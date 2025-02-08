@@ -13,7 +13,7 @@ from peewee import fn, DoesNotExist
 from audio_utils import ensure_audio_data
 from gdutils.llm_utils import generate_gpt_from_template
 from gdutils.strings import PathOrStr
-from _secrets import CLAUDE_API_KEY, OPENAI_API_KEY
+from env_config import CLAUDE_API_KEY, OPENAI_API_KEY
 from lang_utils import get_language_name, get_all_languages, get_language_code
 from db_models import (
     Lemma,

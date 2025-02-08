@@ -24,15 +24,14 @@ TODO: Refactor env_config.py (New)
 - [ ] Define all environment variables as module-level constants
 - [ ] Add validation to ensure all .env.example variables are processed
 - [ ] Update existing os.environ/os.getenv usage to use env_config
-  - [ ] Update db_connection.py
-  - [ ] Update google_cloud_run_utils.py
+  - [ ] Update db_connection.py (needs discussion)
   - [ ] Update fly_cloud_utils.py
 
 TODO: API Keys Migration (Phase 1)
 - [x] Move API keys (Claude, OpenAI, ElevenLabs) to .env.local
-- [ ] Update vocab_llm_utils.py to use os.environ[]
-- [ ] Update audio_utils.py to use os.environ[]
-- [ ] Update sourcefile_views.py to use os.environ[]
+- [x] Update vocab_llm_utils.py to use env_config
+- [x] Update audio_utils.py to use env_config
+- [x] Update sourcefile_views.py to use env_config
 - [ ] Test API connectivity
 
 TODO: Flask Configuration (Phase 1)

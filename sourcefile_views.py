@@ -17,7 +17,7 @@ from pathlib import Path
 from peewee import DoesNotExist
 
 from slugify import slugify
-from _secrets import ELEVENLABS_API_KEY
+from env_config import ELEVENLABS_API_KEY
 from audio_utils import add_delays, ensure_model_audio_data
 from config import (
     LANGUAGE_LEVEL,
