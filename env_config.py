@@ -19,8 +19,10 @@ logger = logging.getLogger(__name__)
 # Track which variables we've processed
 _processed_vars: Set[str] = set()
 
+T = TypeVar("T")
 
-def getenv(name: str, type_=StrictStr) -> Any:
+
+def getenv(name: str, type_: Type[T] = StrictStr) -> T:
     """Get environment variable with type validation.
 
     Args:

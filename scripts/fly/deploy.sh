@@ -30,6 +30,10 @@ if [ "$CURRENT_APP" != "hz-app-web" ]; then
     exit 1
 fi
 
+# Set secrets from .env.fly
+echo "Setting Fly.io secrets..."
+./scripts/fly/set_secrets.sh
+
 # Deploy to Fly.io using fly.toml configuration
 echo "Deploying to Fly.io..."
 fly deploy \
