@@ -1,0 +1,13 @@
+-r requirements.txt
+beautifulsoup4 
+black
+ipdb
+ipykernel
+matplotlib
+numpy
+pandas
+pytest
+pytest-watch 
+playwright==1.42.0
+pytest-playwright==0.4.3
+flask-debugtoolbar==0.14.1

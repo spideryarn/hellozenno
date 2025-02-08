@@ -1,0 +1,151 @@
+{% extends "base.jinja" %}
+
+{% block title %}
+{{ lemma_metadata.lemma }} in {{ target_language_name }} (lemma) - Hello Zenno
+{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » <a href="{{ url_for('lemma_views.lemmas_list', target_language_code=target_language_code) }}">Lemmas</a>
+    » {{ lemma_metadata.lemma }}
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container">
+    {% if metadata %}
+    <div class="metadata-display">
+        <p>Created: <span class="metadata-timestamp">{{ metadata.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
+        <p>Updated: <span class="metadata-timestamp">{{ metadata.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
+    </div>
+    {% endif %}
+
+    <h1>{{ lemma_metadata.lemma }}</h1>
+    
+    <form action="{{ url_for('lemma_views.delete_lemma', target_language_code=target_language_code, lemma=lemma_metadata.lemma) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lemma? All associated wordforms will also be deleted. This action cannot be undone.');">
+        <button type="submit" class="button delete-btn">Delete lemma</button>
+    </form>
+    
+    <div class="lemma-details">
+        <div class="translations">
+            <p><strong>Translation:</strong> {{ lemma_metadata.translations|join('; ') if lemma_metadata.translations else 'No translation available' }}</p>
+        </div>
+        <p><strong>Part of Speech:</strong> {{ lemma_metadata.part_of_speech if lemma_metadata.part_of_speech else 'Not available' }}</p>
+        <div class="etymology">
+            <p><strong>Etymology:</strong> {{ lemma_metadata.etymology if lemma_metadata.etymology else 'Not available' }}</p>
+        </div>
+        <div class="commonality">
+            <p><strong>Commonality:</strong> {{ '%.0f'|format(lemma_metadata.commonality|float * 100) if lemma_metadata.commonality else '0' }}%</p>
+        </div>
+        <div class="guessability">
+            <p><strong>Guessability:</strong> {{ '%.0f'|format(lemma_metadata.guessability|float * 100) if lemma_metadata.guessability else '0' }}%</p>
+        </div>
+        <div class="register">
+            <p><strong>Register:</strong> {{ lemma_metadata.register if lemma_metadata.register else 'Not available' }}</p>
+        </div>
+        
+        {% if lemma_metadata.example_usage %}
+        <h2>Example Usage</h2>
+        <ul>
+            {% for example in lemma_metadata.example_usage %}
+            <li><a href="{{ url_for('sentence_views.get_sentence', language_code=target_language_code, slug=example.slug) if example.slug else '#' }}" class="sentence-link">{{ example.phrase }}</a> - {{ example.translation }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        
+        <div class="mnemonics">
+            {% if lemma_metadata.mnemonics %}
+            <h2>Mnemonics</h2>
+            <ul>
+                {% for mnemonic in lemma_metadata.mnemonics %}
+                <li>{{ mnemonic }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        
+        <div class="related_words_phrases_idioms">
+            {% if lemma_metadata.related_words_phrases_idioms %}
+            <h2>Related Words, Phrases & Idioms</h2>
+            <ul>
+                {% for related in lemma_metadata.related_words_phrases_idioms %}
+                <li>{{ related.lemma }} - {{ related.translation }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        
+        <div class="synonyms">
+            {% if lemma_metadata.synonyms %}
+            <h2>Synonyms</h2>
+            <ul>
+                {% for synonym in lemma_metadata.synonyms %}
+                <li>{{ synonym.lemma }} - {{ synonym.translation }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        
+        <div class="antonyms">
+            {% if lemma_metadata.antonyms %}
+            <h2>Antonyms</h2>
+            <ul>
+                {% for antonym in lemma_metadata.antonyms %}
+                <li>{{ antonym.lemma }} - {{ antonym.translation }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        
+        <div class="example_wordforms">
+            {% if lemma_metadata.example_wordforms %}
+            <h2>Example Wordforms</h2>
+            <ul>
+                {% for form in lemma_metadata.example_wordforms %}
+                <li><a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=form) }}"
+                       class="word-link">
+                        {{ form }}
+                    </a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        
+        <div class="cultural_context">
+            {% if lemma_metadata.cultural_context %}
+            <h2>Cultural Context</h2>
+            <p>{{ lemma_metadata.cultural_context }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="easily_confused_with">
+            {% if lemma_metadata.easily_confused_with %}
+            <h2>Easily Confused With</h2>
+            <ul>
+                {% for confused in lemma_metadata.easily_confused_with %}
+                <li>
+                    <h3>{{ confused.lemma }}</h3>
+                    <p><strong>Explanation:</strong> {{ confused.explanation }}</p>
+                    <p><strong>Example with {{ lemma_metadata.lemma }}:</strong> {{ confused.example_usage_this_target }}</p>
+                    <p><strong>Example with {{ confused.lemma }}:</strong> {{ confused.example_usage_other_target }}</p>
+                    {% if confused.notes %}
+                    <p><strong>Notes:</strong> {{ confused.notes }}</p>
+                    {% endif %}
+                    {% if confused.mnemonic %}
+                    <p><strong>Mnemonic:</strong> {{ confused.mnemonic }}</p>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr>
+
+    <h2>Full Dictionary Entry</h2>
+    <div class="lemma-details">
+        {{ dict_html | safe }}
+    </div>
+</div>
+{% endblock %}

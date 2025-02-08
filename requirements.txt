@@ -1,0 +1,21 @@
+addict
+anthropic
+elevenlabs
+flask
+# google-api-python-client
+# google-auth-httplib2
+# google-auth-oauthlib
+# google-cloud-storage
+gunicorn
+jinja2
+openai
+peewee>=3.17.0
+pendulum
+Pillow
+psutil>=5.9.0
+pycountry
+python-slugify
+psycopg2-binary==2.9.9
+peewee-migrate>=1.12.2
+yt-dlp>=2023.12.30  # For YouTube audio downloads
+flask-cors>=4.0.0  # For cross-origin API access

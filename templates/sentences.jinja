@@ -1,0 +1,82 @@
+{% extends "base.jinja" %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » Sentences
+{% endblock breadcrumbs %}
+
+{% block title %}
+{{ target_language_name }} sentences - Hello Zenno
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ target_language_name }} sentences <span class="count">({{ sentences|length }})</span></h1>
+    
+    <div class="actions mb-4">
+        <a href="{{ url_for('flashcard_views.flashcard_landing', language_code=target_language_code) }}" class="button success-btn">
+            Practice with Flashcards
+        </a>
+    </div>
+
+    <ul class="sentences-list">
+        {% for sentence in sentences %}
+            <li class="sentence-item">
+                <div class="sentence-text">
+                    <a href="{{ url_for('sentence_views.get_sentence', language_code=target_language_code, slug=sentence.slug) }}" class="sentence-link">
+                        {{ sentence.sentence }}
+                    </a>
+                </div>
+                <div class="sentence-translation text-muted">{{ sentence.translation }}</div>
+                {% if sentence.lemma_words %}
+                <div class="sentence-lemmas">
+                    <small class="text-muted">Words: {{ sentence.lemma_words|join(', ') }}</small>
+                </div>
+                {% endif %}
+            </li>
+        {% else %}
+            <li class="no-sentences">No sentences available</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<style>
+    .sentence-item {
+        margin: 1.5em 0;
+        padding: 1em;
+        border: 1px solid #eee;
+        border-radius: 4px;
+    }
+    .sentence-item:hover {
+        background-color: #f8f9fa;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+    }
+    .sentence-translation {
+        margin-top: 0.5em;
+        font-style: italic;
+    }
+    .sentence-lemmas {
+        margin-top: 0.5em;
+    }
+    .no-sentences {
+        color: #666;
+        font-style: italic;
+    }
+    .sentence-link {
+        color: #2563eb;
+        text-decoration: none;
+        display: block;
+        transition: color 0.2s ease;
+    }
+    .sentence-link:hover {
+        color: #1d4ed8;
+        text-decoration: none;
+    }
+    .actions {
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %} 

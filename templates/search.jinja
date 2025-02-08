@@ -1,0 +1,32 @@
+{% extends "base.jinja" %}
+
+{% block title %}Search - {{ target_language_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Search {{ target_language_name }} Words</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <form method="GET" action="{{ url_for('views.search_landing', target_language_code=target_language_code) }}" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Enter a word to search..." required>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Search Tips</h5>
+                    <ul class="mb-0">
+                        <li>Enter any {{ target_language_name }} word (lemma or wordform)</li>
+                        <li>The search will automatically determine if it's a lemma or wordform</li>
+                        <li>If the word is found, you'll be redirected to its details</li>
+                        <li>If it's a new word, it will be analyzed and saved</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

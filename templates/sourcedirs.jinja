@@ -1,0 +1,108 @@
+{% extends "base.jinja" %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » {{ target_language_name }}
+{% endblock breadcrumbs %}
+
+{% block title %}
+{{ target_language_name }} Learning Materials - Hello Zenno
+{% endblock %}
+
+{% block content %}
+<h1>Source Directories for {{ target_language_name }}</h1>
+
+<div class="dictionary-links">
+    <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">
+        Wordforms
+    </a>
+    <a href="{{ url_for('lemma_views.lemmas_list', target_language_code=target_language_code) }}">
+        Dictionary entries (lemmas)
+    </a>
+    <a href="{{ url_for('phrase_views.phrases_list', target_language_code=target_language_code) }}">
+        Phrases & idioms
+    </a>
+    <a href="{{ url_for('sentence_views.sentences_list', language_code=target_language_code) }}">
+        Sentences
+    </a>
+</div>
+<hr />
+
+<button id="newSourcedirBtn" class="button success-btn">New Source Directory</button>
+
+<div class="sort-options">
+    Sort by:
+    <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code, sort='alpha') }}" 
+       class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
+        Alphabetical
+    </a> |
+    <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code, sort='date') }}"
+       class="sort-link {% if current_sort == 'date' %}active{% endif %}">
+        Recently Modified
+    </a>
+</div>
+
+<ul class="source-dirs-list">
+    {% for dir in sourcedirs %}
+        <li>
+            <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=dir.slug) }}">
+                {{ dir.path }}
+            </a>
+            {% if dir.slug in empty_sourcedirs %}
+                <button class="button delete-btn" onclick="confirmDelete('{{ dir.slug }}')">Delete</button>
+            {% endif %}
+        </li>
+    {% else %}
+        <li>No source directories available</li>
+    {% endfor %}
+</ul>
+
+<style>
+    .sort-options {
+        margin: 1em 0;
+    }
+    .sort-link {
+        text-decoration: none;
+        padding: 0.3em 0.6em;
+    }
+    .sort-link.active {
+        font-weight: bold;
+        text-decoration: underline;
+    }
+    .new-sourcedir-btn {
+        margin: 1em 0;
+        padding: 0.5em 1em;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .new-sourcedir-btn:hover {
+        background-color: #45a049;
+    }
+    .stats {
+        color: #666;
+        font-size: 0.9em;
+        margin-left: 1em;
+    }
+    .delete-btn {
+        margin-left: 10px;
+        padding: 3px 8px;
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8em;
+    }
+    .delete-btn:hover {
+        background-color: #d32f2f;
+    }
+</style>
+
+<script>
+    window.target_language_code = "{{ target_language_code }}";
+</script>
+<script src="{{ url_for('static', filename='js/sourcedirs.js') }}"></script>
+{% endblock content %} 

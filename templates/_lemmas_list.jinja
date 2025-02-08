@@ -1,0 +1,11 @@
+<ul class="lemmas-list"></ul>
+    {% for lemma in lemmas %}
+        <li class="lemma-item">
+            <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=lemma) }}" class="lemma-link">
+                {{ lemma }}
+            </a>
+        </li>
+    {% else %}
+        <li class="no-lemmas">No lemmas available</li>
+    {% endfor %}
+</ul>

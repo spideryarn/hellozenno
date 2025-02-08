@@ -1,0 +1,18 @@
+{% extends "base.jinja" %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » All Wordforms
+{% endblock breadcrumbs %}
+
+{% block title %}
+All {{ target_language_name }} Words and Forms - Hello Zenno
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <h1>All Wordforms <span class="count">({{ wordforms_d|length }})</span></h1>
+    {% include '_wordforms_list.jinja' %}
+</div>
+{% endblock %}

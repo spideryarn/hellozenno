@@ -1,0 +1,144 @@
+import pytest
+from unittest.mock import patch
+from flask import url_for
+from peewee import DoesNotExist
+
+from db_models import Lemma, Wordform
+from test_utils import mock_quick_search_for_wordform
+from tests.fixtures_for_tests import (
+    TEST_LANGUAGE_CODE,
+    TEST_LANGUAGE_NAME,
+    SAMPLE_LEMMA_DATA,
+    create_test_lemma,
+    create_test_wordform,
+)
+
+
+def test_wordforms_list(client, test_db):
+    """Test the wordforms list view."""
+    # Create test data
+    lemma = create_test_lemma(test_db)
+    wordform = create_test_wordform(test_db, lemma)
+
+    # Test accessing the wordforms list view
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/wordforms")
+    assert response.status_code == 200
+    assert str(wordform.wordform).encode() in response.data
+
+
+def test_get_existing_wordform(client, test_db):
+    """Test getting metadata for an existing wordform."""
+    # Create test data
+    lemma = create_test_lemma(test_db)
+    wordform = create_test_wordform(test_db, lemma)
+
+    # Test accessing the wordform
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}")
+    assert response.status_code == 200
+    data = response.data.decode()
+    assert str(wordform.wordform) in data
+    assert str(lemma.lemma) in data
+    assert wordform.translations[0] in data
+    assert wordform.inflection_type in data
+
+
+@patch(
+    "wordform_views.quick_search_for_wordform",
+    side_effect=mock_quick_search_for_wordform,
+)
+def test_get_nonexistent_wordform(mock_search, client):
+    """Test getting metadata for a nonexistent wordform."""
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/nonexistent")
+    assert response.status_code == 200
+    data = response.data.decode()
+    assert "Invalid Word" in data
+    assert "test" in data  # from mock possible_misspellings
+
+
+@patch(
+    "wordform_views.quick_search_for_wordform",
+    side_effect=mock_quick_search_for_wordform,
+)
+def test_get_new_wordform(mock_search, client):
+    """Test getting metadata for a new wordform that will be created."""
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/newword")
+    assert response.status_code == 200
+    data = response.data.decode()
+    assert "newword" in data
+    assert "test translation" in data
+
+
+def test_wordform_template_rendering(client, test_db):
+    """Test that the wordform template renders correctly with all navigation elements."""
+    # Create test data
+    lemma = create_test_lemma(test_db)
+    wordform = create_test_wordform(test_db, lemma)
+
+    # Create test context
+    with client.application.test_request_context():
+        # Render the template
+        template = client.application.jinja_env.get_template("wordform.jinja")
+        html = template.render(
+            wordform_metadata={
+                "wordform": str(wordform.wordform),
+                "translations": wordform.translations,
+                "part_of_speech": wordform.part_of_speech,
+                "inflection_type": wordform.inflection_type,
+                "lemma": str(lemma.lemma),
+                "possible_misspellings": None,
+            },
+            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_name=TEST_LANGUAGE_NAME,
+            dict_html="<div>Test dictionary entry</div>",
+        )
+
+        # Check that all navigation links are present
+        assert 'href="/languages"' in html
+        assert f'href="/{TEST_LANGUAGE_CODE}/"' in html
+        assert f'href="/{TEST_LANGUAGE_CODE}/wordforms"' in html
+        assert (
+            url_for(
+                "lemma_views.get_lemma_metadata",
+                target_language_code=TEST_LANGUAGE_CODE,
+                lemma=str(lemma.lemma),
+            )
+            in html
+        )
+
+        # Check that metadata is rendered correctly
+        assert str(wordform.wordform) in html
+        assert wordform.translations[0] in html
+        assert wordform.part_of_speech in html
+        assert wordform.inflection_type in html
+        assert str(lemma.lemma) in html
+
+
+def test_delete_wordform(client, test_db):
+    """Test deleting a wordform."""
+    # Create test data
+    lemma = create_test_lemma(test_db)
+    wordform = create_test_wordform(test_db, lemma)
+
+    # First verify the wordform exists
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}")
+    assert response.status_code == 200
+    assert str(wordform.wordform) in response.data.decode()
+
+    # Delete the wordform
+    response = client.post(f"/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}/delete")
+    assert response.status_code == 302  # Redirect after deletion
+    assert response.headers["Location"].endswith(f"/{TEST_LANGUAGE_CODE}/wordforms")
+
+    # Verify the wordform is deleted from the database
+    with pytest.raises(DoesNotExist):
+        Wordform.get(
+            Wordform.wordform == wordform.wordform,
+            Wordform.language_code == TEST_LANGUAGE_CODE,
+        )
+
+
+def test_delete_nonexistent_wordform(client):
+    """Test deleting a wordform that doesn't exist."""
+    response = client.post(f"/{TEST_LANGUAGE_CODE}/wordform/nonexistent/delete")
+    assert response.status_code == 302  # Should redirect even if wordform doesn't exist
+    assert response.headers["Location"].endswith(f"/{TEST_LANGUAGE_CODE}/wordforms")

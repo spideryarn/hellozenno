@@ -1,0 +1,27 @@
+{% extends "base.jinja" %}
+
+{% block title %}
+Invalid Lemma - {{ target_language_name }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » <a href="{{ url_for('lemma_views.lemmas_list', target_language_code=target_language_code) }}">Lemmas</a>
+    » {{ lemma }}
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container">
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Invalid Lemma</h4>
+        <p>The lemma "{{ lemma }}" was not found in {{ target_language_name }}.</p>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('views.search_landing', target_language_code=target_language_code) }}" class="btn btn-primary">
+            Try Another Search
+        </a>
+    </div>
+</div>
+{% endblock %} 

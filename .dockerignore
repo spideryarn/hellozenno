@@ -1,0 +1,50 @@
+# flyctl launch added from .gitignore
+**/credentials
+
+# flyctl launch added from .pytest_cache/.gitignore
+# Created by pytest automatically.
+.pytest_cache/**/*
+fly.toml
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.vscode/
+.idea/
+*.swp
+.DS_Store
+*.log
+.git/
+.gitignore
+
+
+# from .gcloudignore
+# .gcloudignore
+# .git
+# .gitignore
+# __pycache__/
+# *.pyc
+# .pytest_cache/
+# *.pyo
+# *.pyd
+# .Python
+# env/
+# venv/
+# .env/
+# .venv/
+# pip-log.txt
+# pip-delete-this-directory.txt
+# .tox/
+# .coverage
+# .coverage.*
+# .cache
+# nosetests.xml
+# coverage.xml
+# *.cover
+# *.log
+# .pytest_cache/
+# .env
+# .vscode/
+# credentials/

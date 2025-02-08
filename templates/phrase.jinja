@@ -1,0 +1,145 @@
+{% extends "base.jinja" %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » <a href="{{ url_for('phrase_views.phrases_list', target_language_code=target_language_code) }}">Phrases</a>
+    » {{ phrase.canonical_form }}
+{% endblock breadcrumbs %}
+
+{% block title %}
+{{ phrase.canonical_form }} ({{ target_language_code|upper }}) - Phrase Details - Hello Zenno
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    {% if metadata %}
+    <div class="metadata-display">
+        <p>Created: <span class="metadata-timestamp">{{ metadata.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
+        <p>Updated: <span class="metadata-timestamp">{{ metadata.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
+    </div>
+    {% endif %}
+
+    <h1>{{ phrase.canonical_form }}</h1>
+
+    <div class="phrase-details">
+        {% if phrase.part_of_speech %}
+        <h2>Type</h2>
+        <p>{{ phrase.part_of_speech }}</p>
+        {% endif %}
+
+        <!-- Debug info -->
+        <div style="display: none">
+            Has translations? {{ phrase.translations is defined and phrase.translations }}
+            Translations: {{ phrase.translations|tojson }}
+        </div>
+
+        {% if phrase.translations is defined and phrase.translations %}
+        <h2>Translations</h2>
+        <ul>
+            {% for translation in phrase.translations %}
+                <li>{{ translation }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if phrase.example_sentences %}
+        <h2>Example Usage</h2>
+        <ul>
+            {% for example in phrase.example_sentences %}
+                <li>
+                    {{ example.sentence.sentence }} - {{ example.sentence.translation }}
+                    {% if example.context %}
+                        <br>
+                        <em>{{ example.context }}</em>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if phrase.component_words %}
+        <h2>Component Words</h2>
+        <ul>
+            {% for word in phrase.component_words %}
+                <li>
+                    <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=word.lemma) }}"
+                       class="word-link">
+                        {{ word.lemma }}
+                    </a>
+                    {% if word.notes %} - {{ word.notes }}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if phrase.related_to.count() > 0 or phrase.related_from.count() > 0 %}
+        <h2>Related Phrases</h2>
+        <ul>
+            {% for relation in phrase.related_to %}
+                <li>
+                    {{ relation.to_phrase.canonical_form }}
+                    {% if relation.to_phrase.translations and relation.to_phrase.translations|length > 0 %}
+                        ({{ relation.to_phrase.translations[0] }})
+                    {% endif %}
+                    {% if relation.relationship_type %} - {{ relation.relationship_type }}{% endif %}
+                </li>
+            {% endfor %}
+            {% for relation in phrase.related_from %}
+                <li>
+                    {{ relation.from_phrase.canonical_form }}
+                    {% if relation.from_phrase.translations and relation.from_phrase.translations|length > 0 %}
+                        ({{ relation.from_phrase.translations[0] }})
+                    {% endif %}
+                    {% if relation.relationship_type %} - {{ relation.relationship_type }}{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if phrase.mnemonics %}
+        <h2>Mnemonics</h2>
+        <ul>
+            {% for mnemonic in phrase.mnemonics %}
+                <li>{{ mnemonic }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if phrase.cultural_context %}
+        <h2>Cultural Context</h2>
+        <p>{{ phrase.cultural_context }}</p>
+        {% endif %}
+
+        {% if phrase.usage_notes %}
+        <h2>Usage Notes</h2>
+        <p>{{ phrase.usage_notes }}</p>
+        {% endif %}
+
+        {% if phrase.register %}
+        <h2>Register</h2>
+        <p>{{ phrase.register }}</p>
+        {% endif %}
+
+        {% if phrase.difficulty_level %}
+        <h2>Difficulty Level</h2>
+        <p>{{ phrase.difficulty_level }}</p>
+        {% endif %}
+
+        {% if phrase.commonality is defined %}
+        <h2>Commonality</h2>
+        <p>{{ "%.0f"|format(phrase.commonality * 100) }}%</p>
+        {% endif %}
+
+        {% if phrase.guessability is defined %}
+        <h2>Guessability</h2>
+        <p>{{ "%.0f"|format(phrase.guessability * 100) }}%</p>
+        {% endif %}
+
+        {% if phrase.etymology %}
+        <h2>Etymology</h2>
+        <p>{{ phrase.etymology }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %} 

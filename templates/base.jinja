@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}{% if target_language_name %}Practice {{ target_language_name }} vocabulary and grammar with AI-assisted feedback on Hello Zenno{% else %}Practice vocabulary and grammar with AI-assisted feedback on Hello Zenno{% endif %}{% endblock %}">
+    <title>
+        {% block title %}
+        Hello Zenno - AI-assisted language learning
+        {% endblock title %}
+    </title>
+    {% block head_imports %}
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    {% endblock head_imports %}
+    <style>
+        {% block head_css %}
+        {% endblock head_css %}
+    </style>
+</head>
+
+<body>
+    {% block top_nav %}
+    <nav>
+        <div class="nav-content">
+            <div class="breadcrumbs">
+                <a href="{{ url_for('views.languages') }}">Home</a>
+                {% block breadcrumbs %}{% endblock breadcrumbs %}
+            </div>
+            {% if target_language_code is defined %}
+            <div class="nav-menu">
+                {# <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a> #}
+                {# <a href="{{ url_for('lemma_views.lemmas_list', target_language_code=target_language_code) }}">Lemmas</a> #}
+                {# <a href="{{ url_for('phrase_views.phrases_list', target_language_code=target_language_code) }}">Phrases</a> #}
+            </div>
+            <div class="search-box">
+                <form method="GET" action="{{ url_for('views.search_landing', target_language_code=target_language_code) }}">
+                    <input type="text" name="q" placeholder="Search {{ target_language_name }} words..." required>
+                    <button type="submit" class="button">Search</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+    {% endblock top_nav %}
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}
+    {% endblock content %}
+
+    {% block late_script_imports %}
+    {% endblock late_script_imports %}
+
+    <!-- Reusable Modal Dialog -->
+    <div id="reusableModal" class="modal">
+        <div class="modal-content">
+            <input type="text" id="modalInput" placeholder="">
+            <div class="modal-buttons">
+                <button id="modalConfirm" class="confirm-btn">Confirm</button>
+                <button id="modalCancel" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+</body>
+
+</html>

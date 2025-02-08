@@ -1,0 +1,63 @@
+# fly.toml app configuration file generated for hz-app-web on 2024-12-31T18:57:35+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'hz-app-web'
+primary_region = 'lhr'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[deploy]
+  strategy = 'immediate'
+
+[env]
+  FLASK_SECRET_KEY = 'your-secret-key-here'
+  PORT = '8080'
+  POSTGRES_DB_NAME = 'hz_app_web'
+  POSTGRES_DB_PASSWORD = 'jjdJxIji1gl6rC4'
+  POSTGRES_DB_USER = 'hz_app_web'
+  POSTGRES_HOST = 'hz-app-db-prod.internal'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [http_service.concurrency]
+    type = 'connections'
+    hard_limit = 25
+    soft_limit = 20
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/health-check'
+    protocol = 'http'
+
+    [http_service.checks.headers]
+      User-Agent = 'fly/health'
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 5432
+
+  [[services.ports]]
+    port = 5432
+    handlers = ['pg_tls']
+
+[[vm]]
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 1024
+
+[[metrics]]
+  port = 9091
+  path = '/metrics'
+  https = false
