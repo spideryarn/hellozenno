@@ -1,0 +1,58 @@
+{% extends "base.jinja" %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » Phrases & Idioms
+{% endblock breadcrumbs %}
+
+{% block title %}
+{{ target_language_name }} phrases and idioms - Hello Zenno
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ target_language_name }} phrases and idioms <span class="count">({{ phrases|length }})</span></h1>
+    
+    <div class="sort-options">
+        Sort by:
+        <a href="{{ url_for('phrase_views.phrases_list', target_language_code=target_language_code, sort='alpha') }}" 
+           class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
+            Alphabetical
+        </a> |
+        <a href="{{ url_for('phrase_views.phrases_list', target_language_code=target_language_code, sort='date') }}"
+           class="sort-link {% if current_sort == 'date' %}active{% endif %}">
+            Recently Modified
+        </a>
+    </div>
+
+    <ul class="phrases-list">
+        {% for phrase in phrases %}
+            <li class="phrase-item">
+                <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, canonical_form=phrase.canonical_form) }}" class="phrase-link">
+                    {{ phrase.canonical_form }}
+                </a>
+            </li>
+        {% else %}
+            <li class="no-phrases">No phrases available</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<style>
+    .sort-options {
+        margin: 1em 0;
+    }
+    .sort-link {
+        text-decoration: none;
+        padding: 0.3em 0.6em;
+    }
+    .sort-link.active {
+        font-weight: bold;
+        text-decoration: underline;
+    }
+    .phrase-item {
+        margin: 0.5em 0;
+    }
+</style>
+{% endblock %} 

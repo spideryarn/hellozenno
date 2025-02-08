@@ -1,0 +1,6 @@
+.env
+.env.production
+credentials/
+__pycache__/
+*.pyc
+

@@ -1,0 +1,140 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ target_language_name }} sentence flashcards - Hello Zenno{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    {% if not sourcedir and not sourcefile %}
+    » <a href="{{ url_for('sentence_views.sentences_list', language_code=target_language_code) }}">Sentences</a>
+    {% endif %}
+    {% if sourcedir %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir.slug) }}">{{ sourcedir.path }}</a>
+    {% endif %}
+    {% if sourcefile is not string and sourcefile %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug) }}">{{ sourcefile.sourcedir.path }}</a>
+    » <a href="{{ url_for('sourcefile_views.inspect_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug, sourcefile_slug=sourcefile.slug) }}">{{ sourcefile.filename }}</a>
+    {% endif %}
+    » Flashcards
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    
+                    <div id="error-message" class="alert alert-danger d-none"></div>
+                    
+                    {% if sentence %}
+                    <div class="flashcard-controls">
+                        <button id="left-btn" class="flashcard-btn" onclick="handleLeftClick()">
+                            <i class="fas fa-play"></i> Play Audio <span class="shortcut-hint">(←)</span>
+                        </button>
+                        <button id="right-btn" class="flashcard-btn" onclick="handleRightClick()">
+                            <i class="fas fa-eye"></i> Show Sentence <span class="shortcut-hint">(→)</span>
+                        </button>
+                        <button id="next-btn" class="flashcard-btn" onclick="handleNextClick()">
+                            <i class="fas fa-forward"></i> New Sentence <span class="shortcut-hint">(Enter)</span>
+                        </button>
+                    </div>
+
+                    <div id="flashcard" class="mb-4">
+                        <div id="stage2-content" class="d-none">
+                            <h3 id="sentence" class="mb-3">{{ sentence.sentence }}</h3>
+                            <p id="lemma-words" class="text-muted">Vocabulary: {{ sentence.lemma_words|join(', ') }}</p>
+                        </div>
+                        <p id="translation" class="text-muted d-none" style="display: none !important;">{{ sentence.translation }}</p>
+                    </div>
+
+                    <audio id="audio-player" autoplay src="{{ url_for('sentence_views.get_sentence_audio', language_code=target_language_code, sentence_id=sentence.id) }}"></audio>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No sentences found for these words. Please try again later.
+                    </div>
+                    {% endif %}
+
+                    {% if lemma_count %}
+                    <hr />
+                    <div class="mb-3">
+                        <h4>Practicing with {{ lemma_count }} words{% if sourcedir %} from {{ sourcedir.path }}{% elif sourcefile %} from {{ sourcefile.filename }}{% endif %}</h4>
+                    </div>
+                    {% endif %}
+
+                    <div class="text-muted mt-4">
+                        <p><strong>Keyboard shortcuts:</strong></p>
+                        <ul class="list-unstyled">
+                            <li>← Left arrow: Go back one stage / Replay audio</li>
+                            <li>→ Right arrow: Advance to next stage</li>
+                            <li>Enter: Next random sentence</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.flashcard-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem;
+}
+
+.flashcard-btn {
+    font-size: 1.25rem;
+    padding: 1rem;
+    border: 2px solid #2563eb;
+    border-radius: 8px;
+    background-color: white;
+    color: #2563eb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.flashcard-btn:hover {
+    background-color: #2563eb;
+    color: white;
+}
+
+.flashcard-btn.active {
+    background-color: #2563eb;
+    color: white;
+    border-color: #1d4ed8;
+}
+
+.flashcard-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.shortcut-hint {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+@media (min-width: 768px) {
+    .flashcard-controls {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<script>
+    window.target_language_code = "{{ target_language_code }}";
+    window.current_sentence_id = {{ sentence.id }};
+    window.sourcefile = {% if sourcefile is not string and sourcefile %}{{ sourcefile.slug|tojson|safe }}{% else %}null{% endif %};
+    window.sourcedir = {% if sourcedir is not string and sourcedir %}{{ sourcedir.slug|tojson|safe }}{% else %}null{% endif %};
+</script>
+<script src="{{ url_for('static', filename='js/sentence_flashcards.js') }}"></script>
+{% endblock %} 

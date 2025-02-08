@@ -1,0 +1,43 @@
+<ul class="wordforms-list">
+    {% for wordform_d in wordforms_d %}
+        <li class="wordform-entry">
+            {% set wordform_translations = wordform_d.get('translations', []) %}
+            {% set lemma = wordform_d.get('lemma_entry', {}).get('lemma', '') %}
+            {% set lemma_data = lemma_metadata.get(lemma, {}) %}
+            
+            <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=wordform_d.wordform) }}"
+               class="word-link">
+                {{ wordform_d.wordform }}
+            </a>
+            {% if lemma and lemma != '' %}
+            →
+            <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=lemma) }}"
+               class="word-link">
+                {{ lemma }}
+            </a>
+            {% endif %}
+        </li>
+    {% else %}
+        <li class="no-entries">No wordforms available</li>
+    {% endfor %}
+</ul>
+
+<style>
+    .wordforms-list {
+        list-style: none;
+        padding: 0;
+    }
+    .wordform-entry {
+        margin: 0.5em 0;
+    }
+    .wordform-entry a {
+        text-decoration: none;
+    }
+    .wordform-entry a:hover {
+        text-decoration: underline;
+    }
+    .no-entries {
+        color: #666;
+        font-style: italic;
+    }
+</style>

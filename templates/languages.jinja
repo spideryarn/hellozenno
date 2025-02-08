@@ -1,0 +1,43 @@
+{% extends "base.jinja" %}
+
+{% block breadcrumbs %}
+    » Languages
+{% endblock breadcrumbs %}
+
+{% block title %}
+Hello Zenno - learn foreign words, with a magical AI dictionary
+{% endblock %}
+
+{% block meta_description %}
+Learn vocabulary and phrases in any language.
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Available Languages <span class="count">({{ languages|length }})</span></h1>
+    <div class="languages-list">
+        {% for language in languages %}
+            <button onclick="window.location.href='{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=language.code) }}'" class="button">
+                {{ language.name }}
+            </button>
+        {% else %}
+            <p>No languages available</p>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.languages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem 0;
+    max-width: 300px;
+}
+
+.languages-list .button {
+    width: 100%;
+    text-align: left;
+}
+</style>
+{% endblock %} 

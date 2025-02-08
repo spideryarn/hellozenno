@@ -1,0 +1,47 @@
+{% extends "base.jinja" %}
+
+{% block title %}{{ target_language_name }} Flashcards{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    {% if sourcedir %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir.slug) }}">{{ sourcedir.path }}</a>
+    {% endif %}
+    {% if sourcefile %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug) }}">{{ sourcefile.sourcedir.path }}</a>
+    » <a href="{{ url_for('sourcefile_views.inspect_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug, sourcefile_slug=sourcefile.slug) }}">{{ sourcefile.filename }}</a>
+    {% endif %}
+    » Flashcards
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>{{ target_language_name }} Flashcards</h1>
+        
+    <div class="text-center mt-4">
+        <a href="{{ url_for('flashcard_views.random_flashcard', language_code=target_language_code) }}{% if request.query_string %}?{{ request.query_string.decode() }}{% endif %}" 
+           class="button success-btn btn-lg"
+           id="start-flashcards">
+            Start Flashcards &nbsp;<span class="text-muted">(ENTER)</span>
+        </a>
+    </div>
+
+    <hr />
+
+    {% if lemma_count %}
+    <div class="text-center mt-4">
+        <h4>Practicing with {{ lemma_count }} words{% if sourcedir %} from {{ sourcedir.path }}{% elif sourcefile %} from {{ sourcefile.filename }}{% endif %}</h4>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        document.getElementById('start-flashcards').click();
+    }
+});
+</script>
+{% endblock %} 

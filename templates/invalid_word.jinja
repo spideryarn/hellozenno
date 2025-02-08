@@ -1,0 +1,41 @@
+{% extends "base.jinja" %}
+
+{% block title %}
+Invalid Word - {{ target_language_name }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a>
+    » {{ wordform }}
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container">
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Invalid Word</h4>
+        <p>"{{ wordform }}" is not a valid word in {{ target_language_name }}.</p>
+        
+        {% if possible_misspellings %}
+            <hr>
+            <p class="mb-0">Did you mean one of these?</p>
+            <ul>
+                {% for suggestion in possible_misspellings %}
+                    <li>
+                        <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=suggestion) }}">
+                            {{ suggestion }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('views.search_landing', target_language_code=target_language_code) }}" class="btn btn-primary">
+            Try Another Search
+        </a>
+    </div>
+</div>
+{% endblock %} 

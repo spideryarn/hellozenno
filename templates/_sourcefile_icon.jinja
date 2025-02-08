@@ -1,0 +1,56 @@
+{% macro sourcefile_icon(sourcefile_type, metadata={}) %}
+{# Map of sourcefile types to icon names and colors #}
+{# text: Blue #}
+{# image: Green #}
+{# audio: Amber #}
+{# youtube_audio: Red #}
+{# default: Gray #}
+{% set icon_map = {
+    'text': {
+        'icon': 'file-text',
+        'color': '3B82F6'
+    },
+    'image': {
+        'icon': 'image',
+        'color': '10B981'
+    },
+    'audio': {
+        'icon': 'speaker-high',
+        'color': 'F59E0B'
+    },
+    'youtube_audio': {
+        'icon': 'youtube-logo',
+        'color': 'EF4444'
+    }
+} %}
+
+{# Default icon info for unknown file types #}
+{% set default_icon_info = {
+    'icon': 'file',
+    'color': '6B7280'
+} %}
+
+{# Get icon info based on sourcefile type, fallback to default if not found #}
+{% set icon_info = icon_map.get(sourcefile_type, default_icon_info) %}
+
+{# Build tooltip content #}
+{% set tooltip_content = sourcefile_type|title %}
+
+{% if metadata %}
+    {% if metadata.video_title %}
+        {% set tooltip_content = tooltip_content ~ '<br><br>' ~ metadata.video_title %}
+    {% endif %}
+    {% if metadata.duration %}
+        {% set tooltip_content = tooltip_content ~ '<br><br>Duration: ' ~ metadata.duration|int ~ ' seconds' %}
+    {% endif %}
+    {% if metadata.image_processing %}
+        {% if metadata.image_processing.was_resized %}
+            {% set tooltip_content = tooltip_content ~ '<br><br>Image resized: ' ~ (metadata.image_processing.original_size / 1024)|round|int ~ 'KB → ' ~ (metadata.image_processing.final_size / 1024)|round|int ~ 'KB' %}
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+<span class="sourcefile-icon" data-tippy-content="{{ tooltip_content }}">
+    <i class="ph-fill ph-{{ icon_info.icon }}" style="color: #{{ icon_info.color }};"></i>
+</span>
+{% endmacro %} 

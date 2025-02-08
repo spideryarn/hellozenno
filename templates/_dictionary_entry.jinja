@@ -1,0 +1,21 @@
+<li class="dictionary-entry">
+    <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=lemma) }}"
+       class="word-link">
+        {{ lemma }}
+    </a>
+    {% if lemma_metadata[lemma].translations %}
+    <div class="translations">
+        {{ lemma_metadata[lemma].translations|join('; ') }}
+    </div>
+    {% endif %}
+    {% if lemma_metadata[lemma].etymology %}
+    <div class="etymology">
+        {{ lemma_metadata[lemma].etymology }}
+    </div>
+    {% endif %}
+    {% if lemma_metadata[lemma].commonality is not none %}
+    <div class="commonality">
+        {{ (lemma_metadata[lemma].commonality * 100)|round|int }}%
+    </div>
+    {% endif %}
+</li> 

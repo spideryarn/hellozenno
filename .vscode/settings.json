@@ -1,0 +1,10 @@
+{
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "terminal.integrated.env.osx": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "${workspaceFolder}/credentials/google-service-account-key.json"
+    }
+}

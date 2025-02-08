@@ -1,0 +1,27 @@
+{% extends "base.jinja" %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » Dictionary Entries
+{% endblock breadcrumbs %}
+
+{% block title %}
+{{ target_language_name }} dictionary - Hello Zenno
+{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ target_language_name }} dictionary entries (lemmas) <span class="count">({{ lemmas|length }})</span></h1>
+    
+    {% include '_sort_options.jinja' with context %}
+
+    <ul class="dictionary-entries">
+        {% for lemma in lemmas %}
+            {% include '_dictionary_entry.jinja' with context %}
+        {% else %}
+            <li class="no-entries">No dictionary entries available</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

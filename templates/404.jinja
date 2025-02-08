@@ -1,0 +1,19 @@
+{% extends "base.jinja" %}
+
+{% block title %}
+Page Not Found - Hello Zenno
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="text-content">
+        <h1>404 - Page Not Found</h1>
+        <p>Sorry, the page you're looking for doesn't exist.</p>
+        <p>You might want to:</p>
+        <ul>
+            <li><a href="{{ url_for('views.home') }}">Go to the homepage</a></li>
+            <li><a href="{{ url_for('views.languages') }}">View available languages</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %} 

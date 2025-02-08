@@ -1,0 +1,838 @@
+body {
+    /* font-family: 'Helvetica', sans-serif; */
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    color: #333;
+    padding-top: 100px;
+}
+
+p,
+li {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    margin-bottom: 0;
+}
+
+.nav-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.search-box {
+    flex: 0 1 300px;
+}
+
+.search-box form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-box input[type="text"] {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.search-box button {
+    padding: 0.5rem 1rem;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.search-box button:hover {
+    background-color: #1d4ed8;
+}
+
+nav a {
+    text-decoration: none;
+    color: #2563eb;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+nav a:hover {
+    text-decoration: none;
+    background-color: #e5e7eb;
+}
+
+/* Add a container for main content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.breadcrumbs {
+    flex: 1;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.breadcrumbs a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Dictionary entries styling */
+.dictionary-entries {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dictionary-entry {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.dictionary-entry:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.lemma-link {
+    display: block;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.lemma-link:hover {
+    color: #1d4ed8;
+}
+
+.no-entries {
+    padding: 1rem;
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    background-color: #fff;
+    border-radius: 4px;
+}
+
+/* Word metadata styling */
+.word-metadata {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.word-details {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.text-content {
+    margin: 2em 0;
+    padding: 1em;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-text,
+.translated-text {
+    margin: 1em 0;
+    padding: 1em;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.text-content h2 {
+    margin-top: 0;
+    color: #444;
+    font-size: 1.3em;
+}
+
+.enhanced-text {
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+
+/* Generic list styling based on dictionary-entries */
+.source-dirs-list,
+.source-files-list,
+.languages-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.source-dirs-list li,
+.source-files-list li,
+.languages-list li {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.source-dirs-list li:hover,
+.source-files-list li:hover,
+.languages-list li:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.source-dirs-list a,
+.source-files-list a,
+.languages-list a {
+    display: block;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.source-dirs-list a:hover,
+.source-files-list a:hover,
+.languages-list a:hover {
+    color: #1d4ed8;
+}
+
+/* Phrase and lemma details styling */
+.phrase-details,
+.lemma-details {
+    margin: 1em 0;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.phrase-details h2,
+.lemma-details h2 {
+    margin-top: 0.75em;
+    margin-bottom: 0.25em;
+    color: #444;
+    font-size: 1.1em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.25em;
+}
+
+.phrase-details ul,
+.lemma-details ul {
+    margin: 0.25em 0;
+    padding-left: 1.25em;
+}
+
+.phrase-details li,
+.lemma-details li {
+    margin: 0.25em 0;
+    line-height: 1.3;
+}
+
+.phrase-details p,
+.lemma-details p {
+    margin: 0.25em 0;
+    line-height: 1.3;
+}
+
+/* Two-column layout for lemma details */
+.lemma-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.lemma-details>div {
+    background: #fff;
+    padding: 0.75rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Make certain sections full width */
+.lemma-details>div.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Phrases list styling */
+.phrases-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.phrase-item {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.phrase-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.phrase-link {
+    display: block;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.phrase-link:hover {
+    color: #1d4ed8;
+}
+
+.raw-forms {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 0.3em;
+}
+
+.speed-controls {
+    margin-top: 5px;
+}
+
+.speed-controls button {
+    padding: 2px 8px;
+    margin: 0 2px;
+    cursor: pointer;
+}
+
+/* Navigation menu styling */
+.nav-menu {
+    display: flex;
+    gap: 1rem;
+    margin-right: 1rem;
+}
+
+.nav-menu a {
+    padding: 0.5rem 1rem;
+    background-color: #fff;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.nav-menu a:hover {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+.nav-menu a.active {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+/* Dictionary links styling */
+.dictionary-links {
+    display: flex;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.dictionary-links a {
+    padding: 0.75rem 1.5rem;
+    background-color: #fff;
+    border: 1px solid #2563eb;
+    border-radius: 4px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-width: 150px;
+    max-width: 300px;
+    white-space: nowrap;
+}
+
+.dictionary-links a:hover {
+    background-color: #2563eb;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove the separator character styling */
+.dictionary-links span {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: 200px;
+    }
+
+    nav {
+        padding: 0.5rem;
+    }
+
+    .nav-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-box {
+        flex: 1 1 100%;
+        margin-top: 0.5rem;
+        width: 100%;
+    }
+}
+
+/* Add an extra breakpoint for very narrow screens */
+@media (max-width: 480px) {
+    body {
+        padding-top: 220px;
+    }
+}
+
+/* Word link styling */
+.word-link {
+    position: relative;
+    text-decoration: none;
+    color: #0066cc;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Tippy tooltip customization */
+.tippy-box[data-theme~='light'] {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tippy-box[data-theme~='light'] h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2563eb;
+}
+
+.tippy-box[data-theme~='light'] p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.tippy-box[data-theme~='light'] .translation {
+    font-weight: 500;
+}
+
+.tippy-box[data-theme~='light'] .etymology {
+    color: #666;
+    font-style: italic;
+}
+
+/* Remove old tooltip styles */
+
+/* Add spacing for main content */
+.lemma-details,
+.lemma-metadata,
+.container h1 {
+    margin-top: 1rem;
+}
+
+.sort-options {
+    margin: 1em 0;
+}
+
+.sort-link {
+    text-decoration: none;
+    padding: 0.3em 0.6em;
+}
+
+.sort-link.active {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Nested data structure styling */
+.example-text {
+    font-style: italic;
+    color: #333;
+    margin-bottom: 0.25em;
+}
+
+.example-translation {
+    color: #666;
+    margin-bottom: 0.5em;
+    font-size: 0.95em;
+}
+
+.translation {
+    color: #666;
+    margin-bottom: 0.25em;
+    font-size: 0.95em;
+}
+
+.mnemonic {
+    color: #2563eb;
+    font-style: italic;
+    margin-top: 0.25em;
+}
+
+.notes {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 0.25em;
+    padding-left: 1em;
+    border-left: 2px solid #eee;
+}
+
+.example {
+    color: #666;
+    font-style: italic;
+    margin-top: 0.25em;
+}
+
+/* Make nested list items more distinct */
+.lemma-details li {
+    margin-bottom: 0.75em;
+}
+
+.lemma-details li:last-child {
+    margin-bottom: 0;
+}
+
+.lemma-details li strong {
+    color: #444;
+}
+
+.lemma-details li div {
+    margin-left: 0.5em;
+}
+
+/* Confusion section styling */
+.confusion-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.confusion-item {
+    margin-bottom: 1.5em;
+    padding: 1em;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.confusion-header {
+    font-size: 1.1em;
+    margin-bottom: 0.5em;
+}
+
+.confusion-explanation {
+    margin-bottom: 1em;
+    color: #555;
+}
+
+.confusion-examples {
+    margin: 0.5em 0;
+    padding: 0.5em;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.example-pair {
+    margin: 0.5em 0;
+}
+
+.confusion-mnemonic {
+    margin-top: 0.8em;
+    color: #444;
+}
+
+.confusion-notes {
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Metadata display styling */
+.metadata-display {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: right;
+    float: right;
+    margin-left: 1rem;
+    margin-bottom: 1rem;
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.metadata-display p {
+    margin: 0.2rem 0;
+}
+
+.metadata-timestamp {
+    font-family: monospace;
+}
+
+/* Modal dialog styling */
+.modal {
+    display: none;
+    /* Initial state is hidden */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Add a separate class for when modal is shown */
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 15px;
+    width: 90%;
+    max-width: 300px;
+    border-radius: 8px;
+    margin: 10px;
+}
+
+.modal input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    /* Better for mobile */
+    box-sizing: border-box;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: stretch;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    /* Better for mobile */
+}
+
+.modal-buttons .confirm-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal-buttons .cancel-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Button styling */
+.button,
+button.button,
+input[type="submit"].button,
+form button.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    padding: 0 0.75rem;
+    text-decoration: none;
+    background-color: #fff;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    line-height: 1;
+    font-family: inherit;
+    min-height: 2rem;
+}
+
+.button:hover,
+button.button:hover,
+input[type="submit"].button:hover,
+form button.button:hover {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+.button.delete-btn,
+button.button.delete-btn,
+input[type="submit"].button.delete-btn,
+form button.button.delete-btn {
+    border-color: #dc2626;
+    color: #dc2626;
+    background-color: #fff;
+}
+
+.button.delete-btn:hover,
+button.button.delete-btn:hover,
+input[type="submit"].button.delete-btn:hover,
+form button.button.delete-btn:hover {
+    background-color: #dc2626;
+    color: #fff;
+}
+
+.button.success-btn,
+button.button.success-btn,
+input[type="submit"].button.success-btn,
+form button.button.success-btn {
+    border-color: #16a34a;
+    color: #16a34a;
+}
+
+.button.success-btn:hover,
+button.button.success-btn:hover,
+input[type="submit"].button.success-btn:hover,
+form button.button.success-btn:hover {
+    background-color: #16a34a;
+    color: #fff;
+}
+
+.button.disabled,
+button.button.disabled,
+input[type="submit"].button.disabled,
+form button.button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.button.disabled:hover,
+button.button.disabled:hover,
+input[type="submit"].button.disabled:hover,
+form button.button.disabled:hover {
+    background-color: #fff;
+    color: #2563eb;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Modal styling */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.modal input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.modal-buttons button {
+    min-width: 100px;
+}
+
+/* Sourcefile icon styling */
+.sourcefile-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.5rem;
+    cursor: help;
+}
+
+.sourcefile-icon i {
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+
+h1 .sourcefile-icon {
+    font-size: 1.5rem;
+}
+
+.source-file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.source-file-item a {
+    flex: 1;
+}
