@@ -65,10 +65,17 @@ def ensure_test_config():
     """Load and validate test configuration."""
     load_dotenv(".env.testing", override=True)
 
-    # Safety check to ensure we're using test database
+    # Safety checks for test database
     db_name = getenv("POSTGRES_DB_NAME")
-    if not db_name.endswith("_test"):
-        raise RuntimeError(f"Test database name must end with '_test', got {db_name}")
+    assert db_name.endswith(
+        "_test"
+    ), f"Test database name must end with '_test', got {db_name}"
+    assert (
+        getenv("POSTGRES_HOST") == "localhost"
+    ), "Test database host must be localhost"
+    assert (
+        getenv("POSTGRES_PORT", PositiveInt) == 5432
+    ), "Test database port must be 5432"
 
 
 @pytest.fixture(scope="session")
