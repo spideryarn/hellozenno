@@ -41,8 +41,12 @@ TODO: Flask Configuration (Phase 1)
 
 TODO: Database Migration (Needs Discussion)
 - [x] Move database credentials to .env.local
+- [x] Discuss approach for conftest.py (test database configuration)
+  - Use .env.testing with safe defaults
+  - Simple safety check to ensure test database name
+  - Allow environment variables to override if needed
+  - Use env_config.getenv() for validation
 - [ ] Discuss approach for db_connection.py (handling defaults, test vs prod configs)
-- [ ] Discuss approach for conftest.py (test database configuration)
 - [ ] Discuss approach for bash scripts
 - [ ] Implement agreed approach
 - [ ] Test database connectivity
@@ -78,6 +82,16 @@ ELEVENLABS_API_KEY=your_elevenlabs_api_key  # Required
 FLASK_SECRET_KEY=your_secret_key_here   # Required
 ```
 
+### Test Environment Configuration
+```
+# .env.testing (version controlled)
+POSTGRES_DB_NAME=hellozenno_test
+POSTGRES_DB_USER=postgres
+POSTGRES_DB_PASSWORD=postgres
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+```
+
 ### Key Decisions
 1. Using `.env.local` instead of `.env` to be explicit about local development
 2. Using same variable names across environments (e.g. POSTGRES_* instead of LOCAL_POSTGRES_*)
@@ -88,13 +102,20 @@ FLASK_SECRET_KEY=your_secret_key_here   # Required
 7. No optional environment variables - all must be specified
 8. Exposing environment variables as typed module-level constants for better IDE support and clarity
 9. Using Pydantic types for robust validation while keeping implementation simple
+10. Using .env.testing for test configuration with safe defaults
+11. Keeping test configuration simple - no sensitive data, just local development needs
+12. Using env_config.getenv() consistently across all environments for validation
 
 ### Discussion Points for Database Migration
 1. How to handle test vs production database configurations
+   - DECIDED: Use .env.testing with safe defaults
+   - DECIDED: Validate using env_config.getenv()
+   - DECIDED: Enforce _test suffix for test databases
 2. Whether to allow any default values (e.g. localhost, default ports)
 3. How to handle Fly.io specific configuration
 4. Best approach for database scripts that need different behavior in different environments
 5. Whether to keep LOCAL_ prefix for test database configuration
+   - DECIDED: No, use consistent naming across environments
 
 ### Testing Strategy
 1. Test each group of secrets independently

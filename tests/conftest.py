@@ -7,6 +7,8 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from flask import Flask
 import os
+from dotenv import load_dotenv
+from pydantic import StrictStr, PositiveInt
 
 from db_models import (
     Lemma,
@@ -36,8 +38,8 @@ from sentence_views import sentence_views_bp
 from api import api_bp
 from test_utils import mock_quick_search_for_wordform
 from db_connection import init_db
-from _secrets import LOCAL_POSTGRES_DB_USER, LOCAL_POSTGRES_DB_PASSWORD
 from flashcard_views import flashcard_views_bp
+from env_config import getenv
 
 # All models in dependency order for table creation/deletion
 MODELS = [
@@ -58,20 +60,32 @@ MODELS = [
 TEST_DB_NAME = "hellozenno_test"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def ensure_test_config():
+    """Load and validate test configuration."""
+    load_dotenv(".env.testing", override=True)
+
+    # Safety check to ensure we're using test database
+    db_name = getenv("POSTGRES_DB_NAME")
+    if not db_name.endswith("_test"):
+        raise RuntimeError(f"Test database name must end with '_test', got {db_name}")
+
+
 @pytest.fixture(scope="session")
 def test_db():
     """Create a test database for the test session."""
     # Connect to postgres db to create test db
     conn = psycopg2.connect(
         dbname="postgres",
-        user=LOCAL_POSTGRES_DB_USER,
-        password=LOCAL_POSTGRES_DB_PASSWORD,
-        host="localhost",
+        user=getenv("POSTGRES_DB_USER"),
+        password=getenv("POSTGRES_DB_PASSWORD"),
+        host=getenv("POSTGRES_HOST"),
     )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
 
     # Create test database
+    TEST_DB_NAME = getenv("POSTGRES_DB_NAME")
     cur.execute(f'DROP DATABASE IF EXISTS "{TEST_DB_NAME}"')
     cur.execute(f'CREATE DATABASE "{TEST_DB_NAME}"')
     cur.close()
@@ -80,9 +94,10 @@ def test_db():
     # Configure the test database
     database = PostgresqlExtDatabase(
         TEST_DB_NAME,
-        user=LOCAL_POSTGRES_DB_USER,
-        password=LOCAL_POSTGRES_DB_PASSWORD,
-        host="localhost",
+        user=getenv("POSTGRES_DB_USER"),
+        password=getenv("POSTGRES_DB_PASSWORD"),
+        host=getenv("POSTGRES_HOST"),
+        port=getenv("POSTGRES_PORT", PositiveInt),
     )
 
     # Bind models to database
@@ -102,9 +117,9 @@ def test_db():
     # Drop test database
     conn = psycopg2.connect(
         dbname="postgres",
-        user=LOCAL_POSTGRES_DB_USER,
-        password=LOCAL_POSTGRES_DB_PASSWORD,
-        host="localhost",
+        user=getenv("POSTGRES_DB_USER"),
+        password=getenv("POSTGRES_DB_PASSWORD"),
+        host=getenv("POSTGRES_HOST"),
     )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()

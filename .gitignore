@@ -1,7 +1,7 @@
 credentials/
 gdutils/
 _secrets.py
-.env.*
+.env.local
 .pytest_cache/**/*
 __pycache__/
 *.pyc
