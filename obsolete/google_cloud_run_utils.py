@@ -1,6 +1,14 @@
 import os
 from pathlib import Path
 
+# # project ID, i.e. name
+# GOOGLE_CLOUD_PROJECT = environ.get("GOOGLE_CLOUD_PROJECT")
+# GOOGLE_CLOUD_STORAGE_BUCKET = environ.get("GOOGLE_CLOUD_STORAGE_BUCKET")
+# # for Oauth
+# GOOGLE_CLIENT_CREDENTIALS = Path(
+#     "credentials/241119_google_cloud_oauth_client_secret_732376889523-5qd6h3gm4s1q05cnlskqanf5cceeav7j.apps.googleusercontent.com.json"
+# )
+
 
 def is_cloud_run() -> bool:
     """Check if we're running on Google Cloud Run."""

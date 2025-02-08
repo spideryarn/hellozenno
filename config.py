@@ -1,7 +1,9 @@
 from os import environ
 from pathlib import Path
 from urllib.parse import urlparse
-from google_cloud_run_utils import is_cloud_run
+from fly_cloud_utils import is_fly_cloud
+
+# from google_cloud_run_utils import is_cloud_run
 
 # gets imported by app.py
 SECRET_KEY = environ.get("FLASK_SECRET_KEY")
@@ -13,13 +15,6 @@ if not SECRET_KEY:
             "FLASK_SECRET_KEY environment variable not set and _secrets.py not found"
         )
 
-# project ID, i.e. name
-GOOGLE_CLOUD_PROJECT = environ.get("GOOGLE_CLOUD_PROJECT")
-GOOGLE_CLOUD_STORAGE_BUCKET = environ.get("GOOGLE_CLOUD_STORAGE_BUCKET")
-# for Oauth
-GOOGLE_CLIENT_CREDENTIALS = Path(
-    "credentials/241119_google_cloud_oauth_client_secret_732376889523-5qd6h3gm4s1q05cnlskqanf5cceeav7j.apps.googleusercontent.com.json"
-)
 
 SOURCEFILES_DIRN = Path("sourcefiles")
 
@@ -27,7 +22,8 @@ SOURCEFILES_DIRN = Path("sourcefiles")
 # Database configuration
 def is_production():
     """Check if we're running in a production environment (Cloud Run or Fly.io)"""
-    return is_cloud_run() or environ.get("FLY_APP_NAME") is not None
+    # return is_cloud_run()
+    return is_fly_cloud()
 
 
 if is_production():
