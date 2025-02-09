@@ -1,14 +1,16 @@
 import pytest
 from pathlib import Path
 from utils.vocab_llm_utils import (
-    process_img_filen,
     extract_text_from_image,
     translate_to_english,
     extract_tricky_words_or_phrases,
     extract_phrases_from_text,
 )
 from db_models import Lemma, Wordform
-from tests.fixtures_for_tests import SAMPLE_PHRASE_DATA
+from tests.fixtures_for_tests import (
+    SAMPLE_PHRASE_DATA,
+    TEST_IMAGE_PATH_JPG,
+)
 
 
 @pytest.fixture
@@ -57,64 +59,13 @@ def mock_gpt_from_template(monkeypatch):
                     "txt_tgt": "Test text in Greek",
                 },
             }, {}
-        return "Unexpected template", {}
-
-    monkeypatch.setattr(
-        "utils.vocab_llm_utils.generate_gpt_from_template", mock_generate
-    )
-
-
-def test_process_img_filen(mock_gpt_from_template, fixture_for_testing_db):
-    """Test processing image data."""
-    # Test with minimal valid image
-    with fixture_for_testing_db.bind_ctx([Lemma, Wordform]):
-        image_data = b"test image data"
-        source, words, extra = process_img_filen(
-            image_data=image_data,
-            target_language_name="Greek",
-            should_translate=True,
-            should_mp3=False,
-        )
-
-        # Check source dict
-        assert "txt_tgt" in source
-        assert "txt_en" in source
-        assert "sorted_words_display" in source
-        assert (
-            "txt_tgt_mp3_filen" not in source
-        )  # Should not be present when should_mp3=False
-
-        # Check extracted text
-        assert source["txt_tgt"] == "Test text in Greek"
-        assert source["txt_en"] == "Test text in English"
-
-        # Check words list
-        assert isinstance(words, list)
-        assert len(words) == 1
-        assert words[0]["wordform"] == "test"
-        assert words[0]["lemma"] == "test"
-        assert words[0]["translated_word"] == "test"
-        assert words[0]["centrality"] == 0.8
-        assert words[0]["ordering"] == 1
-
-        # Check database entries were created
-        lemma = Lemma.get(Lemma.lemma == "test")
-        assert lemma.translations == ["test"]
-        assert lemma.part_of_speech == "noun"
-        assert not lemma.is_complete  # Should be False for new lemmas
-
-        wordform = Wordform.get(Wordform.wordform == "test")
-        assert wordform.translations == ["test"]
-        assert wordform.part_of_speech == "noun"
-        assert wordform.inflection_type == "nominative"
-        assert wordform.lemma_entry == lemma
+        return {}, {}
 
 
 def test_extract_text_from_image(mock_gpt_from_template):
     """Test extracting text from image data."""
-    image_data = b"test image data"
     text, extra = extract_text_from_image(
-        image_data=image_data,
+        image_data=str(TEST_IMAGE_PATH_JPG),
         target_language_name="Greek",
     )
 

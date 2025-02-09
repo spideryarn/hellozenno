@@ -17,9 +17,6 @@ from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
 from utils.lang_utils import get_language_name, get_all_languages, get_language_code
 from db_models import (
     Lemma,
-    Wordform,
-    SourcefileWordform,
-    Sourcefile,
     Phrase,
     SourcefilePhrase,
     Sentence,
@@ -44,59 +41,42 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 def extract_text_from_image(
-    image_data: bytes | str,
+    image_data: str,  # Path to image file
     target_language_name: str,
     verbose: int = 1,
 ) -> tuple[str, dict]:
     """Extract text from image data.
 
     Args:
-        image_data: Raw image data bytes or path to image file
+        image_data: Path to image file
         target_language_name: Full name of target language (e.g. "Greek")
         verbose: Verbosity level
 
     Returns:
         Tuple of (extracted_text, extra_info)
     """
-    # If image_data is bytes, create a temporary file
-    temp_file = None
-    try:
-        if isinstance(image_data, bytes):
-            temp_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
-            temp_file.write(image_data)
-            temp_file.flush()
-            image_filen = temp_file.name
-        else:
-            image_filen = str(image_data)  # Ensure string type
+    txt_tgt, extra = generate_gpt_from_template(
+        client=anthropic_client,
+        prompt_template_var="extract_text_from_image",
+        context_d={"target_language_name": target_language_name},
+        response_json=False,
+        image_filens=str(image_data),  # Ensure string type
+        verbose=verbose - 1,
+    )
 
-        txt_tgt, extra = generate_gpt_from_template(
-            client=anthropic_client,
-            prompt_template_var="extract_text_from_image",
-            context_d={"target_language_name": target_language_name},
-            response_json=False,
-            image_filens=image_filen,  # Now guaranteed to be str
-            verbose=verbose - 1,
-        )
-
-        assert isinstance(txt_tgt, str), f"Expected str, got {type(txt_tgt)}"
-        if verbose >= 1:
-            print(f"Extracted text from image -> {txt_tgt[:20]}...")
-        if verbose >= 2:
-            print(txt_tgt)
-        extra = {
-            "txt_tgt": txt_tgt,
-            "orig": target_language_name,
-            "source_type": "image",
-            "function": "extract_text_from_image",
-            "llm_extra": extra,
-        }
-        return txt_tgt, extra
-    finally:
-        if temp_file:
-            try:
-                os.unlink(temp_file.name)  # Clean up temporary file
-            except:
-                pass  # Ignore cleanup errors
+    assert isinstance(txt_tgt, str), f"Expected str, got {type(txt_tgt)}"
+    if verbose >= 1:
+        print(f"Extracted text from image -> {txt_tgt[:20]}...")
+    if verbose >= 2:
+        print(txt_tgt)
+    extra = {
+        "txt_tgt": txt_tgt,
+        "orig": target_language_name,
+        "source_type": "image",
+        "function": "extract_text_from_image",
+        "llm_extra": extra,
+    }
+    return txt_tgt, extra
 
 
 def translate_to_english(inp: str, source_language_name: str, verbose: int = 1):
@@ -175,152 +155,6 @@ def extract_tricky_words_or_phrases(
         print(f"Found {len(out.get('wordforms', []))} new tricky words/phrases")  # type: ignore
 
     return out, extra  # type: ignore
-
-
-def process_img_filen(
-    image_data: bytes | str,  # Can be raw bytes or a filename
-    target_language_name: str,
-    should_translate: bool = True,
-    should_mp3: bool = False,
-    should_add_delays: bool = True,
-    ignore_words: Optional[list[str]] = None,
-    sourcefile_entry: Optional[
-        Sourcefile
-    ] = None,  # Optional sourcefile entry for creating SourcefileWordform entries
-    verbose: int = 1,
-) -> tuple[dict, list, dict]:
-    """Process image data to extract and analyze text.
-
-    Args:
-        image_data: Raw image data bytes or path to image file
-        target_language_name: Full name of target language (e.g. "Greek")
-        should_translate: Whether to translate the text
-        should_mp3: Whether to generate audio (currently disabled)
-        should_add_delays: Whether to add delays between sentences in audio
-        ignore_words: List of words to ignore when finding tricky words
-        sourcefile_entry: Optional sourcefile entry for creating SourcefileWordform entries
-        verbose: Verbosity level
-
-    Returns:
-        Tuple of (source_info, tricky_words, extra_info)
-    """
-    extra = locals()
-    if verbose > 1:
-        if isinstance(image_data, bytes):
-            print(f"Processing image data of length {len(image_data)} bytes")
-        else:
-            print(f"Processing image file: {image_data}")
-
-    # Extract text from image
-    txt_tgt, _ = extract_text_from_image(image_data, target_language_name, verbose=1)
-    txt_en = ""
-
-    if should_translate:
-        txt_en, _ = translate_to_english(txt_tgt, target_language_name, verbose=1)
-
-    if should_mp3:
-        # Create a temporary directory for audio files
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            # Generate audio data
-            audio_data = ensure_audio_data(
-                text=txt_tgt,
-                should_add_delays=True,
-                should_play=False,
-                verbose=1,
-            )
-
-            # Create sourcefile entry to store the audio
-            sourcefile = Sourcefile.create(
-                sourcedir=None,  # No sourcedir needed for temporary files
-                filename=os.path.basename(txt_tgt),
-                audio_filename=os.path.join(tmp_dir, f"{slugify(txt_tgt)}.mp3"),
-                text_target=txt_tgt,
-                text_english="",
-                metadata={},
-                sourcefile_type="text",
-                audio_data=audio_data,
-            )
-            txt_tgt_mp3_filen = sourcefile.audio_filename
-
-    tricky_d_orig, _ = extract_tricky_words_or_phrases(
-        txt_tgt, target_language_name, ignore_words=ignore_words, verbose=1
-    )
-    tricky_ad = Addict(tricky_d_orig)
-    tricky_words_d = tricky_ad.wordforms
-
-    # Get language code for database
-    target_language_code = get_language_code(target_language_name)
-
-    # Process each word and create database entries
-    for word_counter, word_d in enumerate(tricky_words_d):
-        # Try to get existing lemma or create new one
-        lemma, lemma_created = Lemma.get_or_create(
-            lemma=word_d["lemma"],
-            language_code=target_language_code,
-            defaults={
-                "part_of_speech": word_d["part_of_speech"],
-                "translations": word_d["translations"],
-                "is_complete": False,  # Mark as incomplete until full metadata is added
-            },
-        )
-
-        # Try to get existing wordform or create new one
-        wordform, wordform_created = Wordform.get_or_create(
-            wordform=word_d.wordform,
-            language_code=target_language_code,
-            defaults={
-                "lemma_entry": lemma,
-                "part_of_speech": word_d.part_of_speech,
-                "translations": word_d.translations,
-                "inflection_type": word_d.inflection_type,
-                "is_lemma": word_d.wordform == word_d.lemma,
-            },
-        )
-
-        # Create SourcefileWordform entry if we have a sourcefile
-        if sourcefile_entry is not None:
-            SourcefileWordform.get_or_create(
-                sourcefile=sourcefile_entry,
-                wordform=wordform,
-                defaults={
-                    "centrality": word_d.centrality,
-                    "ordering": word_counter + 1,
-                },
-            )
-
-        # Add ordering to the word data for display
-        word_d.ordering = word_counter + 1
-
-    # Process phrases
-    if sourcefile_entry is not None:
-        process_phrases_from_text(
-            txt_tgt,
-            target_language_name,
-            target_language_code,
-            sourcefile_entry,
-            verbose=1,
-        )
-
-    sorted_tricky_words_d = sorted(
-        tricky_words_d,
-        key=lambda w: w.wordform,
-        reverse=True,
-    )
-    sorted_tricky_words_output = "\n".join(
-        [
-            f"{word_d.ordering}. {word_d.wordform}-> {', '.join(word_d.translations)}"
-            for word_d in sorted_tricky_words_d
-        ]
-    )
-    source = {
-        "txt_tgt": txt_tgt,
-        "txt_en": txt_en,
-        "sorted_words_display": sorted_tricky_words_output,
-    }
-    if should_mp3:
-        source["txt_tgt_mp3_filen"] = str(txt_tgt_mp3_filen)
-
-    return source, tricky_words_d, extra
 
 
 def metadata_for_lemma_full(

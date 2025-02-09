@@ -16,6 +16,8 @@ from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,
     TEST_LANGUAGE_NAME,
     TEST_SOURCE_DIR,
+    TEST_SOURCE_FILE,
+    TEST_IMAGE_PATH_PNG,
 )
 from tests.mocks import mock_download_audio
 from utils.sourcedir_utils import _get_navigation_info
@@ -843,24 +845,10 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
 def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     """Test uploading a source file."""
 
-    # Mock process_img_filen to avoid actual image processing
-    def mock_process_img_filen(*args, **kwargs):
-        return (
-            {
-                "txt_tgt": "test text",
-                "txt_en": "test translation",
-            },
-            [{"lemma": "test", "wordform": "test"}],
-            {},
-        )
-
     # Mock dt_str to return a fixed timestamp for testing
     def mock_dt_str(*args, **kwargs):
         return "231231_1459_23"
 
-    monkeypatch.setattr(
-        "utils.vocab_llm_utils.process_img_filen", mock_process_img_filen
-    )
     monkeypatch.setattr("utils.sourcefile_processing.dt_str", mock_dt_str)
 
     # Create test sourcedir
@@ -1189,3 +1177,45 @@ def test_upload_audio_file(client, monkeypatch, fixture_for_testing_db):
         return "Test transcription", {"duration": 60, "language": "el"}
 
     monkeypatch.setattr("utils.audio_utils.transcribe_audio", mock_transcribe_audio)
+
+
+def test_process_png_file(client, monkeypatch, fixture_for_testing_db):
+    """Test processing a PNG file."""
+    # Create test sourcedir
+    sourcedir = Sourcedir.create(path="test_dir_png", language_code=TEST_LANGUAGE_CODE)
+
+    # Read the PNG fixture
+    with open(TEST_IMAGE_PATH_PNG, "rb") as f:
+        png_content = f.read()
+
+    # Upload the PNG file
+    data = {
+        "files[]": (BytesIO(png_content), "test.png"),
+    }
+
+    response = client.post(
+        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload",
+        data=data,
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+    assert b"Successfully uploaded" in response.data
+
+    # Get the created sourcefile
+    sourcefile = Sourcefile.get(
+        Sourcefile.sourcedir == sourcedir,
+        Sourcefile.filename == "test.png",
+    )
+    assert sourcefile.sourcefile_type == "image"
+    assert bytes(sourcefile.image_data) == png_content
+
+    # Process the file
+    response = client.get(
+        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}/process"
+    )
+    assert response.status_code == 302  # Redirect after success
+
+    # Verify the sourcefile was processed
+    sourcefile = Sourcefile.get_by_id(sourcefile.id)
+    assert sourcefile.text_target != ""  # Should have extracted text
+    assert sourcefile.text_english != ""  # Should have translation

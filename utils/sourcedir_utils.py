@@ -1,6 +1,8 @@
 from flask import abort, redirect, url_for
 from peewee import DoesNotExist
-from config import SOURCE_EXTENSIONS
+from config import (
+    SOURCE_EXTENSIONS,
+)
 from db_models import Sourcedir, Sourcefile
 
 
