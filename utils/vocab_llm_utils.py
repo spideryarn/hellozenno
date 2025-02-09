@@ -30,8 +30,8 @@ EMPTY_LOGD = {
     "words": [],
 }
 
-anthropic_client = Anthropic(api_key=CLAUDE_API_KEY)
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+anthropic_client = Anthropic(api_key=CLAUDE_API_KEY.get_secret_value())
+openai_client = OpenAI(api_key=OPENAI_API_KEY.get_secret_value())
 
 
 def extract_text_from_image(

@@ -9,7 +9,7 @@ from gdutils.outloud_text_to_speech import outloud_elevenlabs
 from openai import OpenAI
 
 # Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=OPENAI_API_KEY.get_secret_value())
 
 
 def validate_audio_file(file_path: Path) -> tuple[bool, Optional[str]]:
@@ -152,7 +152,7 @@ def ensure_audio_data(
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=True) as temp_file:
         outloud_elevenlabs(
             text=text_with_delays,
-            api_key=ELEVENLABS_API_KEY,
+            api_key=ELEVENLABS_API_KEY.get_secret_value(),
             mp3_filen=temp_file.name,
         )
 

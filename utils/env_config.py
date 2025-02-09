@@ -93,7 +93,7 @@ def decide_environment_and_load_dotenv_file():
     return env_file
 
 
-def get_env_var(name: str, type_: Type[T] = StrictStr) -> T:  # type: ignore
+def get_env_var(name: str, type_: Any = StrictStr) -> T:
     """Get environment variable with type validation.
 
     Args:
@@ -114,15 +114,8 @@ def get_env_var(name: str, type_: Type[T] = StrictStr) -> T:  # type: ignore
         adapter = TypeAdapter(type_)
         validated = adapter.validate_python(value)
 
-        # Handle SecretStr specially
-        return cast(
-            T,
-            (
-                validated.get_secret_value()
-                if isinstance(validated, SecretStr)
-                else validated
-            ),
-        )
+        # Return validated value directly
+        return cast(T, validated)
     except KeyError:
         raise ValueError(f"Missing required environment variable: {name}")
     except Exception as e:
@@ -158,9 +151,9 @@ POSTGRES_HOST = get_env_var("POSTGRES_HOST")  # type: ignore
 POSTGRES_PORT = get_env_var("POSTGRES_PORT", PositiveInt)  # type: ignore
 
 # API Keys
-CLAUDE_API_KEY = get_env_var("CLAUDE_API_KEY", SecretStr)  # type: ignore
-OPENAI_API_KEY = get_env_var("OPENAI_API_KEY", SecretStr)  # type: ignore
-ELEVENLABS_API_KEY = get_env_var("ELEVENLABS_API_KEY", SecretStr)  # type: ignore
+CLAUDE_API_KEY = get_env_var("CLAUDE_API_KEY", SecretStr)
+OPENAI_API_KEY = get_env_var("OPENAI_API_KEY", SecretStr)
+ELEVENLABS_API_KEY = get_env_var("ELEVENLABS_API_KEY", SecretStr)
 
 # Flask configuration
 FLASK_SECRET_KEY = get_env_var("FLASK_SECRET_KEY", SecretStr)  # type: ignore
