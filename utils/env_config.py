@@ -156,7 +156,7 @@ OPENAI_API_KEY = get_env_var("OPENAI_API_KEY", SecretStr)
 ELEVENLABS_API_KEY = get_env_var("ELEVENLABS_API_KEY", SecretStr)
 
 # Flask configuration
-FLASK_SECRET_KEY = get_env_var("FLASK_SECRET_KEY", SecretStr)  # type: ignore
+FLASK_SECRET_KEY = get_env_var("FLASK_SECRET_KEY", SecretStr).get_secret_value()  # type: ignore
 
 # Proxy configuration
 USE_FLY_POSTGRES_FROM_LOCAL_PROXY = get_env_var("USE_FLY_POSTGRES_FROM_LOCAL_PROXY")  # type: ignore
