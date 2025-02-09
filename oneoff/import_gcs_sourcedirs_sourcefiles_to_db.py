@@ -9,9 +9,9 @@ import json
 import glob
 
 
-from db_connection import database, init_db
+from utils.db_connection import database, init_db
 from db_models import Sourcedir, Sourcefile
-from logging_utils import setup_logging
+from utils.logging_utils import setup_logging
 
 
 PathLike = Union[str, Path]

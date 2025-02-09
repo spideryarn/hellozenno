@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from vocab_llm_utils import (
+from utils.vocab_llm_utils import (
     process_img_filen,
     extract_text_from_image,
     translate_to_english,

@@ -17,8 +17,8 @@ from pathlib import Path
 from peewee import DoesNotExist
 
 from slugify import slugify
-from env_config import ELEVENLABS_API_KEY
-from audio_utils import add_delays, ensure_model_audio_data
+from utils.env_config import ELEVENLABS_API_KEY
+from utils.audio_utils import add_delays, ensure_model_audio_data
 from config import (
     LANGUAGE_LEVEL,
     MAX_AUDIO_SIZE_FOR_STORAGE,
@@ -36,28 +36,28 @@ from db_models import (
     fn,
 )
 from gdutils.outloud_text_to_speech import outloud_elevenlabs
-from lang_utils import get_language_name
-from sentence_utils import generate_practice_sentences, get_all_sentences
-from sourcedir_utils import (
+from utils.lang_utils import get_language_name
+from utils.sentence_utils import generate_practice_sentences, get_all_sentences
+from utils.sourcedir_utils import (
     _get_navigation_info,
     _get_sourcedir_entry,
     _get_sourcefile_entry,
     _navigate_sourcefile,
     get_sourcedir_or_404,
 )
-from sourcefile_processing import process_sourcefile_content
-from store_utils import load_or_generate_lemma_metadata
-from vocab_llm_utils import (
+from utils.sourcefile_processing import process_sourcefile_content
+from utils.store_utils import load_or_generate_lemma_metadata
+from utils.vocab_llm_utils import (
     create_interactive_word_links,
     extract_tricky_words_or_phrases,
     normalize_text,
 )
-from youtube_utils import YouTubeDownloadError, download_audio
+from utils.youtube_utils import YouTubeDownloadError, download_audio
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import random
 import time
-from word_utils import get_sourcefile_lemmas
+from utils.word_utils import get_sourcefile_lemmas
 
 sourcefile_views_bp = Blueprint("sourcefile_views", __name__)
 
@@ -93,7 +93,7 @@ def inspect_sourcefile(
             existing_wordform_ids.add(wordform.id)
 
         # Extract tokens from the text
-        from vocab_llm_utils import extract_tokens
+        from utils.vocab_llm_utils import extract_tokens
 
         tokens_in_text = extract_tokens(str(sourcefile_entry.text_target or ""))
 

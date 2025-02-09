@@ -2,7 +2,7 @@ from typing import Optional, BinaryIO, Union
 from pathlib import Path
 import os
 import tempfile
-from env_config import ELEVENLABS_API_KEY, OPENAI_API_KEY
+from utils.env_config import ELEVENLABS_API_KEY, OPENAI_API_KEY
 from config import MAX_AUDIO_SIZE_FOR_STORAGE, SUPPORTED_LANGUAGES
 from gdutils.audios import play_mp3
 from gdutils.outloud_text_to_speech import outloud_elevenlabs

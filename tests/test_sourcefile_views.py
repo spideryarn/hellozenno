@@ -17,9 +17,9 @@ from tests.fixtures_for_tests import (
     TEST_LANGUAGE_NAME,
     TEST_SOURCE_DIR,
 )
-from sourcedir_utils import _get_navigation_info
-from vocab_llm_utils import extract_tokens
-from youtube_utils import YouTubeDownloadError
+from utils.sourcedir_utils import _get_navigation_info
+from utils.vocab_llm_utils import extract_tokens
+from utils.youtube_utils import YouTubeDownloadError
 
 
 def test_inspect_sourcefile(client, test_data):

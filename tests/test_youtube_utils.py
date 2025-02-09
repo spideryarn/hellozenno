@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-from youtube_utils import (
+from utils.youtube_utils import (
     extract_video_metadata,
     download_audio,
     download_subtitles,

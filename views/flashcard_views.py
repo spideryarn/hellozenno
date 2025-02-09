@@ -1,11 +1,11 @@
-from audio_utils import ensure_model_audio_data
+from utils.audio_utils import ensure_model_audio_data
 from db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir, Wordform
-from lang_utils import get_language_name
+from utils.lang_utils import get_language_name
 from peewee import DoesNotExist
-from sentence_utils import get_random_sentence
+from utils.sentence_utils import get_random_sentence
 from flask import abort, redirect, render_template, request, url_for, Blueprint
 
-from word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
+from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
 
 # Create a new blueprint for flashcard views
 flashcard_views_bp = Blueprint("flashcard_views", __name__)

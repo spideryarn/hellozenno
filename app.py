@@ -4,7 +4,7 @@ import logging
 import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from env_config import is_fly_cloud, FLASK_SECRET_KEY
+from utils.env_config import is_fly_cloud, FLASK_SECRET_KEY
 
 # from flask_pw import Peewee as FLPeewee
 
@@ -47,7 +47,7 @@ def create_app():
             logger.info("Debug Toolbar not available")
 
     # Initialize database
-    from db_connection import init_db
+    from utils.db_connection import init_db
 
     init_db(app)
 

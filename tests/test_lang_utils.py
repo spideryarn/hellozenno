@@ -1,5 +1,5 @@
 import pytest
-from lang_utils import get_language_name, get_all_languages
+from utils.lang_utils import get_language_name, get_all_languages
 from pycountry import languages
 
 

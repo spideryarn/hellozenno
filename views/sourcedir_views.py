@@ -11,17 +11,17 @@ from peewee import fn, DoesNotExist
 import datetime
 from slugify import slugify
 
-from lang_utils import get_language_name, get_all_languages, VALID_LANGUAGE_CODES
+from utils.lang_utils import get_language_name, get_all_languages, VALID_LANGUAGE_CODES
 from db_models import (
     Sourcedir,
     Sourcefile,
     SourcefilePhrase,
 )
-from sourcedir_utils import (
+from utils.sourcedir_utils import (
     _get_sourcedir_entry,
     allowed_file,
 )
-from sourcefile_processing import process_uploaded_file
+from utils.sourcefile_processing import process_uploaded_file
 from config import (
     MAX_AUDIO_SIZE_UPLOAD_ALLOWED,
     MAX_IMAGE_SIZE_UPLOAD_ALLOWED,

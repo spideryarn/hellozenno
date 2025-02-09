@@ -2,9 +2,9 @@ from flask import Blueprint, render_template, redirect, url_for
 from gdutils.dicts import dict_as_html
 from peewee import DoesNotExist
 
-from lang_utils import get_language_name
+from utils.lang_utils import get_language_name
 from db_models import Wordform
-from vocab_llm_utils import quick_search_for_wordform
+from utils.vocab_llm_utils import quick_search_for_wordform
 
 wordform_views_bp = Blueprint("wordform_views", "/")
 

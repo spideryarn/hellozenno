@@ -41,9 +41,9 @@ from views.phrase_views import phrase_views_bp
 from views.sentence_views import sentence_views_bp
 from views.api import api_bp
 from test_utils import mock_quick_search_for_wordform
-from db_connection import init_db
+from utils.db_connection import init_db
 from views.flashcard_views import flashcard_views_bp
-from env_config import (
+from utils.env_config import (
     POSTGRES_DB_NAME,
     POSTGRES_DB_USER,
     POSTGRES_DB_PASSWORD,

@@ -1,10 +1,10 @@
 from typing import Optional
 import random
 
-from audio_utils import ensure_audio_data
+from utils.audio_utils import ensure_audio_data
 from db_models import Sentence, Lemma, SentenceLemma
-from lang_utils import get_language_name
-from vocab_llm_utils import anthropic_client, generate_gpt_from_template
+from utils.lang_utils import get_language_name
+from utils.vocab_llm_utils import anthropic_client, generate_gpt_from_template
 
 
 def generate_sentence(

@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 
 from config import GOOGLE_CLOUD_STORAGE_BUCKET, SUPPORTED_LANGUAGES
-from db_connection import database, init_db
+from utils.db_connection import database, init_db
 from db_models import (
     Wordform,
     Lemma,
@@ -19,8 +19,8 @@ from db_models import (
 )
 from obsolete.google_cloud_storage_utils import list_blobs, read_json
 from paths import get_wordforms_dir
-from logging_utils import setup_logging
-from lang_utils import get_language_name
+from utils.logging_utils import setup_logging
+from utils.lang_utils import get_language_name
 
 
 """

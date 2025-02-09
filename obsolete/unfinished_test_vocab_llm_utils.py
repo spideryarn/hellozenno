@@ -1,5 +1,5 @@
 import pytest
-from vocab_llm_utils import quick_search_for_wordform
+from utils.vocab_llm_utils import quick_search_for_wordform
 
 # pytest -m slow to run only slow tests
 # pytest -m "not slow" to run only fast tests (default)

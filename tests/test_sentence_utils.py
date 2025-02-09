@@ -1,5 +1,9 @@
 import pytest
-from sentence_utils import generate_sentence, get_all_sentences, get_random_sentence
+from utils.sentence_utils import (
+    generate_sentence,
+    get_all_sentences,
+    get_random_sentence,
+)
 
 
 def test_generate_and_retrieve_sentence(fixture_for_testing_db):

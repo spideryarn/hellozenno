@@ -5,7 +5,7 @@ from io import BytesIO
 from peewee import DoesNotExist
 from db_models import Sentence, Wordform, Lemma
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
-import audio_utils  # Import the module directly for mocking
+import utils.audio_utils as audio_utils  # Import the module directly for mocking
 
 
 @pytest.fixture

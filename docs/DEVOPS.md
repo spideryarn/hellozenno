@@ -24,7 +24,7 @@ Includes database migrations and health checks
 ```
 
 ### Database Migrations
-- Create: `python migrate.py create migration_name`
+- Create: `python utils/migrate.py create migration_name`
 - Run locally: `./scripts/database/migrate_local.sh`
 - List migrations: `./scripts/database/migrations_list.sh`
 - Production: Handled by deploy.sh via `./scripts/database/migrate_fly.sh`
@@ -39,7 +39,7 @@ Includes database migrations and health checks
 For scripts that need to connect to production database from local:
 - First run `./scripts/database/connect_to_fly_postgres_via_proxy.sh` to start the proxy
 - Set environment variable: `export USE_FLY_POSTGRES_FROM_LOCAL_PROXY=1`
-- Your script can now use db_connection.py which will automatically connect via the proxy
+- Your script can now use utils/db_connection.py which will automatically connect via the proxy
 - The proxy must remain running while your script executes
 - Remember to unset when done: `unset USE_FLY_POSTGRES_FROM_LOCAL_PROXY`
 
@@ -76,5 +76,5 @@ Takes effect immediately
 - Environment variables: See `.env.example` for required variables
 - Database: See `config.py` for connection settings
 - Add language: Add to `SUPPORTED_LANGUAGES` in `config.py`
-- Environment tiers: See `db_connection.py` (Fly.io, Local-to-Fly, Local Development)
+- Environment tiers: See `utils/db_connection.py` (Fly.io, Local-to-Fly, Local Development)
 - App settings: See `config.py` for file limits, language settings, etc. 

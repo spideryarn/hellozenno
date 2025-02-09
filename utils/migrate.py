@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 import sys
 from peewee_migrate import Router
-from db_connection import get_db_config
+from utils.db_connection import get_db_config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

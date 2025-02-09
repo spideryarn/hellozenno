@@ -3,8 +3,8 @@ import logging
 import psutil
 from flask import Blueprint, jsonify
 
-from db_connection import get_db
-from system_utils import get_db_metrics, get_system_metrics
+from utils.db_connection import get_db
+from utils.system_utils import get_db_metrics, get_system_metrics
 
 # Create blueprint for system views
 system_views_bp = Blueprint("system_views", __name__, url_prefix="/")

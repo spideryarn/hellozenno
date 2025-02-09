@@ -14,11 +14,11 @@ See also: DATABASE.md
    - Check with the user that they've backed up the database first - see backup_proxy_production_db.sh
    
 2. **Environment Management**
-   - Environment detection is handled by `db_connection.py`
+   - Environment detection is handled by `utils/db_connection.py`
    - Production (Fly.io) is detected via `FLY_APP_NAME` environment variable
    - Local-to-Fly proxy mode via `USE_FLY_POSTGRES_FROM_LOCAL_PROXY=1`
    - Local development is the default when no special variables are set
-   - All database configuration is centralized in `db_connection.py`
+   - All database configuration is centralized in `utils/db_connection.py`
 
 3. **Checking locally**
    - Make sure to run migrations locally before deploying to production

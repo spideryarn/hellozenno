@@ -3,9 +3,9 @@ from peewee import DoesNotExist, fn, JOIN
 import time
 import logging
 
-from lang_utils import get_language_name
+from utils.lang_utils import get_language_name
 from db_models import Lemma, Wordform, LemmaExampleSentence
-from store_utils import load_or_generate_lemma_metadata
+from utils.store_utils import load_or_generate_lemma_metadata
 
 lemma_views_bp = Blueprint("lemma_views", __name__)
 logger = logging.getLogger(__name__)

@@ -48,7 +48,7 @@ Main database models (`db_models.py`):
 
 ## Connection Management
 
-The database connection (`db_connection.py`) features:
+The database connection (`utils/db_connection.py`) features:
 
 - Connection pooling
 - Automatic environment detection
@@ -102,7 +102,7 @@ Don't ever make changes directly to the database, only as part of a migration (t
 
 ### Querying the local development database
 
-See `config.py` and `db_connection.py` for the details of this.
+See `config.py` and `utils/db_connection.py` for the details of this.
 
 Database credentials are stored in environment files:
 - `.env.local` for local development

@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, abort, request
 from db_models import Phrase
 from peewee import DoesNotExist, fn
-from lang_utils import get_language_name
-from vocab_llm_utils import extract_phrases_from_text
+from utils.lang_utils import get_language_name
+from utils.vocab_llm_utils import extract_phrases_from_text
 
 phrase_views_bp = Blueprint("phrase_views", __name__)
 

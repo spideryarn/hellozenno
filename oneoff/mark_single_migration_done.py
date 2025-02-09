@@ -11,7 +11,7 @@ project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 from peewee_migrate import Router
-from db_connection import get_db_config, init_db
+from utils.db_connection import get_db_config, init_db
 from peewee import SqliteDatabase
 
 
