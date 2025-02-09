@@ -165,6 +165,9 @@ ELEVENLABS_API_KEY = get_env_var("ELEVENLABS_API_KEY", SecretStr)  # type: ignor
 # Flask configuration
 FLASK_SECRET_KEY = get_env_var("FLASK_SECRET_KEY", SecretStr)  # type: ignore
 
+# Proxy configuration
+USE_FLY_POSTGRES_FROM_LOCAL_PROXY = get_env_var("USE_FLY_POSTGRES_FROM_LOCAL_PROXY")  # type: ignore
+
 # Validate we processed all required variables
 # Get required variables before we start processing
 required_vars = list_env_example_vars()
