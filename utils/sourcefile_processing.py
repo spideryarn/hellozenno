@@ -1,8 +1,25 @@
-from pathlib import Path
-import tempfile
-from gdutils.dt import dt_str
-from addict import Addict
+# External imports
 import os
+import tempfile
+from addict import Addict
+from pathlib import Path
+
+# Internal imports
+from config import (
+    MAX_IMAGE_SIZE_FOR_STORAGE,
+    MAX_AUDIO_SIZE_FOR_STORAGE,
+    SOURCE_IMAGE_EXTENSIONS,
+)
+from db_models import Lemma, Wordform, SourcefileWordform
+from utils.audio_utils import transcribe_audio
+from gdutils.dt import dt_str
+from utils.image_utils import resize_image_to_target_size
+from utils.vocab_llm_utils import (
+    extract_text_from_image,
+    translate_to_english,
+    extract_tricky_words_or_phrases,
+    process_phrases_from_text,
+)
 
 """
 This module handles processing of sourcefiles in different formats.
@@ -20,21 +37,6 @@ The processing pipeline is the same for all types:
 3. Extract vocabulary
 4. Create database entries
 """
-
-from config import (
-    MAX_IMAGE_SIZE_FOR_STORAGE,
-    MAX_AUDIO_SIZE_FOR_STORAGE,
-    SOURCE_IMAGE_EXTENSIONS,
-)
-from utils.image_utils import resize_image_to_target_size
-from utils.audio_utils import transcribe_audio
-from utils.vocab_llm_utils import (
-    extract_text_from_image,
-    translate_to_english,
-    extract_tricky_words_or_phrases,
-    process_phrases_from_text,
-)
-from db_models import Lemma, Wordform, SourcefileWordform
 
 
 def process_sourcefile_content(
@@ -235,8 +237,9 @@ def get_text_from_sourcefile(
 
             try:
                 os.unlink(temp_file.name)  # Clean up temp file
-            except:
-                pass  # Ignore cleanup errors
+            except OSError:
+                # Ignore file cleanup errors - temp file will be cleaned up by OS eventually
+                pass
 
             # Add text source to metadata
             extra["text_source"] = "whisper_transcription"
