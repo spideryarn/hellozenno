@@ -48,3 +48,6 @@ __pycache__/
 # .env
 # .vscode/
 # credentials/
+
+.env*
+!.env.example
