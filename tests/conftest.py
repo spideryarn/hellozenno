@@ -32,17 +32,17 @@ from tests.fixtures_for_tests import (
     SAMPLE_LEMMA_DATA,
     SAMPLE_PHRASE_DATA,
 )
-from views import views_bp
-from wordform_views import wordform_views_bp
-from lemma_views import lemma_views_bp
-from sourcedir_views import sourcedir_views_bp
-from sourcefile_views import sourcefile_views_bp
-from phrase_views import phrase_views_bp
-from sentence_views import sentence_views_bp
-from api import api_bp
+from views.views import views_bp
+from views.wordform_views import wordform_views_bp
+from views.lemma_views import lemma_views_bp
+from views.sourcedir_views import sourcedir_views_bp
+from views.sourcefile_views import sourcefile_views_bp
+from views.phrase_views import phrase_views_bp
+from views.sentence_views import sentence_views_bp
+from views.api import api_bp
 from test_utils import mock_quick_search_for_wordform
 from db_connection import init_db
-from flashcard_views import flashcard_views_bp
+from views.flashcard_views import flashcard_views_bp
 from env_config import (
     POSTGRES_DB_NAME,
     POSTGRES_DB_USER,
