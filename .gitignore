@@ -2,6 +2,8 @@ credentials/
 gdutils/
 _secrets.py
 .env.local
+.env.local_with_fly_proxy
+.env.fly_cloud
 .pytest_cache/**/*
 __pycache__/
 *.pyc
