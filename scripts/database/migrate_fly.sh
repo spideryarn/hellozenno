@@ -12,6 +12,6 @@ source scripts/common.sh
 echo "Running migrations on Fly.io database..."
 
 # Run migrations using fly ssh console with new CLI
-fly ssh console -C "./migrate.py migrate"
+fly ssh console -C "./utils/migrate.py migrate"
 
 echo_success "Migrations completed successfully!" 

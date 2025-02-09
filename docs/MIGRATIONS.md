@@ -137,11 +137,11 @@ Note: No need to bind models to database - they're just used for schema definiti
    - Make a proposal for which indexes (informed by how we're querying that model) we'll need, but check with the user first
    - Wherever possible, use Peewee's built-in migration functions (e.g., `migrator.add_columns()`, `migrator.drop_columns()`)
    - When raw SQL is unavoidable, always use `migrator.sql()` - never use `database.execute_sql()`
-   - Use the `migrate.py` wrapper or `migrate_local.sh` for running migrations
+   - Use the `utils/migrate.py` wrapper or `migrate_local.sh` for running migrations
 
 2. **Naming and Organization**
    - Use descriptive migration names
-   - Use `migrate.py`, which will should generate sequential number prefixes, e.g., `001_initial_schema.py` for you
+   - Use `utils/migrate.py`, which will should generate sequential number prefixes, e.g., `001_initial_schema.py` for you
    - One logical change per migration
 
 3. **Error Handling**
