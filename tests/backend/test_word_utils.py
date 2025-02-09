@@ -82,61 +82,75 @@ def test_get_sourcedir_lemmas_error_cases(fixture_for_testing_db):
 
 
 def test_get_sourcefile_lemmas_happy_path(fixture_for_testing_db):
-    """Test getting lemmas from a sourcefile with multiple wordforms."""
-    with fixture_for_testing_db.bind_ctx(
-        [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
-    ):
-        # Setup test data
-        sd = Sourcedir.create(path="/test", language_code="el", slug="test-dir")
-        sf = Sourcefile.create(
-            sourcedir=sd,
-            filename="file.txt",
-            slug="test-file",
-            sourcefile_type="text",
-            text_target="Test file content",
-            text_english="Test file content in English",
-            metadata={},
-        )
+    """Test getting lemmas from a single sourcefile."""
+    with fixture_for_testing_db.atomic():
+        with fixture_for_testing_db.bind_ctx(
+            [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
+        ):
+            # Setup a test sourcedir and sourcefile
+            sd = Sourcedir.create(
+                path="/test_sf", language_code="el", slug="test-sf-dir"
+            )
+            sf = Sourcefile.create(
+                sourcedir=sd,
+                filename="fileA.txt",
+                slug="fileA",
+                sourcefile_type="text",
+                text_target="...",
+                text_english="...",
+                metadata={},
+            )
 
-        # Create lemmas and wordforms
-        lemma = Lemma.create(lemma="test", language_code="el")
-        wordforms = [
-            Wordform.create(wordform="test1", language_code="el", lemma_entry=lemma),
-            Wordform.create(wordform="test2", language_code="el", lemma_entry=lemma),
-            Wordform.create(wordform="invalid", language_code="el", lemma_entry=None),
-        ]
+            # Create lemmas and wordforms
+            lem_a = Lemma.create(lemma="alpha", language_code="el")
+            lem_b = Lemma.create(lemma="beta", language_code="el")
 
-        # Create associations
-        SourcefileWordform.create(sourcefile=sf, wordform=wordforms[0])
-        SourcefileWordform.create(sourcefile=sf, wordform=wordforms[1])
-        SourcefileWordform.create(sourcefile=sf, wordform=wordforms[2])  # No lemma
+            wf_a = Wordform.create(
+                wordform="alpha", language_code="el", lemma_entry=lem_a
+            )
+            wf_b = Wordform.create(
+                wordform="beta", language_code="el", lemma_entry=lem_b
+            )
+            wf_b2 = Wordform.create(
+                wordform="beta2", language_code="el", lemma_entry=lem_b
+            )
 
-        # Test the function within the bind context
-        result = get_sourcefile_lemmas("el", "test-file", db=fixture_for_testing_db)
-        assert result == ["test"]  # Only one unique lemma
+            # Link wordforms to the sourcefile
+            SourcefileWordform.create(sourcefile=sf, wordform=wf_a)
+            SourcefileWordform.create(sourcefile=sf, wordform=wf_b)
+            SourcefileWordform.create(sourcefile=sf, wordform=wf_b2)
+
+            # Test function
+            result = get_sourcefile_lemmas("el", "fileA")
+            assert result == ["alpha", "beta"]  # "beta2" has same lemma "beta"
 
 
 def test_get_sourcefile_lemmas_error_cases(fixture_for_testing_db):
     """Test sourcefile lemmas error scenarios."""
-    with fixture_for_testing_db.bind_ctx([Sourcedir, Sourcefile]):
-        # Non-existent sourcefile
-        with pytest.raises(NotFound) as exc_info:
-            get_sourcefile_lemmas("el", "missing-file", db=fixture_for_testing_db)
-        assert "Sourcefile not found" in str(exc_info.value.description)
+    with fixture_for_testing_db.atomic():
+        with fixture_for_testing_db.bind_ctx(
+            [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
+        ):
+            # Missing sourcefile
+            with pytest.raises(NotFound) as exc_info:
+                get_sourcefile_lemmas("el", "missing-file")
+            assert "Sourcefile not found" in str(exc_info.value.description)
 
-        # Sourcefile with no lemmas
-        sd = Sourcedir.create(path="/test", language_code="el", slug="test-dir")
-        Sourcefile.create(
-            sourcedir=sd,
-            filename="empty.txt",
-            slug="empty-file",
-            sourcefile_type="text",
-            text_target="Empty file content",
-            text_english="Empty file content in English",
-            metadata={},
-        )
+            # Sourcefile with no lemmas
+            sd = Sourcedir.create(
+                path="/empty_sf", language_code="el", slug="empty-dir"
+            )
+            sf = Sourcefile.create(
+                sourcedir=sd,
+                filename="empty.txt",
+                slug="empty-file",
+                sourcefile_type="text",
+                text_target="...",
+                text_english="...",
+                metadata={},
+            )
 
-        # Test empty file within the same bind context
-        with pytest.raises(NotFound) as exc_info:
-            get_sourcefile_lemmas("el", "empty-file", db=fixture_for_testing_db)
-        assert "contains no practice vocabulary" in str(exc_info.value.description)
+            # Test function
+            with pytest.raises(NotFound) as exc_info:
+                get_sourcefile_lemmas("el", "empty-file")
+            assert "contains no practice vocabulary" in str(exc_info.value.description)
