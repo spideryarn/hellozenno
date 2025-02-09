@@ -23,8 +23,8 @@ TEST_LANGUAGE_NAME = "Greek"
 TEST_SOURCE_DIR = "test_source"
 TEST_SOURCE_FILE = "test.txt"
 TEST_SOURCE_FILE_AUDIO = "test.mp3"
-TEST_IMAGE_PATH_JPG = Path("fixtures/small_test_fixture_image.jpg")
-TEST_IMAGE_PATH_PNG = Path("fixtures/small png image fixture.png")
+TEST_IMAGE_PATH_JPG = Path("tests/fixtures/small_test_fixture_image.jpg")
+TEST_IMAGE_PATH_PNG = Path("tests/fixtures/small png image fixture.png")
 
 # Sample data for lemma tests
 SAMPLE_LEMMA_DATA = {
