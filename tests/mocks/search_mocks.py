@@ -1,6 +1,3 @@
-"""Test utilities and mock functions."""
-
-
 def mock_quick_search_for_wordform(
     wordform: str, target_language_code: str, verbose: int = 1
 ):

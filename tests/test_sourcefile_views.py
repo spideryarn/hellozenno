@@ -17,6 +17,7 @@ from tests.fixtures_for_tests import (
     TEST_LANGUAGE_NAME,
     TEST_SOURCE_DIR,
 )
+from tests.mocks import mock_download_audio
 from utils.sourcedir_utils import _get_navigation_info
 from utils.vocab_llm_utils import extract_tokens
 from utils.youtube_utils import YouTubeDownloadError
@@ -903,26 +904,11 @@ def test_upload_audio_file(client, monkeypatch, fixture_for_testing_db):
     assert b"Invalid file type" in response.data
 
 
+# Mock download_audio to avoid actual API calls
 def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db):
     """Test adding a sourcefile from YouTube."""
 
-    # Mock download_audio to avoid actual API calls
-    def mock_download_audio(url):
-        return (
-            b"test audio data",
-            {
-                "source": "youtube",
-                "video_id": "test_id",
-                "video_title": "Test Video",
-                "channel": "Test Channel",
-                "upload_date": "20240111",
-                "url": url,
-                "download_date": "2024-01-11T12:00:00",
-                "duration_secs": 300,
-            },
-        )
-
-    monkeypatch.setattr("sourcefile_views.download_audio", mock_download_audio)
+    monkeypatch.setattr("views.sourcefile_views.download_audio", mock_download_audio)
 
     # Create test sourcedir
     sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)

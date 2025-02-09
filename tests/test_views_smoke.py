@@ -3,7 +3,7 @@ from unittest.mock import patch
 from flask import url_for
 from urllib.parse import quote
 
-from test_utils import mock_quick_search_for_wordform
+from tests.mocks import mock_quick_search_for_wordform
 
 
 """
