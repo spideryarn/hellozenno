@@ -14,11 +14,11 @@ source .env.local_with_fly_proxy
 echo "Using Fly.io database via proxy"
 
 # Configuration
-LOCAL_PORT=15432
-REMOTE_PORT=$POSTGRES_PORT
+LOCAL_PORT=$LOCAL_POSTGRES_PORT
+REMOTE_PORT=$REMOTE_POSTGRES_PORT
 DB_NAME=$POSTGRES_DB_NAME
 DB_USER=$POSTGRES_DB_USER
-APP_NAME="hz-app-db-prod"
+APP_NAME=$FLY_APP_NAME
 
 echo "Using Fly.io database app: ${APP_NAME}"
 
@@ -40,6 +40,8 @@ if lsof -i :${LOCAL_PORT} > /dev/null 2>&1; then
     echo "This usually means a previous proxy session didn't clean up properly."
     echo "To fix, run this command:"
     echo "    pkill -f 'fly proxy ${LOCAL_PORT}:${REMOTE_PORT}'"
+    echo "Or, if that doesn't work:"
+    echo "    pkill -f fly; sudo lsof -i :15432"
     echo
     echo "Then try this script again."
     echo
