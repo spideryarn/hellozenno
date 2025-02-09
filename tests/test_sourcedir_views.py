@@ -7,7 +7,7 @@ from db_models import (
     Sourcefile,
 )
 from views.wordform_views import wordform_views_bp
-from test_utils import mock_quick_search_for_wordform
+from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,
     TEST_LANGUAGE_NAME,

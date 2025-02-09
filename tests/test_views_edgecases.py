@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 from flask import url_for
 
-from test_utils import mock_quick_search_for_wordform
+from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,
     create_test_lemma,

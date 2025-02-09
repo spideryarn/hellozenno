@@ -1,6 +1,6 @@
 from pathlib import Path
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock
 
 from utils.audio_utils import (
     validate_audio_file,
@@ -74,38 +74,7 @@ def test_add_delays():
     assert '<break time="1.00s" />' in result  # Has newline pause
 
 
-@pytest.fixture
-def mock_elevenlabs():
-    """Mock ElevenLabs API calls."""
-    with patch("audio_utils.outloud_elevenlabs") as mock:
-
-        def fake_generate_audio(text, api_key, mp3_filen):
-            # Write some fake audio data to the file
-            with open(mp3_filen, "wb") as f:
-                f.write(b"fake mp3 data")
-
-        mock.side_effect = fake_generate_audio
-        yield mock
-
-
-@pytest.fixture
-def mock_play_mp3():
-    """Mock MP3 playback."""
-    with patch("audio_utils.play_mp3") as mock:
-        yield mock
-
-
-@pytest.fixture
-def mock_openai():
-    """Mock OpenAI Whisper API calls."""
-    with patch("audio_utils.client") as mock:
-        mock_response = Mock()
-        mock_response.text = "Transcribed text"
-        mock.audio.transcriptions.create.return_value = mock_response
-        yield mock
-
-
-def test_transcribe_audio(mock_openai, tmp_path):
+def test_transcribe_audio(mock_openai_whisper, tmp_path):
     """Test audio transcription."""
     # Test with invalid language
     with pytest.raises(ValueError, match="Language xx not supported"):
