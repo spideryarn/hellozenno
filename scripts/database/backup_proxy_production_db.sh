@@ -9,6 +9,10 @@ cd "$(dirname "$0")/../.."
 # Source common variables and functions
 source scripts/common.sh
 
+# Load environment variables
+source .env.local_with_fly_proxy
+echo "Using Fly.io database via proxy"
+
 # Configuration
 BACKUP_DIR="backup"
 TIMESTAMP=$(python3 -c "from gdutils.dt import dt_str; print(dt_str())")
@@ -18,8 +22,8 @@ BACKUP_FILE="${BACKUP_DIR}/production_backup_${TIMESTAMP}.sql"
 mkdir -p "${BACKUP_DIR}"
 
 # Check if proxy is running
-if ! nc -z localhost 15432 >/dev/null 2>&1; then
-    echo_error "No PostgreSQL connection detected on port 15432"
+if ! nc -z $POSTGRES_HOST $POSTGRES_PORT >/dev/null 2>&1; then
+    echo_error "No PostgreSQL connection detected on port $POSTGRES_PORT"
     echo
     echo "Please run the proxy connection first:"
     echo "    ./scripts/database/connect_to_fly_postgres_via_proxy.sh"
@@ -30,8 +34,8 @@ fi
 
 echo "Will create backup of production database at: ${BACKUP_FILE}"
 
-# Get password from _secrets.py without displaying it
-PGPASSWORD="$( grep POSTGRES_DB_PASSWORD _secrets.py | cut -d'"' -f2 )" \
-    pg_dump -h localhost -p 15432 -U hz_app_web hz_app_web > "${BACKUP_FILE}"
+# Get password from environment
+PGPASSWORD=$POSTGRES_DB_PASSWORD \
+    pg_dump -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_DB_USER $POSTGRES_DB_NAME > "${BACKUP_FILE}"
 
 echo_success "Backup created at: ${BACKUP_FILE}" 

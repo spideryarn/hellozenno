@@ -22,23 +22,24 @@ if ! pg_isready &> /dev/null; then
     exit 1
 fi
 
-# Get database name from _secrets.py
-DB_NAME=$(python3 -c "from _secrets import LOCAL_POSTGRES_DB_NAME; print(LOCAL_POSTGRES_DB_NAME)")
+# Load environment variables
+source .env.local
+echo "Using database: $POSTGRES_DB_NAME"
 
 # Check if database exists
-if psql -lqt | cut -d \| -f 1 | grep -qw "$DB_NAME"; then
-    echo -e "${RED}Database $DB_NAME already exists. Skipping creation.${NC}"
+if psql -lqt | cut -d \| -f 1 | grep -qw "$POSTGRES_DB_NAME"; then
+    echo -e "${RED}Database $POSTGRES_DB_NAME already exists. Skipping creation.${NC}"
     read -p "Do you want to drop and recreate it? [y/N] " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "Dropping database $DB_NAME..."
-        dropdb "$DB_NAME"
-        createdb "$DB_NAME"
-        echo -e "${GREEN}Database $DB_NAME recreated.${NC}"
+        echo "Dropping database $POSTGRES_DB_NAME..."
+        dropdb "$POSTGRES_DB_NAME"
+        createdb "$POSTGRES_DB_NAME"
+        echo -e "${GREEN}Database $POSTGRES_DB_NAME recreated.${NC}"
     fi
 else
-    createdb "$DB_NAME"
-    echo -e "${GREEN}Database $DB_NAME created.${NC}"
+    createdb "$POSTGRES_DB_NAME"
+    echo -e "${GREEN}Database $POSTGRES_DB_NAME created.${NC}"
 fi
 
 # Run migrations - migrations/MIGRATIONS.md for instructions
