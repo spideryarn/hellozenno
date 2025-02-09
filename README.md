@@ -27,4 +27,9 @@ Both types of source files support:
 
 ## Getting Started
 
-See `scripts/README.md` for development setup and infrastructure details. 
+See the following documentation for setup and development:
+- `docs/DEVOPS.md` for development setup and infrastructure details
+- `docs/DATABASE.md` for database configuration
+- `.env.example` for required environment variables
+
+Copy `.env.example` to `.env.local` and fill in your credentials to get started. 

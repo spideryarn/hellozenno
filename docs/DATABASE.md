@@ -9,18 +9,18 @@ see also:
 The application uses PostgreSQL in all environments:
 
 1. **Production** (Fly.io): PostgreSQL via internal network
-   - Detected via `FLY_APP_NAME` environment variable
-   - Uses credentials from `_secrets.py`
+   - Detected via `FLY_APP_NAME` environment variable - see `env_config.is_fly_cloud()`
+   - Uses credentials from `.env.fly_cloud`
    - Connects via internal network on Fly.io
 
 2. **Local-to-Fly**: Local development connecting to Fly.io PostgreSQL via proxy
-   - Activated by setting `USE_FLY_POSTGRES_FROM_LOCAL_PROXY=1`
-   - Uses same credentials as production
+   - Activated by setting `USE_FLY_POSTGRES_FROM_LOCAL_PROXY=1` - see `env_config.py`
+   - Uses credentials from `.env.local_with_fly_proxy`
    - Connects via local proxy on port 15432
 
 3. **Local Development**: Local PostgreSQL database
    - Default when no special environment variables are set
-   - Uses local credentials from `_secrets.py`
+   - Uses credentials from `.env.local`
    - Database name defaults to "hellozenno_development"
 
 ## Database Scripts
@@ -102,9 +102,13 @@ Don't ever make changes directly to the database, only as part of a migration (t
 
 ### Querying the local development database
 
-see config.py and db_connection.py for the details of this.
+See `config.py` and `db_connection.py` for the details of this.
 
-The secrets are in _secrets.py - you can use `python -c` to pull out passwords so that they aren't included in the CLI history.
+Database credentials are stored in environment files:
+- `.env.local` for local development
+- `.env.local_with_fly_proxy` for connecting to production via proxy
+- `.env.testing` for test environment
+- `.env.fly_cloud` for production
 
 Make sure to turn off pager mode (see below) so that you can see the output of running psql commands.
 
@@ -128,4 +132,4 @@ Common psql flags for better output:
 For JSON fields, cast to text for better readability:
 ```sql
 SELECT id, metadata::text FROM sourcefile WHERE id = 7;
-``` 
+```

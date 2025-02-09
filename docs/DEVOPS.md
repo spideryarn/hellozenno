@@ -32,7 +32,7 @@ Includes database migrations and health checks
 ### Database Access
 - Connect to production: `./scripts/database/connect_to_fly_postgres_via_proxy.sh`
   - Sets up a secure proxy tunnel to Fly.io Postgres on port 15432
-  - Connects via psql using credentials from _secrets.py
+  - Uses credentials from `.env.local_with_fly_proxy`
   - Automatically cleans up when you exit psql
   - If port 15432 is in use, either wait or kill existing proxy (script will guide you)
 
@@ -67,12 +67,13 @@ Takes effect immediately
 ## Local Development
 
 ### Setup
-1. Get `_secrets.py` from Greg (not in repo)
+1. Copy `.env.example` to `.env.local` and fill in your credentials
 2. Install dev requirements: `pip install -r requirements-dev.txt`
 3. Make scripts executable: `chmod +x scripts/**/*.sh`
 4. Set up local database: `./scripts/database/initialise_or_wipe_local_postgres.sh`
 
 ### Configuration
+- Environment variables: See `.env.example` for required variables
 - Database: See `config.py` for connection settings
 - Add language: Add to `SUPPORTED_LANGUAGES` in `config.py`
 - Environment tiers: See `db_connection.py` (Fly.io, Local-to-Fly, Local Development)
