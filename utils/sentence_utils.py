@@ -136,25 +136,29 @@ def get_random_sentence(
     query = Sentence.select().where(Sentence.language_code == target_language_code)
 
     if required_lemmas:
-        # Filter sentences to those containing at least one of the required lemmas
-        matching_sentences = []
-        for sentence in query:
-            if any(lemma in sentence.lemma_words for lemma in required_lemmas):
-                matching_sentences.append(sentence)
+        # Filter sentences using database JOIN to find those with matching lemmas
+        query = (
+            query.join(SentenceLemma)
+            .join(Lemma)
+            .where(Lemma.lemma.in_(required_lemmas))
+            .distinct()
+        )  # Avoid duplicates if sentence has multiple matching lemmas
 
-        print(
-            f"Found {len(matching_sentences)} sentences matching at least one of lemmas: {required_lemmas}"
-        )
-        if not matching_sentences:
-            return None
-        chosen = random.choice(matching_sentences)
-    else:
-        # Convert to list for random.choice
-        sentences = list(query)
-        if not sentences:
-            print(f"No sentences found for language: {target_language_code}")
-            return None
-        chosen = random.choice(sentences)
+    # Get total count for random selection
+    count = query.count()
+    if count == 0:
+        msg = "No sentences found for language: " + target_language_code
+        if required_lemmas:
+            msg += " with lemmas: " + str(required_lemmas)
+        print(msg)
+        return None
+
+    # Get random offset and select one sentence
+    offset = random.randint(0, count - 1)
+    results = list(query.offset(offset).limit(1))
+    if not results:
+        return None
+    chosen = results[0]
 
     # Generate audio if missing and requested
     if generate_missing_audio and not chosen.audio_data:
@@ -166,8 +170,8 @@ def get_random_sentence(
         )
         chosen.save()
 
-    # Format response the same way as before
-    metadata = {
+    # Return metadata in same format as before for compatibility
+    return {
         "id": chosen.id,
         "sentence": chosen.sentence,
         "translation": chosen.translation,
@@ -175,9 +179,6 @@ def get_random_sentence(
         "target_language_code": target_language_code,
         "slug": chosen.slug,
     }
-
-    print(f"Chosen sentence: {metadata['sentence']}")
-    return metadata
 
 
 def generate_practice_sentences(
