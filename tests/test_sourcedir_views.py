@@ -17,11 +17,7 @@ from tests.fixtures_for_tests import (
 )
 from config import (
     MAX_IMAGE_SIZE_UPLOAD_ALLOWED,
-    SOURCE_EXTENSIONS,
-    MAX_AUDIO_SIZE_FOR_STORAGE,
 )
-from views.sourcedir_views import sourcedir_views_bp
-from utils import vocab_llm_utils
 
 # Test image path
 TEST_IMAGE_PATH = Path("fixtures/large_image_el.jpg")
@@ -341,24 +337,10 @@ def test_rename_sourcedir(client):
 def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     """Test uploading a source file."""
 
-    # Mock process_img_filen to avoid actual image processing
-    def mock_process_img_filen(*args, **kwargs):
-        return (
-            {
-                "txt_tgt": "test text",
-                "txt_en": "test translation",
-            },
-            [{"lemma": "test", "wordform": "test"}],
-            {},
-        )
-
     # Mock dt_str to return a fixed timestamp for testing
     def mock_dt_str(*args, **kwargs):
         return "231231_1459_23"
 
-    monkeypatch.setattr(
-        "utils.vocab_llm_utils.process_img_filen", mock_process_img_filen
-    )
     monkeypatch.setattr("utils.sourcefile_processing.dt_str", mock_dt_str)
 
     # Create test sourcedir with language code

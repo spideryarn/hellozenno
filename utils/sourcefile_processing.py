@@ -21,7 +21,11 @@ The processing pipeline is the same for all types:
 4. Create database entries
 """
 
-from config import MAX_IMAGE_SIZE_FOR_STORAGE, MAX_AUDIO_SIZE_FOR_STORAGE
+from config import (
+    MAX_IMAGE_SIZE_FOR_STORAGE,
+    MAX_AUDIO_SIZE_FOR_STORAGE,
+    SOURCE_IMAGE_EXTENSIONS,
+)
 from utils.image_utils import resize_image_to_target_size
 from utils.audio_utils import transcribe_audio
 from utils.vocab_llm_utils import (
@@ -168,8 +172,14 @@ def get_text_from_sourcefile(
         if sourcefile_entry.image_data is None:
             raise ValueError("No image data found")
 
-        # Create temp file for image processing
-        with tempfile.NamedTemporaryFile(suffix=".jpg") as temp_file:
+        # Get original file extension
+        ext = Path(sourcefile_entry.filename).suffix.lower()
+        assert (
+            ext in SOURCE_IMAGE_EXTENSIONS
+        ), f"No appropriate extension found for {sourcefile_entry.filename}"
+
+        # Create temp file for image processing with original extension
+        with tempfile.NamedTemporaryFile(suffix=ext) as temp_file:
             temp_file.write(sourcefile_entry.image_data)
             temp_file.flush()
             txt_tgt, extra = extract_text_from_image(

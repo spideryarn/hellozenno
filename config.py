@@ -39,7 +39,7 @@ LANGUAGE_NAME_OVERRIDES = {
 }
 
 # Supported file extensions for source files
-SOURCE_EXTENSIONS = {
+SOURCE_IMAGE_EXTENSIONS = {
     # ".pdf",
     # ".txt",
     ".jpg",
@@ -51,6 +51,7 @@ SOURCE_EXTENSIONS = {
 
 # Add audio extensions
 AUDIO_SOURCE_EXTENSIONS = {".mp3"}
+SOURCE_EXTENSIONS = SOURCE_IMAGE_EXTENSIONS.copy()
 SOURCE_EXTENSIONS.update(AUDIO_SOURCE_EXTENSIONS)
 
 # Maximum file sizes (in bytes)
