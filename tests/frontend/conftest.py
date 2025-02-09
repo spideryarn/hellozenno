@@ -1,7 +1,7 @@
 import pytest
 from playwright.sync_api import Page
 from flask import Flask
-from tests.conftest import fixture_for_testing_db, MODELS
+from tests.backend.conftest import fixture_for_testing_db, MODELS
 from utils.db_connection import init_db
 
 FLASK_TEST_PORT = 3001

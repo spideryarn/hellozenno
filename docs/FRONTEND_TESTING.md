@@ -14,7 +14,7 @@ playwright install chromium
 
 ## Test Structure
 
-Tests are located in `tests/e2e/` directory:
+Tests are located in `tests/frontend/` directory:
 - `conftest.py` - Shared test configuration and fixtures
 - Test files named like `test_*.py`
 
@@ -41,7 +41,7 @@ def page(page: Page, base_url):
 
 Run tests with:
 ```bash
-pytest tests/e2e/test_*.py -v -x --lf
+pytest tests/frontend/test_*.py -v -x --lf
 ```
 
 Note: The test server runs on port 3001 by default, while the development server typically runs on port 3000. This allows you to run tests without stopping your development server.
