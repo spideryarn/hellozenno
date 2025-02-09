@@ -22,9 +22,9 @@ The processing pipeline is the same for all types:
 """
 
 from config import MAX_IMAGE_SIZE_FOR_STORAGE, MAX_AUDIO_SIZE_FOR_STORAGE
-from image_utils import resize_image_to_target_size
-from audio_utils import transcribe_audio
-from vocab_llm_utils import (
+from utils.image_utils import resize_image_to_target_size
+from utils.audio_utils import transcribe_audio
+from utils.vocab_llm_utils import (
     extract_text_from_image,
     translate_to_english,
     extract_tricky_words_or_phrases,

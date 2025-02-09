@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Optional
 from slugify import slugify
 
-from db_connection import database
+from utils.db_connection import database
 from config import (
     SOURCEDIR_SLUG_MAX_LENGTH,
     SOURCEFILE_SLUG_MAX_LENGTH,

@@ -11,7 +11,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.append(str(project_root))
 
 from db_models import Sourcedir, Sourcefile, Phrase, SourcefilePhrase
-from db_connection import get_db_config, init_db
+from utils.db_connection import get_db_config, init_db
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

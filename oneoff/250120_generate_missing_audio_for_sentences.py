@@ -1,6 +1,6 @@
 from db_models import Sentence, database
-from sentence_utils import generate_sentence
-from db_connection import init_db
+from utils.sentence_utils import generate_sentence
+from utils.db_connection import init_db
 
 
 def main():

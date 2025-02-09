@@ -1,7 +1,7 @@
 from flask import Blueprint, abort, jsonify, redirect, url_for, send_file
 
-from flask_view_utils import full_url_for
-from word_utils import get_word_preview
+from utils.flask_view_utils import full_url_for
+from utils.word_utils import get_word_preview
 
 # Create a Blueprint for our API routes
 api_bp = Blueprint("api", __name__, url_prefix="/api")

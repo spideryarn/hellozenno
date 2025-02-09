@@ -11,10 +11,10 @@ from playhouse.sqlite_ext import JSONField
 # Add parent directory to path to import from project
 sys.path.append(str(Path(__file__).parent.parent))
 
-from db_connection import init_db, database
+from utils.db_connection import init_db, database
 from db_models import Lemma
-from lang_utils import get_language_name
-from vocab_llm_utils import metadata_for_lemma_full
+from utils.lang_utils import get_language_name
+from utils.vocab_llm_utils import metadata_for_lemma_full
 
 
 def is_empty_or_default(value: Any) -> bool:

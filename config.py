@@ -1,5 +1,5 @@
 from pathlib import Path
-from env_config import (
+from utils.env_config import (
     is_fly_cloud,
 )
 

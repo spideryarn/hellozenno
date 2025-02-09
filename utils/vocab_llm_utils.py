@@ -10,11 +10,11 @@ import os
 from slugify import slugify
 from peewee import fn, DoesNotExist
 
-from audio_utils import ensure_audio_data
+from utils.audio_utils import ensure_audio_data
 from gdutils.llm_utils import generate_gpt_from_template
 from gdutils.strings import PathOrStr
-from env_config import CLAUDE_API_KEY, OPENAI_API_KEY
-from lang_utils import get_language_name, get_all_languages, get_language_code
+from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
+from utils.lang_utils import get_language_name, get_all_languages, get_language_code
 from db_models import (
     Lemma,
     Wordform,
@@ -26,7 +26,7 @@ from db_models import (
     LemmaExampleSentence,
     SentenceLemma,
 )
-from word_utils import normalize_text
+from utils.word_utils import normalize_text
 
 IMG_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "bmp", "tiff", "gif"]
 
@@ -605,7 +605,7 @@ def create_interactive_word_links(
         Tuple of (enhanced_text, found_wordforms) where found_wordforms is a set of
         wordforms that were found in the text
     """
-    from store_utils import load_or_generate_lemma_metadata
+    from utils.store_utils import load_or_generate_lemma_metadata
 
     # Track which wordforms we actually find in the text
     found_wordforms = set()
@@ -749,7 +749,7 @@ def get_or_create_wordform_metadata(
     Returns:
         Tuple of (wordform_metadata, lemma_metadata)
     """
-    from store_utils import (
+    from utils.store_utils import (
         load_wordform_metadata,
         save_wordform_metadata,
         load_or_generate_lemma_metadata,

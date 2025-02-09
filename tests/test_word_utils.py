@@ -1,7 +1,7 @@
 import pytest
 from werkzeug.exceptions import NotFound
 from db_models import Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform
-from word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
+from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
 
 
 def test_get_sourcedir_lemmas_happy_path(fixture_for_testing_db):

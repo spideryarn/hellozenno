@@ -12,11 +12,11 @@ from flask import (
 from peewee import DoesNotExist
 
 from db_models import Sentence, Wordform
-from audio_utils import ensure_model_audio_data
-from lang_utils import get_language_name
-from sentence_utils import get_all_sentences, get_random_sentence
+from utils.audio_utils import ensure_model_audio_data
+from utils.lang_utils import get_language_name
+from utils.sentence_utils import get_all_sentences, get_random_sentence
 from slugify import slugify
-from vocab_llm_utils import (
+from utils.vocab_llm_utils import (
     create_interactive_word_links,
     normalize_text,
     extract_tokens,

@@ -7,9 +7,9 @@ from flask import (
 import logging
 import os
 
-from flask_view_utils import redirect_to_view
+from utils.flask_view_utils import redirect_to_view
 
-from lang_utils import get_all_languages, get_language_name
+from utils.lang_utils import get_all_languages, get_language_name
 from views.wordform_views import get_wordform_metadata, wordform_views_bp
 
 

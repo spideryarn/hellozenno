@@ -8,7 +8,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.append(str(project_root))
 
-from db_connection import get_db_config, init_db
+from utils.db_connection import get_db_config, init_db
 from db_models import get_models
 
 

@@ -7,7 +7,7 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 
-from vocab_llm_utils import (
+from utils.vocab_llm_utils import (
     GREEK_WIKTIONARY_FREQUENCY_LIST_URL,
     quick_search_for_wordform,
     metadata_for_lemma_full,

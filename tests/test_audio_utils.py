@@ -2,7 +2,7 @@ from pathlib import Path
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 
-from audio_utils import (
+from utils.audio_utils import (
     validate_audio_file,
     add_delays,
     transcribe_audio,
