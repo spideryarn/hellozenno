@@ -1,7 +1,7 @@
 from typing import Optional
 from pathlib import Path
 import tempfile
-from _secrets import ELEVENLABS_API_KEY
+from obsolete._secrets import ELEVENLABS_API_KEY
 from gdutils.audios import play_mp3
 from gdutils.outloud_text_to_speech import outloud_elevenlabs
 from gdutils.strings import PathOrStr
