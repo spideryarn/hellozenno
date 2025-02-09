@@ -18,11 +18,15 @@ def mock_gpt_from_template(monkeypatch):
     """Mock generate_gpt_from_template to avoid actual API calls."""
 
     def mock_generate(*args, **kwargs):
-        if kwargs.get("prompt_template_var") == "extract_text_from_image":
+        if "prompt_template_var" not in kwargs:
+            return "Unexpected template", {}
+
+        template = kwargs["prompt_template_var"]
+        if template == "extract_text_from_image":
             return "Test text in Greek", {}
-        elif kwargs.get("prompt_template_var") == "translate_to_english":
+        elif template == "translate_to_english":
             return "Test text in English", {}
-        elif kwargs.get("prompt_template_var") == "extract_tricky_wordforms":
+        elif template == "extract_tricky_wordforms":
             return {
                 "wordforms": [
                     {
@@ -36,7 +40,7 @@ def mock_gpt_from_template(monkeypatch):
                     }
                 ]
             }, {}
-        elif kwargs.get("prompt_template_var") == "extract_phrases_from_text":
+        elif template == "extract_phrases_from_text":
             return {
                 "phrases": [
                     {
@@ -61,7 +65,10 @@ def mock_gpt_from_template(monkeypatch):
             }, {}
         return {}, {}
 
-    monkeypatch.setattr("gdutils.llm_utils.generate_gpt_from_template", mock_generate)
+    monkeypatch.setattr(
+        "utils.vocab_llm_utils.generate_gpt_from_template", mock_generate
+    )
+    return mock_generate
 
 
 def test_extract_text_from_image(mock_gpt_from_template):
