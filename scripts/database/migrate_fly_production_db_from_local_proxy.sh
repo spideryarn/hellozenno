@@ -39,14 +39,14 @@ echo "User: hz_app_web"
 if [ "$DRY_RUN" = "1" ]; then
     echo
     echo "DRY RUN - Would execute:"
-    echo "    ./migrate.py migrate"
+    echo "    ./utils/migrate.py migrate"
     echo
     echo "This would apply these migrations:"
-    ./migrate.py list
+    ./utils/migrate.py list
 else
     echo
     echo "Applying migrations..."
-    ./migrate.py migrate
+    ./utils/migrate.py migrate
 fi
 
 # Clean up

@@ -102,7 +102,7 @@ database = PooledPostgresqlExtDatabase(...)
 ```
 
 ### Configuration Management
-- Moved hardcoded database configuration from `migrate.py` to central configuration
+- Moved hardcoded database configuration from `utils/migrate.py` to central configuration
 - Production settings now use `DB_CONFIG` from `config.py`
 - Local development settings use environment variables with sensible defaults
 - Credentials remain in `_secrets.py`
