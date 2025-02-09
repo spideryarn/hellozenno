@@ -192,4 +192,3 @@ Production configuration template for Fly.io deployment.
 
 ## Rollback Plan
 Since _secrets.py is in version control and the app has no active users, we'll keep _secrets.py for now only as reference, then move it to `obsolete/`
-
