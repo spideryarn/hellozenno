@@ -21,6 +21,7 @@ from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
 )
 from views.sourcedir_views import sourcedir_views_bp
+from utils import vocab_llm_utils
 
 # Test image path
 TEST_IMAGE_PATH = Path("fixtures/large_image_el.jpg")
@@ -355,8 +356,10 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     def mock_dt_str(*args, **kwargs):
         return "231231_1459_23"
 
-    monkeypatch.setattr("vocab_llm_utils.process_img_filen", mock_process_img_filen)
-    monkeypatch.setattr("sourcefile_processing.dt_str", mock_dt_str)
+    monkeypatch.setattr(
+        "utils.vocab_llm_utils.process_img_filen", mock_process_img_filen
+    )
+    monkeypatch.setattr("utils.sourcefile_processing.dt_str", mock_dt_str)
 
     # Create test sourcedir with language code
     models = [Sourcefile, Sourcedir]
