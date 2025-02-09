@@ -39,7 +39,9 @@ def flashcard_landing(language_code: str):
                 .where(Sourcefile.slug == sourcefile_slug)
                 .get()
             )
-            lemmas = get_sourcefile_lemmas(language_code, sourcefile_slug)
+            lemmas = get_sourcefile_lemmas(
+                language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
+            )
             lemma_count = len(lemmas)
         except DoesNotExist:
             abort(404, description="Sourcefile not found")
@@ -103,7 +105,9 @@ def flashcard_sentence(language_code: str, slug: str):
                 .where(Sourcefile.slug == sourcefile_slug)
                 .get()
             )
-            lemmas = get_sourcefile_lemmas(language_code, sourcefile_slug)
+            lemmas = get_sourcefile_lemmas(
+                language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
+            )
             lemma_count = len(lemmas)
         except DoesNotExist:
             abort(404, description="Sourcefile not found")
@@ -143,7 +147,9 @@ def random_flashcard(language_code: str):
                 .where(Sourcefile.slug == sourcefile_slug)
                 .get()
             )
-            lemmas = get_sourcefile_lemmas(language_code, sourcefile_slug)
+            lemmas = get_sourcefile_lemmas(
+                language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
+            )
         except DoesNotExist:
             abort(404, description="Sourcefile not found")
 

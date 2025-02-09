@@ -5,6 +5,7 @@ import unicodedata
 from werkzeug.exceptions import NotFound
 
 from db_models import Sourcedir, Sourcefile, SourcefileWordform, Wordform, Lemma
+from utils.sourcedir_utils import _get_sourcefile_entry
 
 
 class WordPreview(TypedDict):
@@ -93,22 +94,16 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
     return lemmas
 
 
-def get_sourcefile_lemmas(language_code: str, sourcefile_slug: str) -> list[str]:
+def get_sourcefile_lemmas(
+    language_code: str, sourcedir_slug: str, sourcefile_slug: str
+) -> list[str]:
     """
     Return a sorted, deduplicated list of lemma strings for all wordforms
     in the specified sourcefile. Raise NotFound if not found or if empty.
     """
-    # Attempt to get the sourcefile with matching language_code
-    try:
-        sourcefile = (
-            Sourcefile.select()
-            .join(Sourcedir)
-            .where(Sourcefile.slug == sourcefile_slug)
-            .where(Sourcedir.language_code == language_code)
-            .get()
-        )
-    except DoesNotExist:
-        raise NotFound("Sourcefile not found or does not match the given language.")
+
+    # Get the sourcefile using _get_sourcefile_entry
+    sourcefile = _get_sourcefile_entry(language_code, sourcedir_slug, sourcefile_slug)
 
     # Gather all lemmas
     query = (

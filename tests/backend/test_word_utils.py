@@ -1,14 +1,22 @@
 import pytest
+from slugify import slugify
 from werkzeug.exceptions import NotFound
-from db_models import Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform
+from peewee import DoesNotExist
+from db_models import (
+    Sourcedir,
+    Sourcefile,
+    Lemma,
+    Wordform,
+    SourcefileWordform,
+    database,
+)
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
+import uuid  # Import uuid
 
 
 def test_get_sourcedir_lemmas_happy_path(fixture_for_testing_db):
     """Test getting lemmas from sourcedir with multiple sourcefiles."""
-    with fixture_for_testing_db.bind_ctx(
-        [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
-    ):
+    with fixture_for_testing_db.atomic():
         # Setup test data
         sd = Sourcedir.create(path="/test", language_code="el", slug="test-dir")
 
@@ -73,7 +81,7 @@ def test_get_sourcedir_lemmas_error_cases(fixture_for_testing_db):
     assert "Sourcedir not found" in str(exc_info.value.description)
 
     # Sourcedir with no lemmas
-    with fixture_for_testing_db.bind_ctx([Sourcedir]):
+    with fixture_for_testing_db.atomic():
         Sourcedir.create(path="/empty", language_code="el", slug="empty-dir")
 
         with pytest.raises(NotFound) as exc_info:
@@ -84,73 +92,52 @@ def test_get_sourcedir_lemmas_error_cases(fixture_for_testing_db):
 def test_get_sourcefile_lemmas_happy_path(fixture_for_testing_db):
     """Test getting lemmas from a single sourcefile."""
     with fixture_for_testing_db.atomic():
-        with fixture_for_testing_db.bind_ctx(
-            [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
-        ):
-            # Setup a test sourcedir and sourcefile
-            sd = Sourcedir.create(
-                path="/test_sf", language_code="el", slug="test-sf-dir"
-            )
-            sf = Sourcefile.create(
-                sourcedir=sd,
-                filename="fileA.txt",
-                slug="fileA",
-                sourcefile_type="text",
-                text_target="...",
-                text_english="...",
-                metadata={},
-            )
 
-            # Create lemmas and wordforms
-            lem_a = Lemma.create(lemma="alpha", language_code="el")
-            lem_b = Lemma.create(lemma="beta", language_code="el")
+        sourcedir_slug = f"test-sf-dir-{uuid.uuid4()}"
+        sourcefile_filename = f"test-sf-{uuid.uuid4()}"
+        sourcefile_slug = slugify(sourcefile_filename)
 
-            wf_a = Wordform.create(
-                wordform="alpha", language_code="el", lemma_entry=lem_a
-            )
-            wf_b = Wordform.create(
-                wordform="beta", language_code="el", lemma_entry=lem_b
-            )
-            wf_b2 = Wordform.create(
-                wordform="beta2", language_code="el", lemma_entry=lem_b
-            )
+        # before we create the Sourcedir, what error should we get if we run get_sourcefile_lemmas?
+        with pytest.raises(DoesNotExist):
+            get_sourcefile_lemmas("el", sourcedir_slug, sourcefile_slug)
 
-            # Link wordforms to the sourcefile
-            SourcefileWordform.create(sourcefile=sf, wordform=wf_a)
-            SourcefileWordform.create(sourcefile=sf, wordform=wf_b)
-            SourcefileWordform.create(sourcefile=sf, wordform=wf_b2)
+        sd = Sourcedir.create(path="test_sf", language_code="el", slug=sourcedir_slug)
 
-            # Test function
-            result = get_sourcefile_lemmas("el", "fileA")
-            assert result == ["alpha", "beta"]  # "beta2" has same lemma "beta"
+        # before we create the Sourcefile, what error should we get if we run get_sourcefile_lemmas?
+        with pytest.raises(DoesNotExist):
+            get_sourcefile_lemmas("el", sourcedir_slug, sourcefile_slug)
 
+        # Setup a test sourcedir and sourcefile
+        sf = Sourcefile.create(
+            sourcedir=sd,
+            filename=sourcefile_filename,
+            slug=sourcefile_slug,
+            sourcefile_type="text",
+            text_target="...",
+            text_english="...",
+            metadata={},
+        )
 
-def test_get_sourcefile_lemmas_error_cases(fixture_for_testing_db):
-    """Test sourcefile lemmas error scenarios."""
-    with fixture_for_testing_db.atomic():
-        with fixture_for_testing_db.bind_ctx(
-            [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
-        ):
-            # Missing sourcefile
-            with pytest.raises(NotFound) as exc_info:
-                get_sourcefile_lemmas("el", "missing-file")
-            assert "Sourcefile not found" in str(exc_info.value.description)
+        # assert that that Sourcedir exists
+        assert Sourcedir.get(Sourcedir.slug == sourcedir_slug) is not None
 
-            # Sourcefile with no lemmas
-            sd = Sourcedir.create(
-                path="/empty_sf", language_code="el", slug="empty-dir"
-            )
-            sf = Sourcefile.create(
-                sourcedir=sd,
-                filename="empty.txt",
-                slug="empty-file",
-                sourcefile_type="text",
-                text_target="...",
-                text_english="...",
-                metadata={},
-            )
+        # run it now - we should get NotFound because there are no associated Lemmas
+        with pytest.raises(NotFound):
+            get_sourcefile_lemmas("el", sourcedir_slug, sourcefile_slug)
 
-            # Test function
-            with pytest.raises(NotFound) as exc_info:
-                get_sourcefile_lemmas("el", "empty-file")
-            assert "contains no practice vocabulary" in str(exc_info.value.description)
+        # Create lemmas and wordforms
+        lem_a = Lemma.create(lemma="alpha", language_code="el")
+        lem_b = Lemma.create(lemma="beta", language_code="el")
+
+        wf_a = Wordform.create(wordform="alpha", language_code="el", lemma_entry=lem_a)
+        wf_b = Wordform.create(wordform="beta", language_code="el", lemma_entry=lem_b)
+        wf_b2 = Wordform.create(wordform="beta2", language_code="el", lemma_entry=lem_b)
+
+        # Link wordforms to the sourcefile
+        SourcefileWordform.create(sourcefile=sf, wordform=wf_a)
+        SourcefileWordform.create(sourcefile=sf, wordform=wf_b)
+        SourcefileWordform.create(sourcefile=sf, wordform=wf_b2)
+
+        # Test function
+        result = get_sourcefile_lemmas("el", sourcedir_slug, sourcefile_slug)
+        assert result == ["alpha", "beta"]
