@@ -20,7 +20,7 @@ from config import (
 )
 
 # Test image path
-TEST_IMAGE_PATH = Path("fixtures/large_image_el.jpg")
+TEST_IMAGE_PATH = Path("tests/fixtures/large_image_el.jpg")
 
 
 @pytest.fixture(autouse=True)
