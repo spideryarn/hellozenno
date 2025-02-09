@@ -61,6 +61,8 @@ def mock_gpt_from_template(monkeypatch):
             }, {}
         return {}, {}
 
+    monkeypatch.setattr("gdutils.llm_utils.generate_gpt_from_template", mock_generate)
+
 
 def test_extract_text_from_image(mock_gpt_from_template):
     """Test extracting text from image data."""
