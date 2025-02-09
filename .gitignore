@@ -12,4 +12,4 @@ __pycache__/
 *.pyd
 .DS_Store
 backup/
-# obsolete/
+obsolete/
