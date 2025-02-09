@@ -30,7 +30,7 @@ TEST_IMAGE_PATH = Path("fixtures/large_image_el.jpg")
 def mock_dependencies(monkeypatch):
     """Mock all necessary dependencies."""
     monkeypatch.setattr(
-        "sourcedir_views.get_language_name", lambda x: TEST_LANGUAGE_NAME
+        "views.sourcedir_views.get_language_name", lambda x: TEST_LANGUAGE_NAME
     )
 
 

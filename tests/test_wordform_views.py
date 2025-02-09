@@ -43,7 +43,7 @@ def test_get_existing_wordform(client, fixture_for_testing_db):
 
 
 @patch(
-    "wordform_views.quick_search_for_wordform",
+    "views.wordform_views.quick_search_for_wordform",
     side_effect=mock_quick_search_for_wordform,
 )
 def test_get_nonexistent_wordform(mock_search, client):
@@ -56,7 +56,7 @@ def test_get_nonexistent_wordform(mock_search, client):
 
 
 @patch(
-    "wordform_views.quick_search_for_wordform",
+    "views.wordform_views.quick_search_for_wordform",
     side_effect=mock_quick_search_for_wordform,
 )
 def test_get_new_wordform(mock_search, client):

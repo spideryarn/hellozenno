@@ -21,6 +21,7 @@ from tests.mocks import mock_download_audio
 from utils.sourcedir_utils import _get_navigation_info
 from utils.vocab_llm_utils import extract_tokens
 from utils.youtube_utils import YouTubeDownloadError
+from views import sourcefile_views
 
 
 def test_inspect_sourcefile(client, test_data):
@@ -737,11 +738,11 @@ def test_process_sourcefile(client, monkeypatch):
         return "test translation", {}
 
     monkeypatch.setattr(
-        "sourcefile_views.process_sourcefile_content",
+        "views.sourcefile_views.process_sourcefile_content",
         mock_process_sourcefile_content,
     )
     monkeypatch.setattr(
-        "vocab_llm_utils.translate_to_english",
+        "utils.vocab_llm_utils.translate_to_english",
         mock_translate_to_english,
     )
 
@@ -839,14 +840,28 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
     assert b"already exists" in response.data
 
 
-def test_upload_audio_file(client, monkeypatch, fixture_for_testing_db):
-    """Test uploading an audio file."""
+def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
+    """Test uploading a source file."""
 
-    # Mock transcribe_audio to avoid actual API calls
-    def mock_transcribe_audio(*args, **kwargs):
-        return "Test transcription", {"duration": 60, "language": "el"}
+    # Mock process_img_filen to avoid actual image processing
+    def mock_process_img_filen(*args, **kwargs):
+        return (
+            {
+                "txt_tgt": "test text",
+                "txt_en": "test translation",
+            },
+            [{"lemma": "test", "wordform": "test"}],
+            {},
+        )
 
-    monkeypatch.setattr("audio_utils.transcribe_audio", mock_transcribe_audio)
+    # Mock dt_str to return a fixed timestamp for testing
+    def mock_dt_str(*args, **kwargs):
+        return "231231_1459_23"
+
+    monkeypatch.setattr(
+        "utils.vocab_llm_utils.process_img_filen", mock_process_img_filen
+    )
+    monkeypatch.setattr("utils.sourcefile_processing.dt_str", mock_dt_str)
 
     # Create test sourcedir
     sourcedir = Sourcedir.create(
@@ -904,7 +919,6 @@ def test_upload_audio_file(client, monkeypatch, fixture_for_testing_db):
     assert b"Invalid file type" in response.data
 
 
-# Mock download_audio to avoid actual API calls
 def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db):
     """Test adding a sourcefile from YouTube."""
 
@@ -958,7 +972,7 @@ def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db
     def mock_download_error(url):
         raise YouTubeDownloadError("Test error")
 
-    monkeypatch.setattr("sourcefile_views.download_audio", mock_download_error)
+    monkeypatch.setattr("views.sourcefile_views.download_audio", mock_download_error)
 
     response = client.post(
         f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/add_from_youtube",
@@ -980,7 +994,9 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
         with open(kwargs["mp3_filen"], "wb") as f:
             f.write(b"test audio data")
 
-    monkeypatch.setattr("sourcefile_views.outloud_elevenlabs", mock_outloud_elevenlabs)
+    monkeypatch.setattr(
+        "views.sourcefile_views.outloud_elevenlabs", mock_outloud_elevenlabs
+    )
 
     # Create test sourcedir and sourcefile
     sourcedir = Sourcedir.create(
@@ -1157,9 +1173,19 @@ def test_process_individual_words(client, fixture_for_testing_db):
 def mock_dependencies(monkeypatch):
     """Mock all necessary dependencies."""
     monkeypatch.setattr(
-        "sourcefile_views.get_language_name", lambda x: TEST_LANGUAGE_NAME
+        "views.sourcefile_views.get_language_name", lambda x: TEST_LANGUAGE_NAME
     )
-    monkeypatch.setattr("sourcefile_views.get_all_sentences", lambda x: [])
+    monkeypatch.setattr("views.sourcefile_views.get_all_sentences", lambda x: [])
     monkeypatch.setattr(
-        "sourcefile_views.generate_practice_sentences", lambda **kwargs: None
+        "views.sourcefile_views.generate_practice_sentences", lambda **kwargs: None
     )
+
+
+def test_upload_audio_file(client, monkeypatch, fixture_for_testing_db):
+    """Test uploading an audio file."""
+
+    # Mock transcribe_audio to avoid actual API calls
+    def mock_transcribe_audio(*args, **kwargs):
+        return "Test transcription", {"duration": 60, "language": "el"}
+
+    monkeypatch.setattr("utils.audio_utils.transcribe_audio", mock_transcribe_audio)

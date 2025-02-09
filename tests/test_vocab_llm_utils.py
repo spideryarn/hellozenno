@@ -59,7 +59,9 @@ def mock_gpt_from_template(monkeypatch):
             }, {}
         return "Unexpected template", {}
 
-    monkeypatch.setattr("vocab_llm_utils.generate_gpt_from_template", mock_generate)
+    monkeypatch.setattr(
+        "utils.vocab_llm_utils.generate_gpt_from_template", mock_generate
+    )
 
 
 def test_process_img_filen(mock_gpt_from_template, fixture_for_testing_db):
@@ -192,7 +194,7 @@ def test_extract_phrases_from_text_empty(mock_gpt_from_template, monkeypatch):
         return "Unexpected template", {}
 
     monkeypatch.setattr(
-        "vocab_llm_utils.generate_gpt_from_template", mock_generate_empty
+        "utils.vocab_llm_utils.generate_gpt_from_template", mock_generate_empty
     )
 
     result, extra = extract_phrases_from_text(
@@ -218,7 +220,7 @@ def test_extract_phrases_from_text_invalid_response(
         return "Unexpected template", {}
 
     monkeypatch.setattr(
-        "vocab_llm_utils.generate_gpt_from_template", mock_generate_invalid
+        "utils.vocab_llm_utils.generate_gpt_from_template", mock_generate_invalid
     )
 
     result, extra = extract_phrases_from_text(
@@ -252,7 +254,7 @@ def test_extract_phrases_from_text_missing_fields(mock_gpt_from_template, monkey
         return "Unexpected template", {}
 
     monkeypatch.setattr(
-        "vocab_llm_utils.generate_gpt_from_template", mock_generate_missing_fields
+        "utils.vocab_llm_utils.generate_gpt_from_template", mock_generate_missing_fields
     )
 
     result, extra = extract_phrases_from_text(

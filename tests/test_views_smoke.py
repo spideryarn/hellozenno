@@ -55,7 +55,7 @@ def test_lemmas_list_date_sort(client):
 
 
 @patch(
-    "wordform_views.quick_search_for_wordform",
+    "views.wordform_views.quick_search_for_wordform",
     side_effect=mock_quick_search_for_wordform,
 )
 def test_wordforms_list(mock_search, client):
@@ -65,7 +65,7 @@ def test_wordforms_list(mock_search, client):
 
 
 @patch(
-    "wordform_views.quick_search_for_wordform",
+    "views.wordform_views.quick_search_for_wordform",
     side_effect=mock_quick_search_for_wordform,
 )
 def test_wordform_detail_existing(mock_search, client):
@@ -77,7 +77,7 @@ def test_wordform_detail_existing(mock_search, client):
 
 
 @patch(
-    "wordform_views.quick_search_for_wordform",
+    "views.wordform_views.quick_search_for_wordform",
     side_effect=mock_quick_search_for_wordform,
 )
 def test_wordform_detail_nonexistent(mock_search, client):
