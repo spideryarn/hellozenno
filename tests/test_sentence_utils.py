@@ -2,7 +2,7 @@ import pytest
 from sentence_utils import generate_sentence, get_all_sentences, get_random_sentence
 
 
-def test_generate_and_retrieve_sentence(test_db):
+def test_generate_and_retrieve_sentence(fixture_for_testing_db):
     """Test generating a sentence and retrieving it from the database."""
     # Generate a test sentence
     sentence = "Το σπίτι είναι μεγάλο"

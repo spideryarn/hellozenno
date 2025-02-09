@@ -14,7 +14,7 @@ from config import MAX_AUDIO_SIZE_FOR_STORAGE
 
 
 @pytest.fixture
-def test_sourcedir(test_db):
+def test_sourcedir(fixture_for_testing_db):
     """Create a test sourcedir."""
     sourcedir = Sourcedir.create(
         path="test_dir",
@@ -148,7 +148,9 @@ def test_ensure_audio_data(mock_elevenlabs):
     assert "<break" in text_with_delays  # Should have delay markers
 
 
-def test_ensure_model_audio_data(mock_elevenlabs, test_db, test_sourcedir):
+def test_ensure_model_audio_data(
+    mock_elevenlabs, fixture_for_testing_db, test_sourcedir
+):
     """Test generating audio for model instances."""
     # Test with Sentence model
     sentence = Sentence.create(

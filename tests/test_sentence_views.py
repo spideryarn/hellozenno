@@ -9,9 +9,9 @@ import audio_utils  # Import the module directly for mocking
 
 
 @pytest.fixture
-def test_sentence(test_db):
+def test_sentence(fixture_for_testing_db):
     """Create a test sentence with audio data."""
-    return create_test_sentence(test_db)
+    return create_test_sentence(fixture_for_testing_db)
 
 
 def test_get_sentence_audio(client, test_sentence):

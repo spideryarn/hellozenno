@@ -14,11 +14,11 @@ from tests.fixtures_for_tests import (
 )
 
 
-def test_wordforms_list(client, test_db):
+def test_wordforms_list(client, fixture_for_testing_db):
     """Test the wordforms list view."""
     # Create test data
-    lemma = create_test_lemma(test_db)
-    wordform = create_test_wordform(test_db, lemma)
+    lemma = create_test_lemma(fixture_for_testing_db)
+    wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     # Test accessing the wordforms list view
     response = client.get(f"/{TEST_LANGUAGE_CODE}/wordforms")
@@ -26,11 +26,11 @@ def test_wordforms_list(client, test_db):
     assert str(wordform.wordform).encode() in response.data
 
 
-def test_get_existing_wordform(client, test_db):
+def test_get_existing_wordform(client, fixture_for_testing_db):
     """Test getting metadata for an existing wordform."""
     # Create test data
-    lemma = create_test_lemma(test_db)
-    wordform = create_test_wordform(test_db, lemma)
+    lemma = create_test_lemma(fixture_for_testing_db)
+    wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     # Test accessing the wordform
     response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}")
@@ -68,11 +68,11 @@ def test_get_new_wordform(mock_search, client):
     assert "test translation" in data
 
 
-def test_wordform_template_rendering(client, test_db):
+def test_wordform_template_rendering(client, fixture_for_testing_db):
     """Test that the wordform template renders correctly with all navigation elements."""
     # Create test data
-    lemma = create_test_lemma(test_db)
-    wordform = create_test_wordform(test_db, lemma)
+    lemma = create_test_lemma(fixture_for_testing_db)
+    wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     # Create test context
     with client.application.test_request_context():
@@ -113,11 +113,11 @@ def test_wordform_template_rendering(client, test_db):
         assert str(lemma.lemma) in html
 
 
-def test_delete_wordform(client, test_db):
+def test_delete_wordform(client, fixture_for_testing_db):
     """Test deleting a wordform."""
     # Create test data
-    lemma = create_test_lemma(test_db)
-    wordform = create_test_wordform(test_db, lemma)
+    lemma = create_test_lemma(fixture_for_testing_db)
+    wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     # First verify the wordform exists
     response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}")

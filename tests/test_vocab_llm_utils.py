@@ -62,10 +62,10 @@ def mock_gpt_from_template(monkeypatch):
     monkeypatch.setattr("vocab_llm_utils.generate_gpt_from_template", mock_generate)
 
 
-def test_process_img_filen(mock_gpt_from_template, test_db):
+def test_process_img_filen(mock_gpt_from_template, fixture_for_testing_db):
     """Test processing image data."""
     # Test with minimal valid image
-    with test_db.bind_ctx([Lemma, Wordform]):
+    with fixture_for_testing_db.bind_ctx([Lemma, Wordform]):
         image_data = b"test image data"
         source, words, extra = process_img_filen(
             image_data=image_data,

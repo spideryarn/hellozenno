@@ -15,11 +15,11 @@ Edge case tests for views, using the test database.
 """
 
 
-def test_wordform_details(client, test_db):
+def test_wordform_details(client, fixture_for_testing_db):
     """Test viewing details of a wordform."""
     # Create test data
-    lemma = create_test_lemma(test_db)
-    wordform = create_test_wordform(test_db, lemma)
+    lemma = create_test_lemma(fixture_for_testing_db)
+    wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}")
     assert response.status_code == 200

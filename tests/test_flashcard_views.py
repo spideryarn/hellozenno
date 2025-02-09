@@ -14,7 +14,7 @@ from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
 
 
 @pytest.fixture
-def test_sourcefile(test_db):
+def test_sourcefile(fixture_for_testing_db):
     """Create a test sourcefile with a test lemma."""
     sourcedir = Sourcedir.create(
         path="test_dir",
@@ -34,9 +34,9 @@ def test_sourcefile(test_db):
 
 
 @pytest.fixture
-def test_sentence_with_sourcefile(test_db, test_sourcefile):
+def test_sentence_with_sourcefile(fixture_for_testing_db, test_sourcefile):
     """Create a test sentence with a test lemma and associate it with a sourcefile."""
-    sentence = create_test_sentence(test_db)
+    sentence = create_test_sentence(fixture_for_testing_db)
 
     # Create test lemma and associate it with the sentence
     lemma = Lemma.create(
@@ -59,7 +59,7 @@ def test_sentence_with_sourcefile(test_db, test_sourcefile):
 
 
 @pytest.fixture
-def test_sourcedir_with_files(test_db):
+def test_sourcedir_with_files(fixture_for_testing_db):
     """Create a test sourcedir with multiple sourcefiles containing wordforms."""
     sourcedir = Sourcedir.create(
         path="test_dir", language_code=TEST_LANGUAGE_CODE, slug="test-dir"
@@ -113,7 +113,7 @@ def test_sourcedir_with_files(test_db):
     SourcefileWordform.create(sourcefile=sourcefile2, wordform=wordform2)
 
     # Create a test sentence using one of our lemmas
-    sentence = create_test_sentence(test_db)
+    sentence = create_test_sentence(fixture_for_testing_db)
     SentenceLemma.create(sentence=sentence, lemma=lemma1)
 
     return sourcedir
@@ -213,7 +213,9 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     assert b"No matching sentences found" in response.data
 
 
-def test_sourcedir_multiple_files(client, test_sourcedir_with_files, test_db):
+def test_sourcedir_multiple_files(
+    client, test_sourcedir_with_files, fixture_for_testing_db
+):
     """Test sourcedir with multiple sourcefiles returns combined lemmas."""
     # Add third sourcefile with different lemma
     sourcefile3 = Sourcefile.create(

@@ -1,21 +1,21 @@
 import pytest
 from playwright.sync_api import Page
 from flask import Flask
-from tests.conftest import test_db, MODELS
+from tests.conftest import fixture_for_testing_db, MODELS
 from db_connection import init_db
 
 FLASK_TEST_PORT = 3001
 
 
 @pytest.fixture(scope="session")
-def app(test_db):
+def app(fixture_for_testing_db):
     """Create test Flask app."""
     app = Flask("app")
     app.config["TESTING"] = True
     app.config["SECRET_KEY"] = "test_key"
 
     # Initialize database with test database
-    init_db(app, test_db)
+    init_db(app, fixture_for_testing_db)
 
     # Register blueprints
     from views import views_bp
