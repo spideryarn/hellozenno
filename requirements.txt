@@ -21,3 +21,4 @@ peewee-migrate>=1.12.2
 python-dotenv>=1.0.0  # For environment variable management
 yt-dlp>=2023.12.30  # For YouTube audio downloads
 flask-cors>=4.0.0  # For cross-origin API access
+pytest-postgresql>=5.0.0

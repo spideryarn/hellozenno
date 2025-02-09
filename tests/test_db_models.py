@@ -2,7 +2,7 @@ import pytest
 from db_models import Sourcefile, Sourcedir, Lemma, Wordform, Phrase
 
 
-def test_json_field_handling(test_db):
+def test_json_field_handling(fixture_for_testing_db):
     """Test that JSONField properly serializes and deserializes data."""
     # Test Sourcefile metadata
     sourcedir = Sourcedir.create(

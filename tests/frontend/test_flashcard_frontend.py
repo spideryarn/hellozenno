@@ -6,7 +6,7 @@ import uuid
 
 
 @pytest.fixture
-def test_sourcefile(test_db):
+def test_sourcefile(fixture_for_testing_db):
     """Create a test sourcefile with some test content."""
     # Create test sourcedir
     sourcedir = Sourcedir.create(
@@ -57,7 +57,7 @@ def test_sourcefile(test_db):
 
 
 @pytest.fixture
-def test_sentence(test_db):
+def test_sentence(fixture_for_testing_db):
     """Create a test sentence for flashcard testing."""
     unique_id = str(uuid.uuid4())[:8]
     sentence = Sentence.create(

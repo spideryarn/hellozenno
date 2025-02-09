@@ -30,7 +30,7 @@ def test_lemma_url_generation(client):
         )
 
 
-def test_lemmas_list_basic(client, test_db):
+def test_lemmas_list_basic(client, fixture_for_testing_db):
     """Test that the lemmas list view returns a 200 status code and includes lemma metadata."""
     # Create a test lemma
     lemma = Lemma.create(
@@ -53,9 +53,11 @@ def test_lemmas_list_basic(client, test_db):
     assert "50%" in content  # Commonality should be formatted as percentage
 
 
-def test_lemma_detail_view(client, test_db):
+def test_lemma_detail_view(client, fixture_for_testing_db):
     """Test the individual lemma detail view."""
-    with test_db.bind_ctx([Lemma, Sentence, LemmaExampleSentence, SentenceLemma]):
+    with fixture_for_testing_db.bind_ctx(
+        [Lemma, Sentence, LemmaExampleSentence, SentenceLemma]
+    ):
         # Create a test lemma with full metadata
         lemma = Lemma.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_LEMMA_DATA)
 
@@ -104,7 +106,7 @@ def test_nonexistent_lemma(client):
     assert "was not found" in response.data.decode()
 
 
-def test_lemmas_list_sorting(client, test_db):
+def test_lemmas_list_sorting(client, fixture_for_testing_db):
     """Test the sorting functionality of the lemmas list view."""
     # Clear any existing lemmas
     Lemma.delete().execute()
@@ -165,7 +167,7 @@ def test_lemmas_list_sorting(client, test_db):
     assert gamma_pos < beta_pos < alpha_pos
 
 
-def test_lemma_model_defaults(test_db):
+def test_lemma_model_defaults(fixture_for_testing_db):
     """Test that the Lemma model handles default values correctly."""
     # Create a minimal lemma
     lemma = Lemma.create(
@@ -185,9 +187,9 @@ def test_lemma_model_defaults(test_db):
     assert data["easily_confused_with"] is None
 
 
-def test_delete_lemma(client, test_db):
+def test_delete_lemma(client, fixture_for_testing_db):
     """Test deleting a lemma and verifying its wordforms are cascade deleted."""
-    with test_db.bind_ctx([Lemma, Wordform]):
+    with fixture_for_testing_db.bind_ctx([Lemma, Wordform]):
         # Create a test lemma with associated wordforms
         lemma = Lemma.create(
             lemma="test_delete",
@@ -235,7 +237,7 @@ def test_delete_nonexistent_lemma(client):
     assert response.headers["Location"].endswith(f"/{TEST_LANGUAGE_CODE}/lemmas")
 
 
-def test_wordforms_list_with_no_lemma(client, test_db):
+def test_wordforms_list_with_no_lemma(client, fixture_for_testing_db):
     """Test that the wordforms list view handles wordforms without lemmas correctly."""
     # Create a wordform without a lemma
     wordform = Wordform.create(
@@ -256,9 +258,9 @@ def test_wordforms_list_with_no_lemma(client, test_db):
     )  # The arrow should not be present for wordforms without lemmas
 
 
-def test_wordform_detail_with_no_lemma(client, test_db):
+def test_wordform_detail_with_no_lemma(client, fixture_for_testing_db):
     """Test that the wordform detail view handles wordforms without lemmas correctly."""
-    with test_db.bind_ctx([Wordform]):
+    with fixture_for_testing_db.bind_ctx([Wordform]):
         # Create a wordform without a lemma
         wordform = Wordform.create(
             wordform="test_no_lemma",
@@ -276,9 +278,9 @@ def test_wordform_detail_with_no_lemma(client, test_db):
         assert "No lemma linked" in content
 
 
-def test_lemma_update_or_create(client, test_db):
+def test_lemma_update_or_create(client, fixture_for_testing_db):
     """Test the update_or_create method for Lemma model."""
-    with test_db.bind_ctx([Lemma]):
+    with fixture_for_testing_db.bind_ctx([Lemma]):
         # Test creation of new lemma
         lemma, created = Lemma.update_or_create(
             lookup={"lemma": "νέος", "language_code": TEST_LANGUAGE_CODE},

@@ -3,10 +3,10 @@ from db_models import Lemma, Wordform
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
 
 
-def test_word_preview(client, test_db):
+def test_word_preview(client, fixture_for_testing_db):
     """Test the word preview API endpoint."""
     # Create test data
-    with test_db.bind_ctx([Lemma, Wordform]):
+    with fixture_for_testing_db.bind_ctx([Lemma, Wordform]):
         lemma = Lemma.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_LEMMA_DATA)
         wordform = Wordform.create(
             wordform="preview_testing",

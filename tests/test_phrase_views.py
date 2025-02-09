@@ -24,7 +24,7 @@ def test_phrase_url_generation(client):
         )
 
 
-def test_phrases_list_basic(client, test_db):
+def test_phrases_list_basic(client, fixture_for_testing_db):
     """Test that the phrases list view returns a 200 status code and includes phrase metadata."""
     phrase = Phrase.create(
         canonical_form="test_list",
@@ -44,7 +44,7 @@ def test_phrases_list_basic(client, test_db):
     assert "test_list" in content
 
 
-def test_phrase_detail_view(client, test_db):
+def test_phrase_detail_view(client, fixture_for_testing_db):
     """Test the individual phrase detail view."""
     # Create a test phrase with full metadata
     phrase = Phrase.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA)
@@ -70,7 +70,7 @@ def test_nonexistent_phrase(client):
     assert response.status_code == 404  # Should return 404 for non-existent phrase
 
 
-def test_phrases_list_sorting(client, test_db):
+def test_phrases_list_sorting(client, fixture_for_testing_db):
     """Test the sorting functionality of the phrases list view."""
     # Create phrases with different dates
     phrase1 = Phrase.create(

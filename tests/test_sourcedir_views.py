@@ -337,7 +337,7 @@ def test_rename_sourcedir(client):
     assert b"Directory not found" in response.data
 
 
-def test_upload_sourcefile(client, monkeypatch, test_db):
+def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     """Test uploading a source file."""
 
     # Mock process_img_filen to avoid actual image processing
@@ -360,7 +360,7 @@ def test_upload_sourcefile(client, monkeypatch, test_db):
 
     # Create test sourcedir with language code
     models = [Sourcefile, Sourcedir]
-    with test_db.bind_ctx(models):
+    with fixture_for_testing_db.bind_ctx(models):
         sourcedir = Sourcedir.create(
             path="test_dir_upload", language_code=TEST_LANGUAGE_CODE
         )

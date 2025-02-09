@@ -2,13 +2,9 @@
 
 import pytest
 from pathlib import Path
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from flask import Flask
 import os
-from dotenv import load_dotenv
-from pydantic import StrictStr, PositiveInt
 
 from db_models import (
     Lemma,
@@ -79,32 +75,33 @@ def ensure_test_config():
     assert POSTGRES_PORT == 5432, "Test database port must be 5432"
 
 
+def pytest_configure(config):
+    """Configure pytest-postgresql with values from .env.testing."""
+    config.option.postgresql_dbname = POSTGRES_DB_NAME
+    config.option.postgresql_host = POSTGRES_HOST
+    config.option.postgresql_port = POSTGRES_PORT
+
+
 @pytest.fixture(scope="session")
-def test_db():
-    """Create a test database for the test session."""
-    # Connect to postgres db to create test db
-    conn = psycopg2.connect(
-        dbname="postgres",
-        user=POSTGRES_DB_USER,
-        password=POSTGRES_DB_PASSWORD,
-        host=POSTGRES_HOST,
-    )
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cur = conn.cursor()
+def postgresql_auth():
+    """Provide authentication details for pytest-postgresql."""
+    return {
+        "user": POSTGRES_DB_USER,
+        "password": POSTGRES_DB_PASSWORD,
+        "host": POSTGRES_HOST,
+        "port": POSTGRES_PORT,
+    }
 
-    # Create test database
-    cur.execute(f'DROP DATABASE IF EXISTS "{POSTGRES_DB_NAME}"')
-    cur.execute(f'CREATE DATABASE "{POSTGRES_DB_NAME}"')
-    cur.close()
-    conn.close()
 
-    # Configure the test database
+@pytest.fixture(scope="session")
+def fixture_for_testing_db(postgresql):
+    """Create a test database for the test session using pytest-postgresql."""
     database = PostgresqlExtDatabase(
-        POSTGRES_DB_NAME,
-        user=POSTGRES_DB_USER,
-        password=POSTGRES_DB_PASSWORD,
-        host=POSTGRES_HOST,
-        port=POSTGRES_PORT,
+        postgresql.info.dbname,
+        user=postgresql.info.user,
+        password=postgresql.info.password,
+        host=postgresql.info.host,
+        port=postgresql.info.port,
     )
 
     # Bind models to database
@@ -117,29 +114,15 @@ def test_db():
 
     yield database
 
-    # Cleanup after all tests
-    database.drop_tables(MODELS)
+    # Cleanup handled automatically by pytest-postgresql
     database.close()
-
-    # Drop test database
-    conn = psycopg2.connect(
-        dbname="postgres",
-        user=POSTGRES_DB_USER,
-        password=POSTGRES_DB_PASSWORD,
-        host=POSTGRES_HOST,
-    )
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cur = conn.cursor()
-    cur.execute(f'DROP DATABASE IF EXISTS "{POSTGRES_DB_NAME}"')
-    cur.close()
-    conn.close()
 
 
 @pytest.fixture(autouse=True)
-def clean_tables(test_db):
+def clean_tables(fixture_for_testing_db):
     """Clean all tables between tests using TRUNCATE."""
-    with test_db.atomic():
-        test_db.execute_sql(
+    with fixture_for_testing_db.atomic():
+        fixture_for_testing_db.execute_sql(
             "TRUNCATE TABLE {} CASCADE".format(
                 ", ".join(f'"{model._meta.table_name}"' for model in reversed(MODELS))
             )
@@ -148,20 +131,20 @@ def clean_tables(test_db):
 
 
 @pytest.fixture
-def test_data(test_db):
+def test_data(fixture_for_testing_db):
     """Create test data in the database."""
-    return create_complete_test_data(test_db)
+    return create_complete_test_data(fixture_for_testing_db)
 
 
 @pytest.fixture
-def client(test_db):
+def client(fixture_for_testing_db):
     """Create a test client with database connection."""
     app = Flask("app", root_path=os.path.dirname(os.path.dirname(__file__)))
     app.config["TESTING"] = True
     app.config["SECRET_KEY"] = "test_key"
 
     # Initialize database
-    init_db(app, test_db)
+    init_db(app, fixture_for_testing_db)
 
     # Register blueprints
     app.register_blueprint(views_bp)

@@ -214,10 +214,12 @@ def test_extract_tokens():
     assert tokens == {"καλημερα"}  # Should only extract Greek words
 
 
-def test_auto_linking_wordforms(client, test_db):
+def test_auto_linking_wordforms(client, fixture_for_testing_db):
     """Test automatic linking of known wordforms in sourcefile text."""
     # Create test data
-    with test_db.bind_ctx([Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]):
+    with fixture_for_testing_db.bind_ctx(
+        [Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]
+    ):
         # Create sourcedir and sourcefile
         sourcedir = Sourcedir.create(
             path="test_dir",
@@ -287,9 +289,11 @@ def test_auto_linking_wordforms(client, test_db):
         assert 'href="/el/lemma/είμαι"' in response.data.decode()  # Links to lemma
 
 
-def test_auto_linking_case_insensitive(client, test_db):
+def test_auto_linking_case_insensitive(client, fixture_for_testing_db):
     """Test that auto-linking works regardless of case."""
-    with test_db.bind_ctx([Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]):
+    with fixture_for_testing_db.bind_ctx(
+        [Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]
+    ):
         # Create test data
         sourcedir = Sourcedir.create(
             path="test_dir",
@@ -356,9 +360,11 @@ def test_auto_linking_case_insensitive(client, test_db):
             ), f"Variant {variant} not found in link text"
 
 
-def test_auto_linking_preserves_existing(client, test_db):
+def test_auto_linking_preserves_existing(client, fixture_for_testing_db):
     """Test that auto-linking preserves existing SourcefileWordform entries."""
-    with test_db.bind_ctx([Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]):
+    with fixture_for_testing_db.bind_ctx(
+        [Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]
+    ):
         # Create test data
         sourcedir = Sourcedir.create(
             path="test_dir",
@@ -483,7 +489,7 @@ def test_rename_sourcefile(client):
     assert response.status_code == 409
 
 
-def test_sourcefile_navigation(client, test_db):
+def test_sourcefile_navigation(client, fixture_for_testing_db):
     """Test sourcefile navigation (prev/next) functionality."""
     # Create test data
     # Create sourcedir
@@ -654,7 +660,7 @@ def test_sourcefile_phrase_ordering(client, test_data):
     assert first_phrase_index < second_phrase_index
 
 
-def test_sourcefile_slug_generation(client, test_db):
+def test_sourcefile_slug_generation(client, fixture_for_testing_db):
     """Test that sourcefile slugs are generated correctly."""
     # Create test sourcedir
     sourcedir = Sourcedir.create(
@@ -771,7 +777,7 @@ def test_process_sourcefile(client, monkeypatch):
     assert wordform_entry.centrality == 0.5
 
 
-def test_create_sourcefile_from_text(client, test_db):
+def test_create_sourcefile_from_text(client, fixture_for_testing_db):
     """Test creating a sourcefile from text."""
     # Create test sourcedir
     sourcedir = Sourcedir.create(
@@ -832,7 +838,7 @@ def test_create_sourcefile_from_text(client, test_db):
     assert b"already exists" in response.data
 
 
-def test_upload_audio_file(client, monkeypatch, test_db):
+def test_upload_audio_file(client, monkeypatch, fixture_for_testing_db):
     """Test uploading an audio file."""
 
     # Mock transcribe_audio to avoid actual API calls
@@ -897,7 +903,7 @@ def test_upload_audio_file(client, monkeypatch, test_db):
     assert b"Invalid file type" in response.data
 
 
-def test_add_sourcefile_from_youtube(client, monkeypatch, test_db):
+def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db):
     """Test adding a sourcefile from YouTube."""
 
     # Mock download_audio to avoid actual API calls
@@ -976,7 +982,7 @@ def test_add_sourcefile_from_youtube(client, monkeypatch, test_db):
     assert b"Test error" in response.data
 
 
-def test_generate_sourcefile_audio(client, monkeypatch, test_db):
+def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
     """Test generating audio for a sourcefile using ElevenLabs."""
 
     # Mock outloud_elevenlabs to avoid actual API calls
@@ -1110,10 +1116,12 @@ def test_delete_sourcefile_with_wordforms(client):
     )
 
 
-def test_process_individual_words(client, test_db):
+def test_process_individual_words(client, fixture_for_testing_db):
     """Test processing individual words in a sourcefile."""
     # Create test data
-    with test_db.bind_ctx([Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]):
+    with fixture_for_testing_db.bind_ctx(
+        [Sourcedir, Sourcefile, Wordform, Lemma, SourcefileWordform]
+    ):
         # Create sourcedir and sourcefile
         sourcedir = Sourcedir.create(
             path="test_dir",

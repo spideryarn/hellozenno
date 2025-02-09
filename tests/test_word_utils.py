@@ -4,9 +4,11 @@ from db_models import Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform
 from word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
 
 
-def test_get_sourcedir_lemmas_happy_path(test_db):
+def test_get_sourcedir_lemmas_happy_path(fixture_for_testing_db):
     """Test getting lemmas from sourcedir with multiple sourcefiles."""
-    with test_db.bind_ctx([Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]):
+    with fixture_for_testing_db.bind_ctx(
+        [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
+    ):
         # Setup test data
         sd = Sourcedir.create(path="/test", language_code="el", slug="test-dir")
 
@@ -63,7 +65,7 @@ def test_get_sourcedir_lemmas_happy_path(test_db):
         assert result == ["alpha", "beta", "gamma"]  # Sorted and deduped
 
 
-def test_get_sourcedir_lemmas_error_cases(test_db):
+def test_get_sourcedir_lemmas_error_cases(fixture_for_testing_db):
     """Test sourcedir lemmas error scenarios."""
     # Non-existent sourcedir
     with pytest.raises(NotFound) as exc_info:
@@ -71,7 +73,7 @@ def test_get_sourcedir_lemmas_error_cases(test_db):
     assert "Sourcedir not found" in str(exc_info.value.description)
 
     # Sourcedir with no lemmas
-    with test_db.bind_ctx([Sourcedir]):
+    with fixture_for_testing_db.bind_ctx([Sourcedir]):
         Sourcedir.create(path="/empty", language_code="el", slug="empty-dir")
 
         with pytest.raises(NotFound) as exc_info:
@@ -79,9 +81,11 @@ def test_get_sourcedir_lemmas_error_cases(test_db):
         assert "contains no practice vocabulary" in str(exc_info.value.description)
 
 
-def test_get_sourcefile_lemmas_happy_path(test_db):
+def test_get_sourcefile_lemmas_happy_path(fixture_for_testing_db):
     """Test getting lemmas from a sourcefile with multiple wordforms."""
-    with test_db.bind_ctx([Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]):
+    with fixture_for_testing_db.bind_ctx(
+        [Sourcedir, Sourcefile, Lemma, Wordform, SourcefileWordform]
+    ):
         # Setup test data
         sd = Sourcedir.create(path="/test", language_code="el", slug="test-dir")
         sf = Sourcefile.create(
@@ -108,16 +112,16 @@ def test_get_sourcefile_lemmas_happy_path(test_db):
         SourcefileWordform.create(sourcefile=sf, wordform=wordforms[2])  # No lemma
 
         # Test the function within the bind context
-        result = get_sourcefile_lemmas("el", "test-file", db=test_db)
+        result = get_sourcefile_lemmas("el", "test-file", db=fixture_for_testing_db)
         assert result == ["test"]  # Only one unique lemma
 
 
-def test_get_sourcefile_lemmas_error_cases(test_db):
+def test_get_sourcefile_lemmas_error_cases(fixture_for_testing_db):
     """Test sourcefile lemmas error scenarios."""
-    with test_db.bind_ctx([Sourcedir, Sourcefile]):
+    with fixture_for_testing_db.bind_ctx([Sourcedir, Sourcefile]):
         # Non-existent sourcefile
         with pytest.raises(NotFound) as exc_info:
-            get_sourcefile_lemmas("el", "missing-file", db=test_db)
+            get_sourcefile_lemmas("el", "missing-file", db=fixture_for_testing_db)
         assert "Sourcefile not found" in str(exc_info.value.description)
 
         # Sourcefile with no lemmas
@@ -134,5 +138,5 @@ def test_get_sourcefile_lemmas_error_cases(test_db):
 
         # Test empty file within the same bind context
         with pytest.raises(NotFound) as exc_info:
-            get_sourcefile_lemmas("el", "empty-file", db=test_db)
+            get_sourcefile_lemmas("el", "empty-file", db=fixture_for_testing_db)
         assert "contains no practice vocabulary" in str(exc_info.value.description)
