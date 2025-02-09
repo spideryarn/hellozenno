@@ -126,7 +126,9 @@ def test_data(fixture_for_testing_db):
 @pytest.fixture
 def client(fixture_for_testing_db):
     """Create a test client with database connection."""
-    app = Flask("app", root_path=os.path.dirname(os.path.dirname(__file__)))
+    app = Flask(
+        "app", root_path=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    )
     app.config["TESTING"] = True
     app.config["SECRET_KEY"] = "test_key"
 
