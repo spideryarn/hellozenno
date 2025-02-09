@@ -70,9 +70,10 @@ def search_word(target_language_code: str, wordform: str):
     )
 
 
-@views_bp.route("/favicon.ico/")
-def favicon_with_trailing_slash():
-    """Handle favicon.ico requests with trailing slash."""
+@views_bp.route("/favicon.ico", defaults={"trailing_slash": ""})
+@views_bp.route("/favicon.ico/", defaults={"trailing_slash": "/"})
+def favicon(trailing_slash):
+    """Handle favicon.ico requests with or without trailing slash."""
     return send_from_directory(
         os.path.join(views_bp.root_path, "static", "img"),
         "favicon.ico",
