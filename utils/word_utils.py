@@ -2,6 +2,7 @@ from typing import TypedDict
 from flask import abort
 from peewee import DoesNotExist, prefetch
 import unicodedata
+from werkzeug.exceptions import NotFound
 
 from db_models import Sourcedir, Sourcefile, SourcefileWordform, Wordform, Lemma
 
@@ -92,43 +93,35 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
     return lemmas
 
 
-def get_sourcefile_lemmas(
-    language_code: str, sourcefile_slug: str, db=None
-) -> list[str]:
-    """Get unique lemmas from a sourcefile."""
+def get_sourcefile_lemmas(language_code: str, sourcefile_slug: str) -> list[str]:
+    """
+    Return a sorted, deduplicated list of lemma strings for all wordforms
+    in the specified sourcefile. Raise NotFound if not found or if empty.
+    """
+    # Attempt to get the sourcefile with matching language_code
     try:
-        condition = (Sourcefile.slug == sourcefile_slug) & (
-            Sourcefile.sourcedir.in_(
-                Sourcedir.select(Sourcedir.id).where(
-                    Sourcedir.language_code == language_code
-                )
-            )
+        sourcefile = (
+            Sourcefile.select()
+            .join(Sourcedir)
+            .where(Sourcefile.slug == sourcefile_slug)
+            .where(Sourcedir.language_code == language_code)
+            .get()
         )
-        if db:
-            with db.bind_ctx([Sourcefile, Sourcedir]):
-                sourcefile_entry = Sourcefile.select().where(condition).get()
-        else:
-            sourcefile_entry = Sourcefile.select().where(condition).get()
     except DoesNotExist:
-        abort(404, description="Sourcefile not found")
+        raise NotFound("Sourcefile not found or does not match the given language.")
 
-    def run_query():
-        query = (
-            Lemma.select(Lemma.lemma)
-            .distinct()
-            .join(Wordform)  # join via Wordform.lemma_entry
-            .join(SourcefileWordform)  # join via SourcefileWordform.wordform
-            .where(SourcefileWordform.sourcefile == sourcefile_entry)
-            .order_by(Lemma.lemma)
-        )
-        return [row.lemma for row in query]
+    # Gather all lemmas
+    query = (
+        Lemma.select(Lemma.lemma)
+        .join(Wordform)
+        .join(SourcefileWordform)
+        .where(SourcefileWordform.sourcefile == sourcefile)
+        .distinct()
+    )
 
-    if db:
-        with db.bind_ctx([Lemma, Wordform, SourcefileWordform, Sourcefile]):
-            lemmas = run_query()
-    else:
-        lemmas = run_query()
-
+    # Collect lemma strings, ignoring any None
+    lemmas = [row.lemma for row in query if row.lemma]
     if not lemmas:
-        abort(404, description="File contains no practice vocabulary")
-    return lemmas
+        raise NotFound("Sourcefile contains no practice vocabulary.")
+
+    return sorted(lemmas)
