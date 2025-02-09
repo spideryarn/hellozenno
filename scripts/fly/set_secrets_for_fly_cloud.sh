@@ -28,7 +28,7 @@ while IFS= read -r line; do
     value=$(echo "$line" | cut -d'=' -f2-)
     
     echo "Setting $key..."
-    # https://www.perplexity.ai/search/with-fly-secrets-do-i-need-to-EECazzUIS4Ky9UXUAfXTQg
+    # Reference: https://www.perplexity.ai/search/with-fly-secrets-do-i-need-to-EECazzUIS4Ky9UXUAfXTQg
     # --stage avoids a restart, and only sets the secret for machines started later
     fly secrets set --stage "$key=$value"    
 done < .env.fly_cloud
