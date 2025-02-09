@@ -11,7 +11,7 @@ source scripts/common.sh
 
 echo "Running migrations on Fly.io database..."
 
-# Run migrations using fly ssh console with new CLI
-fly ssh console -C "./utils/migrate.py migrate"
+# Run migrations using fly ssh console with new CLI, ensuring PYTHONPATH includes project root
+fly ssh console -C "PYTHONPATH=/app python /app/utils/migrate.py migrate"
 
 echo_success "Migrations completed successfully!" 
