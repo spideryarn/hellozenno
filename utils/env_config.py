@@ -85,6 +85,11 @@ def decide_environment_and_load_dotenv_file():
         AssertionError: If required environment file is missing
     """
     env_file = decide_environment_file()
+    # we don't want to send the .env file up to production, so don't
+    # require it to be there it's there. we're setting all the
+    # production environment variables with `set_secrets_for_fly_cloud.sh`
+    if env_file == ENV_FILE_FLY_CLOUD:
+        return None
     assert env_file.exists(), f"Missing required {env_file}"
     logger.info("Loading environment from %s", env_file)
     # if we're testing, we want to be sure to override the environment variables,
