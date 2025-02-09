@@ -32,10 +32,9 @@ from utils.vocab_llm_utils import (
     extract_text_from_image,
     translate_to_english,
     extract_tricky_words_or_phrases,
-    extract_phrases_from_text,
     process_phrases_from_text,
 )
-from db_models import Lemma, Wordform, SourcefileWordform, Phrase, SourcefilePhrase
+from db_models import Lemma, Wordform, SourcefileWordform
 
 
 def process_sourcefile_content(

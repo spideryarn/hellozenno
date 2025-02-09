@@ -1,20 +1,14 @@
 import json
-from addict import Dict as Addict
 from anthropic import Anthropic
 from openai import OpenAI
 from pprint import pprint
 import re
 from typing import Any, Optional, Set
-import tempfile
-import os
 from slugify import slugify
-from peewee import fn, DoesNotExist
 
-from utils.audio_utils import ensure_audio_data
 from gdutils.llm_utils import generate_gpt_from_template
-from gdutils.strings import PathOrStr
 from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
-from utils.lang_utils import get_language_name, get_all_languages, get_language_code
+from utils.lang_utils import get_language_name, get_language_code
 from db_models import (
     Lemma,
     Phrase,
