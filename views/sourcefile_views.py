@@ -877,7 +877,7 @@ def generate_sourcefile_audio(
         try:
             outloud_elevenlabs(
                 text=add_delays(str(sourcefile_entry.text_target)),
-                api_key=ELEVENLABS_API_KEY,
+                api_key=ELEVENLABS_API_KEY.get_secret_value(),
                 mp3_filen=temp_file.name,
             )
 
