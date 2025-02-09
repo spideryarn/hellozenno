@@ -18,7 +18,7 @@ from pathlib import Path
 @pytest.fixture
 def mock_yt_dlp():
     """Mock yt-dlp for testing."""
-    with patch("youtube_utils.yt_dlp.YoutubeDL") as mock_ydl:
+    with patch("utils.youtube_utils.yt_dlp.YoutubeDL") as mock_ydl:
         # Create mock info dict
         mock_info = {
             "id": "test_video_id",
