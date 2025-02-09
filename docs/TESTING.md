@@ -2,7 +2,7 @@
 
 See FRONTEND_TESTING.md for info on using Playwright for front-end tests with Pytest.
 
-See conftest.py for fixtures, setup & teardown, test database, test client & blueprints, etc.
+See tests/backend/conftest.py for fixtures, setup & teardown, test database, test client & blueprints, etc.
 
 ## Test Environment Configuration
 
