@@ -13,12 +13,7 @@ primary_region = 'lhr'
   strategy = 'immediate'
 
 [env]
-  FLASK_SECRET_KEY = 'your-secret-key-here'
   PORT = '8080'
-  POSTGRES_DB_NAME = 'hz_app_web'
-  POSTGRES_DB_PASSWORD = 'jjdJxIji1gl6rC4'
-  POSTGRES_DB_USER = 'hz_app_web'
-  POSTGRES_HOST = 'hz-app-db-prod.internal'
 
 [http_service]
   internal_port = 8080
