@@ -31,6 +31,7 @@ if [ "$CURRENT_APP" != "hz-app-web" ]; then
 fi
 
 # Set secrets from .env.fly
+# echo "Skipping Fly.io secrets..."
 echo "Setting Fly.io secrets..."
 ./scripts/fly/set_secrets_for_fly_cloud.sh
 
