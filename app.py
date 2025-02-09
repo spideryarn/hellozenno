@@ -77,16 +77,6 @@ def create_app():
     app.register_blueprint(api_bp)
     app.register_blueprint(flashcard_views_bp)
 
-    # Add favicon route - handle both with and without trailing slash
-    @app.route("/favicon.ico", defaults={"trailing_slash": ""})
-    @app.route("/favicon.ico/", defaults={"trailing_slash": "/"})
-    def favicon(trailing_slash):
-        return send_from_directory(
-            os.path.join(app.root_path, "static", "img"),
-            "favicon.ico",
-            mimetype="image/vnd.microsoft.icon",
-        )
-
     logger.info("Application initialized successfully")
     return app
 
