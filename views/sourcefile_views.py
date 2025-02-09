@@ -547,7 +547,9 @@ def sourcefile_sentences(
         )
 
         # Get lemmas from sourcefile's wordforms
-        lemmas = get_sourcefile_lemmas(target_language_code, sourcefile_slug)
+        lemmas = get_sourcefile_lemmas(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
 
         # Get sentences containing any of these lemmas
         matching_sentences = [
