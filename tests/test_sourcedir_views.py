@@ -6,7 +6,7 @@ from db_models import (
     Sourcedir,
     Sourcefile,
 )
-from wordform_views import wordform_views_bp
+from views.wordform_views import wordform_views_bp
 from test_utils import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,
@@ -20,7 +20,7 @@ from config import (
     SOURCE_EXTENSIONS,
     MAX_AUDIO_SIZE_FOR_STORAGE,
 )
-from sourcedir_views import sourcedir_views_bp
+from views.sourcedir_views import sourcedir_views_bp
 
 # Test image path
 TEST_IMAGE_PATH = Path("fixtures/large_image_el.jpg")

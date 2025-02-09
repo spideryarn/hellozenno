@@ -17,7 +17,7 @@ import os
 from flask_view_utils import redirect_to_view
 
 from lang_utils import get_all_languages, get_language_name
-from wordform_views import get_wordform_metadata, wordform_views_bp
+from views.wordform_views import get_wordform_metadata, wordform_views_bp
 from db_connection import get_db
 
 
