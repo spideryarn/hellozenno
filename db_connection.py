@@ -5,24 +5,22 @@ from playhouse.pool import PooledPostgresqlExtDatabase
 import os
 import logging
 from datetime import datetime
+from config import DB_POOL_CONFIG
+from env_config import (
+    POSTGRES_DB_NAME,
+    POSTGRES_DB_USER,
+    POSTGRES_DB_PASSWORD,
+    POSTGRES_HOST,
+    POSTGRES_PORT,
+    is_fly_cloud,
+    is_local_to_fly_proxy,
+)
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Initialize with None - will be configured in init_db()
 database = None
-
-
-def is_fly_production():
-    """Check if we're running on Fly.io."""
-    return os.getenv("FLY_APP_NAME") is not None
-
-
-def is_local_to_fly():
-    """Check if we're connecting to Fly.io Postgres from local machine via proxy."""
-    if is_fly_production():
-        raise ValueError("Cannot use local-to-fly connection in production environment")
-    return os.getenv("USE_FLY_POSTGRES_FROM_LOCAL_PROXY") == "1"
 
 
 class MonitoredPooledPostgresqlExtDatabase(PooledPostgresqlExtDatabase):
@@ -66,87 +64,48 @@ class MonitoredPooledPostgresqlExtDatabase(PooledPostgresqlExtDatabase):
 def get_db_config():
     """Get database configuration based on environment.
 
-    Supports two tiers:
+    Supports three modes:
     1. Production: Running on Fly.io, connecting to Postgres via internal network
-    2. Local Development: Local PostgreSQL database
+    2. Local with Proxy: Local development connecting to Fly.io Postgres via proxy
+    3. Local Development: Local PostgreSQL database
     """
-    if is_fly_production():
-        # In production, use individual credential variables
-        from _secrets import (
-            POSTGRES_DB_PASSWORD,
+    # Start with base configuration
+    config = {
+        "database": POSTGRES_DB_NAME,
+        "user": POSTGRES_DB_USER,
+        "password": POSTGRES_DB_PASSWORD,
+        **DB_POOL_CONFIG,
+    }
+
+    if is_local_to_fly_proxy():
+        # Override host/port for proxy case
+        logger.info(
+            "Configuring Postgres connection to %s@localhost:15432/%s via proxy",
             POSTGRES_DB_USER,
             POSTGRES_DB_NAME,
-            POSTGRES_HOST,
-            POSTGRES_PORT,
         )
-
+        config.update(
+            {
+                "host": "localhost",
+                "port": 15432,
+            }
+        )
+    else:
+        # Use standard host/port for both local and Fly.io
         logger.info(
             "Configuring Postgres connection to %s@%s/%s",
             POSTGRES_DB_USER,
             POSTGRES_HOST,
             POSTGRES_DB_NAME,
         )
-
-        return MonitoredPooledPostgresqlExtDatabase(
-            POSTGRES_DB_NAME,
-            user=POSTGRES_DB_USER,
-            password=POSTGRES_DB_PASSWORD,
-            host=POSTGRES_HOST,
-            port=POSTGRES_PORT,
-            max_connections=20,  # Keep below soft limit
-            stale_timeout=300,  # 5 minutes
-            timeout=30,  # 30 seconds connection timeout
-            autoconnect=True,
-            thread_safe=True,
-        )
-    elif is_local_to_fly():
-        # Local development connecting to Fly.io Postgres via proxy
-        from _secrets import (
-            POSTGRES_DB_PASSWORD,
-            POSTGRES_DB_USER,
-            POSTGRES_DB_NAME,
+        config.update(
+            {
+                "host": POSTGRES_HOST,
+                "port": POSTGRES_PORT,
+            }
         )
 
-        logger.info(
-            "Configuring Postgres connection to %s@localhost:15432/%s via proxy",
-            POSTGRES_DB_USER,
-            POSTGRES_DB_NAME,
-        )
-
-        return MonitoredPooledPostgresqlExtDatabase(
-            POSTGRES_DB_NAME,
-            user=POSTGRES_DB_USER,
-            password=POSTGRES_DB_PASSWORD,
-            host="localhost",
-            port=15432,
-            max_connections=20,
-            stale_timeout=300,
-            timeout=30,
-            autoconnect=True,
-            thread_safe=True,
-        )
-    else:
-        # Local development
-        from _secrets import (
-            LOCAL_POSTGRES_DB_USER,
-            LOCAL_POSTGRES_DB_PASSWORD,
-        )
-
-        dbname = os.getenv("POSTGRES_DB_NAME", "hellozenno_development")
-        logger.info("Configuring local Postgres connection to %s", dbname)
-
-        return MonitoredPooledPostgresqlExtDatabase(
-            dbname,
-            user=LOCAL_POSTGRES_DB_USER,
-            password=LOCAL_POSTGRES_DB_PASSWORD,
-            host="localhost",
-            port=5432,
-            max_connections=20,
-            stale_timeout=300,
-            timeout=30,
-            autoconnect=True,
-            thread_safe=True,
-        )
+    return MonitoredPooledPostgresqlExtDatabase(**config)
 
 
 def get_db():

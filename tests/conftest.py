@@ -39,7 +39,14 @@ from api import api_bp
 from test_utils import mock_quick_search_for_wordform
 from db_connection import init_db
 from flashcard_views import flashcard_views_bp
-from env_config import getenv
+from env_config import (
+    POSTGRES_DB_NAME,
+    POSTGRES_DB_USER,
+    POSTGRES_DB_PASSWORD,
+    POSTGRES_HOST,
+    POSTGRES_PORT,
+    is_testing,
+)
 
 # All models in dependency order for table creation/deletion
 MODELS = [
@@ -57,25 +64,19 @@ MODELS = [
     SourcefilePhrase,
 ]
 
-TEST_DB_NAME = "hellozenno_test"
-
 
 @pytest.fixture(scope="session", autouse=True)
 def ensure_test_config():
     """Load and validate test configuration."""
-    load_dotenv(".env.testing", override=True)
+    # Verify we're in test mode
+    assert is_testing(), "Tests must be run with pytest"
 
     # Safety checks for test database
-    db_name = getenv("POSTGRES_DB_NAME")
-    assert db_name.endswith(
+    assert POSTGRES_DB_NAME.endswith(
         "_test"
-    ), f"Test database name must end with '_test', got {db_name}"
-    assert (
-        getenv("POSTGRES_HOST") == "localhost"
-    ), "Test database host must be localhost"
-    assert (
-        getenv("POSTGRES_PORT", PositiveInt) == 5432
-    ), "Test database port must be 5432"
+    ), f"Test database name must end with '_test', got {POSTGRES_DB_NAME}"
+    assert POSTGRES_HOST == "localhost", "Test database host must be localhost"
+    assert POSTGRES_PORT == 5432, "Test database port must be 5432"
 
 
 @pytest.fixture(scope="session")
@@ -84,27 +85,26 @@ def test_db():
     # Connect to postgres db to create test db
     conn = psycopg2.connect(
         dbname="postgres",
-        user=getenv("POSTGRES_DB_USER"),
-        password=getenv("POSTGRES_DB_PASSWORD"),
-        host=getenv("POSTGRES_HOST"),
+        user=POSTGRES_DB_USER,
+        password=POSTGRES_DB_PASSWORD,
+        host=POSTGRES_HOST,
     )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
 
     # Create test database
-    TEST_DB_NAME = getenv("POSTGRES_DB_NAME")
-    cur.execute(f'DROP DATABASE IF EXISTS "{TEST_DB_NAME}"')
-    cur.execute(f'CREATE DATABASE "{TEST_DB_NAME}"')
+    cur.execute(f'DROP DATABASE IF EXISTS "{POSTGRES_DB_NAME}"')
+    cur.execute(f'CREATE DATABASE "{POSTGRES_DB_NAME}"')
     cur.close()
     conn.close()
 
     # Configure the test database
     database = PostgresqlExtDatabase(
-        TEST_DB_NAME,
-        user=getenv("POSTGRES_DB_USER"),
-        password=getenv("POSTGRES_DB_PASSWORD"),
-        host=getenv("POSTGRES_HOST"),
-        port=getenv("POSTGRES_PORT", PositiveInt),
+        POSTGRES_DB_NAME,
+        user=POSTGRES_DB_USER,
+        password=POSTGRES_DB_PASSWORD,
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
     )
 
     # Bind models to database
@@ -124,13 +124,13 @@ def test_db():
     # Drop test database
     conn = psycopg2.connect(
         dbname="postgres",
-        user=getenv("POSTGRES_DB_USER"),
-        password=getenv("POSTGRES_DB_PASSWORD"),
-        host=getenv("POSTGRES_HOST"),
+        user=POSTGRES_DB_USER,
+        password=POSTGRES_DB_PASSWORD,
+        host=POSTGRES_HOST,
     )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cur = conn.cursor()
-    cur.execute(f'DROP DATABASE IF EXISTS "{TEST_DB_NAME}"')
+    cur.execute(f'DROP DATABASE IF EXISTS "{POSTGRES_DB_NAME}"')
     cur.close()
     conn.close()
 
