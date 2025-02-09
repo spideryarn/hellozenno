@@ -1,6 +1,7 @@
 from pathlib import Path
 import pytest
 from unittest.mock import MagicMock
+from tests.mocks.audio_mocks import mock_openai_whisper, mock_elevenlabs
 
 from utils.audio_utils import (
     validate_audio_file,

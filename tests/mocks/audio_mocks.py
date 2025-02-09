@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 @pytest.fixture
 def mock_elevenlabs():
     """Mock ElevenLabs API calls."""
-    with patch("audio_utils.outloud_elevenlabs") as mock:
+    with patch("utils.audio_utils.outloud_elevenlabs") as mock:
 
         def fake_generate_audio(text, api_key, mp3_filen):
             # Write some fake audio data to the file
@@ -21,14 +21,14 @@ def mock_elevenlabs():
 @pytest.fixture
 def mock_play_mp3():
     """Mock MP3 playback."""
-    with patch("audio_utils.play_mp3") as mock:
+    with patch("utils.audio_utils.play_mp3") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_openai_whisper():
     """Mock OpenAI Whisper API calls."""
-    with patch("audio_utils.client") as mock:
+    with patch("utils.audio_utils.client") as mock:
         mock_response = Mock()
         mock_response.text = "Transcribed text"
         mock.audio.transcriptions.create.return_value = mock_response

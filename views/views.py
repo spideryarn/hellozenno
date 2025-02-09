@@ -75,7 +75,7 @@ def search_word(target_language_code: str, wordform: str):
 def favicon(trailing_slash):
     """Handle favicon.ico requests with or without trailing slash."""
     return send_from_directory(
-        os.path.join(views_bp.root_path, "static", "img"),
+        os.path.join(os.path.dirname(views_bp.root_path), "static", "img"),
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon",
     )
