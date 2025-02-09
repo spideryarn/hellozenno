@@ -56,6 +56,13 @@ DONE: Database Migration
   - [x] Use unified POSTGRES_* names across environments
   - [x] Move pool settings to env_config.py
   - [x] Remove redundant DB config from config.py
+- [x] Discuss approach for bash scripts
+  - [x] Update scripts to use appropriate .env files
+  - [x] Rename set_secrets.sh to set_secrets_for_fly_cloud.sh
+  - [x] Update deploy.sh to use new script name
+  - [x] Update initialise_or_wipe_local_postgres.sh to use .env.local
+  - [x] Update connect_to_fly_postgres_via_proxy.sh to use .env.local_with_fly_proxy
+  - [x] Update backup_proxy_production_db.sh to use .env.local_with_fly_proxy
 
 TODO: Documentation Updates
 - [ ] Update DATABASE.md to reflect new environment variable setup
@@ -70,74 +77,7 @@ TODO: Tidying
 TODO: Create .env Files Structure
 - [ ] Create .env.fly_cloud (with 'xxx' placeholders, for user to fill in)
 - [x] Update .env.example with all required variables
-- [ ] Check .env.local_with_fly_proxy is correct
-
-TODO: Testing & Cleanup
-- [ ] Test all functionality end-to-end
-- [ ] Remove _secrets.py
-- [ ] Update deployment documentation for Supabase/Render
-
-
-
-Accept
-⌘Y
-
-Reject
-⌘N
-dev
-- Fail fast on missing environment variables using `os.environ[...]` for maximum explicitness
-TODO: Refactor env_config.py (New)
-- [ ] Implement new explicit getenv() function with Pydantic type validation
-  - [ ] Use StrictStr as default type
-  - [ ] Use PositiveInt for port numbers
-  - [ ] Use SecretStr for sensitive values
-- [ ] Define all environment variables as module-level constants
-- [ ] Add validation to ensure all .env.example variables are processed
-- [ ] Update existing os.environ/os.getenv usage to use env_config
-  - [ ] Update db_connection.py (needs discussion)
-  - [ ] Update fly_cloud_utils.py
-TODO: API Keys Migration (Phase 1)
-- [x] Move API keys (Claude, OpenAI, ElevenLabs) to .env.local
-- [x] Update vocab_llm_utils.py to use env_config
-- [x] Update audio_utils.py to use env_config
-- [x] Update sourcefile_views.py to use env_config
-- [ ] Test API connectivity
-
-TODO: Flask Configuration (Phase 1)
-- [ ] Update config.py to use os.environ[] (needs discussion)
-- [ ] Test Flask configuration
-TODO: Database Migration (Needs Discussion)
-- [x] Discuss approach for conftest.py (test database configuration)
-  - Use .env.testing with safe defaults
-  - Simple safety check to ensure test database name
-  - Allow environment variables to override if needed
-  - Use env_config.getenv() for validation
-- [x] Discuss approach for db_connection.py (handling defaults, test vs prod configs)
-  - Move environment detection to env_config.py
-  - Use unified POSTGRES_* names across environments
-  - Move pool settings to config.py
-  - Remove redundant DB config from config.py
-  - Create .env.local_with_fly_proxy for proxy case
-- [ ] Create new .env files structure
-  - [ ] Update .env.example with all required variables
-  - [ ] Create .env.local_with_fly_proxy template
-  - [ ] Create .env.fly template (with 'xxx' placeholders)
-- [ ] Implement agreed approach
-  - [ ] Update env_config.py with environment detection
-  - [ ] Update config.py (remove DB config, add pool settings)
-  - [ ] Update db_connection.py to use new structure
-- [ ] Test database connectivity
-- [ ] Discuss approach for bash scripts
-
-TODO: Documentation Updates
-- [ ] Update DATABASE.md to reflect new environment variable setup
-- [ ] Update DEVOPS.md to remove references to _secrets.py
-- [ ] Create documentation for setting up .env.local
-- [ ] Update deployment documentation for Supabase/Render
-
-TODO: Tidying
-- [ ] Fix the linter errors in `env_config.py`
-- [ ] Is there a way to tidy up `conftest.test_db` and how we feed it into `db_connection.init_db()`?
+- [x] Check .env.local_with_fly_proxy is correct
 
 TODO: Testing & Cleanup
 - [ ] Test all functionality end-to-end
@@ -149,10 +89,10 @@ TODO: Final Stages
 - [ ] Test all functionality end-to-end
 - [ ] Remove _secrets.py
 - [ ] Update deployment documentation for Supabase/Render
+
 ## Environment Files Structure
 
 see .env.example (version controlled)
-
 
 ### .env.testing (version controlled)
 Safe defaults for testing environment with test database name enforced.

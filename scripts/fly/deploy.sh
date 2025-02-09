@@ -32,7 +32,7 @@ fi
 
 # Set secrets from .env.fly
 echo "Setting Fly.io secrets..."
-./scripts/fly/set_secrets.sh
+./scripts/fly/set_secrets_for_fly_cloud.sh
 
 # Deploy to Fly.io using fly.toml configuration
 echo "Deploying to Fly.io..."

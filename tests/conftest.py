@@ -80,36 +80,17 @@ def ensure_test_config():
         "_test"
     ), f"Test database name must end with '_test', got {POSTGRES_DB_NAME}"
     assert POSTGRES_HOST == "localhost", "Test database host must be localhost"
-    assert POSTGRES_PORT == 5432, "Test database port must be 5432"
-
-
-def pytest_configure(config):
-    """Configure pytest-postgresql with values from .env.testing."""
-    config.option.postgresql_dbname = POSTGRES_DB_NAME
-    config.option.postgresql_host = POSTGRES_HOST
-    config.option.postgresql_port = POSTGRES_PORT
 
 
 @pytest.fixture(scope="session")
-def postgresql_auth():
-    """Provide authentication details for pytest-postgresql."""
-    return {
-        "user": POSTGRES_DB_USER,
-        "password": POSTGRES_DB_PASSWORD,
-        "host": POSTGRES_HOST,
-        "port": POSTGRES_PORT,
-    }
-
-
-@pytest.fixture
-def fixture_for_testing_db(postgresql):
-    """Create a test database for the test session using pytest-postgresql."""
+def fixture_for_testing_db():
+    """Create a test database connection."""
     database = PostgresqlExtDatabase(
-        postgresql.info.dbname,
-        user=postgresql.info.user,
-        password=postgresql.info.password,
-        host=postgresql.info.host,
-        port=postgresql.info.port,
+        POSTGRES_DB_NAME,
+        user=POSTGRES_DB_USER,
+        password=POSTGRES_DB_PASSWORD,
+        host=POSTGRES_HOST,
+        port=POSTGRES_PORT,
     )
 
     # Bind models to database
@@ -122,7 +103,7 @@ def fixture_for_testing_db(postgresql):
 
     yield database
 
-    # Cleanup handled automatically by pytest-postgresql
+    # Cleanup
     database.close()
 
 

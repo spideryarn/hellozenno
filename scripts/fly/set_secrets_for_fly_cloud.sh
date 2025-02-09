@@ -9,15 +9,15 @@ cd "$(dirname "$0")/../.."
 # Source common variables and functions
 source scripts/common.sh
 
-echo "Setting Fly.io secrets from .env.fly..."
+echo "Setting Fly.io secrets from .env.fly_cloud..."
 
-# Check if .env.fly exists
-if [ ! -f .env.fly ]; then
-    echo_error ".env.fly file not found"
+# Check if .env.fly_cloud exists
+if [ ! -f .env.fly_cloud ]; then
+    echo_error ".env.fly_cloud file not found"
     exit 1
 fi
 
-# Read .env.fly and set each secret
+# Read .env.fly_cloud and set each secret
 while IFS= read -r line; do
     # Skip comments and empty lines
     [[ $line =~ ^#.*$ ]] && continue
@@ -29,6 +29,6 @@ while IFS= read -r line; do
     
     echo "Setting $key..."
     fly secrets set "$key=$value"
-done < .env.fly
+done < .env.fly_cloud
 
 echo_success "Secrets set successfully!" 

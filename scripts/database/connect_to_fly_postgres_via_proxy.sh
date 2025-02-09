@@ -9,11 +9,15 @@ cd "$(dirname "$0")/../.."
 # Source common variables and functions
 source scripts/common.sh
 
+# Load environment variables
+source .env.local_with_fly_proxy
+echo "Using Fly.io database via proxy"
+
 # Configuration
 LOCAL_PORT=15432
-REMOTE_PORT=5432
-DB_NAME="hz_app_web"
-DB_USER="hz_app_web"
+REMOTE_PORT=$POSTGRES_PORT
+DB_NAME=$POSTGRES_DB_NAME
+DB_USER=$POSTGRES_DB_USER
 APP_NAME="hz-app-db-prod"
 
 echo "Using Fly.io database app: ${APP_NAME}"
@@ -73,8 +77,8 @@ echo "  Database : ${DB_NAME}"
 echo "  User     : ${DB_USER}"
 echo
 
-# Get password from _secrets.py without displaying it
-PGPASSWORD="$( grep POSTGRES_DB_PASSWORD _secrets.py | cut -d'"' -f2 )" \
+# Get password from environment
+PGPASSWORD=$POSTGRES_DB_PASSWORD \
     psql -h localhost -p ${LOCAL_PORT} -U ${DB_USER} ${DB_NAME}
 
 # Note: Cleanup happens automatically via trap when you exit psql 
