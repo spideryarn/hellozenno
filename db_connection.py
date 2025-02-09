@@ -12,8 +12,6 @@ from env_config import (
     POSTGRES_DB_PASSWORD,
     POSTGRES_HOST,
     POSTGRES_PORT,
-    is_fly_cloud,
-    is_local_to_fly_proxy,
 )
 
 # Configure logging
@@ -64,46 +62,25 @@ class MonitoredPooledPostgresqlExtDatabase(PooledPostgresqlExtDatabase):
 def get_db_config():
     """Get database configuration based on environment.
 
-    Supports three modes:
-    1. Production: Running on Fly.io, connecting to Postgres via internal network
-    2. Local with Proxy: Local development connecting to Fly.io Postgres via proxy
-    3. Local Development: Local PostgreSQL database
+    Configuration is loaded from environment variables via env_config.py.
     """
-    # Start with base configuration
+    # All configuration comes from env_config.py
     config = {
         "database": POSTGRES_DB_NAME,
         "user": POSTGRES_DB_USER,
         "password": POSTGRES_DB_PASSWORD,
+        "host": POSTGRES_HOST,
+        "port": POSTGRES_PORT,
         **DB_POOL_CONFIG,
     }
 
-    if is_local_to_fly_proxy():
-        # Override host/port for proxy case
-        logger.info(
-            "Configuring Postgres connection to %s@localhost:15432/%s via proxy",
-            POSTGRES_DB_USER,
-            POSTGRES_DB_NAME,
-        )
-        config.update(
-            {
-                "host": "localhost",
-                "port": 15432,
-            }
-        )
-    else:
-        # Use standard host/port for both local and Fly.io
-        logger.info(
-            "Configuring Postgres connection to %s@%s/%s",
-            POSTGRES_DB_USER,
-            POSTGRES_HOST,
-            POSTGRES_DB_NAME,
-        )
-        config.update(
-            {
-                "host": POSTGRES_HOST,
-                "port": POSTGRES_PORT,
-            }
-        )
+    logger.info(
+        "Configuring Postgres connection to %s@%s:%s/%s",
+        POSTGRES_DB_USER,
+        POSTGRES_HOST,
+        POSTGRES_PORT,
+        POSTGRES_DB_NAME,
+    )
 
     return MonitoredPooledPostgresqlExtDatabase(**config)
 
