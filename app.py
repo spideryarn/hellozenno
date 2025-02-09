@@ -1,8 +1,7 @@
 """Main Flask application."""
 
 import logging
-import os
-from flask import Flask, send_from_directory
+from flask import Flask
 from flask_cors import CORS
 from utils.env_config import is_fly_cloud, FLASK_SECRET_KEY
 

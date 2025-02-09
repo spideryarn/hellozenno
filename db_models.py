@@ -10,8 +10,6 @@ from peewee import (
     fn,
     DoesNotExist,
     ForeignKeyField,
-    IntegrityError,
-    OperationalError,
 )
 from playhouse.postgres_ext import JSONField
 from datetime import datetime

@@ -1,8 +1,5 @@
-from peewee import *
 from flask import g
-from pathlib import Path
 from playhouse.pool import PooledPostgresqlExtDatabase
-import os
 import logging
 from datetime import datetime
 from config import DB_POOL_CONFIG
