@@ -5,6 +5,7 @@ All environment variables are required and validated using Pydantic types.
 """
 
 from dotenv import load_dotenv
+from gjdutils.env import get_env_var, list_env_example_vars
 import logging
 import os
 from pathlib import Path
@@ -98,62 +99,11 @@ def decide_environment_and_load_dotenv_file():
     return env_file
 
 
-def get_env_var(name: str, type_: Any = StrictStr) -> T:
-    """Get environment variable with type validation.
-
-    Args:
-        name: Name of environment variable
-        type_: Pydantic type to validate against (default: StrictStr for non-empty string)
-
-    Returns:
-        The validated value with the specified type
-
-    Raises:
-        ValueError: If variable is missing or fails validation
-    """
-    try:
-        value = os.environ[name]
-        _processed_vars.add(name)
-
-        # Use TypeAdapter for validation
-        adapter = TypeAdapter(type_)
-        validated = adapter.validate_python(value)
-
-        # Return validated value directly
-        return cast(T, validated)
-    except KeyError:
-        raise ValueError(f"Missing required environment variable: {name}")
-    except Exception as e:
-        raise ValueError(f"Invalid value for {name}: {e}")
-
-
-def list_env_example_vars() -> set[str]:
-    """Get set of required variables from .env.example."""
-    assert ENV_FILE_EXAMPLE.exists(), "Missing .env.example file"
-
-    required_vars = set()
-    with ENV_FILE_EXAMPLE.open() as f:
-        for line in f:
-            line = line.strip()
-            # Skip comments and empty lines
-            if not line or line.startswith("#"):
-                continue
-            # Get variable name (everything before =)
-            var_name = line.split("=")[0].strip()
-            required_vars.add(var_name)
-
-    return required_vars
-
-
 # Load environment on module import
 decide_environment_and_load_dotenv_file()
 
 # Database configuration
-POSTGRES_DB_NAME = get_env_var("POSTGRES_DB_NAME")  # type: ignore
-POSTGRES_DB_USER = get_env_var("POSTGRES_DB_USER")  # type: ignore
-POSTGRES_DB_PASSWORD = get_env_var("POSTGRES_DB_PASSWORD", SecretStr)  # type: ignore
-POSTGRES_HOST = get_env_var("POSTGRES_HOST")  # type: ignore
-POSTGRES_PORT = get_env_var("POSTGRES_PORT", PositiveInt)  # type: ignore
+DATABASE_URL = get_env_var("DATABASE_URL", SecretStr)  # type: ignore
 
 # API Keys
 CLAUDE_API_KEY = get_env_var("CLAUDE_API_KEY", SecretStr)
@@ -168,7 +118,7 @@ USE_FLY_POSTGRES_FROM_LOCAL_PROXY = get_env_var("USE_FLY_POSTGRES_FROM_LOCAL_PRO
 
 # Validate we processed all required variables
 # Get required variables before we start processing
-required_vars = list_env_example_vars()
+required_vars = list_env_example_vars(ENV_FILE_EXAMPLE)
 unprocessed = required_vars - _processed_vars
 if unprocessed:
     raise ValueError(

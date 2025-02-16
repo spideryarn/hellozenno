@@ -3,13 +3,8 @@ from playhouse.pool import PooledPostgresqlExtDatabase
 import logging
 from datetime import datetime
 from config import DB_POOL_CONFIG
-from utils.env_config import (
-    POSTGRES_DB_NAME,
-    POSTGRES_DB_USER,
-    POSTGRES_DB_PASSWORD,
-    POSTGRES_HOST,
-    POSTGRES_PORT,
-)
+from utils.env_config import DATABASE_URL
+from urllib.parse import urlparse
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -56,27 +51,46 @@ class MonitoredPooledPostgresqlExtDatabase(PooledPostgresqlExtDatabase):
             raise
 
 
+def parse_database_url(url: str) -> dict:
+    """Parse DATABASE_URL into connection parameters.
+
+    Args:
+        url: Database URL string
+
+    Returns:
+        dict: Connection parameters
+    """
+    parsed = urlparse(url)
+    path = parsed.path.lstrip("/")  # Remove leading slash
+
+    return {
+        "database": path,
+        "user": parsed.username,
+        "password": parsed.password,
+        "host": parsed.hostname,
+        "port": parsed.port,
+        "sslmode": "require",  # Supabase requires SSL
+    }
+
+
 def get_db_config():
-    """Get database configuration based on environment.
+    """Get database configuration from DATABASE_URL.
 
     Configuration is loaded from environment variables via env_config.py.
     """
-    # All configuration comes from env_config.py
+    # Parse the database URL into connection parameters
+    db_url = DATABASE_URL.get_secret_value()
     config = {
-        "database": POSTGRES_DB_NAME,
-        "user": POSTGRES_DB_USER,
-        "password": POSTGRES_DB_PASSWORD,
-        "host": POSTGRES_HOST,
-        "port": POSTGRES_PORT,
+        **parse_database_url(db_url),
         **DB_POOL_CONFIG,
     }
 
     logger.info(
         "Configuring Postgres connection to %s@%s:%s/%s",
-        POSTGRES_DB_USER,
-        POSTGRES_HOST,
-        POSTGRES_PORT,
-        POSTGRES_DB_NAME,
+        config["user"],
+        config["host"],
+        config["port"],
+        config["database"],
     )
 
     return MonitoredPooledPostgresqlExtDatabase(**config)
