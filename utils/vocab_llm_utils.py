@@ -6,7 +6,7 @@ import re
 from typing import Any, Optional, Set
 from slugify import slugify
 
-from gdutils.llm_utils import generate_gpt_from_template
+from gjdutils.llm_utils import generate_gpt_from_template
 from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
 from utils.lang_utils import get_language_name, get_language_code
 from db_models import (

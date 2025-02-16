@@ -15,7 +15,7 @@ echo "Using Fly.io database via proxy"
 
 # Configuration
 BACKUP_DIR="backup"
-TIMESTAMP=$(python3 -c "from gdutils.dt import dt_str; print(dt_str())")
+TIMESTAMP=$(python3 -c "from gjdutils.dt import dt_str; print(dt_str())")
 BACKUP_FILE="${BACKUP_DIR}/production_backup_${TIMESTAMP}.sql"
 
 # Create backups directory if it doesn't exist

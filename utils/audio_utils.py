@@ -4,8 +4,8 @@ import os
 import tempfile
 from utils.env_config import ELEVENLABS_API_KEY, OPENAI_API_KEY
 from config import MAX_AUDIO_SIZE_FOR_STORAGE, SUPPORTED_LANGUAGES
-from gdutils.audios import play_mp3
-from gdutils.outloud_text_to_speech import outloud_elevenlabs
+from gjdutils.audios import play_mp3
+from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from openai import OpenAI
 
 # Initialize OpenAI client

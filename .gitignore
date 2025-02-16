@@ -1,5 +1,4 @@
 credentials/
-gdutils/
 _secrets.py
 .env.local
 .env.testing
