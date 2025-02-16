@@ -1,35 +1,31 @@
 # Project Management Practices
 
-This is a guide for writing planning/project management `.md` files.
+This is a guide for writing planning/project management `.md` files, e.g. `planning/yyMMdd_complex_project.md`.
+
+Aim to keep these concise, and only include stuff explicitly agreed with the user.
+
+Update this doc regularly, making minimal changes.
 
 
 ## Document structure
 
-1. **Goal Statement**
-   - Clear problem/goal at top, with enough context/description to pick up where we left off
-   - Example: "Migrate phrases from JSON to relational DB to enable better searching and management"
-   - If the goal is complex, break things down in detail about the desired behaviour.
+### Goal & context
 
-2. **Progress/next steps**
-   - Most immediate or important tasks first
-   - Label the beginning of each action section with TODO, DONE, SKIP, etc
-   - Include subtasks with clear acceptance criteria
-   - Refer to specific files/functions to so it's clear exactly what needs to be done
-   - Update the tasks & status when we make changes
-   - When updating, make minimal changes
+- Clear problem/goal statement(s) at top, plus enough context/background to pick up where we left off
+- If the goal is complex, break things down in detail about the desired behaviour.
 
-## Key Tactics Used
+### Principles
 
-- Prioritisation
-   - Start with core functionality, the simplest version
-   - Implement features end-to-end (DB → API → UI), and complete one slice before starting next
+- If there are any specific principles/approaches that have been explicitly agreed with the user (over and above existing Cursor rules, project examples, best practices, etc).
 
-- Testing
-   - Write tests before implementation
-   - Think about whether to test at multiple levels (smoke, unit, integration, frontend) - see `planning_docs/FRONTEND_TESTING.md`
-   - Discuss edge case tests
-   - Every so often run all the tests, but focus on running & fixing a small number of tests at a time for speed of iteration with `-x --lf`
+### Actions
 
-- Next Steps
-   - Order the tasks in the order you want to do them, so the next task is always the topmost task that hasn't been done
-   - Break large tasks into smaller pieces
+- Break into lots of stages. Start with a really simple working v1, and gradually layer in complexity, ending each stage with passing tests and working code. Don't number the stages (so it's easy to move them around)
+- List action in the order that they should be tackled
+- Label the beginning of each action section with TODO, DONE, etc, updating task status as we go along
+- Include subtasks with clear acceptance criteria
+- Referring concretely to specific files/functions, so it's clear exactly what needs to be done
+- Explicitly add tasks for writing automated tests, usually before writing code. (Perhaps one or two end-to-end tests first, then gradually adding more detailed tests as complexity grows). Explicitly add tasks for running the automated tests before ending each stage. see `docs/FRONTEND_TESTING.md`
+- If there are actions that the user needs to do, add those in too, so we can track progress and remind the user.
+- Ask the user whether we should have an early action to create a `yyMMdd_complex_project` Git branch (and move over any changes), and a final action to merge that back into `main`.
+
