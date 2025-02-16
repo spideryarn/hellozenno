@@ -9,7 +9,7 @@ import logging
 import os
 from pathlib import Path
 from pydantic import StrictStr, PositiveInt, SecretStr, TypeAdapter
-from typing import Any, TypeVar, Type, Set, cast, Optional
+from typing import Any, TypeVar, Type, cast, Optional
 
 ENV_FILE_EXAMPLE = Path(".env.example")
 ENV_FILE_LOCAL = Path(".env.local")
@@ -21,7 +21,7 @@ ENV_FILE_FLY_CLOUD = Path(".env.fly_cloud")  # TODO we need to create this
 logger = logging.getLogger(__name__)
 
 # Track which variables we've processed
-_processed_vars: Set[str] = set()
+_processed_vars: set[str] = set()
 
 T = TypeVar("T")
 
@@ -127,7 +127,7 @@ def get_env_var(name: str, type_: Any = StrictStr) -> T:
         raise ValueError(f"Invalid value for {name}: {e}")
 
 
-def list_env_example_vars() -> Set[str]:
+def list_env_example_vars() -> set[str]:
     """Get set of required variables from .env.example."""
     assert ENV_FILE_EXAMPLE.exists(), "Missing .env.example file"
 
