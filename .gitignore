@@ -2,8 +2,8 @@ credentials/
 _secrets.py
 .env.local
 .env.testing
-.env.local_with_fly_proxy
-.env.fly_cloud
+.env.local_to_prod
+.env.prod
 .pytest_cache/**/*
 __pycache__/
 *.pyc
