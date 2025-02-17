@@ -7,7 +7,7 @@ set -e
 cd "$(dirname "$0")/../.."
 
 # Source common variables and functions
-source scripts/common.sh
+source scripts/utils/common.sh
 
 # Check for unstaged changes
 if ! git diff --quiet; then

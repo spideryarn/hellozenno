@@ -7,7 +7,7 @@ set -e
 cd "$(dirname "$0")/../.."
 
 # Source common variables and functions
-source scripts/common.sh
+source scripts/utils/common.sh
 
 echo "Setting Fly.io secrets from .env.prod..."
 
@@ -18,7 +18,6 @@ if [ ! -f .env.prod ]; then
 fi
 
 # Read .env.prod and set each secret
-# Note: DATABASE_URL should point to Supabase's transaction pooling endpoint (port 6543)
 while IFS= read -r line; do
     # Skip comments and empty lines
     [[ $line =~ ^#.*$ ]] && continue

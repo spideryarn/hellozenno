@@ -65,28 +65,23 @@ DONE: Connection Verification
 - [x] Verify connection pooling works - ✓ Pool configured with max 20 connections
 - [x] Confirm we can connect from local machine - ✓ Local to prod connection working
 
-IN PROGRESS: Database Migration
+DONE: Database Migration
 - [x] Create backup of Fly.io database
-  - [x] Use `backup_proxy_production_db.sh` to dump current production data
-  - [x] Verify backup integrity
-  - [x] Store backup in secure location at `/Users/greg/Dropbox/dev/experim/hellozenno/backup/production_backup_250209_0231_22.sql`
 - [x] Import to Supabase
-  - [x] Create `oneoff/load_supabase_from_prod_backup.py` script
-  - [x] Run script to load backup into Supabase
-  - [x] Verify data integrity:
 
 TODO: Deployment Process Updates
-- [ ] Update deploy.sh for new environment structure
-- [ ] Update set_secrets script for new variables
+- [ ] Update deploy.sh to remove proxy-related code and simplify for Supabase
+- [ ] Update set_secrets script for new DATABASE_URL
+- [ ] Remove connection pooling configuration (will use Supabase defaults)
 - [ ] Test deployment process end-to-end
 - [ ] Document new deployment steps in DEVOPS.md
+- [ ] Figure out how migrations will work, uncomment from deploy script
 
 TODO: Cleanup
 - [ ] Remove obsolete Fly.io database code
-- [ ] Update database scripts to use direct Supabase connection:
-  - [ ] Update backup_proxy_production_db.sh
-  - [ ] Remove connect_to_fly_postgres_via_proxy.sh
-  - [ ] Remove migrate_fly_production_db_from_local_proxy.sh
+- [ ] Update database scripts to use direct Supabase connection (i.e. no proxy needed):
+  - [ ] Update backup_proxy_production_db.sh, rename it. We'll still need to be able backup prod database from local.
+  - [ ] Remove connect_to_fly_postgres_via_proxy.sh, migrate_fly_production_db_from_local_proxy.sh (maybe already addressed by oneoff.reorganise_scripts.sh that we've already run)
 - [ ] Update documentation to remove proxy references
 - [ ] Archive old configuration files if they exist
 
@@ -102,8 +97,7 @@ DONE: Document Script Reorganization
   - [x] Verified no script path updates needed in other docs
 
 TODO: Final Testing & Documentation
-- [ ] Run full test suite again
-- [ ] Test local-to-prod debugging workflow
+- [ ] Run full test suite
 - [ ] Update all database-related documentation
 - [ ] Document lessons learned and improvements made
 
@@ -114,7 +108,6 @@ TODO: Git Completion (after user approval)
 
 ## Current Status
 - Environment and connection changes are complete and tested
-- Have production backup from Feb 9th
-- Ready to load backup into Supabase
-- Need user approval before proceeding with database import
+- Database successfully migrated to Supabase
+- Ready to update deployment scripts and remove unnecessary configuration
 

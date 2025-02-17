@@ -7,7 +7,7 @@ set -e
 cd "$(dirname "$0")/../.."
 
 # Source common variables and functions
-source scripts/common.sh
+source scripts/utils/common.sh
 
 echo_success "Starting deployment process..."
 
@@ -32,7 +32,7 @@ fi
 
 # Set secrets from .env.prod
 echo "Setting Fly.io secrets..."
-./scripts/fly/set_secrets.sh
+./scripts/prod/set_secrets.sh
 
 # Deploy to Fly.io using fly.toml configuration
 echo "Deploying to Fly.io..."
@@ -50,7 +50,7 @@ sleep 60  # Initial wait for deployment to start
 ./scripts/prod/migrate.sh
 
 # Run health checks
-./scripts/health-checks/check.sh
+./scripts/prod/check_health.sh
 
 echo_success "Deployment completed successfully!"
 echo "You can now access the application at: https://hz-app-web.fly.dev" 
