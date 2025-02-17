@@ -31,15 +31,15 @@ The application uses PostgreSQL (via Supabase) in all environments:
 
 ## Database Scripts
 
-Located in `scripts/database/`:
+Located in `scripts/prod/` and `scripts/local/`:
 
-- `initialise_or_wipe_local_postgres.sh`: Sets up local PostgreSQL database
-- `migrate_local.sh`: Runs migrations on local database
-- `migrate_fly.sh`: Runs migrations on production database
-- `backup_local_db.sh`: Creates a backup of the local database
-- `migrations_list.sh`: Lists all available migrations
+- `scripts/local/init_db.sh`: Sets up local PostgreSQL database
+- `scripts/local/migrate.sh`: Runs migrations on local database
+- `scripts/prod/migrate.sh`: Runs migrations on production database
+- `scripts/local/backup_db.sh`: Creates a backup of the local database
+- `scripts/local/migrations_list.sh`: Lists all available migrations
 
-N.B. We used to host our Postgres database on Fly.io, but now we use Supabase for that. If you see reference to Fly and databases, that's why. Notify the user, because we should update them. see `planning/250216_Supabase_database_migration.md`
+N.B. We used to host our Postgres database on Fly.io, but now we use Supabase for that. If you see references to Fly.io and databases, please update them. See `planning/250216_Supabase_database_migration.md`
 
 ## Models
 
@@ -77,8 +77,8 @@ Test configuration (`conftest.py`) provides:
 ### Initial Setup
 
 ```bash
-# Set up local development database
-./scripts/database/initialise_or_wipe_local_postgres.sh
+# Initialize local database
+./scripts/local/init_db.sh
 ```
 
 ### Connecting to Production Database
@@ -115,11 +115,11 @@ For debugging or maintenance tasks, you can connect directly to the production d
 Don't ever make changes directly to the database, only as part of a migration (to keep local and Production in sync).
 
 ```bash
-# Local development
-./scripts/database/migrate_local.sh
+# Run migrations locally
+./scripts/local/migrate.sh
 
-# Production
-./scripts/database/migrate_prod.sh
+# Run migrations in production
+./scripts/prod/migrate.sh
 ```
 
 ### Querying the local development database

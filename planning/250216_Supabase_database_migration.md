@@ -90,12 +90,16 @@ TODO: Cleanup
 - [ ] Update documentation to remove proxy references
 - [ ] Archive old configuration files if they exist
 
-TODO: Document Script Reorganization
-- [ ] Update README.md with new script locations
-- [ ] Update DATABASE.md to reflect new script structure
-- [ ] Update MIGRATIONS.md with new paths
-- [ ] Review and update any remaining documentation files for script path references
-- [ ] Add note about script organization in CONTRIBUTING.md if it exists
+DONE: Document Script Reorganization
+- [x] Move and rename scripts according to reorganise_scripts.sh:
+  - [x] Production scripts to scripts/prod/
+  - [x] Local development scripts to scripts/local/
+  - [x] Utility scripts to scripts/utils/
+- [x] Update documentation with new script paths:
+  - [x] DEVOPS.md
+  - [x] DATABASE.md
+  - [x] MIGRATIONS.md
+  - [x] Verified no script path updates needed in other docs
 
 TODO: Final Testing & Documentation
 - [ ] Run full test suite again
