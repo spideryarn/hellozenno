@@ -1,4 +1,5 @@
 credentials/
+gjdutils/
 _secrets.py
 .env.local
 .env.testing

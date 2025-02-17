@@ -17,6 +17,7 @@ Update this doc regularly, making minimal changes.
 ### Principles
 
 - If there are any specific principles/approaches that have been explicitly agreed with the user (over and above existing Cursor rules, project examples, best practices, etc).
+- Reference this doc, so that future updates continue to follow this style
 
 ### Actions
 

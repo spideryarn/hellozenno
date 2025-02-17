@@ -2,6 +2,7 @@
 beautifulsoup4 
 black
 flake8
+flask-debugtoolbar==0.14.1
 ipdb
 ipykernel
 matplotlib
@@ -11,4 +12,4 @@ pytest
 pytest-watch 
 playwright==1.42.0
 pytest-playwright==0.4.3
-flask-debugtoolbar==0.14.1
+rich
