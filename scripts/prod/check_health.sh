@@ -4,7 +4,7 @@
 set -e
 
 # Source common variables and functions
-source "$(dirname "$0")/../common.sh"
+source "$(dirname "$0")/../utils/common.sh"
 
 echo "Running health checks against https://hz-app-web.fly.dev"
 echo "Testing health check endpoint..."
