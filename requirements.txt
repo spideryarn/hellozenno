@@ -6,7 +6,7 @@ flask
 # google-auth-httplib2
 # google-auth-oauthlib
 # google-cloud-storage
-git+https://github.com/gregdetre/gjdutils.git#egg=gjdutils
+gjdutils
 gunicorn
 jinja2
 openai
