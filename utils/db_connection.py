@@ -3,7 +3,7 @@ from playhouse.pool import PooledPostgresqlExtDatabase
 import logging
 from datetime import datetime
 from config import DB_POOL_CONFIG
-from utils.env_config import DATABASE_URL
+from utils.env_config import DATABASE_URL, is_fly_cloud, is_local_to_prod
 from urllib.parse import urlparse
 
 # Configure logging
@@ -63,14 +63,19 @@ def parse_database_url(url: str) -> dict:
     parsed = urlparse(url)
     path = parsed.path.lstrip("/")  # Remove leading slash
 
-    return {
+    config = {
         "database": path,
         "user": parsed.username,
         "password": parsed.password,
         "host": parsed.hostname,
         "port": parsed.port,
-        "sslmode": "require",  # Supabase requires SSL
     }
+
+    # Require SSL for production and local-to-prod connections
+    if is_fly_cloud() or is_local_to_prod():
+        config["sslmode"] = "require"
+
+    return config
 
 
 def get_db_config():
