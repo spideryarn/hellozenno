@@ -30,10 +30,9 @@ if [ "$CURRENT_APP" != "hz-app-web" ]; then
     exit 1
 fi
 
-# Set secrets from .env.fly
-# echo "Skipping Fly.io secrets..."
+# Set secrets from .env.prod
 echo "Setting Fly.io secrets..."
-./scripts/fly/set_secrets_for_fly_cloud.sh
+./scripts/fly/set_secrets.sh
 
 # Deploy to Fly.io using fly.toml configuration
 echo "Deploying to Fly.io..."
@@ -48,7 +47,7 @@ echo "Waiting for deployment to complete..."
 sleep 60  # Initial wait for deployment to start
 
 # Run migrations
-./scripts/database/migrate_fly.sh
+./scripts/prod/migrate.sh
 
 # Run health checks
 ./scripts/health-checks/check.sh

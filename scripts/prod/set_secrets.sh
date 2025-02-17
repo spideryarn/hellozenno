@@ -9,15 +9,16 @@ cd "$(dirname "$0")/../.."
 # Source common variables and functions
 source scripts/common.sh
 
-echo "Setting Fly.io secrets from .env.fly_cloud..."
+echo "Setting Fly.io secrets from .env.prod..."
 
-# Check if .env.fly_cloud exists
-if [ ! -f .env.fly_cloud ]; then
-    echo_error ".env.fly_cloud file not found"
+# Check if .env.prod exists
+if [ ! -f .env.prod ]; then
+    echo_error ".env.prod file not found"
     exit 1
 fi
 
-# Read .env.fly_cloud and set each secret
+# Read .env.prod and set each secret
+# Note: DATABASE_URL should point to Supabase's transaction pooling endpoint (port 6543)
 while IFS= read -r line; do
     # Skip comments and empty lines
     [[ $line =~ ^#.*$ ]] && continue
@@ -31,6 +32,6 @@ while IFS= read -r line; do
     # Reference: https://www.perplexity.ai/search/with-fly-secrets-do-i-need-to-EECazzUIS4Ky9UXUAfXTQg
     # --stage avoids a restart, and only sets the secret for machines started later
     fly secrets set --stage "$key=$value"    
-done < .env.fly_cloud
+done < .env.prod
 
 echo_success "Secrets set successfully!" 

@@ -90,6 +90,13 @@ TODO: Cleanup
 - [ ] Update documentation to remove proxy references
 - [ ] Archive old configuration files if they exist
 
+TODO: Document Script Reorganization
+- [ ] Update README.md with new script locations
+- [ ] Update DATABASE.md to reflect new script structure
+- [ ] Update MIGRATIONS.md with new paths
+- [ ] Review and update any remaining documentation files for script path references
+- [ ] Add note about script organization in CONTRIBUTING.md if it exists
+
 TODO: Final Testing & Documentation
 - [ ] Run full test suite again
 - [ ] Test local-to-prod debugging workflow

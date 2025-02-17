@@ -13,40 +13,41 @@ pytest -k test_name  # Single test
 
 ### Deployment
 ```bash
-./scripts/fly/deploy.sh  # Deploy to Fly.io
+./scripts/prod/deploy.sh  # Deploy to Fly.io
 ./scripts/health-checks/check.sh  # Run health checks manually
 ```
 Includes database migrations and health checks
 
 ### Database Setup
 ```bash
-./scripts/database/initialise_or_wipe_local_postgres.sh  # Set up local PostgreSQL database
+./scripts/local/init_db.sh  # Set up local PostgreSQL database
 ```
 
 ### Database Migrations
 - Create: `python utils/migrate.py create migration_name`
-- Run locally: `./scripts/database/migrate_local.sh`
-- List migrations: `./scripts/database/migrations_list.sh`
-- Production: Handled by deploy.sh via `./scripts/database/migrate_fly.sh`
+- Run locally: `./scripts/local/migrate.sh`
+- List migrations: `./scripts/local/migrations_list.sh`
+- Production: Handled by deploy.sh via `./scripts/prod/migrate.sh`
 
 ### Database Access
-- Connect to production: `./scripts/database/connect_to_fly_postgres_via_proxy.sh`
-  - Sets up a secure proxy tunnel to Fly.io Postgres on port 15432
-  - Uses credentials from `.env.local_with_fly_proxy`
-  - Automatically cleans up when you exit psql
-  - If port 15432 is in use, either wait or kill existing proxy (script will guide you)
+- Production database (Supabase):
+  - Direct connection using DATABASE_URL from .env.prod
+  - Uses transaction pooling on port 6543
+  - Monitor via Supabase dashboard
+  - Automatic backups handled by Supabase
 
-For scripts that need to connect to production database from local:
-- First run `./scripts/database/connect_to_fly_postgres_via_proxy.sh` to start the proxy
-- Set environment variable: `export USE_FLY_POSTGRES_FROM_LOCAL_PROXY=1`
-- Your script can now use utils/db_connection.py which will automatically connect via the proxy
-- The proxy must remain running while your script executes
-- Remember to unset when done: `unset USE_FLY_POSTGRES_FROM_LOCAL_PROXY`
+For local development with production database:
+- Copy `.env.local_to_prod.example` to `.env.local_to_prod`
+- Update DATABASE_URL with your Supabase credentials
+- Set environment variable: `export USE_LOCAL_TO_PROD=1`
+- Your script can now use utils/db_connection.py to connect to production
+- Remember to unset when done: `unset USE_LOCAL_TO_PROD`
 
 ### Monitoring
 - Web app: `fly status -a hz-app-web`
-- Database: `fly status -a hz-app-db-prod`
-- Logs: `fly logs`
+- Database: Monitor via Supabase dashboard
+- Web app logs: `fly logs`
+- Database logs: Available in Supabase dashboard
 
 ## Resource Management
 
@@ -57,12 +58,13 @@ For scripts that need to connect to production database from local:
 ```
 Takes effect on next deploy
 
-### Database Memory
-```bash
-fly machine list -a hz-app-db-prod  # Get machine ID
-fly machine update MACHINE_ID --memory 512 -a hz-app-db-prod -y
-```
-Takes effect immediately
+### Database Resources
+Managed through Supabase dashboard:
+- Connection pooling
+- Compute resources
+- Storage
+- Backups
+- Monitoring
 
 ## Local Development
 
@@ -70,11 +72,11 @@ Takes effect immediately
 1. Copy `.env.example` to `.env.local` and fill in your credentials
 2. Install dev requirements: `pip install -r requirements-dev.txt`
 3. Make scripts executable: `chmod +x scripts/**/*.sh`
-4. Set up local database: `./scripts/database/initialise_or_wipe_local_postgres.sh`
+4. Set up local database: `./scripts/local/init_db.sh`
 
 ### Configuration
 - Environment variables: See `.env.example` for required variables
 - Database: See `config.py` for connection settings
 - Add language: Add to `SUPPORTED_LANGUAGES` in `config.py`
-- Environment tiers: See `utils/db_connection.py` (Fly.io, Local-to-Fly, Local Development)
+- Environment tiers: See `utils/db_connection.py` (Production, Local-to-Prod, Local Development)
 - App settings: See `config.py` for file limits, language settings, etc. 
