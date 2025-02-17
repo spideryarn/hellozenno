@@ -8,14 +8,14 @@ environment configuration.
 Usage:
     1. Local database testing:
        ```
-       python utils/verify_db_connection.py
+       PYTHONPATH=.python utils/verify_db_connection.py
        ```
        Uses settings from .env.local by default
 
     2. Production database testing:
        ```
        source ./scripts/export_envs.sh .env.local_to_prod
-       python tests/backend/verify_db_connection.py
+       PYTHONPATH=. python tests/backend/verify_db_connection.py
        ```
        Uses settings from .env.local_to_prod to connect to production database
        
@@ -71,16 +71,17 @@ def verify_connection():
         # Initialize database using shared configuration
         logger.info("\nInitializing database connection...")
         init_db()
+        db = get_db_config()  # Get fresh database instance
 
         # Test connection
         logger.info("Testing connection...")
-        database.connect()
+        db.connect()
         logger.info("✓ Connection successful")
 
         # Log pool status if using connection pool
-        if hasattr(database, "_connections"):
+        if hasattr(db, "_connections"):
             logger.info("\nConnection pool status:")
-            logger.info(f"  Active connections: {len(database._connections)}")
+            logger.info(f"  Active connections: {len(db._connections)}")
             logger.info(f"  Max connections: {DB_POOL_CONFIG['max_connections']}")
 
         # Get model list
@@ -94,8 +95,8 @@ def verify_connection():
             logger.info(f"✓ {model.__name__} has {count} records")
 
             # Update pool status after each query if using connection pool
-            if hasattr(database, "_connections"):
-                logger.debug(f"  Pool status: {len(database._connections)} connections")
+            if hasattr(db, "_connections"):
+                logger.debug(f"  Pool status: {len(db._connections)} connections")
 
         logger.info("\nAll verifications completed successfully! 🎉")
         return True
@@ -104,13 +105,11 @@ def verify_connection():
         logger.error(f"\nError during verification: {str(e)}")
         return False
     finally:
-        if database and not database.is_closed():
-            database.close()
+        if db and not db.is_closed():
+            db.close()
             # Final pool status
-            if hasattr(database, "_connections"):
-                logger.info(
-                    f"\nFinal pool status: {len(database._connections)} connections"
-                )
+            if hasattr(db, "_connections"):
+                logger.info(f"\nFinal pool status: {len(db._connections)} connections")
 
 
 if __name__ == "__main__":

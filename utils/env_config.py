@@ -129,7 +129,7 @@ ELEVENLABS_API_KEY = get_env_var_and_track("ELEVENLABS_API_KEY", SecretStr)
 FLASK_SECRET_KEY = get_env_var_and_track("FLASK_SECRET_KEY", SecretStr).get_secret_value()  # type: ignore
 
 # Local to prod configuration
-USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD")  # type: ignore
+USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ignore
 
 # Validate we processed all required variables
 # Get required variables before we start processing
