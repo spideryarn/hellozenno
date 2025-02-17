@@ -96,8 +96,7 @@ For debugging or maintenance tasks, you can connect directly to the production d
 - Or for specific operations:
    ```bash
    # Backup the production database
-   # TODO update our backup_proxy_production_db.sh to backup without needing a proxy 
-   source .env.local_to_prod && pg_dump "$DATABASE_URL" > backup/production_$(date +%Y%m%d_%H%M%S).sql
+   ./scripts/prod/backup_db.sh
 
    # Run a specific query
    source .env.local_to_prod && psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM lemma;"

@@ -11,12 +11,12 @@ See also: DATABASE.md
    - Never run migrations on production unless explicitly requested
    - Always wrap migrations in `database.atomic()` transactions
    - Try to write rollback functions, or if that's going to be very complicated then ask the user
-   - Check with the user that they've backed up the database first - see backup_proxy_production_db.sh
+   - Check with the user that they've backed up the database first - see scripts/prod/backup_db.sh
    
 2. **Environment Management**
    - Environment detection is handled by `utils/db_connection.py`
-   - Production (Fly.io) is detected via `FLY_APP_NAME` environment variable
-   - Local-to-Fly proxy mode via `USE_FLY_POSTGRES_FROM_LOCAL_PROXY=1`
+   - Production is detected via `FLY_APP_NAME` environment variable
+   - Local-to-production mode via `USE_LOCAL_TO_PROD=1`
    - Local development is the default when no special variables are set
    - All database configuration is centralized in `utils/db_connection.py`
 
@@ -41,9 +41,7 @@ N.B. Don't run things on production without being explicitly asked to.
    ./scripts/local/migrate.sh
    ```
 
-2. **Production (Fly.io)**
-
-    (This should get run as part of the standar )
+2. **Production**
    ```bash
    # Run migrations in production (handled by deploy.sh)
    ./scripts/prod/migrate.sh

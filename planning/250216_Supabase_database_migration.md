@@ -77,13 +77,16 @@ DONE: Deployment Process Updates
 - [x] Document new deployment steps in DEVOPS.md
 - [x] Figure out how migrations will work, uncomment from deploy script
 
-TODO: Cleanup
-- [ ] Remove obsolete Fly.io database code
-- [ ] Update database scripts to use direct Supabase connection (i.e. no proxy needed):
-  - [ ] Update backup_proxy_production_db.sh, rename it. We'll still need to be able backup prod database from local.
-  - [ ] Remove connect_to_fly_postgres_via_proxy.sh, migrate_fly_production_db_from_local_proxy.sh (maybe already addressed by oneoff.reorganise_scripts.sh that we've already run)
-- [ ] Update documentation to remove proxy references
-- [ ] Archive old configuration files if they exist
+DONE: Cleanup
+- [x] Remove obsolete Fly.io database code
+- [x] Update database scripts to use direct Supabase connection (i.e. no proxy needed):
+  - [x] Update backup_proxy_production_db.sh to backup_db.sh, now using direct Supabase connection
+  - [x] Remove connect_to_fly_postgres_via_proxy.sh, migrate_fly_production_db_from_local_proxy.sh (already addressed by oneoff.reorganise_scripts.sh)
+- [x] Update documentation to remove proxy references:
+  - [x] DATABASE.md - updated backup commands and connection examples
+  - [x] MIGRATIONS.md - removed Fly.io references, updated environment variables
+  - [x] Updated all references to USE_FLY_POSTGRES_FROM_LOCAL_PROXY to USE_LOCAL_TO_PROD
+- [x] Archive old configuration files if they exist
 
 DONE: Document Script Reorganization
 - [x] Move and rename scripts according to reorganise_scripts.sh:
