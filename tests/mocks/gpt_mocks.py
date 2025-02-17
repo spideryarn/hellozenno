@@ -56,4 +56,4 @@ def mock_gpt_from_template(monkeypatch):
         return "Unexpected template", {}
 
     monkeypatch.setattr("vocab_llm_utils.generate_gpt_from_template", mock_generate)
-    monkeypatch.setattr("gdutils.llm_utils.generate_gpt_from_template", mock_generate)
+    monkeypatch.setattr("gjdutils.llm_utils.generate_gpt_from_template", mock_generate)

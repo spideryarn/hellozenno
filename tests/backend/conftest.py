@@ -1,6 +1,7 @@
 """Shared test fixtures and configuration."""
 
 import os
+from urllib.parse import urlparse
 
 # This has to come at the top, before we import config variables
 # from `env_config` below, so that `PYTEST_CURRENT_TEST` has already been
@@ -42,11 +43,7 @@ from tests.mocks.search_mocks import mock_quick_search_for_wordform
 from utils.db_connection import init_db
 from views.flashcard_views import flashcard_views_bp
 from utils.env_config import (
-    POSTGRES_DB_NAME,
-    POSTGRES_DB_USER,
-    POSTGRES_DB_PASSWORD,
-    POSTGRES_HOST,
-    POSTGRES_PORT,
+    DATABASE_URL,
     is_testing,
 )
 
@@ -73,22 +70,28 @@ def ensure_test_config():
     # Verify we're in test mode
     assert is_testing(), "Tests must be run with pytest"
 
+    # Parse DATABASE_URL
+    db_url = urlparse(DATABASE_URL.get_secret_value())
+
     # Safety checks for test database
-    assert POSTGRES_DB_NAME.endswith(
+    assert db_url.path.endswith(
         "_test"
-    ), f"Test database name must end with '_test', got {POSTGRES_DB_NAME}"
-    assert POSTGRES_HOST == "localhost", "Test database host must be localhost"
+    ), f"Test database name must end with '_test', got {db_url.path}"
+    assert db_url.hostname == "localhost", "Test database host must be localhost"
 
 
 @pytest.fixture(scope="session")
 def fixture_for_testing_db():
     """Create a test database connection."""
+    # Parse DATABASE_URL
+    db_url = urlparse(DATABASE_URL.get_secret_value())
+
     database = PostgresqlExtDatabase(
-        POSTGRES_DB_NAME,
-        user=POSTGRES_DB_USER,
-        password=POSTGRES_DB_PASSWORD,
-        host=POSTGRES_HOST,
-        port=POSTGRES_PORT,
+        db_url.path.lstrip("/"),  # Remove leading slash from path to get database name
+        user=db_url.username,
+        password=db_url.password,
+        host=db_url.hostname,
+        port=db_url.port or 5432,  # Default to 5432 if port not specified
     )
 
     # Bind models to database

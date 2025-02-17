@@ -12,7 +12,7 @@ from config import (
 )
 from db_models import Lemma, Wordform, SourcefileWordform
 from utils.audio_utils import transcribe_audio
-from gdutils.dt import dt_str
+from gjdutils.dt import dt_str
 from utils.image_utils import resize_image_to_target_size
 from utils.vocab_llm_utils import (
     extract_text_from_image,

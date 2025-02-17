@@ -2,38 +2,44 @@ This document describes the database setup and management scripts for the applic
 
 see also:
 - MIGRATIONS.md
-- 
 
 ## Environment Tiers
 
-The application uses PostgreSQL in all environments:
+The application uses PostgreSQL (via Supabase) in all environments:
 
-1. **Production** (Fly.io): PostgreSQL via internal network
-   - Detected via `FLY_APP_NAME` environment variable - see `env_config.is_fly_cloud()`
-   - Uses credentials from `.env.fly_cloud`
-   - Connects via internal network on Fly.io
+1. **Production**: Supabase PostgreSQL
+   - Uses connection string from `.env.prod`
+   - Connects directly to Supabase over HTTPS
+   - Uses transaction pooling (port 6543) for optimal performance
+   - SSL mode required for security
 
-2. **Local-to-Fly**: Local development connecting to Fly.io PostgreSQL via proxy
-   - Activated by setting `USE_FLY_POSTGRES_FROM_LOCAL_PROXY=1` - see `env_config.py`
-   - Uses credentials from `.env.local_with_fly_proxy`
-   - Connects via local proxy on port 15432
-
-3. **Local Development**: Local PostgreSQL database
+2. **Local Development**: Local PostgreSQL database
    - Default when no special environment variables are set
-   - Uses credentials from `.env.local`
+   - Uses connection string from `.env.local`
    - Database name defaults to "hellozenno_development"
+
+3. **Local-to-Production**: Direct connection to Supabase for debugging
+   - Uses connection string from `.env.local_to_prod`
+   - Connects directly to Supabase (no proxy needed)
+   - Useful for debugging production database issues
+   - Use with caution - read-only operations recommended
+
+4. **Testing**: Local PostgreSQL test database
+   - Uses connection string from `.env.testing`
+   - Isolated test database with name ending in "_test"
+   - Automatically managed by test suite
 
 ## Database Scripts
 
-Located in `scripts/database/`:
+Located in `scripts/prod/` and `scripts/local/`:
 
-- `initialise_or_wipe_local_postgres.sh`: Sets up local PostgreSQL database
-- `connect_to_fly_postgres_via_proxy.sh`: Establishes a proxy connection to the Fly.io production database
-- `migrate_local.sh`: Runs migrations on local database
-- `migrate_fly.sh`: Runs migrations on Fly.io database
-- `migrate_fly_production_db_from_local_proxy.sh`: Runs migrations on production via proxy
-- `backup_proxy_production_db.sh`: Creates a backup of the production database
-- `migrations_list.sh`: Lists all available migrations
+- `scripts/local/init_db.sh`: Sets up local PostgreSQL database
+- `scripts/local/migrate.sh`: Runs migrations on local database
+- `scripts/prod/migrate.sh`: Runs migrations on production database
+- `scripts/local/backup_db.sh`: Creates a backup of the local database
+- `scripts/local/migrations_list.sh`: Lists all available migrations
+
+N.B. We used to host our Postgres database on Fly.io, but now we use Supabase for that. If you see references to Fly.io and databases, please update them. See `planning/250216_Supabase_database_migration.md`
 
 ## Models
 
@@ -50,7 +56,7 @@ Main database models (`db_models.py`):
 
 The database connection (`utils/db_connection.py`) features:
 
-- Connection pooling
+- Connection pooling via Supabase's transaction pooler
 - Automatic environment detection
 - Connection monitoring and logging
 - Request-scoped connections in Flask
@@ -71,44 +77,57 @@ Test configuration (`conftest.py`) provides:
 ### Initial Setup
 
 ```bash
-# Set up local development database
-./scripts/database/initialise_or_wipe_local_postgres.sh
+# Initialize local database
+./scripts/local/init_db.sh
 ```
 
 ### Connecting to Production Database
 
-```bash
-# Via proxy from local machine
-./scripts/database/connect_to_fly_postgres_via_proxy.sh
+For debugging or maintenance tasks, you can connect directly to the production database:
 
-# Backup production database (requires proxy to be running)
-# First start the proxy in a separate terminal:
-./scripts/database/connect_to_fly_postgres_via_proxy.sh
-# Then in another terminal:
-./scripts/database/backup_proxy_production_db.sh
-```
+- Use `.env.local_to_prod`:
+
+- Connect using psql:
+   ```bash
+   # Using the connection string from .env.local_to_prod
+   source .env.local_to_prod && psql "$DATABASE_URL"
+   ```
+
+- Or for specific operations:
+   ```bash
+   # Backup the production database
+   # TODO update our backup_proxy_production_db.sh to backup without needing a proxy 
+   source .env.local_to_prod && pg_dump "$DATABASE_URL" > backup/production_$(date +%Y%m%d_%H%M%S).sql
+
+   # Run a specific query
+   source .env.local_to_prod && psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM lemma;"
+   ```
+
+**Important Safety Notes:**
+- Always use read-only operations unless you have a specific need to write
+- Never run migrations this way - use `migrate_prod.sh` instead
+- Consider using transaction blocks (`BEGIN; ... ROLLBACK;`) to prevent accidental changes
+- Take a backup before any maintenance work
+- Be cautious with large queries that might impact production performance
 
 ### Running Migrations
 
 Don't ever make changes directly to the database, only as part of a migration (to keep local and Production in sync).
 
 ```bash
-# Local development
-./scripts/database/migrate_local.sh
+# Run migrations locally
+./scripts/local/migrate.sh
 
-# Production
-./scripts/database/migrate_fly.sh
+# Run migrations in production
+./scripts/prod/migrate.sh
 ```
 
 ### Querying the local development database
 
-See `config.py` and `utils/db_connection.py` for the details of this.
-
 Database credentials are stored in environment files:
 - `.env.local` for local development
-- `.env.local_with_fly_proxy` for connecting to production via proxy
 - `.env.testing` for test environment
-- `.env.fly_cloud` for production
+- `.env.prod` for production
 
 Make sure to turn off pager mode (see below) so that you can see the output of running psql commands.
 

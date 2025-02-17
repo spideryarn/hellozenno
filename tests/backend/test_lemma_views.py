@@ -2,8 +2,18 @@ import pytest
 from flask import url_for
 from peewee import DoesNotExist, IntegrityError
 
-from db_models import Lemma, Wordform, Sentence, LemmaExampleSentence, SentenceLemma
+from db_models import (
+    Lemma,
+    Wordform,
+    Sentence,
+    LemmaExampleSentence,
+    SentenceLemma,
+    SourcefileWordform,
+    Sourcefile,
+    Sourcedir,
+)
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
+from utils.store_utils import load_or_generate_lemma_metadata
 
 
 def test_lemma_url_generation(client):
@@ -307,3 +317,46 @@ def test_lemma_update_or_create(client, fixture_for_testing_db):
         )
         assert created is False
         assert "updated" in lemma.translations
+
+
+def test_load_lemma_metadata_handles_null_lemma(client, fixture_for_testing_db):
+    """Test that load_or_generate_lemma_metadata handles wordforms with null lemmas."""
+    # Create a wordform with a null lemma
+    wordform = Wordform.create(
+        wordform=None,  # Using None as the wordform to prevent LLM generation
+        language_code=TEST_LANGUAGE_CODE,
+        lemma_entry=None,
+        part_of_speech="unknown",
+        translations=[],
+        inflection_type="unknown",
+        is_lemma=False,
+    )
+
+    # Test that the function handles the null lemma gracefully
+    metadata = load_or_generate_lemma_metadata(wordform.wordform, TEST_LANGUAGE_CODE)
+
+    # Verify the metadata is returned with appropriate defaults
+    assert metadata is not None
+    assert metadata["lemma"] is None
+    assert metadata["translations"] == []
+    assert metadata["etymology"] == ""
+    assert metadata["commonality"] == 0.5
+    assert metadata["guessability"] == 0.5
+    assert metadata["register"] == "unknown"
+    assert metadata["example_usage"] == []
+
+
+def test_load_lemma_metadata_with_none(client, fixture_for_testing_db):
+    """Test that load_or_generate_lemma_metadata handles None input gracefully."""
+    # Test with None lemma
+    metadata = load_or_generate_lemma_metadata(None, TEST_LANGUAGE_CODE)
+
+    # Verify the metadata is returned with appropriate defaults
+    assert metadata is not None
+    assert metadata["lemma"] is None  # None as per implementation
+    assert metadata["translations"] == []
+    assert metadata["etymology"] == ""
+    assert metadata["commonality"] == 0.5
+    assert metadata["guessability"] == 0.5
+    assert metadata["register"] == "unknown"
+    assert metadata["example_usage"] == []

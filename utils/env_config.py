@@ -5,25 +5,41 @@ All environment variables are required and validated using Pydantic types.
 """
 
 from dotenv import load_dotenv
+from gjdutils.env import get_env_var, list_env_example_vars
 import logging
 import os
 from pathlib import Path
 from pydantic import StrictStr, PositiveInt, SecretStr, TypeAdapter
-from typing import Any, TypeVar, Type, Set, cast, Optional
+from typing import Any, TypeVar, Type, cast, Optional
 
 ENV_FILE_EXAMPLE = Path(".env.example")
 ENV_FILE_LOCAL = Path(".env.local")
 ENV_FILE_TESTING = Path(".env.testing")
-ENV_FILE_LOCAL_WITH_FLY_PROXY = Path(".env.local_with_fly_proxy")
-ENV_FILE_FLY_CLOUD = Path(".env.fly_cloud")  # TODO we need to create this
+ENV_FILE_LOCAL_TO_PROD = Path(".env.local_to_prod")
+ENV_FILE_PROD = Path(".env.prod")
 
 
 logger = logging.getLogger(__name__)
 
 # Track which variables we've processed
-_processed_vars: Set[str] = set()
+_processed_vars: set[str] = set()
 
 T = TypeVar("T")
+
+
+def get_env_var_and_track(var_name: str, type_adapter: Type[T] | None = None) -> T:
+    """Wrapper around gjdutils.env.get_env_var that tracks processed variables.
+
+    Args:
+        var_name: Name of environment variable to get
+        type_adapter: Optional Pydantic type to validate value against
+
+    Returns:
+        The environment variable value, validated against type_adapter if provided
+    """
+    value = get_env_var(var_name, type_adapter)
+    _processed_vars.add(var_name)
+    return value
 
 
 def is_testing() -> bool:
@@ -43,32 +59,32 @@ def is_fly_cloud() -> bool:
     return os.getenv("FLY_APP_NAME") is not None
 
 
-def is_local_to_fly_proxy() -> bool:
-    """Check if we're connecting to Fly.io Postgres from local machine via proxy."""
-    local_to_fly_proxy = os.getenv("USE_FLY_POSTGRES_FROM_LOCAL_PROXY")
+def is_local_to_prod() -> bool:
+    """Check if we're connecting to production database from local machine."""
+    local_to_prod = os.getenv("USE_LOCAL_TO_PROD")
     if is_fly_cloud():
         return False
-    assert local_to_fly_proxy is None or local_to_fly_proxy in ["0", "1"]
-    return local_to_fly_proxy == "1"
+    assert local_to_prod is None or local_to_prod in ["0", "1"]
+    return local_to_prod == "1"
 
 
 def decide_environment_file() -> Path:
     """Choose which .env file to load based on environment.
 
     Returns:
-        Optional[Path]: Path to the .env file to load, or None for Fly.io production
+        Optional[Path]: Path to the .env file to load, or None for production
     """
     # these should be mutually exclusive
     assert (
-        sum([is_testing(), is_fly_cloud(), is_local_to_fly_proxy()]) <= 1
-    ), "Testing, fly-cloud and local-with-fly-proxy should be mutually exclusive"
+        sum([is_testing(), is_fly_cloud(), is_local_to_prod()]) <= 1
+    ), "Testing, production and local-to-prod should be mutually exclusive"
 
     if is_testing():
         return ENV_FILE_TESTING
     if is_fly_cloud():
-        return ENV_FILE_FLY_CLOUD
-    if is_local_to_fly_proxy():
-        return ENV_FILE_LOCAL_WITH_FLY_PROXY
+        return ENV_FILE_PROD
+    if is_local_to_prod():
+        return ENV_FILE_LOCAL_TO_PROD
     return ENV_FILE_LOCAL
 
 
@@ -77,14 +93,19 @@ def decide_environment_and_load_dotenv_file():
 
     The environment file is selected based on the current environment:
     - test: .env.testing (required)
-    - fly: no file (uses environment variables)
-    - local_with_fly_proxy: .env.local_with_fly_proxy (required)
+    - prod: no file (we don't send up `.env.prod` to prod - instead we set environment variables during deploy)
+    - local_to_prod: .env.local_to_prod (required)
     - local: .env.local (required)
 
     Raises:
         AssertionError: If required environment file is missing
     """
     env_file = decide_environment_file()
+    # we don't want to send the .env file up to production, so don't
+    # require it to be there it's there. we're setting all the
+    # production environment variables with `set_secrets_for_fly_cloud.sh`
+    if env_file == ENV_FILE_PROD:
+        return None
     assert env_file.exists(), f"Missing required {env_file}"
     logger.info("Loading environment from %s", env_file)
     # if we're testing, we want to be sure to override the environment variables,
@@ -93,77 +114,26 @@ def decide_environment_and_load_dotenv_file():
     return env_file
 
 
-def get_env_var(name: str, type_: Any = StrictStr) -> T:
-    """Get environment variable with type validation.
-
-    Args:
-        name: Name of environment variable
-        type_: Pydantic type to validate against (default: StrictStr for non-empty string)
-
-    Returns:
-        The validated value with the specified type
-
-    Raises:
-        ValueError: If variable is missing or fails validation
-    """
-    try:
-        value = os.environ[name]
-        _processed_vars.add(name)
-
-        # Use TypeAdapter for validation
-        adapter = TypeAdapter(type_)
-        validated = adapter.validate_python(value)
-
-        # Return validated value directly
-        return cast(T, validated)
-    except KeyError:
-        raise ValueError(f"Missing required environment variable: {name}")
-    except Exception as e:
-        raise ValueError(f"Invalid value for {name}: {e}")
-
-
-def list_env_example_vars() -> Set[str]:
-    """Get set of required variables from .env.example."""
-    assert ENV_FILE_EXAMPLE.exists(), "Missing .env.example file"
-
-    required_vars = set()
-    with ENV_FILE_EXAMPLE.open() as f:
-        for line in f:
-            line = line.strip()
-            # Skip comments and empty lines
-            if not line or line.startswith("#"):
-                continue
-            # Get variable name (everything before =)
-            var_name = line.split("=")[0].strip()
-            required_vars.add(var_name)
-
-    return required_vars
-
-
 # Load environment on module import
 decide_environment_and_load_dotenv_file()
 
 # Database configuration
-POSTGRES_DB_NAME = get_env_var("POSTGRES_DB_NAME")  # type: ignore
-POSTGRES_DB_USER = get_env_var("POSTGRES_DB_USER")  # type: ignore
-POSTGRES_DB_PASSWORD = get_env_var("POSTGRES_DB_PASSWORD", SecretStr)  # type: ignore
-POSTGRES_HOST = get_env_var("POSTGRES_HOST")  # type: ignore
-POSTGRES_PORT = get_env_var("POSTGRES_PORT", PositiveInt)  # type: ignore
+DATABASE_URL = get_env_var_and_track("DATABASE_URL", SecretStr)  # type: ignore
 
 # API Keys
-CLAUDE_API_KEY = get_env_var("CLAUDE_API_KEY", SecretStr)
-OPENAI_API_KEY = get_env_var("OPENAI_API_KEY", SecretStr)
-ELEVENLABS_API_KEY = get_env_var("ELEVENLABS_API_KEY", SecretStr)
+CLAUDE_API_KEY = get_env_var_and_track("CLAUDE_API_KEY", SecretStr)
+OPENAI_API_KEY = get_env_var_and_track("OPENAI_API_KEY", SecretStr)
+ELEVENLABS_API_KEY = get_env_var_and_track("ELEVENLABS_API_KEY", SecretStr)
 
 # Flask configuration
-FLASK_SECRET_KEY = get_env_var("FLASK_SECRET_KEY", SecretStr).get_secret_value()  # type: ignore
+FLASK_SECRET_KEY = get_env_var_and_track("FLASK_SECRET_KEY", SecretStr).get_secret_value()  # type: ignore
 
-# Proxy configuration
-USE_FLY_POSTGRES_FROM_LOCAL_PROXY = get_env_var("USE_FLY_POSTGRES_FROM_LOCAL_PROXY")  # type: ignore
+# Local to prod configuration
+USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ignore
 
 # Validate we processed all required variables
 # Get required variables before we start processing
-required_vars = list_env_example_vars()
+required_vars = list_env_example_vars(ENV_FILE_EXAMPLE)
 unprocessed = required_vars - _processed_vars
 if unprocessed:
     raise ValueError(

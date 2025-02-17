@@ -37,30 +37,16 @@ N.B. Don't run things on production without being explicitly asked to.
 
 1. **Local Development**
    ```bash
-   ./scripts/database/migrate_local.sh
+   # Run migrations locally
+   ./scripts/local/migrate.sh
    ```
 
 2. **Production (Fly.io)**
 
     (This should get run as part of the standar )
    ```bash
-   # First backup the database
-   ./scripts/database/backup_proxy_production_db.sh
-   
-   # Then run migrations
-   ./scripts/database/migrate_fly.sh
-   ```
-
-3. **Production via Proxy** (if needed)
-   ```bash
-   # Start proxy in another terminal
-   ./scripts/database/connect_to_fly_postgres_via_proxy.sh
-   
-   # Run migrations with dry-run first
-   ./scripts/database/migrate_fly_production_db_from_local_proxy.sh --dry-run
-   
-   # Then run for real if dry-run looks good
-   ./scripts/database/migrate_fly_production_db_from_local_proxy.sh
+   # Run migrations in production (handled by deploy.sh)
+   ./scripts/prod/migrate.sh
    ```
 
 ## Common Patterns
@@ -137,7 +123,7 @@ Note: No need to bind models to database - they're just used for schema definiti
    - Make a proposal for which indexes (informed by how we're querying that model) we'll need, but check with the user first
    - Wherever possible, use Peewee's built-in migration functions (e.g., `migrator.add_columns()`, `migrator.drop_columns()`)
    - When raw SQL is unavoidable, always use `migrator.sql()` - never use `database.execute_sql()`
-   - Use the `utils/migrate.py` wrapper or `migrate_local.sh` for running migrations
+   - Use the `utils/migrate.py` wrapper or `scripts/local/migrate.sh` for running migrations
 
 2. **Naming and Organization**
    - Use descriptive migration names

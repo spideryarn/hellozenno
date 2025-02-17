@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for
-from gdutils.dicts import dict_as_html
+from gjdutils.dicts import dict_as_html
 from peewee import DoesNotExist
 
 from utils.lang_utils import get_language_name

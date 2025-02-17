@@ -6,6 +6,7 @@ flask
 # google-auth-httplib2
 # google-auth-oauthlib
 # google-cloud-storage
+gjdutils
 gunicorn
 jinja2
 openai

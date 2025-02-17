@@ -35,7 +35,7 @@ from db_models import (
     SentenceLemma,
     fn,
 )
-from gdutils.outloud_text_to_speech import outloud_elevenlabs
+from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import generate_practice_sentences, get_all_sentences
 from utils.sourcedir_utils import (
