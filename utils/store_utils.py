@@ -49,14 +49,17 @@ def _generate_and_save_metadata(
 
 
 def load_or_generate_lemma_metadata(
-    lemma: str, target_language_code: str, *, generate_if_incomplete: bool = False
-):
+    lemma: Optional[str],
+    target_language_code: str,
+    *,
+    generate_if_incomplete: bool = False,
+) -> dict[str, Any]:
     """Load metadata for a word lemma from database.
 
     Args:
-        lemma: The lemma to load
+        lemma: The lemma to load, or None if no lemma exists
         target_language_code: ISO language code (e.g. 'el' for Greek)
-        check_complete: If True, verify metadata completeness and regenerate if incomplete
+        generate_if_incomplete: If True, verify metadata completeness and regenerate if incomplete
 
     Returns:
         Dictionary containing lemma metadata
@@ -64,6 +67,26 @@ def load_or_generate_lemma_metadata(
     Raises:
         peewee.DatabaseError: If there's an error accessing the database
     """
+    # Handle null or empty lemma
+    if not lemma:
+        return {
+            "lemma": None,
+            "translations": [],
+            "etymology": "",
+            "commonality": 0.5,
+            "guessability": 0.5,
+            "register": "unknown",
+            "example_usage": [],
+            "mnemonics": [],
+            "related_words_phrases_idioms": [],
+            "synonyms": [],
+            "antonyms": [],
+            "example_wordforms": [],
+            "cultural_context": "",
+            "is_complete": True,  # Mark as complete to prevent regeneration attempts
+            "notes": "No lemma available for this wordform",
+        }
+
     try:
         lemma_model = Lemma.get(
             Lemma.lemma == lemma, Lemma.language_code == target_language_code
