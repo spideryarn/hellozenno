@@ -9,7 +9,7 @@ def mock_elevenlabs():
     """Mock ElevenLabs API calls."""
     with patch("utils.audio_utils.outloud_elevenlabs") as mock:
 
-        def fake_generate_audio(text, api_key, mp3_filen):
+        def fake_generate_audio(text, api_key, mp3_filen, bot_name=None):
             # Write some fake audio data to the file
             with open(mp3_filen, "wb") as f:
                 f.write(b"fake mp3 data")

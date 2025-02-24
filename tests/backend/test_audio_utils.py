@@ -105,6 +105,14 @@ def test_ensure_audio_data(mock_elevenlabs):
     mock_elevenlabs.assert_called_once()
     assert mock_elevenlabs.call_args[1]["text"] == "Test text"
 
+    # Verify voice selection
+    assert mock_elevenlabs.call_args[1]["bot_name"] in [
+        "Charlotte",
+        "Serena",
+        "Josh",
+        "Michael",
+    ]
+
     # Test with delays - use text that will trigger delays
     mock_elevenlabs.reset_mock()
     audio_data = ensure_audio_data(
@@ -116,6 +124,14 @@ def test_ensure_audio_data(mock_elevenlabs):
         text_with_delays != "Test text, with commas. And periods.\nAnd newlines."
     )  # Text should be modified
     assert "<break" in text_with_delays  # Should have delay markers
+
+    # Verify voice selection again
+    assert mock_elevenlabs.call_args[1]["bot_name"] in [
+        "Charlotte",
+        "Serena",
+        "Josh",
+        "Michael",
+    ]
 
 
 def test_ensure_model_audio_data(
