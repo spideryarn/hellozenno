@@ -15,6 +15,13 @@ logger = logging.getLogger("peewee_migrate")
 # Initialize router with database from db_connection
 router = Router(get_db_config(), migrate_dir="migrations")
 
+def list_migrations():
+    """Return lists of done and pending migrations."""
+    return {
+        "done": router.done,
+        "pending": router.diff
+    }
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: ./utils/migrate.py [create|migrate|list]")

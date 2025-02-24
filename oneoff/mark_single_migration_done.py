@@ -59,7 +59,7 @@ def mark_migration_done(migration_name: str, dry_run: bool = False):
         # Manually insert the migration record if it doesn't exist
         if migration_name not in router.done:
             database.execute_sql(
-                "INSERT INTO migratehistory (name, migrated_at) VALUES (?, ?)",
+                "INSERT INTO migratehistory (name, migrated_at) VALUES (%s, %s)",
                 (migration_name, datetime.now()),
             )
             print(f"Marked {migration_name} as done")

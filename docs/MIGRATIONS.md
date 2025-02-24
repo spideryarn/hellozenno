@@ -2,6 +2,12 @@
 
 This guide documents our best practices and lessons learned for managing database migrations.
 
+We're using the `peewee-migrate` library. I think it's this one:
+
+https://github.com/klen/peewee_migrate/blob/develop/peewee_migrate/models.py#L21
+
+and that it writes to the `migratehistory` table.
+
 See also: DATABASE.md
 
 ## Core Principles
