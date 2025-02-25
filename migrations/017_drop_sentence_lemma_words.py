@@ -10,35 +10,31 @@ def migrate(migrator, database, fake=False, **kwargs):
     """Drop the lemma_words column now that data is in junction table."""
 
     # Add new column
-    database.execute_sql("ALTER TABLE sentence ADD COLUMN lemma_words_new JSONB;")
+    migrator.sql("ALTER TABLE sentence ADD COLUMN lemma_words_new JSONB;")
 
     # Copy data
-    database.execute_sql("UPDATE sentence SET lemma_words_new = lemma_words;")
+    migrator.sql("UPDATE sentence SET lemma_words_new = lemma_words;")
 
     # Drop old column
-    database.execute_sql("ALTER TABLE sentence DROP COLUMN lemma_words;")
+    migrator.sql("ALTER TABLE sentence DROP COLUMN lemma_words;")
 
     # Rename new column
-    database.execute_sql(
-        "ALTER TABLE sentence RENAME COLUMN lemma_words_new TO lemma_words;"
-    )
+    migrator.sql("ALTER TABLE sentence RENAME COLUMN lemma_words_new TO lemma_words;")
 
 
 def rollback(migrator, database, fake=False, **kwargs):
     """Rollback the changes."""
 
     # Add new column
-    database.execute_sql(
+    migrator.sql(
         "ALTER TABLE sentence ADD COLUMN lemma_words_old JSONB NOT NULL DEFAULT '[]'::jsonb;"
     )
 
     # Copy data
-    database.execute_sql("UPDATE sentence SET lemma_words_old = lemma_words;")
+    migrator.sql("UPDATE sentence SET lemma_words_old = lemma_words;")
 
     # Drop old column
-    database.execute_sql("ALTER TABLE sentence DROP COLUMN lemma_words;")
+    migrator.sql("ALTER TABLE sentence DROP COLUMN lemma_words;")
 
     # Rename new column
-    database.execute_sql(
-        "ALTER TABLE sentence RENAME COLUMN lemma_words_old TO lemma_words;"
-    )
+    migrator.sql("ALTER TABLE sentence RENAME COLUMN lemma_words_old TO lemma_words;")

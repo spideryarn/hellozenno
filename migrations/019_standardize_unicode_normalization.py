@@ -28,23 +28,24 @@ def migrate(migrator: Migrator, database: pw.Database, *, fake=False):
     if fake:
         return
 
-    # Get the Wordform model dynamically
-    Wordform = migrator.orm["wordform"]
+    # Use raw SQL to update the wordforms directly
+    with database.atomic():
+        # First, get all wordforms that need normalization
+        cursor = database.execute_sql(
+            "SELECT id, wordform FROM wordform WHERE wordform IS NOT NULL"
+        )
 
-    # Get all wordforms
-    wordforms = Wordform.select()
+        update_count = 0
+        for row in cursor.fetchall():
+            wf_id, wordform = row
+            nfc_form = ensure_nfc(wordform)
 
-    # Convert each wordform to NFC and update if different
-    update_count = 0
-    for wf in wordforms:
-        if wf.wordform is None:
-            continue
-
-        nfc_form = ensure_nfc(wf.wordform)
-        if nfc_form != wf.wordform:
-            update_count += 1
-            wf.wordform = nfc_form
-            wf.save()
+            if nfc_form != wordform:
+                update_count += 1
+                # Use migrator.sql for updates
+                migrator.sql(
+                    "UPDATE wordform SET wordform = %s WHERE id = %s", (nfc_form, wf_id)
+                )
 
     # Log the number of updates
     print(f"Standardized {update_count} wordforms to NFC normalization")
