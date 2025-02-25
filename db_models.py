@@ -473,6 +473,7 @@ class Sourcedir(BaseModel):
 class Sourcefile(BaseModel):
     sourcedir = ForeignKeyField(Sourcedir, backref="sourcefiles", on_delete="CASCADE")
     filename = CharField()  # just the filename part
+    description = TextField(null=True)  # description of the file content
     image_data = BlobField(null=True)  # the original image
     audio_data = BlobField(null=True)  # optional mp3 audio
     text_target = TextField()  # the source text in target language

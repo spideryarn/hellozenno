@@ -987,3 +987,37 @@ def process_individual_words(
 
     print(f"Done processing sourcefile {sourcefile_slug}")
     return "", 204
+
+
+@sourcefile_views_bp.route(
+    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/update_description",
+    methods=["PUT"],
+)
+def update_sourcefile_description(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Update the description of a sourcefile."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Get and validate the description from the request
+        data = request.get_json()
+        if data is None:
+            return jsonify({"error": "Missing request data"}), 400
+
+        description = data.get("description", "").strip()
+
+        # Update the description
+        setattr(sourcefile_entry, "description", description if description else None)
+        sourcefile_entry.save()
+
+        return "", 204  # No content, success
+
+    except DoesNotExist:
+        return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error updating description: {str(e)}")
+        return jsonify({"error": str(e)}), 500

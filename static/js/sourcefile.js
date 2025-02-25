@@ -13,6 +13,110 @@ function setPlaybackRate(rate) {
     }
 }
 
+// Description editing
+function editDescription() {
+    const descriptionDisplay = document.getElementById('description-display');
+    const currentDescription = descriptionDisplay.querySelector('p').textContent.trim();
+    const isNoDescription = descriptionDisplay.querySelector('.no-description') !== null;
+
+    // Create editor if it doesn't exist
+    if (!document.getElementById('description-editor')) {
+        const editor = document.createElement('div');
+        editor.id = 'description-editor';
+
+        const textarea = document.createElement('textarea');
+        textarea.id = 'description-textarea';
+        textarea.placeholder = 'Enter a description for this file...';
+
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'button-group';
+
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save';
+        saveButton.className = 'button';
+        saveButton.onclick = saveDescription;
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.className = 'button';
+        cancelButton.onclick = cancelEditDescription;
+
+        buttonGroup.appendChild(cancelButton);
+        buttonGroup.appendChild(saveButton);
+
+        editor.appendChild(textarea);
+        editor.appendChild(buttonGroup);
+
+        descriptionDisplay.parentNode.insertBefore(editor, descriptionDisplay.nextSibling);
+    }
+
+    // Show editor and hide display
+    const editor = document.getElementById('description-editor');
+    const textarea = document.getElementById('description-textarea');
+
+    // Set current description in textarea (if not the placeholder)
+    textarea.value = isNoDescription ? '' : currentDescription;
+
+    editor.style.display = 'block';
+    descriptionDisplay.style.display = 'none';
+}
+
+function saveDescription() {
+    const textarea = document.getElementById('description-textarea');
+    const description = textarea.value.trim();
+
+    // Show loading state
+    const saveButton = textarea.nextElementSibling.querySelector('button:last-child');
+    const originalText = saveButton.textContent;
+    saveButton.disabled = true;
+    saveButton.innerHTML = `Saving... <div class="spinner"></div>`;
+
+    fetch(`/api/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/update_description`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: description })
+    }).then(async response => {
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to update description');
+        }
+
+        // Update the displayed description
+        const descriptionDisplay = document.getElementById('description-display');
+        const descriptionParagraph = descriptionDisplay.querySelector('p');
+
+        if (description) {
+            if (descriptionParagraph.classList.contains('no-description')) {
+                descriptionParagraph.classList.remove('no-description');
+                descriptionParagraph.innerHTML = description;
+            } else {
+                descriptionParagraph.textContent = description;
+            }
+        } else {
+            descriptionParagraph.classList.add('no-description');
+            descriptionParagraph.innerHTML = '<em>No description available</em>';
+        }
+
+        // Hide editor and show display
+        document.getElementById('description-editor').style.display = 'none';
+        descriptionDisplay.style.display = 'block';
+    }).catch(error => {
+        alert('Error updating description: ' + error.message);
+    }).finally(() => {
+        // Reset button state
+        saveButton.disabled = false;
+        saveButton.textContent = originalText;
+    });
+}
+
+function cancelEditDescription() {
+    // Hide editor and show display
+    document.getElementById('description-editor').style.display = 'none';
+    document.getElementById('description-display').style.display = 'block';
+}
+
 // Audio generation
 function generateAudio() {
     showAudioGenerationProgress();
