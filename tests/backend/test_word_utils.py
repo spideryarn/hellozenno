@@ -151,7 +151,7 @@ def test_get_sourcefile_lemmas_happy_path(fixture_for_testing_db):
         assert result == ["alpha", "beta"]
 
 
-def test_unicode_normalization(db):
+def test_unicode_normalization(fixture_for_testing_db):
     """Test handling of different Unicode normalization forms."""
     # Create Greek lemma
     lemma = Lemma.create(
@@ -202,10 +202,8 @@ def test_unicode_normalization(db):
     assert preview["lemma"] == "τροφή"
 
     # 5. After running migration, both should be in NFC form in database
-    from utils.db_connection import database
-
     # Simulate migration effect by converting to NFC
-    with database.atomic():
+    with fixture_for_testing_db.atomic():
         for wf in Wordform.select():
             if wf.wordform:
                 wf.wordform = unicodedata.normalize("NFC", wf.wordform)

@@ -245,9 +245,12 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
         return {"etymology": "Test etymology"}
 
     monkeypatch.setattr(
-        "utils.vocab_llm_utils.load_or_generate_lemma_metadata",
+        "utils.store_utils.load_or_generate_lemma_metadata",
         mock_load_or_generate_lemma_metadata,
     )
+
+    # Import ensure_nfc to normalize wordforms
+    from utils.word_utils import ensure_nfc
 
     # Create test data with different normalization forms
     text_with_nfc = "Η τροφή είναι καλή και ο θυμός είναι κακός."
@@ -259,15 +262,15 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
         + " είναι κακός."
     )
 
-    # Create wordforms in both NFC and NFD
+    # Create wordforms in NFC form (standardized form)
     wordforms = [
         {
-            "wordform": unicodedata.normalize("NFC", "τροφή"),
+            "wordform": ensure_nfc("τροφή"),
             "lemma": "τροφή",
             "translations": ["food", "nourishment"],
         },
         {
-            "wordform": unicodedata.normalize("NFC", "θυμός"),
+            "wordform": ensure_nfc("θυμός"),
             "lemma": "θυμός",
             "translations": ["anger", "wrath"],
         },
@@ -296,7 +299,8 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
     # The original form of the word should be preserved in the link text
     assert ">τροφή<" in enhanced_text_nfc
     assert ">θυμός<" in enhanced_text_nfc
-    # For NFD text, the original NFD form should be in the link
+
+    # For NFD text, the link should still contain the original NFD form
     nfd_trofi = unicodedata.normalize("NFD", "τροφή")
     nfd_thymos = unicodedata.normalize("NFD", "θυμός")
     assert f">{nfd_trofi}<" in enhanced_text_nfd
