@@ -16,7 +16,7 @@ if ! psql -lqt | cut -d \| -f 1 | grep -qw "hellozenno_development"; then
 fi
 
 # Backup the database first
-./scripts/database/backup_local_db.sh
+./scripts/local/backup_db.sh
 
 # Run migrations in dry-run mode first
 echo -e "${YELLOW}Running migrations in dry-run mode...${NC}"
