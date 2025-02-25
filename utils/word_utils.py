@@ -27,9 +27,22 @@ def normalize_text(text: str) -> str:
     return text
 
 
+def ensure_nfc(text: str) -> str:
+    """Ensure text is in NFC (Normalization Form C) for consistent handling.
+
+    This standardizes all Unicode text to use the composed form where characters
+    with diacritics are represented as single code points rather than base characters
+    plus combining marks.
+    """
+    return unicodedata.normalize("NFC", text)
+
+
 def get_word_preview(target_language_code: str, word: str) -> WordPreview | None:
     """Get preview data for a word tooltip."""
     from db_models import Wordform, fn
+
+    # Ensure consistent NFC normalization for lookups
+    word = ensure_nfc(word)
 
     try:
         # First try exact match

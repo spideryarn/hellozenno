@@ -1,10 +1,12 @@
 import pytest
 from pathlib import Path
+import unicodedata
 from utils.vocab_llm_utils import (
     extract_text_from_image,
     translate_to_english,
     extract_tricky_words_or_phrases,
     extract_phrases_from_text,
+    create_interactive_word_links,
 )
 from db_models import Lemma, Wordform
 from tests.fixtures_for_tests import (
@@ -233,3 +235,69 @@ def test_extract_phrases_from_text_missing_fields(mock_gpt_from_template, monkey
     assert phrase["translations"] == []
     assert phrase["register"] == "neutral"
     assert phrase["commonality"] == 0.5
+
+
+def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
+    """Test that create_interactive_word_links handles different Unicode normalization forms correctly."""
+
+    # Mock the load_or_generate_lemma_metadata function to avoid external dependencies
+    def mock_load_or_generate_lemma_metadata(*args, **kwargs):
+        return {"etymology": "Test etymology"}
+
+    monkeypatch.setattr(
+        "utils.vocab_llm_utils.load_or_generate_lemma_metadata",
+        mock_load_or_generate_lemma_metadata,
+    )
+
+    # Create test data with different normalization forms
+    text_with_nfc = "Η τροφή είναι καλή και ο θυμός είναι κακός."
+    text_with_nfd = (
+        "Η "
+        + unicodedata.normalize("NFD", "τροφή")
+        + " είναι καλή και ο "
+        + unicodedata.normalize("NFD", "θυμός")
+        + " είναι κακός."
+    )
+
+    # Create wordforms in both NFC and NFD
+    wordforms = [
+        {
+            "wordform": unicodedata.normalize("NFC", "τροφή"),
+            "lemma": "τροφή",
+            "translations": ["food", "nourishment"],
+        },
+        {
+            "wordform": unicodedata.normalize("NFC", "θυμός"),
+            "lemma": "θυμός",
+            "translations": ["anger", "wrath"],
+        },
+    ]
+
+    # Test with NFC text
+    enhanced_text_nfc, found_wordforms_nfc = create_interactive_word_links(
+        text_with_nfc, wordforms, "el"
+    )
+
+    # Test with NFD text
+    enhanced_text_nfd, found_wordforms_nfd = create_interactive_word_links(
+        text_with_nfd, wordforms, "el"
+    )
+
+    # Both should find the same wordforms
+    assert len(found_wordforms_nfc) == 2
+    assert len(found_wordforms_nfd) == 2
+
+    # Both should contain links to the same lemmas
+    assert 'href="/el/lemma/τροφή"' in enhanced_text_nfc
+    assert 'href="/el/lemma/θυμός"' in enhanced_text_nfc
+    assert 'href="/el/lemma/τροφή"' in enhanced_text_nfd
+    assert 'href="/el/lemma/θυμός"' in enhanced_text_nfd
+
+    # The original form of the word should be preserved in the link text
+    assert ">τροφή<" in enhanced_text_nfc
+    assert ">θυμός<" in enhanced_text_nfc
+    # For NFD text, the original NFD form should be in the link
+    nfd_trofi = unicodedata.normalize("NFD", "τροφή")
+    nfd_thymos = unicodedata.normalize("NFD", "θυμός")
+    assert f">{nfd_trofi}<" in enhanced_text_nfd
+    assert f">{nfd_thymos}<" in enhanced_text_nfd

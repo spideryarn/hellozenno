@@ -231,6 +231,19 @@ class Wordform(BaseModel):
     class Meta:
         indexes = ((("wordform", "language_code"), True),)  # Unique index
 
+    def save(self, *args, **kwargs):
+        """Override save to ensure wordform is in NFC form."""
+        # Import here to avoid circular imports
+        import unicodedata
+
+        # Ensure wordform is in NFC form if it exists
+        if self.wordform is not None:
+            # Convert to string first to ensure compatibility with unicodedata.normalize
+            self.wordform = unicodedata.normalize("NFC", str(self.wordform))
+
+        # Call parent save method
+        return super().save(*args, **kwargs)
+
     @classmethod
     def get_or_create_from_metadata(
         cls,

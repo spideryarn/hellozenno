@@ -3,7 +3,7 @@ from anthropic import Anthropic
 from openai import OpenAI
 from pprint import pprint
 import re
-from typing import Any, Optional, Set
+from typing import Any, Optional
 from slugify import slugify
 
 from gjdutils.llm_utils import generate_gpt_from_template
@@ -17,7 +17,7 @@ from db_models import (
     LemmaExampleSentence,
     SentenceLemma,
 )
-from utils.word_utils import normalize_text
+from utils.word_utils import normalize_text, ensure_nfc
 
 IMG_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "bmp", "tiff", "gif"]
 
@@ -451,12 +451,14 @@ def create_interactive_word_links(
     def replace_match(match):
         """Replace a matched word with an HTML link."""
         word = match.group(0)  # Original word with case and accents preserved
+        # First ensure the word is in NFC form for consistent matching
+        word = ensure_nfc(word)
         normalized_word = normalize_text(word)
         wf = next(
             (
                 wf
                 for wf in sorted_wordforms
-                if normalize_text(wf["wordform"]) == normalized_word
+                if normalize_text(ensure_nfc(wf["wordform"])) == normalized_word
             ),
             None,
         )
@@ -480,13 +482,17 @@ def create_interactive_word_links(
     # Create a regex pattern that matches both original and normalized forms
     pattern_parts = []
     for wf in sorted_wordforms:
+        # Ensure wordform is in NFC form for consistent pattern matching
+        nfc_wordform = ensure_nfc(wf["wordform"])
         # Add the original form
-        pattern_parts.append(re.escape(wf["wordform"]))
+        pattern_parts.append(re.escape(nfc_wordform))
         # Add any case variations found in the text
         text_words = re.findall(r"\b\w+\b", text, re.UNICODE)
         for word in text_words:
-            if normalize_text(word) == normalize_text(wf["wordform"]):
-                pattern_parts.append(re.escape(word))
+            # Ensure word is in NFC form before comparison
+            nfc_word = ensure_nfc(word)
+            if normalize_text(nfc_word) == normalize_text(nfc_wordform):
+                pattern_parts.append(re.escape(nfc_word))
 
     # Create the pattern with all variations
     pattern = re.compile(
@@ -679,7 +685,7 @@ def get_or_create_wordform_metadata(
     return wordform_metadata, lemma_metadata
 
 
-def extract_tokens(text: Optional[str]) -> Set[str]:
+def extract_tokens(text: Optional[str]) -> set[str]:
     """Extract unique tokens from text that could be wordforms.
 
     Handles:

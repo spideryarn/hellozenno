@@ -10,8 +10,16 @@ from db_models import (
     SourcefileWordform,
     database,
 )
-from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
+from utils.word_utils import (
+    get_sourcedir_lemmas,
+    get_sourcefile_lemmas,
+    get_word_preview,
+    normalize_text,
+    ensure_nfc,
+)
 import uuid  # Import uuid
+import unicodedata
+from typing import Any
 
 
 def test_get_sourcedir_lemmas_happy_path(fixture_for_testing_db):
@@ -141,3 +149,102 @@ def test_get_sourcefile_lemmas_happy_path(fixture_for_testing_db):
         # Test function
         result = get_sourcefile_lemmas("el", sourcedir_slug, sourcefile_slug)
         assert result == ["alpha", "beta"]
+
+
+def test_unicode_normalization(db):
+    """Test handling of different Unicode normalization forms."""
+    # Create Greek lemma
+    lemma = Lemma.create(
+        lemma="τροφή",
+        language_code="el",
+        part_of_speech="noun",
+        etymology="From Ancient Greek τροφή (trophḗ, 'nourishment')",
+    )
+
+    # Create wordform in NFD form
+    word_nfd = unicodedata.normalize("NFD", "τροφή")
+    wordform_nfd = Wordform.create(
+        wordform=word_nfd,
+        language_code="el",
+        lemma_entry=lemma,
+        translations=["food", "nourishment"],
+    )
+
+    # Create wordform in NFC form
+    word_nfc = unicodedata.normalize("NFC", "θυμό")
+    wordform_nfc = Wordform.create(
+        wordform=word_nfc,
+        language_code="el",
+        lemma_entry=lemma,
+        translations=["anger", "wrath"],
+    )
+
+    # Test lookup with different forms
+
+    # 1. NFD lookup for NFD-stored word
+    preview = get_word_preview("el", word_nfd)
+    assert preview is not None
+    assert preview["lemma"] == "τροφή"
+
+    # 2. NFC lookup for NFD-stored word
+    preview = get_word_preview("el", unicodedata.normalize("NFC", word_nfd))
+    assert preview is not None
+    assert preview["lemma"] == "τροφή"
+
+    # 3. NFD lookup for NFC-stored word
+    preview = get_word_preview("el", unicodedata.normalize("NFD", word_nfc))
+    assert preview is not None
+    assert preview["lemma"] == "τροφή"
+
+    # 4. NFC lookup for NFC-stored word
+    preview = get_word_preview("el", word_nfc)
+    assert preview is not None
+    assert preview["lemma"] == "τροφή"
+
+    # 5. After running migration, both should be in NFC form in database
+    from utils.db_connection import database
+
+    # Simulate migration effect by converting to NFC
+    with database.atomic():
+        for wf in Wordform.select():
+            if wf.wordform:
+                wf.wordform = unicodedata.normalize("NFC", wf.wordform)
+                wf.save()
+
+    # NFD and NFC lookups should still work
+    preview = get_word_preview("el", unicodedata.normalize("NFD", "τροφή"))
+    assert preview is not None
+    assert "food" in preview["translation"]
+
+    preview = get_word_preview("el", unicodedata.normalize("NFC", "θυμό"))
+    assert preview is not None
+    assert "anger" in preview["translation"]
+
+
+def test_ensure_nfc():
+    """Test that ensure_nfc correctly normalizes text to NFC form."""
+    # Test with already NFC text
+    nfc_text = "τροφή"
+    assert ensure_nfc(nfc_text) == nfc_text
+    assert len(ensure_nfc(nfc_text)) == 5  # 5 characters in NFC form
+
+    # Test with NFD text
+    nfd_text = unicodedata.normalize("NFD", "τροφή")
+    assert ensure_nfc(nfd_text) == "τροφή"
+    assert len(nfd_text) == 6  # 6 characters in NFD form (η + combining accent)
+    assert len(ensure_nfc(nfd_text)) == 5  # 5 characters after normalization
+
+    # Test with mixed text
+    mixed_text = "τροφή και " + unicodedata.normalize("NFD", "θυμός")
+    assert ensure_nfc(mixed_text) == "τροφή και θυμός"
+
+    # Test with non-Greek text
+    english_text = "food"
+    assert ensure_nfc(english_text) == english_text
+
+    # Test with empty string
+    assert ensure_nfc("") == ""
+
+    # Test with None - should raise TypeError
+    with pytest.raises(TypeError):
+        ensure_nfc(None)  # type: ignore
