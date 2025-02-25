@@ -596,6 +596,8 @@ def delete_sourcefile(
         )
 
         try:
+            # Delete the sourcefile - related records will be deleted automatically
+            # due to ON DELETE CASCADE constraints
             sourcefile_entry.delete_instance()
             current_app.logger.info(
                 f"Successfully deleted sourcefile: {sourcefile_entry.filename}"
