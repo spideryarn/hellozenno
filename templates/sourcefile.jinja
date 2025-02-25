@@ -42,46 +42,53 @@
         <ul>
             <li class="button-group">
                 {% if sourcefile_type == "image" %}
-                <button onclick="window.location.href='{{ url_for('sourcefile_views.view_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}'" class="button">
+                <a href="{{ url_for('sourcefile_views.view_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                     View image
-                </button>
-                <button onclick="window.location.href='{{ url_for('sourcefile_views.download_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}'" class="button">
+                </a>
+                <a href="{{ url_for('sourcefile_views.download_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                     Download image
-                </button>
+                </a>
                 {% elif sourcefile_type in ["audio", "youtube_audio"] %}
-                <button onclick="window.location.href='{{ url_for('sourcefile_views.download_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}'" class="button">
+                <a href="{{ url_for('sourcefile_views.download_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                     Download audio
-                </button>
+                </a>
                 {% endif %}
             </li>
             <li class="button-group">
-                <button onclick="window.location.href='{{ url_for('sourcefile_views.process_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}'" class="button">
+                <a href="{{ url_for('sourcefile_views.process_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                     Process sourcefile
-                </button>
+                </a>
                 {% if already_processed %}
-                <button onclick="window.location.href='{{ url_for('sourcefile_views.update_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}'" class="button">
+                <a href="{{ url_for('sourcefile_views.update_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                     Get more words
-                </button>
+                </a>
                 <button onclick="processIndividualWords()" class="button">
                     Process individual words
                 </button>
                 {% endif %}
             </li>
             <li class="navigation-buttons">
-                <button onclick="window.location.href='{{ url_for('sourcefile_views.prev_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}'" 
-                   class="button {% if nav_info.is_first %}disabled{% endif %}"
-                   {% if nav_info.is_first %}disabled{% endif %}>
+                {% if nav_info.is_first %}
+                <span class="button disabled">Prev</span>
+                {% else %}
+                <a href="{{ url_for('sourcefile_views.prev_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                     Prev
-                </button>
-                <button onclick="window.location.href='{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}'" 
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" 
                    class="button">
                     Up
-                </button>
-                <button onclick="window.location.href='{{ url_for('sourcefile_views.next_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}'" 
-                   class="button {% if nav_info.is_last %}disabled{% endif %}"
-                   {% if nav_info.is_last %}disabled{% endif %}>
+                </a>
+                
+                {% if nav_info.is_last %}
+                <span class="button disabled">Next</span>
+                {% else %}
+                <a href="{{ url_for('sourcefile_views.next_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                     Next
-                </button>
+                </a>
+                {% endif %}
+                
                 <span class="file-position">({{ nav_info.current_position }}/{{ nav_info.total_files }})</span>
             </li>
             <li class="audio-controls">
@@ -108,9 +115,9 @@
             </li>
             {% if sourcefile_entry.text_target %}
             <li class="practice-button">
-                <button onclick="window.location.href='{{ url_for('flashcard_views.flashcard_landing', language_code=target_language_code, sourcefile=sourcefile_slug) }}'" class="button">
+                <a href="{{ url_for('flashcard_views.flashcard_landing', language_code=target_language_code, sourcefile=sourcefile_slug) }}" class="button">
                     Practice with Flashcards
-                </button>
+                </a>
             </li>
             {% endif %}
             <li class="button-group">

@@ -681,7 +681,8 @@ nav a:hover {
 .button,
 button.button,
 input[type="submit"].button,
-form button.button {
+form button.button,
+a.button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -704,7 +705,8 @@ form button.button {
 .button:hover,
 button.button:hover,
 input[type="submit"].button:hover,
-form button.button:hover {
+form button.button:hover,
+a.button:hover {
     background-color: #2563eb;
     color: #fff;
 }
@@ -712,7 +714,8 @@ form button.button:hover {
 .button.delete-btn,
 button.button.delete-btn,
 input[type="submit"].button.delete-btn,
-form button.button.delete-btn {
+form button.button.delete-btn,
+a.button.delete-btn {
     border-color: #dc2626;
     color: #dc2626;
     background-color: #fff;
@@ -721,7 +724,8 @@ form button.button.delete-btn {
 .button.delete-btn:hover,
 button.button.delete-btn:hover,
 input[type="submit"].button.delete-btn:hover,
-form button.button.delete-btn:hover {
+form button.button.delete-btn:hover,
+a.button.delete-btn:hover {
     background-color: #dc2626;
     color: #fff;
 }
@@ -729,7 +733,8 @@ form button.button.delete-btn:hover {
 .button.success-btn,
 button.button.success-btn,
 input[type="submit"].button.success-btn,
-form button.button.success-btn {
+form button.button.success-btn,
+a.button.success-btn {
     border-color: #16a34a;
     color: #16a34a;
 }
@@ -737,7 +742,8 @@ form button.button.success-btn {
 .button.success-btn:hover,
 button.button.success-btn:hover,
 input[type="submit"].button.success-btn:hover,
-form button.button.success-btn:hover {
+form button.button.success-btn:hover,
+a.button.success-btn:hover {
     background-color: #16a34a;
     color: #fff;
 }
@@ -745,15 +751,19 @@ form button.button.success-btn:hover {
 .button.disabled,
 button.button.disabled,
 input[type="submit"].button.disabled,
-form button.button.disabled {
+form button.button.disabled,
+a.button.disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    pointer-events: none;
+    /* Prevents clicking */
 }
 
 .button.disabled:hover,
 button.button.disabled:hover,
 input[type="submit"].button.disabled:hover,
-form button.button.disabled:hover {
+form button.button.disabled:hover,
+a.button.disabled:hover {
     background-color: #fff;
     color: #2563eb;
 }
