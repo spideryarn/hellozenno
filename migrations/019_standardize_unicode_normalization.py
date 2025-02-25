@@ -30,7 +30,54 @@ def migrate(migrator: Migrator, database: pw.Database, *, fake=False):
 
     # Use raw SQL to update the wordforms directly
     with database.atomic():
-        # First, get all wordforms that need normalization
+        duplicate_pairs = []
+
+        # First, find all pairs of duplicates where normalizing would create conflicts
+        cursor = database.execute_sql(
+            "SELECT id, wordform, language_code FROM wordform WHERE wordform IS NOT NULL"
+        )
+
+        for row in cursor.fetchall():
+            wf_id, wordform, language_code = row
+            nfc_form = ensure_nfc(wordform)
+
+            # Skip if already in NFC form
+            if nfc_form == wordform:
+                continue
+
+            # Check if normalizing would create a duplicate
+            check_cursor = database.execute_sql(
+                "SELECT id FROM wordform WHERE wordform = %s AND language_code = %s AND id != %s",
+                (nfc_form, language_code, wf_id),
+            )
+            existing = check_cursor.fetchone()
+
+            if existing:
+                existing_id = existing[0]
+                # Found a duplicate pair - id to keep and id to remove
+                duplicate_pairs.append((existing_id, wf_id))
+
+        # Handle all duplicates
+        for existing_id, duplicate_id in duplicate_pairs:
+            # Transfer SourcefileWordform relationships
+            migrator.sql(
+                """
+                INSERT INTO sourcefilewordform (sourcefile_id, wordform_id, centrality, ordering, created_at, updated_at)
+                SELECT sourcefile_id, %s, centrality, ordering, NOW(), NOW()
+                FROM sourcefilewordform
+                WHERE wordform_id = %s
+                ON CONFLICT (sourcefile_id, wordform_id) DO NOTHING
+                """,
+                (existing_id, duplicate_id),
+            )
+
+            # Delete the duplicate
+            migrator.sql("DELETE FROM wordform WHERE id = %s", (duplicate_id,))
+
+        if duplicate_pairs:
+            print(f"Resolved {len(duplicate_pairs)} duplicate wordforms")
+
+        # Now normalize remaining wordforms
         cursor = database.execute_sql(
             "SELECT id, wordform FROM wordform WHERE wordform IS NOT NULL"
         )
@@ -47,8 +94,8 @@ def migrate(migrator: Migrator, database: pw.Database, *, fake=False):
                     "UPDATE wordform SET wordform = %s WHERE id = %s", (nfc_form, wf_id)
                 )
 
-    # Log the number of updates
-    print(f"Standardized {update_count} wordforms to NFC normalization")
+        # Log the number of updates
+        print(f"Standardized {update_count} wordforms to NFC normalization")
 
 
 def rollback(migrator: Migrator, database: pw.Database, *, fake=False):
