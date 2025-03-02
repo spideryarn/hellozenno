@@ -120,13 +120,13 @@ We're building a rich, machine-readable dictionary of {{ target_language_name }}
 """
 
 quick_search_for_wordform = """
-This is a quick search for a Modern {{ target_language_name }} wordform typed directly by the user, as the first stage of a dictionary lookup. Your task is to analyze the input and return appropriate metadata based on these cases:
+This is a quick search for a {{ target_language_name }} wordform typed directly by the user, as the first stage of a dictionary lookup. Your task is to analyze the input and return appropriate metadata based on these cases:
 
 1. If the input is a lemma (dictionary form):
    - Return all fields with appropriate values
    - Set inflection_type to describe the lemma form (e.g. "first-person singular present" for verbs)
    - Set possible_misspellings to None
-   - Use modern forms only (e.g. "έπειτα" not "ἔπειτα")
+   - For modern languages, use modern forms only (e.g. "έπειτα" not "ἔπειτα")
    - Missing accents are ok (e.g. "επειτα" -> "έπειτα")
    - Case variations are ok (e.g. "ΕΠΕΙΤΑ" -> "έπειτα")
 
@@ -135,7 +135,7 @@ This is a quick search for a Modern {{ target_language_name }} wordform typed di
    - Set lemma to the dictionary form this wordform belongs to
    - Set inflection_type to describe this specific form
    - Set possible_misspellings to None
-   - Use modern forms only
+   - For modern languages, use modern forms only
    - Missing accents are ok (e.g. "ανθρωπος" -> "άνθρωπος")
    - Case variations are ok (e.g. "ΚΑΛΟΣ" -> "καλός")
    - For ambiguous cases, always prefer the interpretation that has a different lemma. For example:
@@ -145,7 +145,7 @@ This is a quick search for a Modern {{ target_language_name }} wordform typed di
 
 3. If the input looks like a typo or misspelling:
    - Set all fields to None except possible_misspellings
-   - Set possible_misspellings to a list of closest correct modern forms, ordered by similarity
+   - For modern languages, set possible_misspellings to a list of closest correct modern forms, ordered by similarity
    - When deciding between typo vs valid word:
      * Missing accents are NOT typos (e.g. "επειτα" is valid, just needs accent)
      * Case variations are NOT typos (e.g. "ΚΑΛΟΣ" is valid, just needs case normalization)
@@ -167,7 +167,7 @@ Notes:
 - The sanitized form should be returned in the wordform field
 - For lemmas and valid wordforms, possible_misspellings should be None
 - Raise an error if the input is empty or invalid
-- Only use modern forms, not ancient/archaic forms
+- For modern languages, only use modern forms, not ancient/archaic forms
 - Format the JSON response carefully to ensure it is valid
 - Make sure all strings in lists are properly quoted
 - Do not include any trailing commas in lists or objects

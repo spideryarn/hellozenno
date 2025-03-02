@@ -35,7 +35,7 @@ SUPPORTED_LANGUAGES = set(
 
 LANGUAGE_NAME_OVERRIDES = {
     # because Pycountry cumbersomely calls it "Modern Greek (1453-)"
-    "el": "Greek",
+    "el": "Greek (modern)",
 }
 
 # Supported file extensions for source files
