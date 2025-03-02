@@ -30,6 +30,10 @@ if [ "$CURRENT_APP" != "hz-app-web" ]; then
     exit 1
 fi
 
+# Build frontend assets for production
+echo "Building frontend assets..."
+./scripts/prod/build-frontend.sh
+
 # Set secrets from .env.prod
 echo "Setting Fly.io secrets..."
 ./scripts/prod/set_secrets.sh

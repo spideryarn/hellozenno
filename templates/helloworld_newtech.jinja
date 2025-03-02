@@ -1,0 +1,38 @@
+{% extends "base.jinja" %}
+
+{% block title %}
+{{ page_title }} - Hello Zenno
+{% endblock title %}
+
+{% block head_imports %}
+{{ super() }}
+<!-- This will be replaced with Vite's development script or production build -->
+<script type="module" src="/static/js/helloworld-entry.js" defer></script>
+{% endblock head_imports %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ page_title }}</h1>
+    
+    <div class="demo-section">
+        <h2>Svelte Component Demo</h2>
+        <!-- This div will be the mount point for our Svelte component -->
+        <div id="svelte-demo-component"></div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Tailwind CSS Demo</h2>
+        <!-- This section will demonstrate Tailwind CSS -->
+        <div id="tailwind-demo-section">
+            <!-- Tailwind classes will be added here -->
+            <p>This section will demonstrate Tailwind CSS styling.</p>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Supabase Realtime Demo</h2>
+        <!-- This div will be the mount point for our Supabase realtime demo -->
+        <div id="supabase-realtime-demo"></div>
+    </div>
+</div>
+{% endblock content %} 

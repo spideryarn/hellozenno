@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Tailwind components */
+@layer components {
+    .tw-btn {
+        @apply tw-inline-flex tw-items-center tw-justify-center tw-h-8 tw-px-3 tw-py-0 tw-text-sm tw-font-medium tw-text-primary tw-bg-white tw-border tw-border-primary tw-rounded tw-transition-colors;
+    }
+
+    .tw-btn:hover {
+        @apply tw-bg-primary tw-text-white;
+    }
+
+    .tw-btn-danger {
+        @apply tw-text-danger tw-border-danger;
+    }
+
+    .tw-btn-danger:hover {
+        @apply tw-bg-danger tw-text-white;
+    }
+
+    .tw-btn-success {
+        @apply tw-text-success tw-border-success;
+    }
+
+    .tw-btn-success:hover {
+        @apply tw-bg-success tw-text-white;
+    }
+}

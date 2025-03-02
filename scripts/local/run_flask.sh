@@ -1,3 +1,10 @@
 #!/usr/bin/env bash
 
-FLASK_DEBUG=1 FLASK_APP=app.py flask run --host=localhost --port 3000
+# Check if FLASK_PORT is set
+if [ -z "$FLASK_PORT" ]; then
+    echo "Error: FLASK_PORT environment variable is not set"
+    exit 1
+fi
+
+# Run Flask in debug mode
+FLASK_DEBUG=1 FLASK_APP=app.py flask run --host=localhost --port $FLASK_PORT
