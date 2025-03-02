@@ -1,10 +1,7 @@
 credentials/
 gjdutils/
 _secrets.py
-.env.local
-.env.testing
-.env.local_to_prod
-.env.prod
+.env.*
 .pytest_cache/**/*
 __pycache__/
 *.pyc
