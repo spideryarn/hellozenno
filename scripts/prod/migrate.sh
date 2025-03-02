@@ -13,6 +13,6 @@ echo "Running migrations on Fly.io database..."
 
 # Run migrations using fly ssh console with new CLI
 # Using bash -c to ensure we have a proper shell environment
-fly ssh console -C "bash -c 'PYTHONPATH=/app python /app/utils/migrate.py migrate'"
+fly ssh console -C "bash -c 'cd /app && python -m utils.migrate migrate'"
 
 echo_success "Migrations completed successfully!" 

@@ -51,7 +51,7 @@ export PYTHONPATH="$(pwd):$PYTHONPATH"
 
 # Run migrations in dry-run mode first
 echo_info "Running migrations in dry-run mode..."
-python utils/migrate.py migrate --dry-run
+python -m utils.migrate migrate --dry-run
 
 # Ask for confirmation
 echo_warning "Would you like to proceed with the actual migration against the PRODUCTION database? [y/N]"
@@ -59,7 +59,7 @@ read -r response
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     # Run the migrations
     echo_info "Running migrations on production database..."
-    python utils/migrate.py migrate
+    python -m utils.migrate migrate
     
     echo_success "Migrations completed successfully!"
     

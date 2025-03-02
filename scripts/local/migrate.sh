@@ -20,7 +20,7 @@ fi
 
 # Run migrations in dry-run mode first
 echo -e "${YELLOW}Running migrations in dry-run mode...${NC}"
-POSTGRES_DB_NAME="hellozenno_development" python utils/migrate.py migrate --dry-run
+POSTGRES_DB_NAME="hellozenno_development" python -m utils.migrate migrate --dry-run
 
 # Ask for confirmation
 echo -e "${YELLOW}Would you like to proceed with the actual migration? [y/N]${NC}"
@@ -28,7 +28,7 @@ read -r response
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
 then
     echo -e "${YELLOW}Running migrations...${NC}"
-    POSTGRES_DB_NAME="hellozenno_development" python utils/migrate.py migrate
+    POSTGRES_DB_NAME="hellozenno_development" python -m utils.migrate migrate
     echo -e "${GREEN}Migrations completed successfully.${NC}"
     
     echo -e "${YELLOW}Verifying database state...${NC}"
