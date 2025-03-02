@@ -100,6 +100,9 @@ def fixture_for_testing_db():
 
     # Create tables
     database.connect()
+
+    # Drop tables if they exist and recreate them to ensure schema is up-to-date
+    database.drop_tables(MODELS, safe=True, cascade=True)
     database.create_tables(MODELS)
 
     yield database

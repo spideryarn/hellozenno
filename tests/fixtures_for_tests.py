@@ -155,6 +155,7 @@ def create_test_sourcefile(db, sourcedir: Sourcedir) -> Sourcefile:
         filename=TEST_SOURCE_FILE,
         text_target="test text",
         text_english="test translation",
+        description="Test file description",
         metadata={
             "words": [
                 {

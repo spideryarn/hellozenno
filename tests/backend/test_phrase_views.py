@@ -18,9 +18,6 @@ def test_phrase_url_generation(client):
             slug="kathome-kai-skeftome",
         )
 
-            canonical_form="κάθομαι και σκέφτομαι",
-        )
-
         # Test navigation URLs
         assert url_for("views.languages")
         assert url_for(
