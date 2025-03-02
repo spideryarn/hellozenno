@@ -1,0 +1,23 @@
+{% extends "base.jinja" %}
+
+{% block head_imports %}
+    {{ super() }}
+    {# Use development assets if we're not in production or testing #}
+    {% if config.get('IS_PRODUCTION', False) %}
+        {# Production builds #}
+        {% if vite_entry %}
+            <script type="module" src="{{ url_for('static', filename='build/js/' + vite_entry + '.js') }}" defer></script>
+        {% endif %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='build/assets/tailwind.css') }}">
+    {% else %}
+        <script type="module" src="http://localhost:5173/@vite/client"></script>
+        {# Each page can specify its entry point #}
+        {% if vite_entry %}
+            <script type="module" src="http://localhost:5173/src/entries/{{ vite_entry }}.ts"></script>
+        {% endif %}
+        <script type="module" src="http://localhost:5173/src/styles/tailwind.css"></script>
+
+    {% endif %}
+{% endblock head_imports %}
+
+{# Override any blocks that need Tailwind-specific modifications here #} 

@@ -1,36 +1,39 @@
-{% extends "base.jinja" %}
+{% extends "base_with_tailwind.jinja" %}
+
+{# Set the Vite entry point for this page #}
+{% set vite_entry = 'helloworld-entry' %}
 
 {% block title %}
 {{ page_title }} - Hello Zenno
 {% endblock title %}
 
-{% block head_imports %}
-{{ super() }}
-<!-- This will be replaced with Vite's development script or production build -->
-<script type="module" src="/static/js/helloworld-entry.js" defer></script>
-{% endblock head_imports %}
-
 {% block content %}
-<div class="container">
-    <h1>{{ page_title }}</h1>
+<div class="container tw-max-w-4xl tw-mx-auto tw-px-4 tw-py-8">
+    <h1 class="tw-text-3xl tw-font-bold tw-mb-8">{{ page_title }}</h1>
     
-    <div class="demo-section">
-        <h2>Svelte Component Demo</h2>
+    <div class="demo-section tw-bg-white tw-shadow-md tw-rounded-lg tw-p-6 tw-mb-8">
+        <h2 class="tw-text-xl tw-font-semibold tw-mb-4">Svelte Component Demo</h2>
         <!-- This div will be the mount point for our Svelte component -->
         <div id="svelte-demo-component"></div>
     </div>
     
-    <div class="demo-section">
-        <h2>Tailwind CSS Demo</h2>
+    <div class="demo-section tw-bg-white tw-shadow-md tw-rounded-lg tw-p-6 tw-mb-8">
+        <h2 class="tw-text-xl tw-font-semibold tw-mb-4">Tailwind CSS Demo</h2>
         <!-- This section will demonstrate Tailwind CSS -->
-        <div id="tailwind-demo-section">
-            <!-- Tailwind classes will be added here -->
-            <p>This section will demonstrate Tailwind CSS styling.</p>
+        <div id="tailwind-demo-section" class="tw-space-y-4">
+            <!-- Example Tailwind components -->
+            <button class="tw-btn">Default Button</button>
+            <button class="tw-btn tw-btn-success">Success Button</button>
+            <button class="tw-btn tw-btn-danger">Danger Button</button>
+            
+            <div class="tw-bg-gray-50 tw-p-4 tw-rounded-md">
+                <p class="tw-text-gray-700">This section demonstrates Tailwind CSS styling with our custom prefix.</p>
+            </div>
         </div>
     </div>
     
-    <div class="demo-section">
-        <h2>Supabase Realtime Demo</h2>
+    <div class="demo-section tw-bg-white tw-shadow-md tw-rounded-lg tw-p-6">
+        <h2 class="tw-text-xl tw-font-semibold tw-mb-4">Supabase Realtime Demo</h2>
         <!-- This div will be the mount point for our Supabase realtime demo -->
         <div id="supabase-realtime-demo"></div>
     </div>

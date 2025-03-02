@@ -3,7 +3,7 @@
 import logging
 from flask import Flask
 from flask_cors import CORS
-from utils.env_config import is_fly_cloud, FLASK_SECRET_KEY
+from utils.env_config import is_fly_cloud, is_testing, FLASK_SECRET_KEY
 
 # from flask_pw import Peewee as FLPeewee
 
@@ -33,6 +33,9 @@ def create_app():
     )
 
     app.config["SECRET_KEY"] = FLASK_SECRET_KEY
+
+    # Set production flag based on environment
+    app.config["IS_PRODUCTION"] = is_fly_cloud()
 
     # Only enable Debug Toolbar in development
     if not is_fly_cloud():
