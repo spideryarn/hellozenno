@@ -846,3 +846,66 @@ h1 .sourcefile-icon {
 .source-file-item a {
     flex: 1;
 }
+
+/* Tab styling */
+.tabs {
+    margin: 20px 0;
+    display: flex;
+    gap: 0;
+    /* Remove gap between tabs */
+    padding: 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-right: none;
+    /* Remove right border as tabs will be connected */
+    border-radius: 4px 4px 0 0;
+    color: #666;
+    text-decoration: none;
+    position: relative;
+    top: 1px;
+    /* Align with bottom border */
+    background: #f5f5f5;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin: 0;
+    /* Remove any margin */
+}
+
+.tab:last-child {
+    border-right: 1px solid #ddd;
+    /* Add right border to last tab */
+}
+
+.tab small {
+    margin-left: 4px;
+    color: #888;
+    font-weight: normal;
+}
+
+.tab:hover {
+    background: #fff;
+    color: #333;
+}
+
+.tab.active {
+    background: #fff;
+    color: #2563eb;
+    border-bottom: 1px solid #fff;
+    /* Hide bottom border to connect with content */
+    margin-bottom: -1px;
+    font-weight: 600;
+}
+
+.tab-content {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    padding: 20px;
+}

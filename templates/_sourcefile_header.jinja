@@ -1,0 +1,92 @@
+{% if metadata %}
+<div class="metadata-display">
+    <p>Created: <span class="metadata-timestamp">{{ metadata.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
+    <p>Updated: <span class="metadata-timestamp">{{ metadata.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
+    {% if metadata.image_processing and metadata.image_processing.was_resized %}
+    <p>Image resized: {{ (metadata.image_processing.original_size / 1024)|round|int }}KB → {{ (metadata.image_processing.final_size / 1024)|round|int }}KB</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<h1>
+    {{ sourcefile_icon(sourcefile_type, metadata) }}
+    {{ sourcefile }}
+</h1>
+
+<div class="description-container">
+    <div class="description-content" id="description-display">
+        {% if sourcefile_entry.description %}
+            <p>{{ sourcefile_entry.description }}</p>
+        {% else %}
+            <p class="no-description"><em>No description available</em></p>
+        {% endif %}
+    </div>
+    <button onclick="editDescription()" class="button small-button">
+        <i class="fas fa-edit"></i> Edit
+    </button>
+</div>
+
+<div class="actions">
+    <ul>
+        <li class="button-group">
+            {% if sourcefile_type == "image" %}
+            <a href="{{ url_for('sourcefile_views.view_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+                View image
+            </a>
+            <a href="{{ url_for('sourcefile_views.download_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+                Download image
+            </a>
+            {% elif sourcefile_type in ["audio", "youtube_audio"] %}
+            <a href="{{ url_for('sourcefile_views.download_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+                Download audio
+            </a>
+            {% endif %}
+        </li>
+        <li class="button-group">
+            <a href="{{ url_for('sourcefile_views.process_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+                Process sourcefile
+            </a>
+            {% if already_processed %}
+            <a href="{{ url_for('sourcefile_views.update_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+                Get more words
+            </a>
+            <button onclick="processIndividualWords()" class="button">
+                Process individual words
+            </button>
+            {% endif %}
+        </li>
+        <li class="navigation-buttons">
+            {% if nav_info.is_first %}
+            <span class="button disabled">Prev</span>
+            {% else %}
+            <a href="{{ url_for('sourcefile_views.prev_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+                Prev
+            </a>
+            {% endif %}
+            
+            <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" 
+               class="button">
+                Up
+            </a>
+            
+            {% if nav_info.is_last %}
+            <span class="button disabled">Next</span>
+            {% else %}
+            <a href="{{ url_for('sourcefile_views.next_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+                Next
+            </a>
+            {% endif %}
+            
+            <span class="file-position">({{ nav_info.current_position }}/{{ nav_info.total_files }})</span>
+        </li>
+    </ul>
+</div>
+
+<div class="tabs">
+    <a href="{{ url_for('sourcefile_views.inspect_sourcefile_text', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
+       class="tab {% if active_tab == 'text' %}active{% endif %}">Text</a>
+    <a href="{{ url_for('sourcefile_views.inspect_sourcefile_words', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
+       class="tab {% if active_tab == 'words' %}active{% endif %}">Words<small>({{ wordforms_d|length }})</small></a>
+    <a href="{{ url_for('sourcefile_views.inspect_sourcefile_phrases', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
+       class="tab {% if active_tab == 'phrases' %}active{% endif %}">Phrases<small>({{ phrases_d|length }})</small></a>
+</div> 

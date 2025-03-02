@@ -1,26 +1,25 @@
-<ul class="wordforms-list">
-    {% for wordform_d in wordforms_d %}
-        <li class="wordform-entry">
-            {% set wordform_translations = wordform_d.get('translations', []) %}
-            {% set lemma = wordform_d.get('lemma_entry', {}).get('lemma', '') %}
-            {% set lemma_data = lemma_metadata.get(lemma, {}) %}
-            
-            <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=wordform_d.wordform) }}"
-               class="word-link">
-                {{ wordform_d.wordform }}
+{% if wordforms_d %}
+<ul class="dictionary-entries">
+    {% for wordform in wordforms_d|sort(attribute='ordering') %}
+        <li class="dictionary-entry">
+            <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=wordform.lemma) }}" class="lemma-link">
+                {{ wordform.wordform }}
             </a>
-            {% if lemma and lemma != '' %}
-            →
-            <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=lemma) }}"
-               class="word-link">
-                {{ lemma }}
-            </a>
+            {% if wordform.translations %}
+                <span class="translations">{{ wordform.translations|join(', ') }}</span>
+            {% endif %}
+            {% if wordform.part_of_speech %}
+                <span class="part-of-speech">({{ wordform.part_of_speech }})</span>
+            {% endif %}
+            {% if wordform.inflection_type %}
+                <span class="inflection-type">{{ wordform.inflection_type }}</span>
             {% endif %}
         </li>
-    {% else %}
-        <li class="no-entries">No wordforms available</li>
     {% endfor %}
 </ul>
+{% else %}
+<p class="no-entries"><em>No words found in this source file</em></p>
+{% endif %}
 
 <style>
     .wordforms-list {

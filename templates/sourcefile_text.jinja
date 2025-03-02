@@ -1,0 +1,49 @@
+{% extends "base.jinja" %}
+{% from "_sourcefile_icon.jinja" import sourcefile_icon %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
+    » {{ sourcefile }}
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container">
+    {% include '_sourcefile_header.jinja' %}
+
+    <div class="tab-content">
+        <div class="text-content">
+            <h2>Text</h2>
+            {% if enhanced_original_txt %}
+                {{ enhanced_original_txt | safe }}
+            {% else %}
+                <p>No text available</p>
+            {% endif %}
+        </div>
+
+        <details>
+            <summary><h2 style="display: inline;">Translation</h2></summary>
+            <div class="translated-text">
+                {% if translated_txt %}
+                    {% for paragraph in translated_txt.split('\n\n') %}
+                        {% if paragraph %}
+                            <p>{{ paragraph|safe }}</p>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p><em>No translation available</em></p>
+                {% endif %}
+            </div>
+        </details>
+    </div>
+
+    <script>
+        window.target_language_code = "{{ target_language_code }}";
+        window.sourcedir_slug = "{{ sourcedir_slug }}";
+        window.sourcefile_slug = "{{ sourcefile_slug }}";
+        window.sourcefile = "{{ sourcefile }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/sourcefile.js') }}"></script>
+</div>
+{% endblock content %} 

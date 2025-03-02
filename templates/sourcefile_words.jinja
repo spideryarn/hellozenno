@@ -1,0 +1,82 @@
+{% extends "base.jinja" %}
+{% from "_sourcefile_icon.jinja" import sourcefile_icon %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
+    » {{ sourcefile }}
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container">
+    {% include '_sourcefile_header.jinja' %}
+
+    <div class="tab-content">
+        <h2>Words <small>({{ wordforms_d|length }})</small></h2>
+        {% include '_wordforms_list.jinja' %}
+
+        <div class="phrases">
+            <h2>Phrases & Idioms</h2>
+            {% if phrases_d %}
+            <ul class="phrases-list">
+                {% for phrase in phrases_d %}
+                    <li class="phrase-item">
+                        <div class="phrase-header">
+                            <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug) }}" class="phrase-link">
+                                {{ phrase.canonical_form }}
+                            </a>
+                            {% if phrase.translations %}
+                                <span class="phrase-translations">{{ phrase.translations|join(', ') }}</span>
+                            {% endif %}
+                        </div>
+                        {% if phrase.raw_forms %}
+                            <div class="raw-forms">
+                                Found as: {{ phrase.raw_forms|join(', ') }}
+                            </div>
+                        {% endif %}
+                        <div class="phrase-metadata">
+                            {% if phrase.part_of_speech %}
+                                <span class="metadata-item">{{ phrase.part_of_speech }}</span>
+                            {% endif %}
+                            {% if phrase.register %}
+                                <span class="metadata-item">{{ phrase.register }}</span>
+                            {% endif %}
+                            {% if phrase.usage_notes %}
+                                <span class="metadata-item">{{ phrase.usage_notes }}</span>
+                            {% endif %}
+                        </div>
+                        {% if phrase.component_words %}
+                            <div class="component-words">
+                                Components:
+                                {% for component in phrase.component_words %}
+                                    <span class="component">
+                                        {{ component.lemma }}
+                                        {% if component.translation %}
+                                            ({{ component.translation }})
+                                        {% endif %}
+                                        {% if component.notes %}
+                                            <span class="notes">{{ component.notes }}</span>
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-phrases"><em>No phrases found in this source file</em></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        window.target_language_code = "{{ target_language_code }}";
+        window.sourcedir_slug = "{{ sourcedir_slug }}";
+        window.sourcefile_slug = "{{ sourcefile_slug }}";
+        window.sourcefile = "{{ sourcefile }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/sourcefile.js') }}"></script>
+</div>
+{% endblock content %} 

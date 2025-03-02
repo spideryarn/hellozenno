@@ -66,7 +66,24 @@ sourcefile_views_bp = Blueprint("sourcefile_views", __name__)
 def inspect_sourcefile(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
-    """Display the contents and metadata of a source file."""
+    """Redirect to the text view of a source file."""
+    return redirect(
+        url_for(
+            "sourcefile_views.inspect_sourcefile_text",
+            target_language_code=target_language_code,
+            sourcedir_slug=sourcedir_slug,
+            sourcefile_slug=sourcefile_slug,
+        )
+    )
+
+
+@sourcefile_views_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/text"
+)
+def inspect_sourcefile_text(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Display the text content of a source file."""
     target_language_name = get_language_name(target_language_code)
 
     try:
@@ -80,78 +97,17 @@ def inspect_sourcefile(
             sourcefile_entry.sourcedir, sourcefile_entry.slug  # type: ignore
         )
 
-        # Get existing linked wordforms from database
-        existing_wordforms_d = {}  # Dict for quick lookup by wordform string
-        existing_wordform_ids = set()  # Track existing wordform IDs
+        # Get existing linked wordforms from database and convert to dicts
+        wordforms_d = []
         for sourcefile_wordform in sourcefile_entry.wordform_entries:  # type: ignore
             wordform = sourcefile_wordform.wordform
             wordform_d = wordform.to_dict()
+            # Add lemma information
+            wordform_d["lemma"] = wordform.lemma_entry.lemma
             # Add centrality and ordering from junction table
             wordform_d["centrality"] = sourcefile_wordform.centrality
             wordform_d["ordering"] = sourcefile_wordform.ordering
-            existing_wordforms_d[wordform.wordform.lower()] = wordform_d
-            existing_wordform_ids.add(wordform.id)
-
-        # Extract tokens from the text
-        from utils.vocab_llm_utils import extract_tokens
-
-        tokens_in_text = extract_tokens(str(sourcefile_entry.text_target or ""))
-
-        # Query database for matching wordforms
-        wordforms = list(
-            Wordform.select().where((Wordform.language_code == target_language_code))
-        )
-
-        # Filter wordforms in Python using normalize_text
-        normalized_tokens = {normalize_text(t) for t in tokens_in_text}
-        wordforms = [
-            wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
-        ]
-
-        # Convert to dictionary structure and merge with existing
-        for wordform in wordforms:
-            wordform_str = wordform.wordform.lower()
-            if wordform_str not in existing_wordforms_d:
-                # Create new SourcefileWordform entry
-                SourcefileWordform.create(
-                    sourcefile=sourcefile_entry,
-                    wordform=wordform,
-                    centrality=0.3,  # Default centrality for auto-discovered words
-                    ordering=len(existing_wordforms_d) + 1,
-                )
-                # Add to our dictionaries
-                wordform_d = wordform.to_dict()
-                wordform_d["centrality"] = 0.3
-                wordform_d["ordering"] = len(existing_wordforms_d) + 1
-                existing_wordforms_d[wordform_str] = wordform_d
-                existing_wordform_ids.add(wordform.id)
-
-        # Create enhanced text with interactive word links
-        enhanced_original_txt, found_wordforms = create_interactive_word_links(
-            text=str(sourcefile_entry.text_target or ""),
-            wordforms=list(existing_wordforms_d.values()),
-            target_language_code=target_language_code,
-        )
-
-        # Get unique lemmas from wordforms
-        unique_lemmas = {
-            wordform_d["lemma"]
-            for wordform_d in list(existing_wordforms_d.values())
-            if "lemma" in wordform_d
-        }
-
-        # Load metadata for each lemma
-        lemma_metadata = {}
-        for lemma in unique_lemmas:
-            try:
-                metadata = load_or_generate_lemma_metadata(lemma, target_language_code)
-                lemma_metadata[lemma] = metadata
-            except FileNotFoundError:
-                lemma_metadata[lemma] = {
-                    "translations": [],
-                    "etymology": "",
-                    "commonality": 0.5,
-                }
+            wordforms_d.append(wordform_d)
 
         # Get phrases from database
         phrases_d = []
@@ -174,14 +130,20 @@ def inspect_sourcefile(
                 "mnemonics": phrase.mnemonics,
                 "component_words": phrase.component_words,
                 "usage_notes": phrase.usage_notes,
-                "difficulty_level": phrase.difficulty_level,
                 "centrality": sourcefile_phrase.centrality,
                 "ordering": sourcefile_phrase.ordering,
                 "slug": phrase.slug,
             }
             phrases_d.append(phrase_d)
 
-        # Prepare metadata for template
+        # Create enhanced text with interactive word links
+        enhanced_original_txt, found_wordforms = create_interactive_word_links(
+            text=str(sourcefile_entry.text_target or ""),
+            wordforms=wordforms_d,
+            target_language_code=target_language_code,
+        )
+
+        # Create metadata dict
         metadata = {
             "created_at": sourcefile_entry.created_at,
             "updated_at": sourcefile_entry.updated_at,
@@ -193,26 +155,214 @@ def inspect_sourcefile(
             metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
 
         # Check if file has been processed before
-        already_processed = bool(list(existing_wordforms_d.values()))
+        already_processed = bool(wordforms_d)
 
         return render_template(
-            "sourcefile.jinja",
+            "sourcefile_text.jinja",
             target_language_code=target_language_code,
             target_language_name=target_language_name,
-            sourcedir=sourcefile_entry.sourcedir.path,  # Use path for display
-            sourcedir_slug=sourcedir_slug,  # Use slug for URLs
-            sourcefile=sourcefile_entry.filename,  # Use filename for display
-            sourcefile_slug=sourcefile_slug,  # Use slug for URLs
-            sourcefile_type=sourcefile_entry.sourcefile_type,  # Add sourcefile type for icon
-            sourcefile_entry=sourcefile_entry,  # Pass the full sourcefile entry
+            sourcedir=sourcefile_entry.sourcedir.path,
+            sourcedir_slug=sourcedir_slug,
+            sourcefile=sourcefile_entry.filename,
+            sourcefile_slug=sourcefile_slug,
+            sourcefile_type=sourcefile_entry.sourcefile_type,
+            sourcefile_entry=sourcefile_entry,
             enhanced_original_txt=enhanced_original_txt,
             translated_txt=sourcefile_entry.text_english,
-            wordforms_d=list(existing_wordforms_d.values()),
-            lemma_metadata=lemma_metadata,
+            metadata=metadata,
+            nav_info=nav_info,
+            active_tab="text",
+            already_processed=already_processed,
+            wordforms_d=wordforms_d,
+            phrases_d=phrases_d,
+        )
+    except DoesNotExist:
+        abort(404, description="File not found")
+
+
+@sourcefile_views_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/words"
+)
+def inspect_sourcefile_words(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Display the words and phrases of a source file."""
+    target_language_name = get_language_name(target_language_code)
+
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Get navigation info
+        nav_info = _get_navigation_info(
+            sourcefile_entry.sourcedir, sourcefile_entry.slug  # type: ignore
+        )
+
+        # Get existing linked wordforms from database and convert to dicts
+        wordforms_d = []
+        for sourcefile_wordform in sourcefile_entry.wordform_entries:  # type: ignore
+            wordform = sourcefile_wordform.wordform
+            wordform_d = wordform.to_dict()
+            # Add lemma information
+            wordform_d["lemma"] = wordform.lemma_entry.lemma
+            # Add centrality and ordering from junction table
+            wordform_d["centrality"] = sourcefile_wordform.centrality
+            wordform_d["ordering"] = sourcefile_wordform.ordering
+            wordforms_d.append(wordform_d)
+
+        # Get phrases from database
+        phrases_d = []
+        for sourcefile_phrase in (
+            sourcefile_entry.phrase_entries.select()  # type: ignore
+            .join(Phrase)
+            .order_by(SourcefilePhrase.ordering)
+        ):
+            phrase = sourcefile_phrase.phrase
+            phrase_d = {
+                "canonical_form": phrase.canonical_form,
+                "raw_forms": phrase.raw_forms,
+                "translations": phrase.translations,
+                "part_of_speech": phrase.part_of_speech,
+                "register": phrase.register,
+                "commonality": phrase.commonality,
+                "guessability": phrase.guessability,
+                "etymology": phrase.etymology,
+                "cultural_context": phrase.cultural_context,
+                "mnemonics": phrase.mnemonics,
+                "component_words": phrase.component_words,
+                "usage_notes": phrase.usage_notes,
+                "centrality": sourcefile_phrase.centrality,
+                "ordering": sourcefile_phrase.ordering,
+                "slug": phrase.slug,
+            }
+            phrases_d.append(phrase_d)
+
+        # Create metadata dict
+        metadata = {
+            "created_at": sourcefile_entry.created_at,
+            "updated_at": sourcefile_entry.updated_at,
+        }
+        if (
+            sourcefile_entry.metadata
+            and "image_processing" in sourcefile_entry.metadata
+        ):
+            metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
+
+        # Check if file has been processed before
+        already_processed = bool(wordforms_d)
+
+        return render_template(
+            "sourcefile_words.jinja",
+            target_language_code=target_language_code,
+            target_language_name=target_language_name,
+            sourcedir=sourcefile_entry.sourcedir.path,
+            sourcedir_slug=sourcedir_slug,
+            sourcefile=sourcefile_entry.filename,
+            sourcefile_slug=sourcefile_slug,
+            sourcefile_type=sourcefile_entry.sourcefile_type,
+            sourcefile_entry=sourcefile_entry,
+            wordforms_d=wordforms_d,
             phrases_d=phrases_d,
             metadata=metadata,
-            already_processed=already_processed,
             nav_info=nav_info,
+            active_tab="words",
+            already_processed=already_processed,
+        )
+    except DoesNotExist:
+        abort(404, description="File not found")
+
+
+@sourcefile_views_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/phrases"
+)
+def inspect_sourcefile_phrases(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Display the phrases of a source file."""
+    target_language_name = get_language_name(target_language_code)
+
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Get navigation info
+        nav_info = _get_navigation_info(
+            sourcefile_entry.sourcedir, sourcefile_entry.slug  # type: ignore
+        )
+
+        # Get existing linked wordforms from database and convert to dicts
+        wordforms_d = []
+        for sourcefile_wordform in sourcefile_entry.wordform_entries:  # type: ignore
+            wordform = sourcefile_wordform.wordform
+            wordform_d = wordform.to_dict()
+            # Add lemma information
+            wordform_d["lemma"] = wordform.lemma_entry.lemma
+            # Add centrality and ordering from junction table
+            wordform_d["centrality"] = sourcefile_wordform.centrality
+            wordform_d["ordering"] = sourcefile_wordform.ordering
+            wordforms_d.append(wordform_d)
+
+        # Get phrases from database
+        phrases_d = []
+        for sourcefile_phrase in (
+            sourcefile_entry.phrase_entries.select()  # type: ignore
+            .join(Phrase)
+            .order_by(SourcefilePhrase.ordering)
+        ):
+            phrase = sourcefile_phrase.phrase
+            phrase_d = {
+                "canonical_form": phrase.canonical_form,
+                "raw_forms": phrase.raw_forms,
+                "translations": phrase.translations,
+                "part_of_speech": phrase.part_of_speech,
+                "register": phrase.register,
+                "commonality": phrase.commonality,
+                "guessability": phrase.guessability,
+                "etymology": phrase.etymology,
+                "cultural_context": phrase.cultural_context,
+                "mnemonics": phrase.mnemonics,
+                "component_words": phrase.component_words,
+                "usage_notes": phrase.usage_notes,
+                "centrality": sourcefile_phrase.centrality,
+                "ordering": sourcefile_phrase.ordering,
+                "slug": phrase.slug,
+            }
+            phrases_d.append(phrase_d)
+
+        # Create metadata dict
+        metadata = {
+            "created_at": sourcefile_entry.created_at,
+            "updated_at": sourcefile_entry.updated_at,
+        }
+        if (
+            sourcefile_entry.metadata
+            and "image_processing" in sourcefile_entry.metadata
+        ):
+            metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
+
+        # Check if file has been processed before
+        already_processed = bool(phrases_d)
+
+        return render_template(
+            "sourcefile_phrases.jinja",
+            target_language_code=target_language_code,
+            target_language_name=target_language_name,
+            sourcedir=sourcefile_entry.sourcedir.path,
+            sourcedir_slug=sourcedir_slug,
+            sourcefile=sourcefile_entry.filename,
+            sourcefile_slug=sourcefile_slug,
+            sourcefile_type=sourcefile_entry.sourcefile_type,
+            sourcefile_entry=sourcefile_entry,
+            phrases_d=phrases_d,
+            metadata=metadata,
+            nav_info=nav_info,
+            active_tab="phrases",
+            already_processed=already_processed,
+            wordforms_d=wordforms_d,
         )
     except DoesNotExist:
         abort(404, description="File not found")
