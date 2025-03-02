@@ -97,8 +97,7 @@
             {#each sentence.lemma_words as lemma}
               <li>
                 <a 
-                  target="_blank" 
-                  href="/lemma/{sentence.language_code}/{lemma}" 
+                  href="/{sentence.language_code}/lemma/{lemma}" 
                   class="lemma-link"
                 >
                   {lemma}
