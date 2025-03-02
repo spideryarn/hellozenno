@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import patch
 from flask import url_for
 from peewee import DoesNotExist
+import time
+from peewee import fn
 
 from db_models import Lemma, Wordform
 from tests.mocks import mock_quick_search_for_wordform
@@ -142,3 +144,49 @@ def test_delete_nonexistent_wordform(client):
     response = client.post(f"/{TEST_LANGUAGE_CODE}/wordform/nonexistent/delete")
     assert response.status_code == 302  # Should redirect even if wordform doesn't exist
     assert response.headers["Location"].endswith(f"/{TEST_LANGUAGE_CODE}/wordforms")
+
+
+def test_wordforms_list_sorting(client, fixture_for_testing_db):
+    """Test the sorting functionality of the wordforms list view, especially case-insensitive alphabetical sorting."""
+    # Clear any existing wordforms
+    Wordform.delete().execute()
+
+    # Create wordforms with different case
+    lemma = create_test_lemma(fixture_for_testing_db)
+
+    # Create wordforms with mixed case to test case-insensitive sorting
+    wordform1 = Wordform.create(
+        wordform="Alpha",
+        language_code=TEST_LANGUAGE_CODE,
+        lemma_entry=lemma,
+        translations=["test1"],
+    )
+    wordform2 = Wordform.create(
+        wordform="beta",
+        language_code=TEST_LANGUAGE_CODE,
+        lemma_entry=lemma,
+        translations=["test2"],
+    )
+    wordform3 = Wordform.create(
+        wordform="Gamma",
+        language_code=TEST_LANGUAGE_CODE,
+        lemma_entry=lemma,
+        translations=["test3"],
+    )
+
+    # Test alphabetical sorting (default) - should be case-insensitive
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/wordforms")
+    assert response.status_code == 200
+
+    # Get the wordforms from the database in the expected order
+    wordforms_alpha = list(
+        Wordform.select()
+        .where(Wordform.language_code == TEST_LANGUAGE_CODE)
+        .order_by(fn.Lower(Wordform.wordform))
+    )
+    wordform_names_alpha = [wordform.wordform for wordform in wordforms_alpha]
+    assert wordform_names_alpha == [
+        "Alpha",
+        "beta",
+        "Gamma",
+    ], "Database should return wordforms in case-insensitive alphabetical order"

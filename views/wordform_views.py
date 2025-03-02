@@ -17,27 +17,18 @@ def wordforms_list(target_language_code: str):
     # Get sort parameter from request
     sort_by = request.args.get("sort", "alpha")
 
-    # Base query
-    query = Wordform.select().where(Wordform.language_code == target_language_code)
-
-    # Apply sorting
+    # Get all wordforms for this language from the database using the model method
+    # which now handles case-insensitive sorting
     if sort_by == "commonality":
-        # Join with Lemma to get commonality data
-        query = query.join(
-            Lemma, JOIN.LEFT_OUTER
-        ).order_by(  # Let peewee handle the join condition automatically
-            fn.COALESCE(Lemma.commonality, 0).desc(), Wordform.wordform
+        # For commonality sorting, we need to join with Lemma
+        query = Wordform.select().where(Wordform.language_code == target_language_code)
+        query = query.join(Lemma, JOIN.LEFT_OUTER).order_by(
+            fn.COALESCE(Lemma.commonality, 0).desc(), fn.Lower(Wordform.wordform)
         )
-    elif sort_by == "date":
-        # Sort by modification time, newest first
-        query = query.order_by(
-            fn.COALESCE(Wordform.updated_at, Wordform.created_at).desc()
-        )
-    else:  # default to alpha
-        query = query.order_by(fn.Lower(Wordform.wordform))
-
-    # Get all wordforms for this language from the database
-    wordforms = query
+        wordforms = query
+    else:
+        # For alpha and date sorting, use the model method
+        wordforms = Wordform.get_all_for_language(target_language_code, sort_by)
 
     # Convert to list of dictionaries for template
     wordforms_d = [wordform.to_dict() for wordform in wordforms]

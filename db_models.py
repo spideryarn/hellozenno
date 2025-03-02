@@ -189,7 +189,7 @@ class Lemma(BaseModel):
         if sort_by == "date":
             query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
         else:
-            query = query.order_by(cls.lemma)
+            query = query.order_by(fn.Lower(cls.lemma))
 
         return query
 
@@ -325,7 +325,7 @@ class Wordform(BaseModel):
         if sort_by == "date":
             query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
         else:
-            query = query.order_by(cls.wordform)
+            query = query.order_by(fn.Lower(cls.wordform))
 
         return query
 

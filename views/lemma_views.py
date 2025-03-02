@@ -19,21 +19,11 @@ def lemmas_list(target_language_code: str):
     # Get sort parameter from request
     sort = request.args.get("sort", "alpha")
 
-    # Base query
-    query = Lemma.select().where(Lemma.language_code == target_language_code)
-
-    # Apply sorting
-    if sort == "commonality":
-        query = query.order_by(fn.COALESCE(Lemma.commonality, 0).desc(), Lemma.lemma)
-    elif sort == "date":
-        query = query.order_by(
-            fn.COALESCE(Lemma.updated_at, "1970-01-01").desc(), Lemma.lemma
-        )
-    else:  # default to alpha
-        query = query.order_by(Lemma.lemma)
+    # Get all lemmas for this language from the database using the model method
+    # which now handles case-insensitive sorting
+    lemmas = Lemma.get_all_for_language(target_language_code, sort)
 
     # Convert query results to the format expected by the template
-    lemmas = list(query)
     lemma_metadata = {lemma.lemma: lemma.to_dict() for lemma in lemmas}
 
     return render_template(
