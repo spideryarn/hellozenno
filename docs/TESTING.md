@@ -2,13 +2,12 @@
 
 See FRONTEND_TESTING.md for info on using Playwright for front-end tests with Pytest.
 
-See tests/backend/conftest.py for fixtures, setup & teardown, test database, test client & blueprints, etc.
-
 ## Test Environment Configuration
 
-- Test configuration is managed through `.env.testing` (version controlled)
-- Database credentials and other settings are loaded from `.env.testing`
+- Test configuration and environment variables are managed through `.env.testing` (version controlled), e.g. `source .env.testing && pytest ...`
+- Run tests from the root directory (e.g. reference `tests/backend/test_blah.py`)
 - Safety checks ensure we only connect to test databases (names must end with `_test`)
+- Test client/configuration/database, setup & teardown, fixtures etc are handled in `tests/backend/conftest.py`, `tests/frontend/conftest.py`, `pytest.ini`, and `tests/fixtures_for_tests.py`
 - Environment variables are validated using `env_config.getenv()`
 
 ## Database Testing Best Practices
