@@ -18,17 +18,12 @@ export default defineConfig({
         outDir: '../static/build',
         emptyOutDir: true,
         manifest: true,
-        rollupOptions: {
-            input: {
-                'helloworld-entry': resolve(__dirname, 'src/entries/helloworld-entry.ts'),
-                'styles': resolve(__dirname, 'src/styles/tailwind.css'),
-                // Add more entry points as needed for different pages
-            },
-            output: {
-                entryFileNames: 'js/[name].js',
-                chunkFileNames: 'js/[name]-[hash].js',
-                assetFileNames: 'assets/[name]-[hash][extname]',
-            },
+        cssCodeSplit: true,
+        lib: {
+            entry: resolve(__dirname, 'src/entries/sentence-entry.ts'),
+            name: 'SentenceComponent',
+            fileName: 'js/sentence-entry',
+            formats: ['es'],
         },
     },
 

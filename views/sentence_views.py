@@ -127,15 +127,33 @@ def get_sentence(language_code: str, slug: str):
             target_language_code=language_code,
         )
 
+        # Create serializable versions of the data
         metadata = {
-            "created_at": sentence.created_at,
-            "updated_at": sentence.updated_at,
+            "created_at": (
+                sentence.created_at.isoformat() if sentence.created_at else None
+            ),
+            "updated_at": (
+                sentence.updated_at.isoformat() if sentence.updated_at else None
+            ),
         }
+
+        sentence_data = {
+            "id": sentence.id,
+            "sentence": str(sentence.sentence),
+            "translation": str(sentence.translation) if sentence.translation else None,
+            "slug": sentence.slug,
+            "language_code": sentence.language_code,
+            "has_audio": bool(sentence.audio_data),
+            "lemma_words": (
+                sentence.lemma_words if hasattr(sentence, "lemma_words") else None
+            ),
+        }
+
         return render_template(
             "sentence.jinja",
             target_language_code=language_code,
             target_language_name=target_language_name,
-            sentence=sentence,
+            sentence=sentence_data,
             metadata=metadata,
             enhanced_sentence_text=enhanced_sentence_text,
         )
