@@ -2,9 +2,13 @@
 <ul class="dictionary-entries">
     {% for wordform in wordforms_d|sort(attribute='ordering') %}
         <li class="dictionary-entry">
+            {% if wordform.lemma %}
             <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=wordform.lemma) }}" class="lemma-link">
                 {{ wordform.wordform }}
             </a>
+            {% else %}
+            <span class="wordform">{{ wordform.wordform }}</span>
+            {% endif %}
             {% if wordform.translations %}
                 <span class="translations">{{ wordform.translations|join(', ') }}</span>
             {% endif %}

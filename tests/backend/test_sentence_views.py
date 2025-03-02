@@ -6,6 +6,7 @@ from peewee import DoesNotExist
 from db_models import Sentence, Wordform, Lemma
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
 import utils.audio_utils as audio_utils  # Import the module directly for mocking
+import json
 
 
 @pytest.fixture
@@ -179,5 +180,18 @@ def test_sentence_word_links(client, test_sentence):
     """Test that word links are correctly generated in sentence view."""
     response = client.get(f"/{TEST_LANGUAGE_CODE}/sentence/{test_sentence.slug}")
     assert response.status_code == 200
-    # The test sentence should have some linked words
-    assert b'class="word-link"' in response.data
+
+    # Check that the Svelte component mount point exists
+    response_text = response.data.decode()
+    assert '<div id="sentence-component"></div>' in response_text
+
+    # Check that the Svelte component is initialized with the correct props
+    assert "new Sentence({" in response_text
+    assert "target: document.getElementById('sentence-component')" in response_text
+
+    # Check that lemma_words are passed in the props
+    assert '"lemma_words":' in response_text
+
+    # The lemma words will be JSON encoded, so we need to check for their escaped versions
+    encoded_lemmas = json.dumps(test_sentence.lemma_words)[1:-1]  # Remove outer quotes
+    assert encoded_lemmas in response_text

@@ -67,14 +67,20 @@ def inspect_sourcefile(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Redirect to the text view of a source file."""
-    return redirect(
-        url_for(
-            "sourcefile_views.inspect_sourcefile_text",
-            target_language_code=target_language_code,
-            sourcedir_slug=sourcedir_slug,
-            sourcefile_slug=sourcefile_slug,
+    try:
+        # Check if the file exists first
+        _get_sourcefile_entry(target_language_code, sourcedir_slug, sourcefile_slug)
+
+        return redirect(
+            url_for(
+                "sourcefile_views.inspect_sourcefile_text",
+                target_language_code=target_language_code,
+                sourcedir_slug=sourcedir_slug,
+                sourcefile_slug=sourcefile_slug,
+            )
         )
-    )
+    except DoesNotExist:
+        abort(404, description="File not found")
 
 
 @sourcefile_views_bp.route(
