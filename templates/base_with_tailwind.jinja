@@ -15,8 +15,7 @@
         {% if vite_entry %}
             <script type="module" src="http://localhost:5173/src/entries/{{ vite_entry }}.ts"></script>
         {% endif %}
-        <script type="module" src="http://localhost:5173/src/styles/tailwind.css"></script>
-
+        <link rel="stylesheet" href="http://localhost:5173/src/styles/tailwind.css">
     {% endif %}
 {% endblock head_imports %}
 

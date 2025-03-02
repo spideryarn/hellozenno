@@ -35,31 +35,37 @@ Current stack:
 - Install Vite, Svelte, TypeScript, and Tailwind CSS
 - Configure Vite to output to Flask's static directory
 - Update `.gitignore` and `.cursorignore` for frontend tooling
+- Fix environment variable handling in development scripts
+- Ensure `FLASK_PORT` is only required in development mode
 
 **DONE: Configure Vite with Svelte and Tailwind**
 - Create `vite.config.js` with Svelte plugin
 - Set up Tailwind CSS configuration
 - Configure TypeScript for Svelte components
 - Create build scripts for development and production
+- Fix production build to not require `FLASK_PORT`
 
 **DONE: Create integration mechanism**
 - Develop a system for mounting Svelte components in Jinja templates
 - Create shared TypeScript utilities for reuse across components
 - Set up a development workflow that runs both Flask and Vite
+- Create base template with Tailwind support (`base_with_tailwind.jinja`)
 
 **DONE: Create Hello World sandbox**
 - Create a dedicated Flask route for experimenting with new technologies
-- Create a Jinja template for the sandbox
+- Create a Jinja template for the sandbox (`helloworld_newtech.jinja`)
 - Create a simple Svelte component
 - Set up Tailwind CSS demo
+- Implement development/production asset loading
 
 ### Stage: Tailwind CSS Integration
 
-**TODO: Set up Tailwind alongside existing CSS**
-- Create a new base Jinja template that includes Tailwind
-- Configure Tailwind to respect existing styles
+**IN PROGRESS: Set up Tailwind alongside existing CSS**
+- Create a new base Jinja template that includes Tailwind ✓
+- Configure Tailwind to respect existing styles ✓
 - Create a strategy for incremental CSS migration
 - Test Tailwind styles on a simple component
+- Convert `/languages` page to use Tailwind
 
 **TODO: Create migration path for existing CSS**
 - Identify common patterns in existing CSS

@@ -1,21 +1,56 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-    content: [
-        './src/**/*.{html,js,svelte,ts}',
-        '../templates/**/*.jinja',  // Include Jinja templates
-    ],
-    // Use a prefix to avoid conflicts with existing CSS
     prefix: 'tw-',
+    content: [
+        "../templates/**/*.{html,jinja}",
+        "./src/**/*.{js,ts,jsx,tsx,svelte}",
+    ],
     theme: {
         extend: {
+            fontFamily: {
+                'serif': ['Times New Roman', 'Times', 'serif'],
+                'mono': ['Courier New', 'Courier', 'monospace'],
+            },
             colors: {
-                // Match existing color scheme
-                primary: '#2563eb',
-                secondary: '#1d4ed8',
-                danger: '#dc2626',
-                success: '#16a34a',
+                'primary': '#2563eb',    // Blue-600
+                'primary-hover': '#1d4ed8',  // Blue-700
+                'danger': '#dc2626',     // Red-600
+                'danger-hover': '#b91c1c',  // Red-700
+                'success': '#16a34a',    // Green-600
+                'success-hover': '#15803d',  // Green-700
+            },
+            typography: {
+                DEFAULT: {
+                    css: {
+                        fontFamily: 'Times New Roman, Times, serif',
+                        maxWidth: 'none',
+                        color: '#333',
+                        h1: {
+                            fontWeight: '400',
+                        },
+                        h2: {
+                            fontWeight: '400',
+                        },
+                        h3: {
+                            fontWeight: '400',
+                        },
+                    },
+                },
+            },
+            container: {
+                center: true,
+                padding: '1rem',
+                screens: {
+                    sm: '640px',
+                    md: '768px',
+                    lg: '1024px',
+                    xl: '1280px',
+                    '2xl': '1536px',
+                },
             },
         },
     },
-    plugins: [],
+    plugins: [
+        require('@tailwindcss/typography'),
+    ],
 } 

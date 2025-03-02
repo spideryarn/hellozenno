@@ -21,6 +21,7 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 'helloworld-entry': resolve(__dirname, 'src/entries/helloworld-entry.ts'),
+                'lemma-entry': resolve(__dirname, 'src/entries/lemma-entry.ts'),
                 'styles': resolve(__dirname, 'src/styles/tailwind.css'),
                 // Add more entry points as needed for different pages
             },
