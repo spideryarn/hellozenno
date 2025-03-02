@@ -1,4 +1,4 @@
-{% extends "base_with_tailwind.jinja" %}
+{% extends "base.jinja" %}
 
 {% block breadcrumbs %}
     » Languages
@@ -13,21 +13,46 @@ Learn vocabulary and phrases in any language.
 {% endblock %}
 
 {% block content %}
-<div class="tw-container tw-max-w-7xl tw-mx-auto tw-px-4 tw-py-8">
-    <h1 class="tw-text-4xl tw-font-normal tw-mb-12">Available Languages ({{ languages|length }})</h1>
+<div class="container">
+    <h1>Available Languages ({{ languages|length }})</h1>
     
-    <div class="tw-grid tw-grid-cols-3 tw-gap-6">
+    <ul class="languages-list">
         {% for language in languages %}
-            <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=language.code) }}" 
-               class="tw-block tw-bg-white tw-rounded-lg tw-p-6 tw-shadow-sm hover:tw-shadow-md tw-transition-shadow tw-duration-200">
-                <div class="tw-text-2xl tw-font-normal tw-text-gray-900 tw-mb-2">{{ language.name }}</div>
-                <div class="tw-text-base tw-text-gray-500">{{ language.code }}</div>
-            </a>
+            <li>
+                <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=language.code) }}">
+                    {{ language.name }}
+                    <span class="language-code">({{ language.code }})</span>
+                </a>
+            </li>
         {% else %}
-            <div class="tw-col-span-full tw-text-center tw-text-gray-500 tw-py-8">
-                No languages available
-            </div>
+            <li>No languages available</li>
         {% endfor %}
-    </div>
+    </ul>
 </div>
+
+<style>
+.languages-list {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.languages-list li {
+    margin: 0;
+}
+
+.languages-list a {
+    padding: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.language-code {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+</style>
 {% endblock %} 

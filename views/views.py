@@ -70,19 +70,6 @@ def search_word(target_language_code: str, wordform: str):
     )
 
 
-@views_bp.route("/helloworld-newtech")
-def helloworld_newtech():
-    """
-    A sandbox view for experimenting with Svelte and Tailwind CSS.
-    This isolated view allows us to test new frontend technologies
-    without affecting the rest of the application.
-    """
-    return render_template(
-        "helloworld_newtech.jinja",
-        page_title="Hello World - New Tech Demo",
-    )
-
-
 @views_bp.route("/favicon.ico", defaults={"trailing_slash": ""})
 @views_bp.route("/favicon.ico/", defaults={"trailing_slash": "/"})
 def favicon(trailing_slash):
