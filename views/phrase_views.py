@@ -38,10 +38,13 @@ def get_phrase_metadata(target_language_code, slug):
     """Get metadata for a specific phrase using its slug."""
     target_language_name = get_language_name(target_language_code)
 
-    # First try to find existing phrase in database by slug
-    phrase = Phrase.get(
-        (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
-    )
+    try:
+        # First try to find existing phrase in database by slug
+        phrase = Phrase.get(
+            (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
+        )
+    except DoesNotExist:
+        abort(404, description=f"Phrase with slug '{slug}' not found")
 
     # Prepare metadata for template
     metadata = {

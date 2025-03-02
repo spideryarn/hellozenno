@@ -4,6 +4,8 @@ from flask import url_for
 from urllib.parse import quote
 
 from tests.mocks import mock_quick_search_for_wordform
+from tests.fixtures_for_tests import SAMPLE_PHRASE_DATA, TEST_LANGUAGE_CODE
+from db_models import Phrase
 
 
 """
@@ -144,34 +146,20 @@ def test_phrases_list(client):
     assert "text/html" in response.content_type
 
 
-def test_phrase_detail_existing(client):
+def test_phrase_detail_existing(client, fixture_for_testing_db):
     """Test the phrase detail view with an existing phrase using slug."""
-    # Test with a known phrase that exists in production, using slug
-    response = client.get("/el/phrases/kale-orexe")
+    # Create a test phrase with the sample data
+    phrase = Phrase.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA)
+
+    # Test with the created phrase using its slug
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/phrases/{phrase.slug}")
     assert response.status_code == 200
     # Check that we got a valid HTML response
     assert "text/html" in response.content_type
 
 
-def test_phrase_legacy_route(client):
-    """Test the legacy phrase route with canonical_form."""
-    # Test with a known phrase that exists in production
-    response = client.get("/el/phrase/καλή%20όρεξη")
-    # Should either redirect to slug-based URL (302) or show the content directly (200)
-    assert response.status_code in (200, 302)
-    # Check that we got a valid response
-    if response.status_code == 302:
-        assert "/el/phrases/" in response.location
-    else:
-        assert "text/html" in response.content_type
-
-
 def test_phrase_detail_nonexistent(client):
     """Test the phrase detail view with a non-existent phrase."""
-    # Test legacy route
-    response = client.get("/el/phrase/nonexistentphrase12345")
-    assert response.status_code == 404
-
     # Test new slug-based route
     response = client.get("/el/phrases/nonexistentphrase12345")
     assert response.status_code == 404

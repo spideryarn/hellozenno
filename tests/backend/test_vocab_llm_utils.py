@@ -300,8 +300,7 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
     assert ">τροφή<" in enhanced_text_nfc
     assert ">θυμός<" in enhanced_text_nfc
 
-    # For NFD text, the link should still contain the original NFD form
-    nfd_trofi = unicodedata.normalize("NFD", "τροφή")
-    nfd_thymos = unicodedata.normalize("NFD", "θυμός")
-    assert f">{nfd_trofi}<" in enhanced_text_nfd
-    assert f">{nfd_thymos}<" in enhanced_text_nfd
+    # For NFD text, the link should contain the NFC form (standardized)
+    # rather than preserving the original NFD form
+    assert ">τροφή<" in enhanced_text_nfd
+    assert ">θυμός<" in enhanced_text_nfd

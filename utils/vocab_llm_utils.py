@@ -434,6 +434,7 @@ def create_interactive_word_links(
         wordforms that were found in the text
     """
     from utils.store_utils import load_or_generate_lemma_metadata
+    from utils.word_utils import ensure_nfc, normalize_text
 
     # Track which wordforms we actually find in the text
     found_wordforms = set()
@@ -452,8 +453,8 @@ def create_interactive_word_links(
         """Replace a matched word with an HTML link."""
         word = match.group(0)  # Original word with case and accents preserved
         # First ensure the word is in NFC form for consistent matching
-        word = ensure_nfc(word)
-        normalized_word = normalize_text(word)
+        word_nfc = ensure_nfc(word)
+        normalized_word = normalize_text(word_nfc)
         wf = next(
             (
                 wf
@@ -479,6 +480,9 @@ def create_interactive_word_links(
         wordforms, key=lambda wf: len(wf["wordform"]), reverse=True
     )
 
+    # First, normalize the input text to NFC for consistent pattern matching
+    text_nfc = ensure_nfc(text)
+
     # Create a regex pattern that matches both original and normalized forms
     pattern_parts = []
     for wf in sorted_wordforms:
@@ -487,7 +491,7 @@ def create_interactive_word_links(
         # Add the original form
         pattern_parts.append(re.escape(nfc_wordform))
         # Add any case variations found in the text
-        text_words = re.findall(r"\b\w+\b", text, re.UNICODE)
+        text_words = re.findall(r"\b\w+\b", text_nfc, re.UNICODE)
         for word in text_words:
             # Ensure word is in NFC form before comparison
             nfc_word = ensure_nfc(word)
@@ -501,7 +505,7 @@ def create_interactive_word_links(
     )
 
     # Split text into paragraphs while preserving all whitespace
-    paragraphs = text.split("\n\n")
+    paragraphs = text_nfc.split("\n\n")
 
     # Process each paragraph
     processed_paragraphs = []
