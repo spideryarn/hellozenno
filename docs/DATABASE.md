@@ -9,9 +9,10 @@ The application uses PostgreSQL (via Supabase) in all environments:
 
 1. **Production**: Supabase PostgreSQL
    - Uses connection string from `.env.prod`
-   - Connects directly to Supabase over HTTPS
-   - Uses transaction pooling (port 6543) for optimal performance
+   - Connects via Supabase's session pooler (port 5432)
+   - Supports all PostgreSQL features including prepared statements
    - SSL mode required for security
+   - Optimized for long-lived containers with light traffic
 
 2. **Local Development**: Local PostgreSQL database
    - Default when no special environment variables are set
@@ -28,6 +29,28 @@ The application uses PostgreSQL (via Supabase) in all environments:
    - Uses connection string from `.env.testing`
    - Isolated test database with name ending in "_test"
    - Automatically managed by test suite
+
+## Connection Options with Supabase
+
+Supabase offers three main connection methods:
+
+1. **Direct Connection**:
+   - Connects directly to your Postgres instance
+   - Uses IPv6 by default
+   - Ideal for persistent servers with few connections
+   - Connection string format: `postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres`
+
+2. **Session Pooler** (current setup):
+   - Connects via a proxy on port 5432
+   - Ideal for persistent servers when IPv6 is not supported
+   - Supports all PostgreSQL features including prepared statements
+   - Good for applications with fewer clients that maintain long sessions
+
+3. **Transaction Pooler**:
+   - Connects via a proxy on port 6543
+   - Ideal for serverless or edge functions with many transient connections
+   - Does NOT support prepared statements
+   - Better for high-concurrency scenarios with short-lived connections
 
 ## Database Scripts
 

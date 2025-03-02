@@ -81,8 +81,8 @@ SOURCEFILE_SLUG_MAX_LENGTH = 100  # Characters allowed in URL slugs
 # Database pool configuration
 # These settings are used across all environments
 DB_POOL_CONFIG = {
-    "max_connections": 20,  # Keep below soft limit
-    "stale_timeout": 300,  # 5 minutes
+    "max_connections": 10,  # Reduced from 20 since traffic is light
+    "stale_timeout": 600,  # Increased to 10 minutes to keep connections alive longer
     "timeout": 30,  # 30 seconds connection timeout
     "autoconnect": True,
     "thread_safe": True,
