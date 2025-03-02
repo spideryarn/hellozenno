@@ -140,6 +140,8 @@ psql -d hellozenno_development -P pager=off -x auto
 psql -d hellozenno_development -P pager=off -A -t -c "SELECT * FROM table;"
 ```
 
+## Useful tips
+
 Common psql flags for better output:
 - `-P pager=off`: Disable the pager (no more 'press space to continue')
 - `-x auto`: Automatically switch between normal and expanded display

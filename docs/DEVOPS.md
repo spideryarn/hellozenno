@@ -46,7 +46,7 @@ For local development with production database:
 ### Monitoring
 - Web app: `fly status -a hz-app-web`
 - Database: Monitor via Supabase dashboard
-- Web app logs: `fly logs`
+- Web app logs: `fly logs --no-tail` (so it doesn't continually stream)
 - Database logs: Available in Supabase dashboard
 
 ## Resource Management
