@@ -2,6 +2,7 @@ import pytest
 from flask import url_for
 from peewee import DoesNotExist
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_PHRASE_DATA
+from slugify import slugify
 
 from db_models import Phrase
 
@@ -14,6 +15,9 @@ def test_phrase_url_generation(client):
         assert url_for(
             "phrase_views.get_phrase_metadata",
             target_language_code="el",
+            slug="kathome-kai-skeftome",
+        )
+
             canonical_form="κάθομαι και σκέφτομαι",
         )
 
@@ -49,8 +53,11 @@ def test_phrase_detail_view(client, fixture_for_testing_db):
     # Create a test phrase with full metadata
     phrase = Phrase.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA)
 
-    # Test accessing the phrase detail view
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/phrase/{phrase.canonical_form}")
+    # Don't check against a hardcoded slug, just make sure it's set
+    assert phrase.slug is not None
+
+    # Test accessing the phrase detail view using slug
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/phrases/{phrase.slug}")
     assert response.status_code == 200
 
     # Check that all metadata is displayed correctly
@@ -64,10 +71,27 @@ def test_phrase_detail_view(client, fixture_for_testing_db):
     assert "neutral" in content
 
 
+def test_legacy_phrase_route(client, fixture_for_testing_db):
+    """Test that the legacy route with canonical_form redirects to the slug-based URL."""
+    # Create a test phrase
+    phrase = Phrase.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA)
+
+    # Test accessing the phrase via the legacy route
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/phrase/{phrase.canonical_form}")
+
+    # Should redirect to the slug-based URL
+    assert response.status_code == 302
+    assert f"/{TEST_LANGUAGE_CODE}/phrases/{phrase.slug}" in response.location
+
+
 def test_nonexistent_phrase(client):
     """Test accessing a phrase that doesn't exist."""
     response = client.get(f"/{TEST_LANGUAGE_CODE}/phrase/nonexistent")
     assert response.status_code == 404  # Should return 404 for non-existent phrase
+
+    # Also test the new slug-based route
+    response = client.get(f"/{TEST_LANGUAGE_CODE}/phrases/nonexistent")
+    assert response.status_code == 404
 
 
 def test_phrases_list_sorting(client, fixture_for_testing_db):

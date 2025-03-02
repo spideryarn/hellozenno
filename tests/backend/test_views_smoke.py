@@ -145,17 +145,35 @@ def test_phrases_list(client):
 
 
 def test_phrase_detail_existing(client):
-    """Test the phrase detail view with an existing phrase."""
-    # Test with a known phrase that exists in production
-    response = client.get("/el/phrase/καλή%20όρεξη")
+    """Test the phrase detail view with an existing phrase using slug."""
+    # Test with a known phrase that exists in production, using slug
+    response = client.get("/el/phrases/kale-orexe")
     assert response.status_code == 200
     # Check that we got a valid HTML response
     assert "text/html" in response.content_type
 
 
+def test_phrase_legacy_route(client):
+    """Test the legacy phrase route with canonical_form."""
+    # Test with a known phrase that exists in production
+    response = client.get("/el/phrase/καλή%20όρεξη")
+    # Should either redirect to slug-based URL (302) or show the content directly (200)
+    assert response.status_code in (200, 302)
+    # Check that we got a valid response
+    if response.status_code == 302:
+        assert "/el/phrases/" in response.location
+    else:
+        assert "text/html" in response.content_type
+
+
 def test_phrase_detail_nonexistent(client):
     """Test the phrase detail view with a non-existent phrase."""
+    # Test legacy route
     response = client.get("/el/phrase/nonexistentphrase12345")
+    assert response.status_code == 404
+
+    # Test new slug-based route
+    response = client.get("/el/phrases/nonexistentphrase12345")
     assert response.status_code == 404
 
 

@@ -290,7 +290,7 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
     assert len(found_wordforms_nfc) == 2
     assert len(found_wordforms_nfd) == 2
 
-    # Both should contain links to the same lemmas
+    # Check that links are generated correctly
     assert 'href="/el/lemma/τροφή"' in enhanced_text_nfc
     assert 'href="/el/lemma/θυμός"' in enhanced_text_nfc
     assert 'href="/el/lemma/τροφή"' in enhanced_text_nfd

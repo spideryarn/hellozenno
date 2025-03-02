@@ -138,7 +138,7 @@
             {% for phrase in phrases_d %}
                 <li class="phrase-item">
                     <div class="phrase-header">
-                        <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, canonical_form=phrase.canonical_form) }}" class="phrase-link">
+                        <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug) }}" class="phrase-link">
                             {{ phrase.canonical_form }}
                         </a>
                         {% if phrase.translations %}

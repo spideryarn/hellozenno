@@ -29,7 +29,7 @@
     <ul class="phrases-list">
         {% for phrase in phrases %}
             <li class="phrase-item">
-                <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, canonical_form=phrase.canonical_form) }}" class="phrase-link">
+                <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug) }}" class="phrase-link">
                     {{ phrase.canonical_form }}
                 </a>
             </li>

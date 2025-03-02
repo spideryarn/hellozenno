@@ -385,9 +385,24 @@ class Phrase(BaseModel):
     component_words = JSONField(null=True)  # list[dict] with lemma, translation, notes
     usage_notes = TextField(null=True)  # general notes about usage
     difficulty_level = CharField(null=True)  # e.g. "intermediate"
+    slug = CharField(
+        max_length=255, null=True
+    )  # URL-friendly version of the canonical form
+
+    def save(self, *args, **kwargs):
+        # Generate slug from canonical_form if not set
+        if not self.slug:
+            self.slug = slugify(str(self.canonical_form))
+            # Truncate slug if it exceeds max length
+            if len(self.slug) > 255:
+                self.slug = self.slug[:255]
+        return super().save(*args, **kwargs)
 
     class Meta:
-        indexes = ((("canonical_form", "language_code"), True),)  # Unique index
+        indexes = (
+            (("canonical_form", "language_code"), True),  # Unique index
+            (("slug", "language_code"), True),  # Unique index for URLs
+        )
 
     def to_dict(self) -> dict:
         """Convert phrase model to dictionary format."""
@@ -405,6 +420,7 @@ class Phrase(BaseModel):
             "component_words": self.component_words,
             "usage_notes": self.usage_notes,
             "difficulty_level": self.difficulty_level,
+            "slug": self.slug,
         }
 
     @classmethod

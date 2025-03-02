@@ -13,6 +13,9 @@ All {{ target_language_name }} Words and Forms - Hello Zenno
 {% block content %}
 <div class="container">
     <h1>All Wordforms <span class="count">({{ wordforms_d|length }})</span></h1>
+    
+    {% include '_sort_options.jinja' with context %}
+    
     {% include '_wordforms_list.jinja' %}
 </div>
 {% endblock %}

@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, abort, request
+from flask import Blueprint, render_template, abort, request, redirect, url_for
 from db_models import Phrase
 from peewee import DoesNotExist, fn
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import extract_phrases_from_text
+from slugify import slugify
 
 phrase_views_bp = Blueprint("phrase_views", __name__)
 
@@ -32,54 +33,15 @@ def phrases_list(target_language_code):
     )
 
 
-@phrase_views_bp.route("/<target_language_code>/phrase/<canonical_form>")
-def get_phrase_metadata(target_language_code, canonical_form):
-    """Get metadata for a specific phrase."""
+@phrase_views_bp.route("/<target_language_code>/phrases/<slug>")
+def get_phrase_metadata(target_language_code, slug):
+    """Get metadata for a specific phrase using its slug."""
     target_language_name = get_language_name(target_language_code)
 
-    try:
-        # First try to find existing phrase in database
-        phrase = Phrase.get(
-            (Phrase.language_code == target_language_code)
-            & (Phrase.canonical_form == canonical_form)
-        )
-    except DoesNotExist:
-        # If not found, generate new metadata using LLM
-        phrases_data, _ = extract_phrases_from_text(
-            canonical_form, target_language_name=target_language_name
-        )
-
-        # Get the first phrase's metadata or create a default one
-        metadata = next(
-            (
-                p
-                for p in phrases_data.get("phrases", [])
-                if p.get("canonical_form") == canonical_form
-            ),
-            None,
-        )
-
-        if metadata is None:
-            # If no metadata could be generated, return 404
-            abort(404)
-
-        # Create new database entry
-        phrase = Phrase.create(
-            canonical_form=canonical_form,
-            language_code=target_language_code,
-            raw_forms=[canonical_form],  # At least include the canonical form
-            translations=metadata.get("translations", []),
-            part_of_speech=metadata.get("part_of_speech", "phrase"),
-            register=metadata.get("register", "neutral"),
-            commonality=metadata.get("commonality", 0.5),
-            guessability=metadata.get("guessability", 0.5),
-            etymology=metadata.get("etymology", ""),
-            cultural_context=metadata.get("cultural_context", ""),
-            mnemonics=metadata.get("mnemonics", []),
-            component_words=metadata.get("component_words", []),
-            usage_notes=metadata.get("usage_notes", ""),
-            difficulty_level=metadata.get("difficulty_level", "intermediate"),
-        )
+    # First try to find existing phrase in database by slug
+    phrase = Phrase.get(
+        (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
+    )
 
     # Prepare metadata for template
     metadata = {

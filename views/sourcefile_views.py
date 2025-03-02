@@ -177,6 +177,7 @@ def inspect_sourcefile(
                 "difficulty_level": phrase.difficulty_level,
                 "centrality": sourcefile_phrase.centrality,
                 "ordering": sourcefile_phrase.ordering,
+                "slug": phrase.slug,
             }
             phrases_d.append(phrase_d)
 

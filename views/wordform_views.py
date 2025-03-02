@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, request
 from gjdutils.dicts import dict_as_html
-from peewee import DoesNotExist
+from peewee import DoesNotExist, fn, JOIN
 
 from utils.lang_utils import get_language_name
-from db_models import Wordform
+from db_models import Wordform, Lemma
 from utils.vocab_llm_utils import quick_search_for_wordform
 
 wordform_views_bp = Blueprint("wordform_views", "/")
@@ -14,12 +14,30 @@ def wordforms_list(target_language_code: str):
     """Display all known wordforms for a language."""
     target_language_name = get_language_name(target_language_code)
 
+    # Get sort parameter from request
+    sort_by = request.args.get("sort", "alpha")
+
+    # Base query
+    query = Wordform.select().where(Wordform.language_code == target_language_code)
+
+    # Apply sorting
+    if sort_by == "commonality":
+        # Join with Lemma to get commonality data
+        query = query.join(
+            Lemma, JOIN.LEFT_OUTER
+        ).order_by(  # Let peewee handle the join condition automatically
+            fn.COALESCE(Lemma.commonality, 0).desc(), Wordform.wordform
+        )
+    elif sort_by == "date":
+        # Sort by modification time, newest first
+        query = query.order_by(
+            fn.COALESCE(Wordform.updated_at, Wordform.created_at).desc()
+        )
+    else:  # default to alpha
+        query = query.order_by(fn.Lower(Wordform.wordform))
+
     # Get all wordforms for this language from the database
-    wordforms = (
-        Wordform.select()
-        .where(Wordform.language_code == target_language_code)
-        .order_by(Wordform.wordform)
-    )
+    wordforms = query
 
     # Convert to list of dictionaries for template
     wordforms_d = [wordform.to_dict() for wordform in wordforms]
@@ -40,6 +58,9 @@ def wordforms_list(target_language_code: str):
         target_language_name=target_language_name,
         wordforms_d=wordforms_d,
         lemma_metadata=lemma_metadata,
+        view_name="wordform_views.wordforms_list",
+        current_sort=sort_by,
+        show_commonality=True,  # We can show commonality by joining with Lemma
     )
 
 
