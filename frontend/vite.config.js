@@ -11,7 +11,23 @@ if (process.env.NODE_ENV !== 'production' && !flaskPort) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [svelte()],
+    plugins: [
+        svelte({
+            // Treat warnings as errors in development
+            onwarn: (warning, handler) => {
+                // Log the warning for debugging
+                console.error('Svelte warning:', warning.message);
+
+                // In development, throw errors for warnings
+                if (process.env.NODE_ENV !== 'production') {
+                    throw new Error(warning.message);
+                }
+
+                // In production, handle warnings normally
+                handler(warning);
+            }
+        })
+    ],
 
     // Configure build output to Flask's static directory
     build: {

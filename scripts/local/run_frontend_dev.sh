@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Exit on error
-set -e
+# Exit on error, undefined variables, and ensure pipefail
+set -euo pipefail
 
 # Check if we're in the project root
 if [ ! -f "app.py" ]; then
@@ -10,7 +10,7 @@ if [ ! -f "app.py" ]; then
 fi
 
 # Check if FLASK_PORT is set
-if [ -z "$FLASK_PORT" ]; then
+if [ -z "${FLASK_PORT:-}" ]; then
   echo "Error: FLASK_PORT environment variable is not set"
   exit 1
 fi
@@ -30,22 +30,31 @@ if [ ! -d "frontend/node_modules" ]; then
   cd frontend && npm install && cd ..
 fi
 
-# Start Vite in parallel
-echo "Starting development server..."
-
 # Function to kill background processes on exit
 cleanup() {
   echo "Shutting down server..."
-  kill $VITE_PID 2>/dev/null
+  if [ -n "${VITE_PID:-}" ]; then
+    kill $VITE_PID 2>/dev/null || true
+  fi
 }
 
 # Register the cleanup function on script exit
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
-# Start Vite in the background, passing FLASK_PORT
-echo "Starting Vite server..."
-cd frontend && FLASK_PORT=$FLASK_PORT npm run dev &
+# Set NODE_ENV to development explicitly
+export NODE_ENV=development
+
+# Start Vite in the background with error handling
+echo "Starting Vite development server..."
+cd frontend
+npm run dev &
 VITE_PID=$!
 
-# Wait for process
-wait $VITE_PID 
+# Monitor the Vite process
+while true; do
+  if ! kill -0 $VITE_PID 2>/dev/null; then
+    echo "Vite server crashed or failed to start"
+    exit 1
+  fi
+  sleep 1
+done 

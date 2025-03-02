@@ -16,7 +16,5 @@ interface Sentence {
 export interface SentenceProps {
   sentence: Sentence;
   metadata: Metadata;
-  target_language_code: string;
-  target_language_name: string;
   enhanced_sentence_text: string;
 } 

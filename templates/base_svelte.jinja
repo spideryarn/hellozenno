@@ -1,0 +1,23 @@
+{% macro load_svelte_component(component_name, props={}) %}
+  {% if not config.IS_PRODUCTION %}
+    {# Development mode - use Vite dev server #}
+    <script type="module">
+      import { {{ component_name }} } from 'http://localhost:5173/src/entries/{{ component_name | lower }}-entry.ts';
+      
+      new {{ component_name }}({
+        target: document.getElementById('{{ component_name | lower }}-component'),
+        props: {{ props | tojson | safe }}
+      });
+    </script>
+  {% else %}
+    {# Production mode - use built files #}
+    <script type="module">
+      import { {{ component_name }} } from "{{ url_for('static', filename='build/js/' + component_name | lower + '-entry.js') }}";
+      
+      new {{ component_name }}({
+        target: document.getElementById('{{ component_name | lower }}-component'),
+        props: {{ props | tojson | safe }}
+      });
+    </script>
+  {% endif %}
+{% endmacro %} 

@@ -1,4 +1,5 @@
 {% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -15,19 +16,9 @@
 <!-- Mount point for Svelte component -->
 <div id="sentence-component"></div>
 
-<script type="module">
-  import { Sentence } from "{{ url_for('static', filename='build/js/sentence-entry.js') }}";
-  
-  // Initialize the Svelte component with data from the server
-  new Sentence({
-    target: document.getElementById('sentence-component'),
-    props: {
-      sentence: {{ sentence | tojson | safe }},
-      metadata: {{ metadata | tojson | safe }},
-      enhanced_sentence_text: {{ enhanced_sentence_text | tojson | safe }},
-      target_language_code: "{{ target_language_code }}",
-      target_language_name: "{{ target_language_name }}"
-    }
-  });
-</script>
+{{ load_svelte_component('Sentence', {
+    'sentence': sentence,
+    'metadata': metadata,
+    'enhanced_sentence_text': enhanced_sentence_text
+}) }}
 {% endblock content %} 
