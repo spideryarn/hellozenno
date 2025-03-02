@@ -76,6 +76,7 @@
           
           <div class="playback-controls">
             <button class="speed-button" on:click={() => setPlaybackRate(0.8)}>0.8x</button>
+            <button class="speed-button" on:click={() => setPlaybackRate(0.9)}>0.9x</button>
             <button class="speed-button" on:click={() => setPlaybackRate(1.0)}>1.0x</button>
             <button class="speed-button" on:click={() => setPlaybackRate(1.5)}>1.5x</button>
           </div>
