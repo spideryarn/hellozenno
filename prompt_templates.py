@@ -26,15 +26,15 @@ Translate the following English text to {{ target_language_name }}. Only output 
 """
 
 extract_tricky_wordforms = """
-I'm learning {{ target_language_name }}{% if language_level %}, at about {{ language_level }} level{% endif %}. Please identify a comprehensive list of tricky wordforms (but not phrases)from this text that will help me to understand it.
+I'm learning {{ target_language_name }}{% if language_level %}, at about {{ language_level }} level{% endif %}. Please identify a comprehensive list of difficult/uncommon wordforms (but not phrases) from this text that will help me to understand it.
 
 Return as JSON in the following schema:
 
 {
     "wordforms": [
         {
-            "wordform": str,  # the form as it appears in the text
-            "lemma": str,  # the canonical form (e.g. for "Ακολούθησε", the lemma would be "ακολουθώ")
+            "wordform": str,  # the lower-case form without punctuation as it appears in the text, e.g. "Ακολούθησε," in the text -> "ακολούθησε" as the wordform (i.e. lower-case, no punctuation)
+            "lemma": str,  # the canonical form (e.g. for wordform "ακολούθησε", the lemma would be "ακολουθώ")
             "translations": list[str],  # list of English translations
             "part_of_speech": str,  # e.g. "verb", "noun", "adjective", etc.
             "inflection_type": str,  # e.g. "first-person singular present", "feminine plural genitive"
