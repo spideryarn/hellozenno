@@ -63,9 +63,23 @@ Current stack:
 **IN PROGRESS: Set up Tailwind alongside existing CSS**
 - Create a new base Jinja template that includes Tailwind ✓
 - Configure Tailwind to respect existing styles ✓
-- Create a strategy for incremental CSS migration
-- Test Tailwind styles on a simple component
-- Convert `/languages` page to use Tailwind
+- Create a strategy for incremental CSS migration ✓
+- Test Tailwind styles on a simple component ✓
+- Convert `/languages` page to use Tailwind ✓
+
+**IN PROGRESS: Convert Jinja templates to Tailwind**
+Templates to convert:
+- [x] `languages.jinja` - Language selection page
+- [x] `lemma.jinja` - Individual lemma page
+- [ ] `sentence.jinja` - Individual sentence page
+- [ ] `sourcefile.jinja` - Source file page
+- [ ] `sourcedirs.jinja` - Source directories listing
+- [ ] `wordform.jinja` - Individual wordform page
+- [ ] `lemmas_list.jinja` - List of lemmas
+- [ ] `sentences_list.jinja` - List of sentences
+- [ ] `search_results.jinja` - Search results page
+- [ ] `error.jinja` - Error pages (404, 500, etc.)
+- [ ] `base.jinja` - Base template (migrate remaining non-Tailwind styles)
 
 **TODO: Create migration path for existing CSS**
 - Identify common patterns in existing CSS

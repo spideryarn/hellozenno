@@ -1,8 +1,5 @@
 {% extends "base_with_tailwind.jinja" %}
 
-{# Set the Vite entry point for this page #}
-{% set vite_entry = 'lemma-entry' %}
-
 {% block title %}
 {{ lemma_metadata.lemma }} in {{ target_language_name }} (lemma) - Hello Zenno
 {% endblock %}
@@ -15,7 +12,7 @@
 {% endblock breadcrumbs %}
 
 {% block content %}
-<div class="tw-container-prose">
+<div class="tw-container-wide">
     {% if metadata %}
     <div class="tw-metadata">
         <p>Created: <span>{{ metadata.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
@@ -34,96 +31,124 @@
     </div>
     
     <div class="tw-content-section">
-        <div class="tw-grid tw-grid-cols-2 tw-gap-6">
+        <h2 class="tw-content-section-title">Overview</h2>
+        <div class="tw-content-grid">
             <div>
-                <h2>Basic Information</h2>
-                <dl class="tw-space-y-4">
+                <h3>Basic Information</h3>
+                <dl>
                     <div>
-                        <dt class="tw-text-gray-600">Translation</dt>
+                        <dt>Translation</dt>
                         <dd class="tw-text-lg">{{ lemma_metadata.translations|join('; ') if lemma_metadata.translations else 'No translation available' }}</dd>
                     </div>
                     <div>
-                        <dt class="tw-text-gray-600">Part of Speech</dt>
+                        <dt>Part of Speech</dt>
                         <dd>{{ lemma_metadata.part_of_speech if lemma_metadata.part_of_speech else 'Not available' }}</dd>
                     </div>
                     <div>
-                        <dt class="tw-text-gray-600">Etymology</dt>
+                        <dt>Etymology</dt>
                         <dd>{{ lemma_metadata.etymology if lemma_metadata.etymology else 'Not available' }}</dd>
                     </div>
                 </dl>
             </div>
             <div>
-                <h2>Statistics</h2>
-                <dl class="tw-space-y-4">
+                <h3>Statistics</h3>
+                <dl>
                     <div>
-                        <dt class="tw-text-gray-600">Commonality</dt>
+                        <dt>Commonality</dt>
                         <dd>{{ '%.0f'|format(lemma_metadata.commonality|float * 100) if lemma_metadata.commonality else '0' }}%</dd>
                     </div>
                     <div>
-                        <dt class="tw-text-gray-600">Guessability</dt>
+                        <dt>Guessability</dt>
                         <dd>{{ '%.0f'|format(lemma_metadata.guessability|float * 100) if lemma_metadata.guessability else '0' }}%</dd>
                     </div>
                     <div>
-                        <dt class="tw-text-gray-600">Register</dt>
+                        <dt>Register</dt>
                         <dd>{{ lemma_metadata.register if lemma_metadata.register else 'Not available' }}</dd>
                     </div>
                 </dl>
             </div>
+            {% if lemma_metadata.cultural_context %}
+            <div>
+                <h3>Cultural Context</h3>
+                <div class="tw-text-content">
+                    {{ lemma_metadata.cultural_context }}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
-    {% if lemma_metadata.example_usage %}
-    <div class="tw-content-section">
-        <h2>Example Usage</h2>
-        <ul class="tw-list">
-            {% for example in lemma_metadata.example_usage %}
-            <li class="tw-list-item">
-                <a href="{{ url_for('sentence_views.get_sentence', language_code=target_language_code, slug=example.slug) if example.slug else '#' }}" 
-                   class="tw-block">
-                    <div class="tw-text-lg tw-mb-1">{{ example.phrase }}</div>
-                    <div class="tw-text-gray-600">{{ example.translation }}</div>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+    <div class="tw-content-grid-wide">
+        {% if lemma_metadata.example_usage %}
+        <div class="tw-content-section">
+            <h2 class="tw-content-section-title">Example Usage</h2>
+            <ul class="tw-list">
+                {% for example in lemma_metadata.example_usage %}
+                <li class="tw-list-item">
+                    <a href="{{ url_for('sentence_views.get_sentence', language_code=target_language_code, slug=example.slug) if example.slug else '#' }}" 
+                       class="tw-block">
+                        <div class="tw-text-lg tw-mb-2">{{ example.phrase }}</div>
+                        <div class="tw-text-gray-600">{{ example.translation }}</div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-    {% if lemma_metadata.mnemonics %}
-    <div class="tw-content-section">
-        <h2>Mnemonics</h2>
-        <ul class="tw-list">
-            {% for mnemonic in lemma_metadata.mnemonics %}
-            <li class="tw-list-item tw-italic">{{ mnemonic }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+        {% if lemma_metadata.mnemonics %}
+        <div class="tw-content-section">
+            <h2 class="tw-content-section-title">Mnemonics</h2>
+            <ul class="tw-list">
+                {% for mnemonic in lemma_metadata.mnemonics %}
+                <li class="tw-list-item tw-italic">{{ mnemonic }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-    {% if lemma_metadata.related_words_phrases_idioms %}
-    <div class="tw-content-section">
-        <h2>Related Words, Phrases & Idioms</h2>
-        <ul class="tw-list">
-            {% for related in lemma_metadata.related_words_phrases_idioms %}
-            <li class="tw-list-item">
-                <div class="tw-font-medium">{{ related.lemma }}</div>
-                <div class="tw-text-gray-600">{{ related.translation }}</div>
-            </li>
-            {% endfor %}
-        </ul>
+        {% if lemma_metadata.example_wordforms %}
+        <div class="tw-content-section">
+            <h2 class="tw-content-section-title">Example Wordforms</h2>
+            <ul class="tw-list-wide">
+                {% for form in lemma_metadata.example_wordforms %}
+                <li class="tw-list-item">
+                    <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=form) }}"
+                       class="tw-word-link">
+                        {{ form }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if lemma_metadata.related_words_phrases_idioms %}
+        <div class="tw-content-section">
+            <h2 class="tw-content-section-title">Related Words, Phrases & Idioms</h2>
+            <ul class="tw-list-wide">
+                {% for related in lemma_metadata.related_words_phrases_idioms %}
+                <li class="tw-list-item">
+                    <div class="tw-font-medium tw-mb-1">{{ related.lemma }}</div>
+                    <div class="tw-text-gray-600">{{ related.translation }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 
     {% if lemma_metadata.synonyms or lemma_metadata.antonyms %}
     <div class="tw-content-section">
-        <div class="tw-grid tw-grid-cols-2 tw-gap-6">
+        <h2 class="tw-content-section-title">Related Terms</h2>
+        <div class="tw-content-grid">
             {% if lemma_metadata.synonyms %}
             <div>
-                <h2>Synonyms</h2>
+                <h3>Synonyms</h3>
                 <ul class="tw-list">
                     {% for synonym in lemma_metadata.synonyms %}
                     <li class="tw-list-item">
-                        <div class="tw-font-medium">{{ synonym.lemma }}</div>
+                        <div class="tw-font-medium tw-mb-1">{{ synonym.lemma }}</div>
                         <div class="tw-text-gray-600">{{ synonym.translation }}</div>
                     </li>
                     {% endfor %}
@@ -133,11 +158,11 @@
             
             {% if lemma_metadata.antonyms %}
             <div>
-                <h2>Antonyms</h2>
+                <h3>Antonyms</h3>
                 <ul class="tw-list">
                     {% for antonym in lemma_metadata.antonyms %}
                     <li class="tw-list-item">
-                        <div class="tw-font-medium">{{ antonym.lemma }}</div>
+                        <div class="tw-font-medium tw-mb-1">{{ antonym.lemma }}</div>
                         <div class="tw-text-gray-600">{{ antonym.translation }}</div>
                     </li>
                     {% endfor %}
@@ -148,61 +173,36 @@
     </div>
     {% endif %}
 
-    {% if lemma_metadata.example_wordforms %}
-    <div class="tw-content-section">
-        <h2>Example Wordforms</h2>
-        <ul class="tw-list">
-            {% for form in lemma_metadata.example_wordforms %}
-            <li class="tw-list-item">
-                <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=form) }}"
-                   class="tw-word-link">
-                    {{ form }}
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-
-    {% if lemma_metadata.cultural_context %}
-    <div class="tw-content-section">
-        <h2>Cultural Context</h2>
-        <div class="tw-text-content">
-            {{ lemma_metadata.cultural_context }}
-        </div>
-    </div>
-    {% endif %}
-
     {% if lemma_metadata.easily_confused_with %}
     <div class="tw-content-section">
-        <h2>Easily Confused With</h2>
-        <ul class="tw-list">
+        <h2 class="tw-content-section-title">Easily Confused With</h2>
+        <ul class="tw-list-wide">
             {% for confused in lemma_metadata.easily_confused_with %}
             <li class="tw-list-item">
                 <h3>{{ confused.lemma }}</h3>
-                <div class="tw-space-y-3">
+                <div class="tw-space-y-4">
                     <div>
-                        <div class="tw-text-gray-600">Explanation</div>
-                        <div>{{ confused.explanation }}</div>
+                        <dt>Explanation</dt>
+                        <dd>{{ confused.explanation }}</dd>
                     </div>
                     <div>
-                        <div class="tw-text-gray-600">Example with {{ lemma_metadata.lemma }}</div>
-                        <div>{{ confused.example_usage_this_target }}</div>
+                        <dt>Example with {{ lemma_metadata.lemma }}</dt>
+                        <dd>{{ confused.example_usage_this_target }}</dd>
                     </div>
                     <div>
-                        <div class="tw-text-gray-600">Example with {{ confused.lemma }}</div>
-                        <div>{{ confused.example_usage_other_target }}</div>
+                        <dt>Example with {{ confused.lemma }}</dt>
+                        <dd>{{ confused.example_usage_other_target }}</dd>
                     </div>
                     {% if confused.notes %}
                     <div>
-                        <div class="tw-text-gray-600">Notes</div>
-                        <div>{{ confused.notes }}</div>
+                        <dt>Notes</dt>
+                        <dd>{{ confused.notes }}</dd>
                     </div>
                     {% endif %}
                     {% if confused.mnemonic %}
                     <div>
-                        <div class="tw-text-gray-600">Mnemonic</div>
-                        <div class="tw-italic">{{ confused.mnemonic }}</div>
+                        <dt>Mnemonic</dt>
+                        <dd class="tw-italic">{{ confused.mnemonic }}</dd>
                     </div>
                     {% endif %}
                 </div>
@@ -214,7 +214,7 @@
 
     {% if dict_html %}
     <div class="tw-content-section">
-        <h2>Full Dictionary Entry</h2>
+        <h2 class="tw-content-section-title">Full Dictionary Entry</h2>
         <div class="tw-text-content">
             {{ dict_html | safe }}
         </div>

@@ -5,29 +5,45 @@
 /* Base styles and typography */
 @layer base {
     body {
-        @apply tw-font-serif tw-leading-relaxed tw-m-0 tw-p-0 tw-bg-gray-50 tw-text-gray-900 tw-pt-24;
+        @apply tw-font-serif tw-leading-relaxed tw-m-0 tw-p-0 tw-bg-gray-100 tw-text-gray-900 tw-pt-24;
     }
 
     /* Typography */
     h1 {
-        @apply tw-text-4xl tw-font-normal tw-mb-8;
+        @apply tw-text-4xl tw-font-normal tw-mb-8 tw-text-gray-900;
     }
 
     h2 {
-        @apply tw-text-2xl tw-font-normal tw-mb-4 tw-text-gray-800;
+        @apply tw-text-2xl tw-font-normal tw-mb-6 tw-text-gray-800;
     }
 
     h3 {
-        @apply tw-text-xl tw-font-normal tw-mb-3 tw-text-gray-800;
+        @apply tw-text-xl tw-font-normal tw-mb-4 tw-text-gray-800;
     }
 
     p {
         @apply tw-my-4;
     }
 
+    dt {
+        @apply tw-text-sm tw-uppercase tw-tracking-wide tw-text-gray-600 tw-mb-1;
+    }
+
+    dd {
+        @apply tw-mb-6;
+    }
+
+    dd:last-child {
+        @apply tw-mb-0;
+    }
+
     /* Links */
     a {
-        @apply tw-text-blue-600 tw-no-underline hover:tw-text-blue-800;
+        @apply tw-text-blue-600 tw-no-underline;
+    }
+
+    a:hover {
+        @apply tw-text-blue-800;
     }
 }
 
@@ -51,9 +67,29 @@
         @apply tw-w-full tw-px-3 tw-py-2 tw-border tw-border-gray-300 tw-rounded-md;
     }
 
-    /* Cards */
+    /* Cards and Sections */
+    .tw-content-section {
+        @apply tw-bg-white tw-rounded-lg tw-p-8 tw-shadow-md tw-mb-8 tw-border tw-border-gray-100;
+    }
+
+    .tw-content-section-title {
+        @apply tw-text-2xl tw-font-normal tw-mb-6 tw-pb-4 tw-border-b tw-border-gray-100;
+    }
+
+    .tw-content-grid {
+        @apply tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-8;
+    }
+
+    .tw-content-grid-wide {
+        @apply tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 xl:tw-grid-cols-4 tw-gap-8;
+    }
+
     .tw-card {
-        @apply tw-bg-white tw-rounded-lg tw-p-6 tw-shadow-sm hover:tw-shadow-md tw-transition-shadow;
+        @apply tw-bg-white tw-rounded-lg tw-p-6 tw-shadow-md tw-border tw-border-gray-100 tw-transition-shadow tw-duration-200;
+    }
+
+    .tw-card:hover {
+        @apply tw-shadow-lg;
     }
 
     .tw-card-title {
@@ -66,7 +102,7 @@
 
     /* Metadata Display */
     .tw-metadata {
-        @apply tw-text-sm tw-font-mono tw-text-gray-600 tw-text-right tw-float-right tw-ml-4 tw-mb-4 tw-bg-gray-50 tw-p-2 tw-rounded;
+        @apply tw-text-sm tw-font-mono tw-text-gray-600 tw-text-right tw-float-right tw-ml-8 tw-mb-4 tw-bg-gray-50 tw-p-4 tw-rounded-lg tw-border tw-border-gray-100;
     }
 
     .tw-metadata p {
@@ -75,11 +111,19 @@
 
     /* Buttons */
     .tw-btn {
-        @apply tw-inline-flex tw-items-center tw-justify-center tw-h-9 tw-px-4 tw-bg-white tw-border tw-border-primary tw-text-primary tw-rounded tw-text-sm tw-transition-colors hover:tw-bg-primary hover:tw-text-white;
+        @apply tw-inline-flex tw-items-center tw-justify-center tw-h-9 tw-px-4 tw-bg-white tw-border tw-border-primary tw-text-primary tw-rounded tw-text-sm tw-transition-colors;
+    }
+
+    .tw-btn:hover {
+        @apply tw-bg-primary tw-text-white;
     }
 
     .tw-btn-danger {
-        @apply tw-border-danger tw-text-danger hover:tw-bg-danger hover:tw-text-white;
+        @apply tw-border-danger tw-text-danger;
+    }
+
+    .tw-btn-danger:hover {
+        @apply tw-bg-danger tw-text-white;
     }
 
     .tw-btn-success {
@@ -92,16 +136,15 @@
 
     /* Lists */
     .tw-list {
-        @apply tw-space-y-2;
+        @apply tw-space-y-4 lg:tw-space-y-0 lg:tw-grid lg:tw-grid-cols-2 lg:tw-gap-6;
+    }
+
+    .tw-list-wide {
+        @apply tw-space-y-4 lg:tw-space-y-0 lg:tw-grid lg:tw-grid-cols-3 lg:tw-gap-6;
     }
 
     .tw-list-item {
-        @apply tw-bg-white tw-rounded tw-p-4 tw-shadow-sm hover:tw-shadow-md tw-transition-shadow;
-    }
-
-    /* Content sections */
-    .tw-content-section {
-        @apply tw-bg-white tw-rounded-lg tw-p-6 tw-shadow-sm tw-mb-8;
+        @apply tw-bg-white tw-rounded-lg tw-p-6 tw-shadow-md hover:tw-shadow-lg tw-transition-shadow tw-duration-200 tw-border tw-border-gray-100;
     }
 
     /* Text content */
@@ -116,17 +159,25 @@
 
     /* Word links */
     .tw-word-link {
-        @apply tw-text-blue-600 hover:tw-text-blue-800 tw-no-underline tw-mx-1 first:tw-ml-0;
+        @apply tw-text-blue-600 tw-no-underline tw-mx-1;
+    }
+
+    .tw-word-link:first-child {
+        @apply tw-ml-0;
+    }
+
+    .tw-word-link:hover {
+        @apply tw-text-blue-800;
     }
 }
 
 /* Utilities */
 @layer utilities {
     .tw-container-prose {
-        @apply tw-max-w-3xl tw-mx-auto tw-px-4;
+        @apply tw-max-w-4xl tw-mx-auto tw-px-6;
     }
 
     .tw-container-wide {
-        @apply tw-max-w-7xl tw-mx-auto tw-px-4;
+        @apply tw-max-w-7xl tw-mx-auto tw-px-6;
     }
 }

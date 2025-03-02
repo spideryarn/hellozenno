@@ -107,6 +107,91 @@ The `deploy.sh` script runs `build-frontend.sh` before deploying to ensure the l
 - **Isolated Components**: Svelte components are mounted to specific DOM elements
 - **Gradual Adoption**: New technologies can be adopted page by page or component by component
 
+## Tailwind Migration Guide
+
+### Converting Jinja Templates to Tailwind
+
+1. **Template Setup**
+   - Extend from `base_with_tailwind.jinja` instead of `base.jinja`
+   - Add a Vite entry point if the page needs JavaScript:
+     ```jinja
+     {% set vite_entry = 'your-page-entry' %}
+     ```
+
+2. **Common Patterns**
+   - Use `tw-container-prose` for content-heavy pages (max-width optimized for reading)
+   - Use `tw-container-wide` for full-width layouts
+   - Wrap main content in appropriate container:
+     ```jinja
+     <div class="tw-container-prose">
+       <!-- Your content -->
+     </div>
+     ```
+
+3. **Component Classes**
+   - Cards/Sections: `tw-content-section` for white background panels
+   - Lists: `tw-list` with `tw-list-item` children
+   - Buttons: `tw-btn` with modifiers like `tw-btn-danger`
+   - Metadata: `tw-metadata` for timestamp displays
+   - Links: `tw-word-link` for dictionary/lemma links
+
+4. **Layout Patterns**
+   - Two-column grid:
+     ```html
+     <div class="tw-grid tw-grid-cols-2 tw-gap-6">
+       <div>Left column</div>
+       <div>Right column</div>
+     </div>
+     ```
+   - Card grid (e.g., languages page):
+     ```html
+     <div class="tw-grid tw-grid-cols-3 tw-gap-6">
+       <!-- Card items -->
+     </div>
+     ```
+
+5. **Typography**
+   - Main headings: `tw-text-4xl tw-font-normal tw-mb-8`
+   - Section headings: `tw-text-2xl tw-font-normal tw-mb-4`
+   - Subsection headings: `tw-text-xl tw-font-normal tw-mb-3`
+   - Body text uses Times New Roman by default
+   - Monospace text (e.g., metadata): `tw-font-mono`
+
+6. **Interactive Elements**
+   - Buttons: `tw-btn` base class with modifiers
+   - Hover effects: Most interactive elements have built-in hover states
+   - Forms: Use `tw-` prefixed form classes for inputs and controls
+
+7. **Responsive Design**
+   - Grid columns automatically stack on mobile
+   - Use Tailwind's responsive prefixes for custom breakpoints:
+     ```html
+     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3">
+     ```
+
+8. **Migration Strategy**
+   - Convert one template at a time
+   - Start with simpler, self-contained templates
+   - Test thoroughly on mobile and desktop
+   - Keep existing CSS classes until fully migrated
+
+### Common Gotchas
+
+1. **CSS Conflicts**
+   - Always use the `tw-` prefix
+   - Remove conflicting styles from `base.css`
+   - Check browser dev tools for competing styles
+
+2. **Layout Issues**
+   - Use `tw-container-prose` or `tw-container-wide` at the top level
+   - Mind the top padding (`tw-pt-24`) for the fixed navigation
+   - Use `tw-space-y-{size}` for consistent vertical spacing
+
+3. **Component Integration**
+   - Wrap Svelte mount points in appropriate Tailwind containers
+   - Use consistent class patterns across templates
+   - Follow the established component hierarchy
+
 ## Troubleshooting
 
 ### Common Issues
