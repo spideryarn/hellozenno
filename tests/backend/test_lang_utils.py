@@ -6,7 +6,7 @@ from pycountry import languages
 def test_get_language_name():
     # Test with language code
     assert get_language_name("en") == "English"
-    assert get_language_name("el") == "Greek"
+    assert get_language_name("el") == "Greek (modern)"
 
     # Test with language object
     lang_obj = languages.get(alpha_2="es")
@@ -36,4 +36,4 @@ def test_get_all_languages():
     assert names == sorted(names)
 
     # check that Greek is in the list
-    assert any(lang["name"] == "Greek" for lang in languages_list)
+    assert any(lang["name"] == "Greek (modern)" for lang in languages_list)
