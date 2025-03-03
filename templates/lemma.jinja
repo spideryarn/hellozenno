@@ -82,7 +82,13 @@
             <h2>Related Words, Phrases & Idioms</h2>
             <ul>
                 {% for related in lemma_metadata.related_words_phrases_idioms %}
-                <li>{{ related.lemma }} - {{ related.translation }}</li>
+                <li>
+                    {{ load_svelte_component('MiniWordform', {
+                        'wordform': related.lemma,
+                        'translation': related.translation,
+                        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=related.lemma)
+                    }, component_id='miniwordform-related-' ~ loop.index) }}
+                </li>
                 {% endfor %}
             </ul>
             {% endif %}
@@ -93,7 +99,13 @@
             <h2>Synonyms</h2>
             <ul>
                 {% for synonym in lemma_metadata.synonyms %}
-                <li>{{ synonym.lemma }} - {{ synonym.translation }}</li>
+                <li>
+                    {{ load_svelte_component('MiniWordform', {
+                        'wordform': synonym.lemma,
+                        'translation': synonym.translation,
+                        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=synonym.lemma)
+                    }, component_id='miniwordform-synonym-' ~ loop.index) }}
+                </li>
                 {% endfor %}
             </ul>
             {% endif %}
@@ -104,7 +116,13 @@
             <h2>Antonyms</h2>
             <ul>
                 {% for antonym in lemma_metadata.antonyms %}
-                <li>{{ antonym.lemma }} - {{ antonym.translation }}</li>
+                <li>
+                    {{ load_svelte_component('MiniWordform', {
+                        'wordform': antonym.lemma,
+                        'translation': antonym.translation,
+                        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=antonym.lemma)
+                    }, component_id='miniwordform-antonym-' ~ loop.index) }}
+                </li>
                 {% endfor %}
             </ul>
             {% endif %}
@@ -138,7 +156,11 @@
             <ul>
                 {% for confused in lemma_metadata.easily_confused_with %}
                 <li>
-                    <h3>{{ confused.lemma }}</h3>
+                    {{ load_svelte_component('MiniWordform', {
+                        'wordform': confused.lemma,
+                        'translation': '',
+                        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=confused.lemma)
+                    }, component_id='miniwordform-confused-' ~ loop.index) }}
                     <p><strong>Explanation:</strong> {{ confused.explanation }}</p>
                     <div id="minisentence-component-confused-this-{{ loop.index }}"></div>
                     {{ load_svelte_component('MiniSentence', {
