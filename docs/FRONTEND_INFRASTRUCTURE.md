@@ -161,3 +161,120 @@ The `deploy.sh` script runs `build-frontend.sh` before deploying to ensure the l
 - **TypeScript Errors**: Run `npm run check` in the frontend directory to check for TypeScript errors
 - **Styling Conflicts**: Check `base.css` for existing styles before adding new ones
 - **Environment Variables**: Ensure `FLASK_PORT` is set before running development scripts - see `.env.local`
+
+## Creating New Svelte Components
+
+### Component Creation Checklist
+
+1. **Create the Component**
+   - Create a new `.svelte` file in `frontend/src/components/`
+   - Define props using TypeScript:
+     ```typescript
+     <script lang="ts">
+       export let myProp: string;
+     </script>
+     ```
+   - Add component template and styles
+   - Keep styles scoped to the component
+
+2. **Create the Entry Point**
+   - Create a new entry file in `frontend/src/entries/` named `your-component-entry.ts`
+   - Export both named and default exports:
+     ```typescript
+     import YourComponent from '../components/YourComponent.svelte';
+     export { YourComponent };
+     export default function(target: HTMLElement, props: any) {
+       return new YourComponent({ target, props });
+     }
+     ```
+
+3. **Update the Template**
+   - Add the Vite entry point at the top of your Jinja template:
+     ```jinja
+     {% set vite_entry = 'your-component-entry' %}
+     ```
+   - Create a mount point with a unique ID:
+     ```html
+     <div id="your-component-1"></div>
+     ```
+   - Use the `load_svelte_component` macro to mount the component:
+     ```jinja
+     {{ load_svelte_component('YourComponent', {
+         'prop1': value1,
+         'prop2': value2
+     }, component_id='your-component-1') }}
+     ```
+
+4. **Component Best Practices**
+   - Use TypeScript for prop definitions
+   - Add conditional rendering for optional props
+   - Keep components focused and single-purpose
+   - Use scoped styles to avoid conflicts
+   - Follow existing styling patterns from `base.css`
+   - Add hover states and transitions for interactive elements
+
+5. **Testing**
+   - Verify component renders in development mode
+   - Check browser console for prop warnings
+   - Test with different prop combinations
+   - Verify HMR works correctly
+   - Test in production build
+
+### Example Component Integration
+
+```jinja
+{# template.jinja #}
+{% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+
+{% set vite_entry = 'my-component-entry' %}
+
+{% block content %}
+<div class="container">
+    <div id="my-component-1"></div>
+    {{ load_svelte_component('MyComponent', {
+        'title': 'Hello',
+        'content': 'World'
+    }, component_id='my-component-1') }}
+</div>
+{% endblock %}
+```
+
+```typescript
+// frontend/src/components/MyComponent.svelte
+<script lang="ts">
+  export let title: string;
+  export let content: string;
+</script>
+
+<div class="my-component">
+  <h2>{title}</h2>
+  <p>{content}</p>
+</div>
+
+<style>
+  .my-component {
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+</style>
+```
+
+```typescript
+// frontend/src/entries/my-component-entry.ts
+import MyComponent from '../components/MyComponent.svelte';
+export { MyComponent };
+export default function(target: HTMLElement, props: any) {
+  return new MyComponent({ target, props });
+}
+```
+
+### Common Gotchas
+
+1. **Missing Entry Point**: Always create an entry file and set `vite_entry` in the template
+2. **Prop Type Errors**: Define all props with TypeScript types
+3. **Style Conflicts**: Use scoped styles and follow `base.css` patterns
+4. **HMR Issues**: Check Vite dev server is running and port is correct
+5. **Production Build**: Test component works in production build
+6. **Multiple Instances**: Use unique IDs for each component instance
+7. **Props Validation**: Handle optional props with conditional rendering

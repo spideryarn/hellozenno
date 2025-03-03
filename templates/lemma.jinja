@@ -1,4 +1,8 @@
 {% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+
+{# Specify the Vite entry point for MiniSentence component #}
+{% set vite_entry = 'minisentence-entry' %}
 
 {% block title %}
 {{ lemma_metadata.lemma }} in {{ target_language_name }} (lemma) - Hello Zenno
@@ -45,12 +49,21 @@
         </div>
         
         {% if lemma_metadata.example_usage %}
-        <h2>Example Usage</h2>
-        <ul>
-            {% for example in lemma_metadata.example_usage %}
-            <li><a href="{{ url_for('sentence_views.get_sentence', language_code=target_language_code, slug=example.slug) if example.slug else '#' }}" class="sentence-link">{{ example.phrase }}</a> - {{ example.translation }}</li>
-            {% endfor %}
-        </ul>
+        <div class="example-usage-section">
+            <div class="example-usage">
+            <h2>Example Usage</h2>
+                {% for example in lemma_metadata.example_usage %}
+                <div>
+                    <div id="minisentence-component-{{ loop.index }}"></div>
+                    {{ load_svelte_component('MiniSentence', {
+                        'phrase': example.phrase,
+                        'translation': example.translation,
+                        'href': url_for('sentence_views.get_sentence', language_code=target_language_code, slug=example.slug) if example.slug else '#'
+                    }, component_id='minisentence-component-' ~ loop.index) }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
         {% endif %}
         
         <div class="mnemonics">
@@ -126,8 +139,18 @@
                 <li>
                     <h3>{{ confused.lemma }}</h3>
                     <p><strong>Explanation:</strong> {{ confused.explanation }}</p>
-                    <p><strong>Example with {{ lemma_metadata.lemma }}:</strong> {{ confused.example_usage_this_target }}</p>
-                    <p><strong>Example with {{ confused.lemma }}:</strong> {{ confused.example_usage_other_target }}</p>
+                    <div id="minisentence-component-confused-this-{{ loop.index }}"></div>
+                    {{ load_svelte_component('MiniSentence', {
+                        'phrase': confused.example_usage_this_target,
+                        'translation': confused.example_usage_this_source,
+                        'href': '#'
+                    }, component_id='minisentence-component-confused-this-' ~ loop.index) }}
+                    <div id="minisentence-component-confused-other-{{ loop.index }}"></div>
+                    {{ load_svelte_component('MiniSentence', {
+                        'phrase': confused.example_usage_other_target,
+                        'translation': confused.example_usage_other_source,
+                        'href': url_for('views.search_word', target_language_code=target_language_code, wordform=confused.lemma)
+                    }, component_id='minisentence-component-confused-other-' ~ loop.index) }}
                     {% if confused.notes %}
                     <p><strong>Notes:</strong> {{ confused.notes }}</p>
                     {% endif %}
