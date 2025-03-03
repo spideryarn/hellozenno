@@ -188,6 +188,11 @@ class Lemma(BaseModel):
 
         if sort_by == "date":
             query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
+        elif sort_by == "commonality":
+            # Sort by commonality (highest first), then alphabetically for ties
+            query = query.order_by(
+                fn.COALESCE(cls.commonality, 0.0).desc(), fn.Lower(cls.lemma)
+            )
         else:
             query = query.order_by(fn.Lower(cls.lemma))
 
