@@ -1,43 +1,22 @@
 {% if wordforms_d %}
-<ul class="dictionary-entries">
+<div class="wordforms-list">
     {% for wordform in wordforms_d|sort(attribute='ordering') %}
-        <li class="dictionary-entry">
-            {% if wordform.lemma %}
-            <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=wordform.lemma) }}" class="lemma-link">
-                {{ wordform.wordform }}
-            </a>
-            {% else %}
-            <span class="wordform">{{ wordform.wordform }}</span>
-            {% endif %}
-            {% if wordform.translations %}
-                <span class="translations">{{ wordform.translations|join(', ') }}</span>
-            {% endif %}
-            {% if wordform.part_of_speech %}
-                <span class="part-of-speech">({{ wordform.part_of_speech }})</span>
-            {% endif %}
-            {% if wordform.inflection_type %}
-                <span class="inflection-type">{{ wordform.inflection_type }}</span>
-            {% endif %}
-        </li>
+        {{ load_svelte_component('MiniWordform', {
+            'wordform': wordform.wordform,
+            'translation': wordform.translations[0] if wordform.translations else None,
+            'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=wordform.wordform)
+        }, component_id='miniwordform-component-' ~ loop.index) }}
     {% endfor %}
-</ul>
+</div>
 {% else %}
 <p class="no-entries"><em>No words found in this source file</em></p>
 {% endif %}
 
 <style>
     .wordforms-list {
-        list-style: none;
-        padding: 0;
-    }
-    .wordform-entry {
-        margin: 0.5em 0;
-    }
-    .wordform-entry a {
-        text-decoration: none;
-    }
-    .wordform-entry a:hover {
-        text-decoration: underline;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
     }
     .no-entries {
         color: #666;

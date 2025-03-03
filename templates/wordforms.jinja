@@ -1,4 +1,8 @@
 {% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+
+{# Specify the Vite entry point for MiniWordform component #}
+{% set vite_entries = ['miniwordform-entry'] %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>

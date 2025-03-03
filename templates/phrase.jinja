@@ -1,4 +1,8 @@
 {% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+
+{# Specify the Vite entry point for MiniWordform component #}
+{% set vite_entries = ['miniwordform-entry'] %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -60,17 +64,16 @@
 
         {% if phrase.component_words %}
         <h2>Component Words</h2>
-        <ul>
+        <div class="component-words-list">
             {% for word in phrase.component_words %}
-                <li>
-                    <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=word.lemma) }}"
-                       class="word-link">
-                        {{ word.lemma }}
-                    </a>
-                    {% if word.notes %} - {{ word.notes }}{% endif %}
-                </li>
+                {{ load_svelte_component('MiniWordform', {
+                    'wordform': word.lemma,
+                    'translation': word.translation if word.translation else None,
+                    'notes': word.notes if word.notes else None,
+                    'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=word.lemma)
+                }, component_id='miniwordform-component-' ~ loop.index) }}
             {% endfor %}
-        </ul>
+        </div>
         {% endif %}
 
         {% if phrase.related_to.count() > 0 or phrase.related_from.count() > 0 %}
@@ -142,4 +145,12 @@
         {% endif %}
     </div>
 </div>
+
+<style>
+    .component-words-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+</style>
 {% endblock content %} 

@@ -1,3 +1,19 @@
+<!--
+  MiniWordform.svelte - A compact word display component
+  
+  Used for displaying words in lists and references throughout the application.
+  When used in lists, wrap in a container with:
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  
+  Props:
+    wordform: string - The word to display
+    translation: string | null - Optional translation
+    href: string - Link target for the word
+    notes: string | null - Optional contextual notes (displayed inline in parentheses)
+-->
+
 <!-- Define the props -->
 <script lang="ts">
   import { onMount } from 'svelte';
@@ -15,6 +31,7 @@
   export let wordform: string;
   export let translation: string | null = null;
   export let href: string;
+  export let notes: string | null = null;
 
   let wordformLink: HTMLElement;
 
@@ -78,6 +95,9 @@
       {#if translation}
         <span class="translation">- {translation}</span>
       {/if}
+      {#if notes}
+        <span class="notes">({notes})</span>
+      {/if}
     </div>
   </a>
 </div>
@@ -114,6 +134,13 @@
   .translation {
     font-size: 0.875rem;
     color: #64748b;
+    margin-left: 0.25rem;
+  }
+
+  .notes {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-style: italic;
     margin-left: 0.25rem;
   }
 </style> 
