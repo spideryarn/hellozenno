@@ -18,6 +18,11 @@
     <script src="https://unpkg.com/tippy.js@6"></script>
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    {% if not config.IS_PRODUCTION and vite_entries is defined %}
+        {% for entry in vite_entries %}
+        <script type="module" src="http://localhost:5173/src/entries/{{ entry }}.ts"></script>
+        {% endfor %}
+    {% endif %}
     {% endblock head_imports %}
     <style>
         {% block head_css %}
@@ -64,6 +69,11 @@
     {% endblock content %}
 
     {% block late_script_imports %}
+        {% if config.IS_PRODUCTION and vite_entries is defined %}
+            {% for entry in vite_entries %}
+            <script type="module" src="{{ url_for('static', filename='build/js/' + entry + '.js') }}"></script>
+            {% endfor %}
+        {% endif %}
     {% endblock late_script_imports %}
 
     <!-- Reusable Modal Dialog -->

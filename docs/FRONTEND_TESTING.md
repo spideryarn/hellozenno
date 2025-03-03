@@ -1,5 +1,7 @@
 # Frontend Testing with Playwright
 
+see `docs/FRONTEND_INFRASTRUCTURE.md`
+
 ## Setup
 
 1. Install dependencies in `requirements-dev.txt`:
@@ -17,10 +19,12 @@ playwright install chromium
 Tests are located in `tests/frontend/` directory:
 - `conftest.py` - Shared test configuration and fixtures
 - Test files named like `test_*.py`
+- Fixtures in `tests/fixtures_for_tests.py`
 
 ## Configuration
 
-### Base Configuration (`tests/e2e/conftest.py`)
+### Base Configuration (`tests/frontend/conftest.py`)
+
 ```python
 @pytest.fixture(scope="session")
 def browser_context_args(browser_context_args):

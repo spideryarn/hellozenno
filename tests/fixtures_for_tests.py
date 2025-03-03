@@ -60,6 +60,7 @@ SAMPLE_LEMMA_DATA = {
             "translation": "bad",
         }
     ],
+    "example_wordforms": ["καλός", "καλή", "καλό", "καλοί", "καλές", "καλά"],
     "cultural_context": "Fundamental to Greek politeness",
     "easily_confused_with": [
         {

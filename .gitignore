@@ -16,6 +16,7 @@ obsolete/
 node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/**/*.mjs
 .svelte-kit/
 static/build/
 npm-debug.log*

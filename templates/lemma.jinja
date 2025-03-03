@@ -1,8 +1,8 @@
 {% extends "base.jinja" %}
 {% from "base_svelte.jinja" import load_svelte_component %}
 
-{# Specify the Vite entry point for MiniSentence component #}
-{% set vite_entry = 'minisentence-entry' %}
+{# Specify the Vite entry points for components #}
+{% set vite_entries = ['minisentence-entry', 'miniwordform-entry'] %}
 
 {% block title %}
 {{ lemma_metadata.lemma }} in {{ target_language_name }} (lemma) - Hello Zenno
@@ -113,14 +113,15 @@
         <div class="example_wordforms">
             {% if lemma_metadata.example_wordforms %}
             <h2>Example Wordforms</h2>
-            <ul>
+            <div class="wordforms-list">
                 {% for form in lemma_metadata.example_wordforms %}
-                <li><a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=form) }}"
-                       class="word-link">
-                        {{ form }}
-                    </a></li>
+                {{ load_svelte_component('MiniWordform', {
+                    'wordform': form,
+                    'translation': lemma_metadata.translations[0] if lemma_metadata.translations else None,
+                    'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=form)
+                }, component_id='miniwordform-component-' ~ loop.index) }}
                 {% endfor %}
-            </ul>
+            </div>
             {% endif %}
         </div>
         

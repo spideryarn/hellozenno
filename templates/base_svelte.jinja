@@ -1,4 +1,5 @@
 {% macro load_svelte_component(component_name, props={}, component_id='') %}
+  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}"></div>
   {% if not config.IS_PRODUCTION %}
     {# Development mode - use Vite dev server #}
     <script type="module">

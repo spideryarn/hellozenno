@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
+import preprocess from 'svelte-preprocess';
 
 // Check if Flask port is specified in environment, but only in dev mode
 const flaskPort = process.env.FLASK_PORT;
@@ -9,10 +10,19 @@ if (process.env.NODE_ENV !== 'production' && !flaskPort) {
     process.exit(1);
 }
 
+// Define entry points
+const entries = {
+    'sentence-entry': resolve(__dirname, 'src/entries/sentence-entry.ts'),
+    'minisentence-entry': resolve(__dirname, 'src/entries/minisentence-entry.ts'),
+    'miniwordform-entry': resolve(__dirname, 'src/entries/miniwordform-entry.ts'),
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
         svelte({
+            // Enable TypeScript preprocessing
+            preprocess: preprocess(),
             // Treat warnings as errors in development
             onwarn: (warning, handler) => {
                 // Log the warning for debugging
@@ -35,12 +45,14 @@ export default defineConfig({
         emptyOutDir: true,
         manifest: true,
         cssCodeSplit: true,
-        lib: {
-            entry: resolve(__dirname, 'src/entries/sentence-entry.ts'),
-            name: 'SentenceComponent',
-            fileName: 'js/sentence-entry',
-            formats: ['es'],
-        },
+        rollupOptions: {
+            input: entries,
+            output: {
+                entryFileNames: 'js/[name].js',
+                chunkFileNames: 'js/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash][extname]'
+            }
+        }
     },
 
     // Development server configuration

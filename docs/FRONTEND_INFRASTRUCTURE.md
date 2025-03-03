@@ -1,5 +1,7 @@
 # Frontend Infrastructure
 
+see `docs/FRONTEND_TESTING.md`
+
 This document describes the frontend infrastructure for Hello Zenno, including the tools, build process, and development workflow. see `250302_Vite_Svelte_Tailwind_plan.md` (though we've decided to ditch Tailwind)
 
 ## Overview
@@ -164,6 +166,7 @@ The `deploy.sh` script runs `build-frontend.sh` before deploying to ensure the l
 
 ## Creating New Svelte Components
 
+
 ### Component Creation Checklist
 
 1. **Create the Component**
@@ -176,6 +179,7 @@ The `deploy.sh` script runs `build-frontend.sh` before deploying to ensure the l
      ```
    - Add component template and styles
    - Keep styles scoped to the component
+   - see e.g. `frontend/src/components/MiniSentence.svelte` (as used in `templates/lemma.jinja`)
 
 2. **Create the Entry Point**
    - Create a new entry file in `frontend/src/entries/` named `your-component-entry.ts`
@@ -218,7 +222,7 @@ The `deploy.sh` script runs `build-frontend.sh` before deploying to ensure the l
    - Check browser console for prop warnings
    - Test with different prop combinations
    - Verify HMR works correctly
-   - Test in production build
+   - see `docs/FRONTEND_TESTING.md` (and `tests/frontend/test_lemma_page.py` as an example, and `tests/fixtures_for_tests.py`)
 
 ### Example Component Integration
 
