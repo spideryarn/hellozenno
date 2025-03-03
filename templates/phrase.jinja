@@ -128,7 +128,7 @@
 
         {% if phrase.commonality is defined %}
         <h2>Commonality</h2>
-        <p>{{ "%.0f"|format(phrase.commonality * 100) }}%</p>
+        <p>{{ "%.0f"|format(phrase.commonality * 100) if phrase.commonality else '0' }}%</p>
         {% endif %}
 
         {% if phrase.guessability is defined %}
