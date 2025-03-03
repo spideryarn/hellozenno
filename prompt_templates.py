@@ -33,7 +33,7 @@ Return as JSON in the following schema:
 {
     "wordforms": [
         {
-            "wordform": str,  # the lower-case form without punctuation as it appears in the text, e.g. "Ακολούθησε," in the text -> "ακολούθησε" as the wordform (i.e. lower-case, no punctuation)
+            "wordform": str,  # the form without punctuation as it appears in the text, e.g. "Ακολούθησε," in the text -> "ακολούθησε" as the wordform (i.e. lower-case, no punctuation), unless it's a proper noun or should be capitalised
             "lemma": str,  # the canonical form (e.g. for wordform "ακολούθησε", the lemma would be "ακολουθώ")
             "translations": list[str],  # list of English translations
             "part_of_speech": str,  # e.g. "verb", "noun", "adjective", etc.
