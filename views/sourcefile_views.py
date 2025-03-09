@@ -1129,7 +1129,7 @@ def process_individual_words(
     unique_lemmas = {wf.lemma_entry.lemma for wf in wordforms}
 
     # Process lemmas in parallel with a thread pool
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         # Submit all tasks
         futures = [
             executor.submit(_process_individual_lemma, lemma, target_language_code)
