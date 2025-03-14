@@ -14,10 +14,10 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
+    <script src="https://unpkg.com/@popperjs/core@2" defer></script>
+    <script src="https://unpkg.com/tippy.js@6" defer></script>
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     {% if not config.IS_PRODUCTION and vite_entries is defined %}
         {% for entry in vite_entries %}
         <script type="module" src="http://localhost:5173/src/entries/{{ entry }}.ts"></script>
@@ -74,6 +74,9 @@
             <script type="module" src="{{ url_for('static', filename='build/js/' + entry + '.js') }}"></script>
             {% endfor %}
         {% endif %}
+        
+        <!-- Load base.js at the end to ensure all other scripts are loaded first -->
+        <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
     {% endblock late_script_imports %}
 
     <!-- Reusable Modal Dialog -->
@@ -86,8 +89,6 @@
             </div>
         </div>
     </div>
-
-    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
 </body>
 
 </html>
