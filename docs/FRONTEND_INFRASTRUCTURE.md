@@ -74,7 +74,7 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
    <style>/* Scoped styles */</style>
    ```
 
-2. **Entry Point** (`frontend/src/entries/yourcomponent-entry.ts`)
+2. **Entry Point** (`frontend/src/entries/yourcomponent.ts`)
    ```typescript
    import YourComponent from '../components/YourComponent.svelte';
    export { YourComponent };
@@ -100,7 +100,157 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
 ### Best Practices & Gotchas
 - Use TypeScript for props and conditional rendering for optional props
 - Keep components focused with scoped styles
-- Entry filename must match vite_entries value (e.g., 'mycomponent' → 'mycomponent-entry.ts')
+- Entry filename must match vite_entries value (e.g., 'mycomponent' → 'mycomponent.ts') - no '-entry' suffix is needed
 - Always use an array for vite_entries: `{% set vite_entries = ['componentname'] %}`
 - Use unique IDs for multiple component instances
 - Test in both development and production builds
+
+## Debugging Svelte Components
+
+When working with Svelte components, follow these best practices to ensure smooth integration and easier debugging:
+
+### File Naming Convention
+- Name entry files to match exactly what you use in templates: `minilemma.ts` (not `minilemma-entry.ts`)
+- Make sure your vite_entries value matches: `{% set vite_entries = ['minilemma'] %}`
+- Component naming should follow PascalCase: `MiniLemma.svelte`
+- Consistency between filename and import is critical
+
+### Component Development Workflow
+1. Start with a minimal working component before adding complexity
+2. Create both the component and entry files
+3. Create a dedicated test route/page for the component
+4. Add debugging tools to the test page
+5. Test the component with the simplest possible props before adding complexity
+
+### Debugging Techniques
+- Add debug info to your test template:
+  ```html
+  <button onclick="debugSvelte()">Run Debug Check</button>
+  <div id="debug-output"></div>
+  
+  <script>
+  function debugSvelte() {
+      const output = document.getElementById('debug-output');
+      const mountPoint = document.getElementById('your-component-id');
+      
+      let debugInfo = '';
+      
+      // Check mount point
+      debugInfo += `Mount point exists: ${mountPoint !== null}\n`;
+      if (mountPoint) {
+          debugInfo += `Mount point HTML: ${mountPoint.outerHTML}\n`;
+          debugInfo += `Mount point children: ${mountPoint.children.length}\n`;
+      }
+      
+      // Check for Svelte-generated elements
+      const svelteElements = document.querySelectorAll('.your-component-class');
+      debugInfo += `\nElements with component class: ${svelteElements.length}\n`;
+      
+      output.textContent = debugInfo;
+  }
+  </script>
+  ```
+
+- Create a "non-Svelte" HTML version of your component for comparison
+- Monitor console logs for import and mounting errors
+- Set breakpoints in your browser's dev tools
+- Check network requests to ensure Vite server is accessible
+
+### Common Issues and Solutions
+- **Component not rendering**: Verify correct entry file naming and vite_entries value
+- **Import errors**: Check that the Vite server is running on the correct port
+- **Props not working**: Verify correct prop types and default values
+- **Styling issues**: Check for CSS conflicts with global styles
+- **Multiple instances**: Ensure unique component IDs when mounting multiple instances
+- **Performance problems**: Keep components focused and avoid expensive operations
+
+### Enhancing Component Loading
+Consider enhancing the `base_svelte.jinja` template with better error handling and debugging:
+
+```jinja
+{% macro load_svelte_component(component_name, props={}, component_id='') %}
+  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}"></div>
+  {% if not config.IS_PRODUCTION %}
+    {# Development mode - use Vite dev server #}
+    <script type="module">
+      // Debug flags
+      const SVELTE_DEBUG = true;
+      const debugLog = (msg, ...args) => SVELTE_DEBUG && console.log(`[SVELTE DEBUG] ${msg}`, ...args);
+      
+      // Log initial attempt
+      debugLog(`Starting mount for ${JSON.stringify({
+        component: "{{ component_name }}",
+        mountPoint: "{{ component_id if component_id else component_name | lower + '-component' }}",
+        props: {{ props | tojson | safe }}
+      })}`);
+      
+      // Immediately log what we're going to try to import
+      const importUrl = 'http://localhost:5173/src/entries/{{ component_name | lower }}.ts';
+      debugLog("Import URL:", importUrl);
+      
+      try {
+        // Dynamic import with proper error handling
+        import(importUrl)
+          .then(module => {
+            debugLog("Module imported successfully");
+            
+            if (!module.default) {
+              throw new Error(`Module doesn't have a default export`);
+            }
+            
+            // Find target element
+            const targetId = '{{ component_id if component_id else component_name | lower + "-component" }}';
+            const targetElement = document.getElementById(targetId);
+            debugLog("Target element:", targetElement);
+            
+            if (!targetElement) {
+              throw new Error(`Target element #${targetId} not found`);
+            }
+            
+            // Mount component
+            const props = {{ props | tojson | safe }};
+            const component = module.default(targetElement, props);
+            debugLog("Component mounted successfully");
+          })
+          .catch(error => {
+            console.error(`Failed to import ${importUrl}:`, error);
+          });
+      } catch (error) {
+        console.error(`Error loading Svelte component {{ component_name }}:`, error);
+      }
+    </script>
+  {% else %}
+    {# Production mode implementation #}
+    ...
+  {% endif %}
+{% endmacro %}
+
+### Testing with Playwright
+- Use Playwright to test components in an actual browser environment
+- Add console logs with `page.on("console", log => console.log(log.text()))`
+- Take screenshots for visual inspection with `page.screenshot()`
+- Test loading time and performance issues
+- See `docs/FRONTEND_TESTING.md` for more details
+
+### Using browser-tools-mcp
+The Model Context Protocol browser-tools give you access to browser logs and screenshots during component development:
+
+```python
+# Get console logs
+mcp__browser-tools-mcp__getConsoleLogs()
+
+# Get console errors specifically
+mcp__browser-tools-mcp__getConsoleErrors()
+
+# Clear logs for a fresh start
+mcp__browser-tools-mcp__wipeLogs()
+
+# Take a screenshot to see the current state
+mcp__browser-tools-mcp__takeScreenshot()
+
+# Run various audits
+mcp__browser-tools-mcp__runAccessibilityAudit()
+mcp__browser-tools-mcp__runPerformanceAudit()
+```
+
+This provides a direct way to see what's happening in the browser when developing components with AI assistance.
