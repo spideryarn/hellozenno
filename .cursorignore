@@ -1,4 +1,7 @@
 !.env.*
+!.env.local
+!.env.prod
+!.env.testing
 credentials/
 __pycache__/
 *.pyc
