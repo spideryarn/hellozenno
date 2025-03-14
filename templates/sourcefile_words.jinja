@@ -3,7 +3,7 @@
 {% from "base_svelte.jinja" import load_svelte_component %}
 
 {# Specify the Vite entry point for MiniWordform component #}
-{% set vite_entries = ['miniwordform-entry'] %}
+{% set vite_entries = ['miniwordform'] %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -19,6 +19,10 @@
 
     <div class="tab-content">
         <h2>Words <small>({{ wordforms_d|length }})</small></h2>
+        <script>
+            console.log('Sourcefile words page loaded');
+            console.log('Wordforms count:', {{ wordforms_d|length }});
+        </script>
         {% include '_wordforms_list.jinja' %}
     </div>
 

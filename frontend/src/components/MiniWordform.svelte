@@ -36,8 +36,17 @@
   let wordformLink: HTMLElement;
 
   onMount(() => {
+    console.log('MiniWordform component mounted!', { wordform, href });
+    
+    // Check if Tippy.js is loaded
+    if (!window.tippy) {
+      console.error("Tippy.js is not loaded! This will cause errors.");
+      return;
+    }
+    
     // Extract language code from href (assumes URL format like /el/wordform/...)
     const langCode = href.split('/')[1];
+    console.log('Extracted language code:', langCode);
 
     // Initialize Tippy for this wordform
     window.tippy(wordformLink, {

@@ -14,7 +14,7 @@ if (process.env.NODE_ENV !== 'production' && !flaskPort) {
 const entries = {
     'sentence-entry': resolve(__dirname, 'src/entries/sentence-entry.ts'),
     'minisentence-entry': resolve(__dirname, 'src/entries/minisentence-entry.ts'),
-    'miniwordform-entry': resolve(__dirname, 'src/entries/miniwordform-entry.ts'),
+    'miniwordform': resolve(__dirname, 'src/entries/miniwordform.ts'),
     'minilemma': resolve(__dirname, 'src/entries/minilemma.ts'),
 };
 
