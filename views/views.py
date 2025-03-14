@@ -33,6 +33,14 @@ def languages():
     )
 
 
+@views_bp.route("/experim")
+def experim():
+    """A simple experimental page that returns hello world."""
+    return render_template(
+        "experim.jinja",
+    )
+
+
 @views_bp.route("/<target_language_code>/search")
 def search_landing(target_language_code: str):
     """Landing page for word search with a search form."""

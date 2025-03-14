@@ -1,0 +1,59 @@
+{% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+
+{% set vite_entries = ['experimcounter'] %}
+
+{% block title %}
+Experimental Page - Hello Zenno
+{% endblock title %}
+
+{% block breadcrumbs %}
+<span>Experimental</span>
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container">
+    <div class="content-box">
+        <h1>Hello World!</h1>
+        <p>This is a simple experimental page.</p>
+        <p>Welcome to the Hello Zenno experimental area.</p>
+        
+        <!-- Svelte component mount point -->
+        <div id="experim-counter-1"></div>
+        {{ load_svelte_component('ExperimCounter', {
+            'initialCount': 5,
+            'buttonText': 'Click me!'
+        }, component_id='experim-counter-1') }}
+    </div>
+</div>
+{% endblock content %}
+
+{% block head_css %}
+<style>
+    .container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .content-box {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    h1 {
+        color: #4a6ee0;
+        margin-bottom: 1rem;
+    }
+    
+    p {
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock head_css %}
+
