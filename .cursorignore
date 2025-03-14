@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 !gjdutils/
 
+.cursor/browser-tools/
