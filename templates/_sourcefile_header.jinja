@@ -11,6 +11,9 @@
 <h1>
     {{ sourcefile_icon(sourcefile_type, metadata) }}
     {{ sourcefile }}
+    <button onclick="renameSourcefile()" class="button small-button">
+        <i class="fas fa-edit"></i> Rename
+    </button>
 </h1>
 
 <div class="description-container">
@@ -23,6 +26,20 @@
     </div>
     <button onclick="editDescription()" class="button small-button">
         <i class="fas fa-edit"></i> Edit
+    </button>
+</div>
+
+<div class="sourcedir-selector-container">
+    Directory:
+    <select class="sourcedir-selector" data-sourcefile="{{ sourcefile_slug }}">
+        {% for sdir in available_sourcedirs %}
+            <option value="{{ sdir.slug }}" {% if sdir.slug == sourcedir_slug %}selected{% endif %}>
+                {{ sdir.path }}
+            </option>
+        {% endfor %}
+    </select>
+    <button onclick="moveSourcefile()" class="button small-button" id="moveSourcefileButton" disabled>
+        <i class="fas fa-exchange-alt"></i> Move
     </button>
 </div>
 
