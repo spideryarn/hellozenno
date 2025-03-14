@@ -1,0 +1,18 @@
+{
+    "mcpServers": {
+        "Supabase_local_database": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-postgres",
+                "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+            ]
+        },
+        "browser_tools": {
+            "command": "npx",
+            "args": [
+                "@agentdeskai/browser-tools-mcp@1.2.0"
+            ]
+        }
+    }
+}
