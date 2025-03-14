@@ -191,6 +191,10 @@ nav a:hover {
     line-height: 1.6;
 }
 
+.enhanced-text p {
+    margin: 1em 0;
+}
+
 /* Generic list styling based on dictionary-entries */
 .source-dirs-list,
 .source-files-list,
@@ -420,12 +424,188 @@ nav a:hover {
         margin-top: 0.5rem;
         width: 100%;
     }
+
+    /* Improve content width and alignment */
+    .text-content,
+    .tab-content,
+    .enhanced-text,
+    .translated-text {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ensure text is properly aligned */
+    .text-content p,
+    .translated-text p,
+    .enhanced-text p {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    /* Reduce horizontal margins for better screen utilization */
+    .container {
+        padding: 0 0.3rem;
+        max-width: 100%;
+    }
+
+    /* Improve text readability */
+    .text-content {
+        font-size: 1.1em;
+    }
+
+    .enhanced-text {
+        font-size: 1.3em;
+    }
+
+    .translated-text {
+        font-size: 1.1em;
+    }
+
+    .text-content p,
+    .translated-text p {
+        line-height: 1.6;
+        margin: 0.8em 0;
+    }
+
+    /* Reduce padding in content areas to maximize space */
+    .text-content,
+    .tab-content {
+        padding: 0.5em;
+        margin: 1em 0;
+    }
+
+    .enhanced-text,
+    .translated-text {
+        padding: 0.5em;
+    }
+
+    /* Make word links more tappable on mobile */
+    .word-link {
+        padding: 0.15em 0;
+        display: inline-block;
+    }
+
+    /* Improve details/summary for mobile */
+    details summary {
+        padding: 0.75em 0;
+    }
+
+    details summary h2 {
+        font-size: 1.2em;
+    }
+
+    /* Optimize breadcrumbs for mobile */
+    .breadcrumbs {
+        padding: 8px 5px;
+        font-size: 0.9em;
+        white-space: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .breadcrumbs a {
+        padding: 0 2px;
+    }
 }
 
-/* Add an extra breakpoint for very narrow screens */
 @media (max-width: 480px) {
     body {
         padding-top: 220px;
+    }
+
+    /* Further reduce horizontal margins */
+    .container {
+        padding: 0;
+        max-width: 100%;
+    }
+
+    /* Further improve text readability on small screens */
+    .text-content {
+        font-size: 1.15em;
+    }
+
+    .enhanced-text {
+        font-size: 1.35em;
+    }
+
+    .translated-text {
+        font-size: 1.15em;
+    }
+
+    .text-content p,
+    .translated-text p {
+        line-height: 1.7;
+        margin: 0.7em 0;
+    }
+
+    /* Minimize padding in content areas */
+    .text-content,
+    .tab-content {
+        padding: 0.3em;
+        margin: 0.7em 0;
+        border-radius: 0;
+    }
+
+    .enhanced-text,
+    .translated-text {
+        padding: 0.3em;
+        margin: 0.7em 0;
+        border-radius: 0;
+    }
+
+    /* Make word links even more tappable on very small screens */
+    .word-link {
+        padding: 0.2em 0;
+    }
+
+    /* Further improve details/summary for small screens */
+    details summary {
+        padding: 0.5em 0;
+    }
+
+    /* Remove any box shadows to maximize space */
+    .text-content,
+    .tab-content {
+        box-shadow: none;
+        border-left: none;
+        border-right: none;
+    }
+
+    /* Ensure content takes full width */
+    .container>* {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Further optimize breadcrumbs for very small screens */
+    .breadcrumbs {
+        padding: 6px 3px;
+        font-size: 0.85em;
+    }
+
+    /* Adjust navigation padding */
+    nav {
+        padding: 0.3rem 0;
+    }
+
+    .nav-content {
+        padding: 0 0.3rem;
+    }
+
+    /* Adjust tab content styling */
+    .tab-content {
+        border: none;
+        border-top: 1px solid #ddd;
+    }
+
+    /* Adjust tabs for mobile */
+    .tabs {
+        margin: 10px 0 0 0;
+    }
+
+    .tab {
+        padding: 6px 10px;
+        font-size: 0.9em;
     }
 }
 
@@ -908,4 +1088,23 @@ h1 .sourcefile-icon {
     border-top: none;
     border-radius: 0 0 4px 4px;
     padding: 20px;
+}
+
+/* Improve details/summary styling */
+details {
+    margin: 1.5em 0;
+}
+
+details summary {
+    cursor: pointer;
+    padding: 0.5em 0;
+}
+
+details summary h2 {
+    display: inline;
+    margin: 0;
+}
+
+.translated-text {
+    margin-top: 1em;
 }
