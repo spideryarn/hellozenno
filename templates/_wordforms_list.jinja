@@ -1,11 +1,12 @@
 {% if wordforms_d %}
 <div class="wordforms-list">
     {% for wordform in wordforms_d|sort(attribute='ordering') %}
-        {{ load_svelte_component('MiniWordform', {
-            'wordform': wordform.wordform,
-            'translation': wordform.translations[0] if wordform.translations else None,
+        {{ load_svelte_component('MiniLemma', {
+            'lemma': wordform.wordform,
+            'partOfSpeech': wordform.part_of_speech,
+            'translations': wordform.translations,
             'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=wordform.wordform)
-        }, component_id='miniwordform-component-' ~ loop.index) }}
+        }, component_id='minilemma-component-' ~ loop.index) }}
     {% endfor %}
 </div>
 {% else %}
