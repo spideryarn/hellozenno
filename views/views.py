@@ -36,8 +36,31 @@ def languages():
 @views_bp.route("/experim")
 def experim():
     """A simple experimental page that returns hello world."""
+    # Sample lemma data for testing the MiniLemma component
+    sample_lemmas = [
+        {
+            "lemma": "γράφω",
+            "partOfSpeech": "verb",
+            "translations": ["to write", "to draw", "to record"],
+            "href": "/el/lemma/γράφω",
+        },
+        {
+            "lemma": "πόλη",
+            "partOfSpeech": "noun",
+            "translations": ["city", "town"],
+            "href": "/el/lemma/πόλη",
+        },
+        {
+            "lemma": "καλός",
+            "partOfSpeech": "adjective",
+            "translations": ["good", "beautiful", "fine"],
+            "href": "/el/lemma/καλός",
+        },
+    ]
+
     return render_template(
         "experim.jinja",
+        sample_lemmas=sample_lemmas,
     )
 
 
