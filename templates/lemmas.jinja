@@ -1,4 +1,8 @@
 {% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+
+{# Specify the Vite entry point for MiniLemma component #}
+{% set vite_entries = ['minilemma'] %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -16,12 +20,17 @@
     
     {% include '_sort_options.jinja' with context %}
 
-    <ul class="dictionary-entries">
+    <div class="lemmas-list">
         {% for lemma in lemmas %}
-            {% include '_dictionary_entry.jinja' with context %}
+            {{ load_svelte_component('MiniLemma', {
+                'lemma': lemma,
+                'partOfSpeech': lemma_metadata[lemma].part_of_speech if lemma_metadata[lemma].part_of_speech else "",
+                'translations': lemma_metadata[lemma].translations if lemma_metadata[lemma].translations else [],
+                'href': url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=lemma)
+            }, component_id='minilemma-component-' ~ loop.index) }}
         {% else %}
-            <li class="no-entries">No dictionary entries available</li>
+            <div class="no-entries">No dictionary entries available</div>
         {% endfor %}
-    </ul>
+    </div>
 </div>
 {% endblock %}

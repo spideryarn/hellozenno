@@ -1066,3 +1066,13 @@ details .translated-text {
     padding: 0.5em;
     margin-top: 0.5em;
 }
+/* Styles for lemmas list */
+.lemmas-list {
+  margin: 1rem 0;
+}
+
+.lemmas-list .no-entries {
+  color: #64748b;
+  font-style: italic;
+  padding: 1rem 0;
+}
