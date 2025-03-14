@@ -886,6 +886,46 @@ a.button.disabled:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Selector dropdown styling for language and directory selectors */
+.language-selector-container {
+    margin: 1em 0;
+}
+
+.sourcedir-selector-container {
+    display: inline-block;
+    margin-left: 1rem;
+    vertical-align: middle;
+}
+
+.language-selector,
+.sourcedir-selector {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+.language-selector {
+    min-width: 250px;
+}
+
+.sourcedir-selector {
+    min-width: 200px;
+    max-width: 300px;
+    height: 2rem;
+    color: #2563eb;
+    border-color: #2563eb;
+}
+
+.language-selector:focus,
+.sourcedir-selector:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
 .modal input {
     width: 100%;
     padding: 0.75rem;

@@ -29,20 +29,6 @@
     </button>
 </div>
 
-<div class="sourcedir-selector-container">
-    Directory:
-    <select class="sourcedir-selector" data-sourcefile="{{ sourcefile_slug }}">
-        {% for sdir in available_sourcedirs %}
-            <option value="{{ sdir.slug }}" {% if sdir.slug == sourcedir_slug %}selected{% endif %}>
-                {{ sdir.path }}
-            </option>
-        {% endfor %}
-    </select>
-    <button onclick="moveSourcefile()" class="button small-button" id="moveSourcefileButton" disabled>
-        <i class="fas fa-exchange-alt"></i> Move
-    </button>
-</div>
-
 <div class="actions">
     <ul>
         <li class="button-group">
@@ -95,6 +81,19 @@
             {% endif %}
             
             <span class="file-position">({{ nav_info.current_position }}/{{ nav_info.total_files }})</span>
+            
+            <div class="sourcedir-selector-container">
+                <select class="sourcedir-selector" data-sourcefile="{{ sourcefile_slug }}">
+                    <option value="" disabled>Move to directory...</option>
+                    {% for sdir in available_sourcedirs %}
+                        {% if sdir.slug != sourcedir_slug %}
+                            <option value="{{ sdir.slug }}">
+                                {{ sdir.path }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
         </li>
     </ul>
 </div>

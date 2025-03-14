@@ -162,6 +162,13 @@ def inspect_sourcefile_text(
 
         # Check if file has been processed before
         already_processed = bool(wordforms_d)
+        
+        # Get all available sourcedirs for this language (for move dropdown)
+        available_sourcedirs = (
+            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
+            .where(Sourcedir.language_code == target_language_code)
+            .order_by(Sourcedir.path)
+        )
 
         return render_template(
             "sourcefile_text.jinja",
@@ -181,6 +188,7 @@ def inspect_sourcefile_text(
             already_processed=already_processed,
             wordforms_d=wordforms_d,
             phrases_d=phrases_d,
+            available_sourcedirs=available_sourcedirs,
         )
     except DoesNotExist:
         abort(404, description="File not found")
@@ -258,6 +266,13 @@ def inspect_sourcefile_words(
 
         # Check if file has been processed before
         already_processed = bool(wordforms_d)
+        
+        # Get all available sourcedirs for this language (for move dropdown)
+        available_sourcedirs = (
+            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
+            .where(Sourcedir.language_code == target_language_code)
+            .order_by(Sourcedir.path)
+        )
 
         return render_template(
             "sourcefile_words.jinja",
@@ -275,6 +290,7 @@ def inspect_sourcefile_words(
             nav_info=nav_info,
             active_tab="words",
             already_processed=already_processed,
+            available_sourcedirs=available_sourcedirs,
         )
     except DoesNotExist:
         abort(404, description="File not found")
@@ -352,6 +368,13 @@ def inspect_sourcefile_phrases(
 
         # Check if file has been processed before
         already_processed = bool(phrases_d)
+        
+        # Get all available sourcedirs for this language (for move dropdown)
+        available_sourcedirs = (
+            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
+            .where(Sourcedir.language_code == target_language_code)
+            .order_by(Sourcedir.path)
+        )
 
         return render_template(
             "sourcefile_phrases.jinja",
@@ -369,6 +392,7 @@ def inspect_sourcefile_phrases(
             active_tab="phrases",
             already_processed=already_processed,
             wordforms_d=wordforms_d,
+            available_sourcedirs=available_sourcedirs,
         )
     except DoesNotExist:
         abort(404, description="File not found")
@@ -1179,4 +1203,68 @@ def update_sourcefile_description(
         return jsonify({"error": "File not found"}), 404
     except Exception as e:
         current_app.logger.error(f"Error updating description: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@sourcefile_views_bp.route(
+    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/move",
+    methods=["PUT"],
+)
+def move_sourcefile(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Move a sourcefile to a different sourcedir."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Get and validate the new sourcedir from the request
+        data = request.get_json()
+        if data is None or "new_sourcedir_slug" not in data:
+            return jsonify({"error": "Missing new_sourcedir_slug parameter"}), 400
+
+        new_sourcedir_slug = data.get("new_sourcedir_slug").strip()
+        if not new_sourcedir_slug:
+            return jsonify({"error": "Invalid sourcedir slug"}), 400
+
+        # Get the new sourcedir entry
+        try:
+            new_sourcedir_entry = Sourcedir.get(
+                Sourcedir.slug == new_sourcedir_slug,
+                Sourcedir.language_code == target_language_code,
+            )
+        except DoesNotExist:
+            return jsonify({"error": "Target directory not found"}), 404
+
+        # Don't do anything if it's the same sourcedir
+        if sourcefile_entry.sourcedir.id == new_sourcedir_entry.id:
+            return jsonify({"message": "File is already in this directory"}), 200
+
+        # Check if a file with the same filename already exists in the new sourcedir
+        if (
+            Sourcefile.select()
+            .where(
+                (Sourcefile.sourcedir == new_sourcedir_entry)
+                & (Sourcefile.filename == sourcefile_entry.filename)
+            )
+            .exists()
+        ):
+            return jsonify({"error": "A file with this name already exists in the target directory"}), 409
+
+        # Update the sourcedir
+        sourcefile_entry.sourcedir = new_sourcedir_entry
+        sourcefile_entry.save()  # This will also update the slug if needed
+
+        return jsonify({
+            "message": "File moved successfully",
+            "new_sourcedir_slug": new_sourcedir_slug,
+            "new_sourcefile_slug": sourcefile_entry.slug
+        }), 200
+
+    except DoesNotExist:
+        return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error moving sourcefile: {str(e)}")
         return jsonify({"error": str(e)}), 500

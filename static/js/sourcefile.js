@@ -212,4 +212,62 @@ function processIndividualWords() {
         button.disabled = false;
         button.textContent = originalText;
     });
-} 
+}
+
+// Sourcedir selector functionality
+function initSourcedirSelector() {
+    const selector = document.querySelector('.sourcedir-selector');
+    
+    if (selector) {
+        selector.addEventListener('change', function() {
+            const newSourcedirSlug = this.value;
+            
+            // Don't do anything if nothing is selected
+            if (!newSourcedirSlug) {
+                return;
+            }
+            
+            // Show confirmation dialog
+            if (confirm('Are you sure you want to move this file to a different directory?')) {
+                // Show loading indicator
+                this.disabled = true;
+                
+                // Store the original option text
+                const selectedIndex = this.selectedIndex;
+                const originalText = this.options[selectedIndex].text;
+                this.options[selectedIndex].text = 'Moving...';
+                
+                fetch(`/api/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/move`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ new_sourcedir_slug: newSourcedirSlug })
+                }).then(async response => {
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to move file');
+                    }
+                    
+                    // Redirect to the file in its new location
+                    window.location.href = `/${window.target_language_code}/${data.new_sourcedir_slug}/${data.new_sourcefile_slug}`;
+                }).catch(error => {
+                    alert('Error moving file: ' + error.message);
+                    // Reset the dropdown
+                    this.options[selectedIndex].text = originalText;
+                    this.selectedIndex = 0; // Reset to the first option (placeholder)
+                    this.disabled = false;
+                });
+            } else {
+                // Reset selection if user cancels
+                this.selectedIndex = 0; // Reset to the first option (placeholder)
+            }
+        });
+    }
+}
+
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initSourcedirSelector();
+}); 
