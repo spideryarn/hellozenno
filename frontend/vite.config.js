@@ -4,48 +4,7 @@ import { resolve } from 'path';
 import preprocess from 'svelte-preprocess';
 import fs from 'fs';
 
-// Custom plugin to ensure proper component exports
-function ensureSvelteExports() {
-  return {
-    name: 'ensure-svelte-exports',
-    // Run after build to check and potentially fix output files
-    closeBundle: async () => {
-      console.log('Checking Svelte component exports...');
-      const outDir = resolve(__dirname, '../static/build/js');
-      
-      // Process each entry file
-      for (const entryName in entries) {
-        const outFile = resolve(outDir, `${entryName}.js`);
-        
-        // Check if file exists and is empty/minimal
-        if (fs.existsSync(outFile)) {
-          const content = fs.readFileSync(outFile, 'utf-8');
-          
-          // If file only imports index but doesn't export anything useful
-          if (content.trim().startsWith('import') && !content.includes('export default')) {
-            console.log(`Fixing exports for ${entryName}...`);
-            
-            // Extract component name (assuming PascalCase for components)
-            const componentName = entryName.charAt(0).toUpperCase() + 
-                                  entryName.slice(1).replace(/([A-Z])/g, ' $1').trim().replace(/ /g, '');
-            
-            // Create a proper module that exports the component factory function
-            const newContent = `import { ${componentName} } from "${entries[entryName].replace(__dirname, '.').replace('.ts', '')}";
-export { ${componentName} };
-export default function(target, props) {
-  return new ${componentName}({ target, props });
-}
-`;
-            
-            // Write the fixed content
-            fs.writeFileSync(outFile, newContent, 'utf-8');
-            console.log(`Fixed ${entryName}`);
-          }
-        }
-      }
-    }
-  };
-}
+// No custom plugin needed - we're using server-side rendering in production
 
 // Check if Flask port is specified in environment, but only in dev mode
 const flaskPort = process.env.FLASK_PORT;
@@ -62,6 +21,7 @@ const entries = {
     'minilemma': resolve(__dirname, 'src/entries/minilemma.ts'),
     'miniwordformlist': resolve(__dirname, 'src/entries/miniwordformlist.ts'),
     'miniphrase': resolve(__dirname, 'src/entries/miniphrase.ts'),
+    'flashcardapp': resolve(__dirname, 'src/entries/flashcardapp.ts'),
 };
 
 // https://vitejs.dev/config/
@@ -92,9 +52,7 @@ export default defineConfig({
                 // In production, handle warnings normally
                 handler(warning);
             }
-        }),
-        // Add our custom plugin to ensure component exports
-        ensureSvelteExports()
+        })
     ],
 
     // Configure build output to Flask's static directory
@@ -105,6 +63,10 @@ export default defineConfig({
         cssCodeSplit: true,
         // Ensure source maps are generated for easier debugging
         sourcemap: true,
+        
+        // Disable minification for better debugging
+        minify: process.env.NODE_ENV === 'production' ? 'esbuild' : false,
+        
         rollupOptions: {
             input: entries,
             output: {
@@ -113,8 +75,10 @@ export default defineConfig({
                 assetFileNames: 'assets/[name]-[hash][extname]',
                 // Use ES module format to ensure compatibility with modern browsers
                 format: 'es',
-                // Ensure exports are properly named
-                exports: 'named'
+                // Properly name exports
+                exports: 'named',
+                // Ensure property tree-shaking doesn't remove component code
+                manualChunks: undefined
             }
         }
     },

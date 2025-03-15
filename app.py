@@ -60,6 +60,7 @@ def create_app():
     from views.sentence_views import sentence_views_bp
     from views.api import api_bp
     from views.flashcard_views import flashcard_views_bp
+    from views.flashcard2_views import flashcard2_views_bp
     from views.system_views import system_views_bp
 
     # Register system views first to ensure health check route is matched before language routes
@@ -75,6 +76,7 @@ def create_app():
     app.register_blueprint(sentence_views_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(flashcard_views_bp)
+    app.register_blueprint(flashcard2_views_bp)
 
     logger.info("Application initialized successfully")
     return app

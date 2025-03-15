@@ -1,0 +1,69 @@
+{% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+{% set vite_entries = ['flashcardapp'] %}
+
+{% block title %}{{ target_language_name }} Flashcards 2.0 - Hello Zenno{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    {% if not sourcedir and not sourcefile %}
+    » <a href="{{ url_for('sentence_views.sentences_list', language_code=target_language_code) }}">Sentences</a>
+    {% endif %}
+    {% if sourcedir %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir.slug) }}">{{ sourcedir.path }}</a>
+    {% endif %}
+    {% if sourcefile is not string and sourcefile %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug) }}">{{ sourcefile.sourcedir.path }}</a>
+    » <a href="{{ url_for('sourcefile_views.inspect_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug, sourcefile_slug=sourcefile.slug) }}">{{ sourcefile.filename }}</a>
+    {% endif %}
+    » <a href="{{ url_for('flashcard2_views.flashcard2_landing', language_code=target_language_code) }}">Flashcards 2.0</a>
+    » Sentence
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if sentence %}
+                    <div id="flashcard-app"></div>
+                    {{ load_svelte_component('FlashcardApp', {
+                        'sentence': {
+                            'id': sentence.id,
+                            'slug': sentence.slug,
+                            'text': sentence.sentence,
+                            'translation': sentence.translation,
+                            'lemmaWords': sentence.lemma_words,
+                            'audioUrl': url_for('sentence_views.get_sentence_audio', language_code=target_language_code, sentence_id=sentence.id)
+                        },
+                        'targetLanguageCode': target_language_code,
+                        'targetLanguageName': target_language_name,
+                        'sourcefile': sourcefile.slug if sourcefile else None,
+                        'sourcedir': sourcedir.slug if sourcedir else None
+                    }, component_id='flashcard-app') }}
+                    
+                    <audio id="audio-player" src="{{ url_for('sentence_views.get_sentence_audio', language_code=target_language_code, sentence_id=sentence.id) }}" style="display: none;"></audio>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No sentences found. Please try again later.
+                    </div>
+                    {% endif %}
+
+                    {% if lemma_count %}
+                    <hr />
+                    <div class="mb-3">
+                        <h4>
+                            Practicing with {{ lemma_count }} words
+                            {% if sourcedir %} from {{ sourcedir.path }}{% endif %}
+                            {% if sourcefile %} from {{ sourcefile.filename }}{% endif %}
+                        </h4>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

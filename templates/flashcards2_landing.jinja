@@ -1,0 +1,56 @@
+{% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+{% set vite_entries = ['flashcardapp'] %}
+
+{% block title %}{{ target_language_name }} Flashcards 2.0 - Hello Zenno{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    {% if not sourcedir and not sourcefile %}
+    » <a href="{{ url_for('sentence_views.sentences_list', language_code=target_language_code) }}">Sentences</a>
+    {% endif %}
+    {% if sourcedir %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir.slug) }}">{{ sourcedir.path }}</a>
+    {% endif %}
+    {% if sourcefile is not string and sourcefile %}
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug) }}">{{ sourcefile.sourcedir.path }}</a>
+    » <a href="{{ url_for('sourcefile_views.inspect_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug, sourcefile_slug=sourcefile.slug) }}">{{ sourcefile.filename }}</a>
+    {% endif %}
+    » Flashcards 2.0
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="mb-4">{{ target_language_name }} Flashcards 2.0</h1>
+                    
+                    <p class="lead">Practice with sentence flashcards to improve your {{ target_language_name }} skills.</p>
+                    
+                    <div id="flashcard-landing"></div>
+                    {{ load_svelte_component('FlashcardLanding', {
+                        'targetLanguageCode': target_language_code,
+                        'targetLanguageName': target_language_name,
+                        'sourcefile': sourcefile.slug if sourcefile else None,
+                        'sourcedir': sourcedir.slug if sourcedir else None,
+                        'lemmaCount': lemma_count
+                    }, component_id='flashcard-landing') }}
+                    
+                    {% if lemma_count %}
+                    <div class="mt-3">
+                        <p class="text-muted">
+                            Practice with {{ lemma_count }} words
+                            {% if sourcedir %}from directory {{ sourcedir.path }}{% endif %}
+                            {% if sourcefile %}from file {{ sourcefile.filename }}{% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
