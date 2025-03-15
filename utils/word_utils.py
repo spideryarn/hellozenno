@@ -91,16 +91,29 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
     except DoesNotExist:
         abort(404, description="Sourcedir not found")
 
-    # Use the new optimized method to get lemmas for this sourcedir
-    lemmas_query = Lemma.get_all_lemmas_for(
-        language_code=language_code,
-        sourcedir=sourcedir,
-        sort_by="alpha"
+    # Use a simple, direct query that will always work even in test environments
+    # This query doesn't use any problematic SQL features (like ORDER BY on expressions not in SELECT)
+    simple_query = (
+        Lemma.select(Lemma.lemma)
+        .distinct()
+        .join(Wordform, on=(Wordform.lemma_entry == Lemma.id))
+        .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
+        .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
+        .where(
+            (Lemma.language_code == language_code)
+            & (Sourcefile.sourcedir == sourcedir)
+        )
+        .order_by(Lemma.lemma)  # Simple ordering by column, not expression
     )
-    lemmas = [row.lemma for row in lemmas_query]
-
+    
+    # Execute the query and get the results
+    results = list(simple_query)
+    lemmas = [row.lemma for row in results if row.lemma]
+    
+    # If no lemmas found, abort with 404
     if not lemmas:
         abort(404, description="Directory contains no practice vocabulary")
+            
     return lemmas
 
 
@@ -115,16 +128,27 @@ def get_sourcefile_lemmas(
     # Get the sourcefile using _get_sourcefile_entry
     sourcefile = _get_sourcefile_entry(language_code, sourcedir_slug, sourcefile_slug)
 
-    # Use the new optimized method to get lemmas for this sourcefile
-    query = Lemma.get_all_lemmas_for(
-        language_code=language_code,
-        sourcefile=sourcefile,
-        sort_by="alpha"
+    # Use a simple, direct query that will always work even in test environments
+    # This query doesn't use any problematic SQL features (like ORDER BY on expressions not in SELECT)
+    # but is still efficient for this operation
+    simple_query = (
+        Lemma.select(Lemma.lemma)
+        .distinct()
+        .join(Wordform, on=(Wordform.lemma_entry == Lemma.id))
+        .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
+        .where(
+            (Lemma.language_code == language_code)
+            & (SourcefileWordform.sourcefile == sourcefile)
+        )
+        .order_by(Lemma.lemma)  # Simple ordering by column, not expression
     )
-
-    # Collect lemma strings, ignoring any None
-    lemmas = [row.lemma for row in query if row.lemma]
+    
+    # Execute the query and get the results
+    results = list(simple_query)
+    lemmas = [row.lemma for row in results if row.lemma]
+    
+    # If no lemmas found, raise NotFound
     if not lemmas:
         raise NotFound("Sourcefile contains no practice vocabulary.")
 
-    return lemmas  # Already sorted by the query
+    return lemmas
