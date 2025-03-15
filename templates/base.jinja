@@ -75,16 +75,11 @@
     {% endblock content %}
 
     {% block late_script_imports %}
-        {% if config.IS_PRODUCTION and vite_entries is defined %}
-            {% for entry in vite_entries %}
-            <script type="module" src="{{ url_for('static', filename='build/js/' + entry + '.js') }}"></script>
-            {% endfor %}
-        {% endif %}
+        <!-- In production, all Svelte components are bundled into hz-components.es.js -->
+        <!-- Individual component scripts are no longer needed -->
         
         <!-- Load base.js at the end to ensure all other scripts are loaded first -->
         <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
-
-        <!-- Svelte components are loaded via ES modules, not UMD -->
     {% endblock late_script_imports %}
 
     <!-- Reusable Modal Dialog -->
