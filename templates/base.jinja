@@ -85,7 +85,7 @@
         <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
 
         {% if svelte_umd_mode is defined and svelte_umd_mode %}
-        <!-- Svelte is packaged within the UMD bundle so no need to load it separately -->
+        <!-- Svelte is now bundled within the UMD build, no external dependencies -->
         <script src="{{ url_for('static', filename='build/js/hz-components.umd.js') }}"></script>
         {% endif %}
     {% endblock late_script_imports %}

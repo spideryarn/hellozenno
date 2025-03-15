@@ -94,13 +94,11 @@ export default defineConfig({
         },
 
         rollupOptions: {
-            // Make sure to externalize deps that shouldn't be bundled
+            // Do not externalize Svelte to avoid CDN dependencies
             external: [],
             output: {
                 // Global variables to use in UMD build for externalized deps
-                globals: {
-                    svelte: 'Svelte'
-                },
+                globals: {},
                 // Preserve directory structure for component CSS
                 assetFileNames: 'assets/[name]-[hash][extname]',
             }

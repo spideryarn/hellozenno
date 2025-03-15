@@ -279,9 +279,9 @@ During implementation, we faced several challenges:
    - Note: This approach only affects the flashcards components, not other Svelte components.
 
 3. **Svelte Integration**:
-   - Problem: Svelte dependency was initially external, causing import errors.
-   - Solution: Bundled Svelte into the UMD build to avoid external dependencies.
-   - Impact: Increased bundle size but eliminated external dependencies.
+   - Problem: Svelte dependency was initially external, requiring CDN loading which introduces external dependencies.
+   - Solution: Bundled Svelte into the UMD build to avoid external dependencies completely.
+   - Impact: Increased bundle size but eliminated CDN dependencies for better reliability and offline usage.
 
 4. **Keyboard Navigation**:
    - Problem: The ENTER keyboard shortcut only worked on the button element, not document-wide.

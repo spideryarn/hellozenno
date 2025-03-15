@@ -63,6 +63,7 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
 - **Environment Variables**: Set `FLASK_PORT` before running dev scripts (see `.env.local`)
 - **Module Loading Issues**: For components with loading issues, consider using the UMD pattern (see flashcards2 implementation)
 - **Fix the root cause** - if there is a problem, we should fix it, rather than applying a bandaid or just replacing with a fallback (e.g. to hard-coded HTML)
+- **Avoid CDN dependencies** - All JavaScript libraries should be bundled or stored locally in `/static/js/extern/` to prevent reliance on external services
 
 ## Creating New Svelte Components
 
@@ -287,3 +288,58 @@ mcp__browser-tools-mcp__runPerformanceAudit()
 ```
 
 This provides a direct way to see what's happening in the browser when developing components with AI assistance.
+
+## External Dependencies
+
+### Avoiding CDN Dependencies
+
+All external JavaScript dependencies should be either:
+1. Bundled into our application code
+2. Stored locally in `/static/js/extern/`
+
+This approach provides several benefits:
+- **Reliability**: No dependency on external services that may change or go down
+- **Performance**: Eliminates network requests to third-party domains
+- **Offline capability**: Application works without internet access
+- **Privacy**: Reduces tracking from third-party domains
+- **Security**: Full control over all loaded JavaScript
+
+### Implementation Approaches
+
+1. **Bundling with Dependencies**:
+   ```javascript
+   // In vite.config.js
+   export default defineConfig({
+     build: {
+       rollupOptions: {
+         // Do not externalize deps - bundle them instead
+         external: [],
+       }
+     }
+   });
+   ```
+
+2. **Local Files for Libraries**:
+   - Store library files in `/static/js/extern/`
+   - Reference with `{{ url_for('static', filename='js/extern/library.min.js') }}`
+
+3. **NPM Scripts for Downloading**:
+   - For libraries needed in both development and production, add scripts to download them on project setup
+   - Use version pinning to ensure consistency
+
+### Example: Svelte Integration
+For Svelte components, we bundle the Svelte runtime into our UMD build rather than loading it from a CDN. This is configured in the vite.config.js file:
+
+```javascript
+// In vite.config.js
+rollupOptions: {
+  // Do not externalize deps - bundle them instead
+  external: [],
+  output: {
+    // No global variables needed since we're not using CDN
+    globals: {}
+  }
+}
+```
+
+This approach ensures our Svelte components work reliably in all environments and don't depend on external CDN availability.
