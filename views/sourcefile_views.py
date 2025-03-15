@@ -214,9 +214,19 @@ def inspect_sourcefile_words(
             sourcefile_entry.sourcedir, sourcefile_entry.slug  # type: ignore
         )
 
-        # Get existing linked wordforms from database and convert to dicts
+        # Get existing linked wordforms from database and convert to dicts - use a join to prefetch related data
         wordforms_d = []
-        for sourcefile_wordform in sourcefile_entry.wordform_entries:  # type: ignore
+        wordform_query = (
+            SourcefileWordform.select(
+                SourcefileWordform, Wordform, Lemma
+            )
+            .join(Wordform)
+            .join(Lemma, on=(Wordform.lemma_entry == Lemma.id))
+            .where(SourcefileWordform.sourcefile == sourcefile_entry)
+            .order_by(SourcefileWordform.ordering)
+        )
+        
+        for sourcefile_wordform in wordform_query:
             wordform = sourcefile_wordform.wordform
             wordform_d = wordform.to_dict()
             # Add lemma information
@@ -226,13 +236,18 @@ def inspect_sourcefile_words(
             wordform_d["ordering"] = sourcefile_wordform.ordering
             wordforms_d.append(wordform_d)
 
-        # Get phrases from database
+        # Get phrases from database with a join
         phrases_d = []
-        for sourcefile_phrase in (
-            sourcefile_entry.phrase_entries.select()  # type: ignore
+        phrase_query = (
+            SourcefilePhrase.select(
+                SourcefilePhrase, Phrase
+            )
             .join(Phrase)
+            .where(SourcefilePhrase.sourcefile == sourcefile_entry)
             .order_by(SourcefilePhrase.ordering)
-        ):
+        )
+        
+        for sourcefile_phrase in phrase_query:
             phrase = sourcefile_phrase.phrase
             phrase_d = {
                 "canonical_form": phrase.canonical_form,
