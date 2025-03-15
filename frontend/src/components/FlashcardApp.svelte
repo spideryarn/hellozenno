@@ -7,7 +7,8 @@
   // Props
   export let sentence: SentenceData;
   export let targetLanguageCode: string;
-  export let targetLanguageName: string;
+  // This value is received from the parent but not used within the component itself
+  export const targetLanguageName = '';
   export let sourcefile: string | null = null;
   export let sourcedir: string | null = null;
 
