@@ -34,16 +34,16 @@ def create_app():
     # Set production flag based on environment
     app.config["IS_PRODUCTION"] = is_fly_cloud()
 
-    # Only enable Debug Toolbar in development
-    if not is_fly_cloud():
-        try:
-            from flask_debugtoolbar import DebugToolbarExtension
+    # # Only enable Debug Toolbar in development
+    # if not is_fly_cloud():
+    #     try:
+    #         from flask_debugtoolbar import DebugToolbarExtension
 
-            app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
-            toolbar = DebugToolbarExtension(app)
-            logger.info("Debug Toolbar initialized")
-        except ImportError:
-            logger.info("Debug Toolbar not available")
+    #         app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
+    #         toolbar = DebugToolbarExtension(app)
+    #         logger.info("Debug Toolbar initialized")
+    #     except ImportError:
+    #         logger.info("Debug Toolbar not available")
 
     # Initialize database
     from utils.db_connection import init_db
