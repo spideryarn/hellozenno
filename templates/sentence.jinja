@@ -1,6 +1,8 @@
 {% extends "base.jinja" %}
 {% from "base_svelte.jinja" import load_svelte_component %}
 
+{% set vite_entries = ['sentence'] %}
+
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
     » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>

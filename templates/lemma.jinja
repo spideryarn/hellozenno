@@ -2,7 +2,7 @@
 {% from "base_svelte.jinja" import load_svelte_component %}
 
 {# Specify the Vite entry points for components #}
-{% set vite_entries = ['minisentence-entry', 'miniwordform-entry'] %}
+{% set vite_entries = ['minisentence', 'miniwordform'] %}
 
 {% block title %}
 {{ lemma_metadata.lemma }} in {{ target_language_name }} (lemma) - Hello Zenno

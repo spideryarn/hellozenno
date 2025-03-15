@@ -110,10 +110,11 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
 When working with Svelte components, follow these best practices to ensure smooth integration and easier debugging:
 
 ### File Naming Convention
-- Name entry files to match exactly what you use in templates: `minilemma.ts` (not `minilemma-entry.ts`)
-- Make sure your vite_entries value matches: `{% set vite_entries = ['minilemma'] %}`
+- IMPORTANT: Name entry files WITHOUT the "-entry" suffix: `minilemma.ts` (not `minilemma-entry.ts`)
+- Make sure your vite_entries value matches the base name: `{% set vite_entries = ['minilemma'] %}`
+- In vite.config.js, define entries with the same base name: `'minilemma': resolve(__dirname, 'src/entries/minilemma.ts')`
 - Component naming should follow PascalCase: `MiniLemma.svelte`
-- Consistency between filename and import is critical
+- Consistency between filename, entry point name, and import is critical
 
 ### Component Development Workflow
 1. Start with a minimal working component before adding complexity
@@ -158,7 +159,12 @@ When working with Svelte components, follow these best practices to ensure smoot
 
 ### Common Issues and Solutions
 - **Component not rendering**: Verify correct entry file naming and vite_entries value
-- **Import errors**: Check that the Vite server is running on the correct port
+- **Import errors**: 
+  - Check that the Vite server is running on the correct port
+  - Ensure entry file names don't have the "-entry" suffix (file should be `minisentence.ts`, not `minisentence-entry.ts`)
+  - Verify that `vite_entries` in templates match the entry file names (without "-entry" suffix)
+  - Check vite.config.js to ensure the entries object uses the same key names as in templates
+  - After making changes to entry file names, restart the Vite development server
 - **Props not working**: Verify correct prop types and default values
 - **Styling issues**: Check for CSS conflicts with global styles
 - **Multiple instances**: Ensure unique component IDs when mounting multiple instances
