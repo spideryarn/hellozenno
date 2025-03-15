@@ -142,6 +142,7 @@ This is a quick search for a {{ target_language_name }} wordform typed directly 
    - For modern languages, use modern forms only
    - Missing accents are ok (e.g. "ανθρωπος" -> "άνθρωπος")
    - Case variations are ok (e.g. "ΚΑΛΟΣ" -> "καλός")
+   - The translations should reflect the INFLECTED FORM, not just the lemma, e.g. "προσγειώθηκαν" -> "they landed" rather than just "land"
    - For ambiguous cases, always prefer the interpretation that has a different lemma. For example:
      * "μόνο" -> lemma="μόνος" (adjective) not lemma="μόνο" (adverb)
      * "καλά" -> lemma="καλός" (adjective) not lemma="καλά" (adverb)
@@ -196,6 +197,16 @@ Example valid JSON responses:
     "part_of_speech": "noun",
     "translations": ["human", "person", "man"],
     "inflection_type": "masculine singular nominative",
+    "possible_misspellings": null
+}
+
+2b. For an inflected verb form:
+{
+    "wordform": "προσγειώθηκαν",
+    "lemma": "προσγειώνομαι",
+    "part_of_speech": "verb",
+    "translations": ["they landed", "they touched down"],
+    "inflection_type": "third-person plural passive aorist",
     "possible_misspellings": null
 }
 
