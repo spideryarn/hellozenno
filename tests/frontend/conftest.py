@@ -4,7 +4,7 @@ from flask import Flask
 from tests.backend.conftest import fixture_for_testing_db, MODELS
 from utils.db_connection import init_db
 
-FLASK_TEST_PORT = 3001
+FLASK_TEST_PORT = 3002  # Use a different port for testing
 
 
 @pytest.fixture(scope="session")
