@@ -61,6 +61,7 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
 - **TypeScript Errors**: Run `npm run check` in frontend directory
 - **Styling Conflicts**: Check `base.css` before adding new styles
 - **Environment Variables**: Set `FLASK_PORT` before running dev scripts (see `.env.local`)
+- **Fix the root cause** - if there is a problem, we should fix it, rather than applying a bandaid or just replacing with a fallback (e.g. to hard-coded HTML)
 
 ## Creating New Svelte Components
 
