@@ -62,7 +62,7 @@
     }
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    window.location.href = `/${targetLanguageCode}/flashcards2/random${queryString}`;
+    window.location.href = `/${targetLanguageCode}/flashcards/random${queryString}`;
   }
 
   // Play audio function
@@ -128,7 +128,7 @@
       <i class="ph-fill ph-filter"></i>
       Filtered by {state.sourceFilter.type === 'sourcedir' ? 'directory' : 'file'}: 
       <strong>{state.sourceFilter.slug}</strong>
-      <a href="/{targetLanguageCode}/flashcards2" class="clear-filter">
+      <a href="/{targetLanguageCode}/flashcards" class="clear-filter">
         <i class="ph-fill ph-x"></i>
       </a>
     </div>

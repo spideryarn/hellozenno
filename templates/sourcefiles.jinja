@@ -30,12 +30,7 @@
         <a href="{{ url_for('flashcard_views.flashcard_landing', language_code=target_language_code, sourcedir=sourcedir_slug) }}"
         class="button {% if not has_vocabulary %}disabled{% endif %}"
         {% if not has_vocabulary %}disabled title="No vocabulary found"{% endif %}>
-        Practice with Flashcards v1
-        </a>
-        <a href="{{ url_for('flashcard2_views.flashcard2_landing', language_code=target_language_code, sourcedir=sourcedir_slug) }}"
-        class="button {% if not has_vocabulary %}disabled{% endif %}"
-        {% if not has_vocabulary %}disabled title="No vocabulary found"{% endif %}>
-        Practice with Flashcards v2
+        Practice with Flashcards
         </a>
     </div>
 </div>

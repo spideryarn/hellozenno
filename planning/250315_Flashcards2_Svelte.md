@@ -1,5 +1,7 @@
 # Flashcards2: Svelte-Based Language Learning Flashcards
 
+N.B. This work was a success, and this doc is now out of date - we have finished this stage, and renamed flashcards2 to just flashcards, to replace the previous flashcards v1.
+
 ## Goal, Context
 
 Create a new Svelte-based flashcard system at `/<language_code>/flashcards2` that parallels the existing vanilla JS implementation, starting very simple, gradually adding in functionality, and enabling more complex functionality in the future. The current flashcards have a staged learning flow (audio → sentence → translation) that works well, but adding new features is difficult with the current architecture.

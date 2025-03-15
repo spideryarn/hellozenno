@@ -2,7 +2,7 @@
 {% set vite_entries = [] %}
 {% set svelte_umd_mode = True %}
 
-{% block title %}{{ target_language_name }} Flashcards 2.0 - Hello Zenno{% endblock %}
+{% block title %}{{ target_language_name }} Flashcards - Hello Zenno{% endblock %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -17,7 +17,7 @@
     » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug) }}">{{ sourcefile.sourcedir.path }}</a>
     » <a href="{{ url_for('sourcefile_views.inspect_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug, sourcefile_slug=sourcefile.slug) }}">{{ sourcefile.filename }}</a>
     {% endif %}
-    » <a href="{{ url_for('flashcard2_views.flashcard2_landing', language_code=target_language_code) }}">Flashcards 2.0</a>
+    » <a href="{{ url_for('flashcard_views.flashcard_landing', language_code=target_language_code) }}">Flashcards</a>
     » Sentence
 {% endblock breadcrumbs %}
 
