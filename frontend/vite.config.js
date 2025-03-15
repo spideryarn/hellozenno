@@ -24,9 +24,28 @@ const entries = {
     'flashcardapp': resolve(__dirname, 'src/entries/flashcardapp.ts'),
 };
 
+// Custom plugin to set correct MIME types
+function correctMimeTypes() {
+    return {
+        name: 'correct-mime-types',
+        configureServer(server) {
+            server.middlewares.use((req, res, next) => {
+                // Set correct MIME types for Svelte and TypeScript files
+                if (req.url.endsWith('.svelte')) {
+                    res.setHeader('Content-Type', 'application/javascript');
+                } else if (req.url.endsWith('.ts')) {
+                    res.setHeader('Content-Type', 'application/javascript');
+                }
+                next();
+            });
+        }
+    };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
+        correctMimeTypes(),
         svelte({
             // Enable TypeScript preprocessing
             preprocess: preprocess(),
@@ -63,7 +82,7 @@ export default defineConfig({
         cssCodeSplit: true,
         // Ensure source maps are generated for easier debugging
         sourcemap: true,
-        
+
         // Configure library mode for component building
         lib: {
             // Use a single entry point that exports all components
@@ -72,7 +91,7 @@ export default defineConfig({
             formats: ['es'],
             fileName: (format) => `js/hz-components.${format}.js`
         },
-        
+
         rollupOptions: {
             // Make sure to externalize deps that shouldn't be bundled
             external: ['svelte'],
@@ -98,7 +117,7 @@ export default defineConfig({
                 target: `http://localhost:${flaskPort}`,
                 changeOrigin: true,
             },
-        },
+        }
     },
 
     // Resolve paths

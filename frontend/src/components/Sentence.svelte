@@ -115,7 +115,7 @@
     {/if}
 
     <div class="main-content">
-      <div class="greek-text">
+      <div class="target-lang-text">
         <!-- Render the enhanced text with fallback -->
         {@html enhanced_sentence_text || '<p>No sentence text available</p>'}
       </div>
@@ -206,31 +206,31 @@
     margin-top: var(--spacing-8);
   }
 
-  .greek-text {
+  .target-lang-text {
     font-size: 1.5rem;
     line-height: 1.6;
     margin-bottom: var(--spacing-4);
   }
 
-  /* Style the paragraph inside greek-text directly */
-  .greek-text > p {
+  /* Style paragraphs inside target-lang-text */
+  .target-lang-text :global(p) {
     margin: 0;
     padding: 0;
   }
 
-  .greek-text :global(.word-link) {
+  .target-lang-text :global(.word-link) {
     color: var(--color-primary);
     text-decoration: none;
     margin: 0 var(--spacing-1);
   }
   
   /* Ensure consistent styling for any nested elements */
-  .greek-text :global(br) {
+  .target-lang-text :global(br) {
     display: block;
     content: "";
     margin-top: 0.5rem;
   }
-
+  
   .english-translation {
     font-size: 1.125rem;
     color: var(--color-text-muted);
