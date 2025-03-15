@@ -3,12 +3,10 @@
   {% if not config.IS_PRODUCTION %}
     {# Development mode - use Vite dev server #}
     <script type="module">
-      // Debug flags
+      // Debug flags and helper function
       const SVELTE_DEBUG = true;
       console.log('SVELTE DEV COMPONENT LOADING ATTEMPT');
-      const debugLog = (msg, ...args) => {
-        {# console.log(`[SVELTE DEBUG] ${msg}`, ...args); #}
-      };
+      const debugLog = SVELTE_DEBUG ? (msg, ...args) => console.log(`[SVELTE DEBUG] ${msg}`, ...args) : () => {};
       
       // Log initial attempt
       debugLog(`Starting mount for ${JSON.stringify({
@@ -22,19 +20,11 @@
       const importUrl = 'http://localhost:5173/src/entries/{{ component_name | lower }}.ts';
       debugLog("Import URL:", importUrl);
       
-      // Create a test fetch to see if Vite server is accessible
-      fetch(importUrl).then(
-        response => debugLog(`Vite server responded with status: ${response.status}`),
-        error => debugLog(`Vite server error: ${error.message}`)
-      );
-      
       try {
-        debugLog("Attempting dynamic import...");
-        
         // Dynamic import
         import(importUrl).then(
           module => {
-            debugLog("Module imported successfully:", module);
+            debugLog("Module imported successfully");
             
             if (!module.default) {
               throw new Error(`Module ${importUrl} does not have a default export`);
@@ -42,7 +32,6 @@
             
             // Find target element
             const targetElement = document.getElementById('{{ component_id if component_id else component_name | lower + "-component" }}');
-            debugLog("Target element:", targetElement);
             
             if (!targetElement) {
               throw new Error(`Target element #{{ component_id if component_id else component_name | lower + "-component" }} not found`);
@@ -50,49 +39,32 @@
             
             // Mount component
             const props = {{ props | tojson | safe }};
-            debugLog("Mounting with props:", props);
-            
             const component = module.default(targetElement, props);
-            debugLog("Component mounted successfully:", component);
-            
+            debugLog("Component mounted successfully");
           },
           error => {
-            debugLog("Import failed:", error);
             console.error(`Failed to import ${importUrl}:`, error);
           }
         );
       } catch (error) {
-        debugLog("Critical error in component loading:", error);
         console.error(`Error loading Svelte component {{ component_name }}:`, error);
       }
     </script>
   {% else %}
     {# Production mode - use built files #}
     <script type="module">
-      // Debug flags
-      const SVELTE_DEBUG = true;
-      {# const debugLog = (msg, ...args) => SVELTE_DEBUG && console.log(`[SVELTE DEBUG] ${msg}`, ...args); #}
-      
-      // Log initial attempt
-      debugLog(`Starting mount for ${JSON.stringify({
-        component: "{{ component_name }}",
-        mountPoint: "{{ component_id if component_id else component_name | lower + '-component' }}",
-        props: {{ props | tojson | safe }},
-        viteDev: false
-      })}`);
+      // Debug flags and helper function - no-op in production
+      const debugLog = () => {};
       
       try {
-        const importUrl = "{{ url_for('static', filename='build/js/' + component_name | lower + '-entry.js') }}";
-        debugLog("Import URL (production):", importUrl);
+        // Use the correct filename pattern that matches vite.config.js output configuration
+        const importUrl = "{{ url_for('static', filename='build/js/' + component_name | lower + '.js') }}";
         
         // Dynamic import
         import(importUrl).then(
           module => {
-            debugLog("Module imported successfully:", module);
-            
             // Find target element
             const targetElement = document.getElementById('{{ component_id if component_id else component_name | lower + "-component" }}');
-            debugLog("Target element:", targetElement);
             
             if (!targetElement) {
               throw new Error(`Target element #{{ component_id if component_id else component_name | lower + "-component" }} not found`);
@@ -100,18 +72,13 @@
             
             // Mount component
             const props = {{ props | tojson | safe }};
-            debugLog("Mounting with props:", props);
-            
             const component = module.default(targetElement, props);
-            debugLog("Component mounted successfully:", component);
           },
           error => {
-            debugLog("Import failed:", error);
             console.error(`Failed to import ${importUrl}:`, error);
           }
         );
       } catch (error) {
-        debugLog("Critical error in component loading:", error);
         console.error(`Error loading Svelte component {{ component_name }}:`, error);
       }
     </script>
