@@ -379,6 +379,7 @@ class Wordform(BaseModel):
         sourcedir=None,
         sourcefile=None,
         sort_by: str = "alpha",
+        include_junction_data: bool = False,
     ):
         """Get wordforms for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
 
@@ -387,6 +388,7 @@ class Wordform(BaseModel):
             sourcedir: Optional Sourcedir object or slug to filter by
             sourcefile: Optional Sourcefile object to filter by
             sort_by: Sorting method ("alpha", "date", or "commonality")
+            include_junction_data: Whether to include junction table data in the result for sourcefile queries
 
         Returns:
             If sourcefile is provided:
@@ -578,6 +580,7 @@ class Phrase(BaseModel):
         sourcedir=None,
         sourcefile=None,
         sort_by: str = "alpha",
+        include_junction_data: bool = False,
     ):
         """Get phrases for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
 
@@ -586,6 +589,7 @@ class Phrase(BaseModel):
             sourcedir: Optional Sourcedir object or slug to filter by
             sourcefile: Optional Sourcefile object to filter by
             sort_by: Sorting method ("alpha" or "date")
+            include_junction_data: Whether to include junction table data in the result for sourcefile queries
 
         Returns:
             If sourcefile is provided:
