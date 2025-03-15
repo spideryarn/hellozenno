@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import type { SentenceData, FlashcardState } from '../lib/types';
   import { advanceStage, previousStage, getButtonLabels } from '../lib/flashcard-utils';
+  import MiniLemma from './MiniLemma.svelte';
 
   // Props
   export let sentence: SentenceData;
@@ -25,6 +26,64 @@
   // Audio element reference
   let audioElement: HTMLAudioElement;
 
+  // State for lemma data
+  type LemmaData = {
+    lemma: string;
+    part_of_speech: string;
+    translations: string[];
+    isLoading: boolean;
+    error: string | null;
+  };
+  
+  let lemmasData: Record<string, LemmaData> = {};
+  
+  // Initialize lemmasData with empty values
+  if (sentence.lemmaWords) {
+    sentence.lemmaWords.forEach(lemma => {
+      lemmasData[lemma] = {
+        lemma,
+        part_of_speech: '',
+        translations: [],
+        isLoading: true,
+        error: null
+      };
+    });
+  }
+  
+  // Fetch lemma data for each lemma
+  async function fetchLemmaData(lemma: string) {
+    try {
+      // Add debug logs to trace the API call
+      console.log(`Fetching lemma data for ${lemma} with language code ${targetLanguageCode}`);
+      const apiUrl = `/api/${targetLanguageCode}/lemma/${lemma}/data`;
+      console.log(`API URL: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        console.error(`API error status: ${response.status}`);
+        throw new Error(`Failed to fetch lemma data for ${lemma}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Lemma data received:`, data);
+      
+      lemmasData[lemma] = {
+        lemma,
+        part_of_speech: data.part_of_speech || '',
+        translations: data.translations || [],
+        isLoading: false,
+        error: null
+      };
+    } catch (error) {
+      console.error('Error fetching lemma data:', error);
+      lemmasData[lemma] = {
+        ...lemmasData[lemma],
+        isLoading: false,
+        error: String(error)
+      };
+    }
+  }
+
   // Button labels based on current stage
   $: buttonLabels = getButtonLabels(state.stage);
 
@@ -47,6 +106,11 @@
   function handleRightClick() {
     if (!buttonLabels.rightDisabled) {
       state = advanceStage(state);
+      
+      // When advancing to stage 3, fetch lemma data for all words
+      if (state.stage === 3 && sentence.lemmaWords && sentence.lemmaWords.length > 0) {
+        sentence.lemmaWords.forEach(fetchLemmaData);
+      }
     }
   }
 
@@ -153,9 +217,22 @@
       <p class="translation-text">{sentence.translation}</p>
       
       {#if sentence.lemmaWords && sentence.lemmaWords.length > 0}
-        <p class="lemma-words">
-          Vocabulary: {sentence.lemmaWords.join(', ')}
-        </p>
+        <div class="words-section">
+          <h3>Vocabulary</h3>
+          <div class="words-list">
+            {#each sentence.lemmaWords as lemma}
+              <MiniLemma 
+                lemma={lemma}
+                partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
+                translations={lemmasData[lemma]?.translations || []}
+                href="/{targetLanguageCode}/lemma/{lemma}"
+              />
+              {#if lemmasData[lemma]?.isLoading}
+                <div class="loading-indicator">Loading lemma data...</div>
+              {/if}
+            {/each}
+          </div>
+        </div>
       {/if}
     {/if}
   </div>
@@ -235,11 +312,35 @@
     text-align: center;
   }
   
-  .lemma-words {
-    font-size: 1rem;
-    color: #94a3b8;
+  .words-section {
+    margin-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 1rem;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .words-section h3 {
+    font-size: 1.125rem;
+    color: #4b5563;
+    margin-bottom: 0.75rem;
     text-align: center;
+  }
+
+  .words-list {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .loading-indicator {
+    font-size: 0.75rem;
+    color: #94a3b8;
     font-style: italic;
+    margin-top: -0.25rem;
+    margin-bottom: 0.25rem;
+    text-align: center;
   }
   
   .flashcard-controls {
