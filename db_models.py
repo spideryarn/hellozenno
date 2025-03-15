@@ -190,13 +190,13 @@ class Lemma(BaseModel):
         sort_by: str = "alpha",
     ):
         """Get lemmas for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
-        
+
         Args:
             language_code: 2-letter language code (e.g. "el" for Greek)
             sourcedir: Optional Sourcedir object to filter by
             sourcefile: Optional Sourcefile object to filter by
             sort_by: Sorting method ("alpha", "date", or "commonality")
-            
+
         Returns:
             Optimized query of lemmas matching the criteria
         """
@@ -207,10 +207,12 @@ class Lemma(BaseModel):
                 cls.select(cls)
                 .distinct()
                 .join(Wordform, on=(Wordform.lemma_entry == cls.id))
-                .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
+                .join(
+                    SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)
+                )
                 .where(
-                    (cls.language_code == language_code) &
-                    (SourcefileWordform.sourcefile == sourcefile)
+                    (cls.language_code == language_code)
+                    & (SourcefileWordform.sourcefile == sourcefile)
                 )
             )
         elif sourcedir:
@@ -219,17 +221,19 @@ class Lemma(BaseModel):
                 cls.select(cls)
                 .distinct()
                 .join(Wordform, on=(Wordform.lemma_entry == cls.id))
-                .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
+                .join(
+                    SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)
+                )
                 .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
                 .where(
-                    (cls.language_code == language_code) &
-                    (Sourcefile.sourcedir == sourcedir)
+                    (cls.language_code == language_code)
+                    & (Sourcefile.sourcedir == sourcedir)
                 )
             )
         else:
             # No filter, get all lemmas for the language
             query = cls.select().where(cls.language_code == language_code)
-        
+
         # Apply sorting
         if sort_by == "date":
             query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
@@ -241,9 +245,8 @@ class Lemma(BaseModel):
         else:
             # Default alpha sorting
             query = query.order_by(fn.Lower(cls.lemma))
-        
+
         return query
-        
 
     def get_all_wordforms(self) -> set[str]:
         """Get a flat set of all known forms of this lemma."""
@@ -376,94 +379,53 @@ class Wordform(BaseModel):
         sourcedir=None,
         sourcefile=None,
         sort_by: str = "alpha",
-        include_junction_data: bool = False,
     ):
         """Get wordforms for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
 
         Args:
             language_code: 2-letter language code (e.g. "el" for Greek)
             sourcedir: Optional Sourcedir object or slug to filter by
-            sourcefile: Optional Sourcefile object or slug to filter by
+            sourcefile: Optional Sourcefile object to filter by
             sort_by: Sorting method ("alpha", "date", or "commonality")
-            include_junction_data: Whether to include junction table data in results
 
         Returns:
-            If include_junction_data is False:
-              Optimized query of wordforms matching the criteria
-            If include_junction_data is True:
+            If sourcefile is provided:
               List of dictionaries containing wordform data with centrality and ordering fields added
+            Otherwise:
+              Optimized query of wordforms matching the criteria
         """
         # Handle slug parameters for backwards compatibility
         sourcedir_slug = None
-        sourcefile_slug = None
-        
+
         # Check if parameters are objects or slugs
         if isinstance(sourcedir, str):
             sourcedir_slug = sourcedir
             sourcedir = None
-        if isinstance(sourcefile, str):
-            sourcefile_slug = sourcefile
-            sourcefile = None
-            
-        # If using slugs, need both for sourcefile_slug
-        if sourcefile_slug and not sourcedir_slug:
-            raise ValueError(
-                "sourcedir_slug is required when sourcefile_slug is provided"
-            )
 
         # Start with an optimized join query to get all related data
         if sourcefile:
             # Filter by specific sourcefile object and include junction data
-            if include_junction_data:
-                query = (
-                    cls.select(cls, Lemma, SourcefileWordform)
-                    .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))
-                    .switch(cls)
-                    .join(Lemma, on=(cls.lemma_entry == Lemma.id))
-                    .where(
-                        (cls.language_code == language_code) &
-                        (SourcefileWordform.sourcefile == sourcefile)
-                    )
-                    .order_by(SourcefileWordform.ordering)
-                )
-                
-                # Run query and build custom result with junction data
-                results = []
-                for result in query:
-                    # Add junction data directly to wordform dict to avoid N+1 queries
-                    wordform_d = result.to_dict()
-                    wordform_d["centrality"] = result.sourcefilewordform.centrality
-                    wordform_d["ordering"] = result.sourcefilewordform.ordering
-                    results.append(wordform_d)
-                return results
-            else:
-                # Regular query without junction data
-                query = (
-                    cls.select(cls, Lemma)
-                    .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))
-                    .switch(cls)
-                    .join(Lemma, on=(cls.lemma_entry == Lemma.id))
-                    .where(
-                        (cls.language_code == language_code) &
-                        (SourcefileWordform.sourcefile == sourcefile)
-                    )
-                    .order_by(SourcefileWordform.ordering)
-                )
-        elif sourcefile_slug:
-            # Filter by specific sourcefile slug
             query = (
-                cls.select(cls, Lemma)
+                cls.select(cls, Lemma, SourcefileWordform)
                 .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))
-                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
-                .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))
+                .switch(cls)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.language_code == language_code) &
-                    (Sourcedir.slug == sourcedir_slug) &
-                    (Sourcefile.slug == sourcefile_slug)
+                    (cls.language_code == language_code)
+                    & (SourcefileWordform.sourcefile == sourcefile)
                 )
                 .order_by(SourcefileWordform.ordering)
             )
+
+            # Run query and build custom result with junction data
+            results = []
+            for result in query:
+                # Add junction data directly to wordform dict to avoid N+1 queries
+                wordform_d = result.to_dict()
+                wordform_d["centrality"] = result.sourcefilewordform.centrality
+                wordform_d["ordering"] = result.sourcefilewordform.ordering
+                results.append(wordform_d)
+            return results
         elif sourcedir:
             # Filter by sourcedir object
             query = (
@@ -473,8 +435,8 @@ class Wordform(BaseModel):
                 .switch(cls)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.language_code == language_code) &
-                    (Sourcefile.sourcedir == sourcedir)
+                    (cls.language_code == language_code)
+                    & (Sourcefile.sourcedir == sourcedir)
                 )
                 .group_by(cls.id, Lemma.id)
             )
@@ -487,8 +449,8 @@ class Wordform(BaseModel):
                 .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.language_code == language_code) &
-                    (Sourcedir.slug == sourcedir_slug)
+                    (cls.language_code == language_code)
+                    & (Sourcedir.slug == sourcedir_slug)
                 )
                 .group_by(cls.id, Lemma.id)
             )
@@ -500,25 +462,20 @@ class Wordform(BaseModel):
                 .where(cls.language_code == language_code)
             )
 
-        # Apply sorting (if not already returning processed results)
-        if not (include_junction_data and sourcefile):
-            if sort_by == "date":
-                query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
-            elif sort_by == "commonality":
-                # For commonality sorting, order by lemma commonality (highest first)
-                # Then alphabetically for ties
-                query = query.order_by(
-                    fn.COALESCE(Lemma.commonality, 0).desc(), 
-                    fn.Lower(cls.wordform)
-                )
-            else:
-                # Default alpha sorting
-                query = query.order_by(fn.Lower(cls.wordform))
-            
-            return query
+        # Apply sorting
+        if sort_by == "date":
+            query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
+        elif sort_by == "commonality":
+            # For commonality sorting, order by lemma commonality (highest first)
+            # Then alphabetically for ties
+            query = query.order_by(
+                fn.COALESCE(Lemma.commonality, 0).desc(), fn.Lower(cls.wordform)
+            )
         else:
-            return results
+            # Default alpha sorting
+            query = query.order_by(fn.Lower(cls.wordform))
 
+        return query
 
 
 class Sentence(BaseModel):
@@ -620,81 +577,44 @@ class Phrase(BaseModel):
         language_code: str,
         sourcedir=None,
         sourcefile=None,
-        sourcedir_slug=None,
-        sourcefile_slug=None,
         sort_by: str = "alpha",
-        include_junction_data: bool = False
     ):
         """Get phrases for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
 
         Args:
             language_code: 2-letter language code (e.g. "el" for Greek)
-            sourcedir: Optional Sourcedir object to filter by
+            sourcedir: Optional Sourcedir object or slug to filter by
             sourcefile: Optional Sourcefile object to filter by
-            sourcedir_slug: Optional slug of sourcedir to filter by (backwards compatibility)
-            sourcefile_slug: Optional slug of sourcefile to filter by (backwards compatibility)
             sort_by: Sorting method ("alpha" or "date")
-            include_junction_data: Whether to include junction table data in results
 
         Returns:
-            If include_junction_data is False:
-              Optimized query of phrases matching the criteria
-            If include_junction_data is True and sourcefile is provided:
+            If sourcefile is provided:
               List of phrase dictionaries with centrality and ordering fields added
+            Otherwise:
+              Optimized query of phrases matching the criteria
         """
-        # Validate parameters for slug-based filtering
-        if sourcefile_slug and not sourcedir_slug:
-            raise ValueError("sourcedir_slug is required when sourcefile_slug is provided")
-
         # Start with an optimized join query to get all related data
         if sourcefile:
-            # Filter by specific sourcefile object
-            if include_junction_data:
-                # Include junction data and return processed results
-                query = (
-                    cls.select(cls, SourcefilePhrase)
-                    .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
-                    .where(
-                        (cls.language_code == language_code) &
-                        (SourcefilePhrase.sourcefile == sourcefile)
-                    )
-                    .order_by(SourcefilePhrase.ordering)
-                )
-                
-                # Process results to include junction data
-                results = []
-                for result in query:
-                    phrase_d = result.to_dict()
-                    # Add junction data directly to phrase dictionary
-                    phrase_d["centrality"] = result.sourcefilephrase.centrality
-                    phrase_d["ordering"] = result.sourcefilephrase.ordering
-                    results.append(phrase_d)
-                return results
-            else:
-                # Regular query without junction data
-                query = (
-                    cls.select(cls)
-                    .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
-                    .where(
-                        (cls.language_code == language_code) &
-                        (SourcefilePhrase.sourcefile == sourcefile)
-                    )
-                    .order_by(SourcefilePhrase.ordering)
-                )
-        elif sourcefile_slug:
-            # Filter by specific sourcefile using slugs
+            # Filter by specific sourcefile object and include junction data
             query = (
                 cls.select(cls, SourcefilePhrase)
                 .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
-                .join(Sourcefile, on=(SourcefilePhrase.sourcefile == Sourcefile.id))
-                .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))
                 .where(
-                    (cls.language_code == language_code) &
-                    (Sourcedir.slug == sourcedir_slug) &
-                    (Sourcefile.slug == sourcefile_slug)
+                    (cls.language_code == language_code)
+                    & (SourcefilePhrase.sourcefile == sourcefile)
                 )
                 .order_by(SourcefilePhrase.ordering)
             )
+
+            # Process results to include junction data
+            results = []
+            for result in query:
+                phrase_d = result.to_dict()
+                # Add junction data directly to phrase dictionary
+                phrase_d["centrality"] = result.sourcefilephrase.centrality
+                phrase_d["ordering"] = result.sourcefilephrase.ordering
+                results.append(phrase_d)
+            return results
         elif sourcedir:
             # Filter by sourcedir object
             query = (
@@ -702,21 +622,8 @@ class Phrase(BaseModel):
                 .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
                 .join(Sourcefile, on=(SourcefilePhrase.sourcefile == Sourcefile.id))
                 .where(
-                    (cls.language_code == language_code) &
-                    (Sourcefile.sourcedir == sourcedir)
-                )
-                .group_by(cls.id)
-            )
-        elif sourcedir_slug:
-            # Filter by sourcedir using slug
-            query = (
-                cls.select(cls)
-                .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
-                .join(Sourcefile, on=(SourcefilePhrase.sourcefile == Sourcefile.id))
-                .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))
-                .where(
-                    (cls.language_code == language_code) &
-                    (Sourcedir.slug == sourcedir_slug)
+                    (cls.language_code == language_code)
+                    & (Sourcefile.sourcedir == sourcedir)
                 )
                 .group_by(cls.id)
             )
@@ -724,15 +631,13 @@ class Phrase(BaseModel):
             # No filter, get all phrases for the language
             query = cls.select().where(cls.language_code == language_code)
 
-        # Apply sorting (if not already returning processed results)
-        if not (include_junction_data and sourcefile):
-            if sort_by == "date":
-                query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
-            else:
-                query = query.order_by(cls.canonical_form)
+        # Apply sorting
+        if sort_by == "date":
+            query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
+        else:
+            query = query.order_by(cls.canonical_form)
 
         return query
-
 
 
 class LemmaExampleSentence(BaseModel):
