@@ -71,7 +71,11 @@
       audioElement.currentTime = 0;
       audioElement.play().catch(error => {
         console.error("Error playing audio:", error);
-        state = { ...state, error: "Error playing audio. Try again." };
+        // More informative error message with instructions
+        state = { 
+          ...state, 
+          error: "Audio couldn't autoplay. Please use the Play Audio button to listen." 
+        };
       });
     }
   }
@@ -98,11 +102,8 @@
 
   // Initialize the component
   onMount(() => {
-    // Set up audio element
-    audioElement = new Audio(sentence.audioUrl);
-    
-    // Play audio automatically when component mounts
-    playAudio();
+    // Audio element is now defined in the HTML with autoplay attribute
+    // No need to create it programmatically
     
     // Add keyboard event listener
     document.addEventListener('keydown', handleKeydown);
@@ -122,11 +123,12 @@
   {/if}
   
   <div class="flashcard-content">
-    <!-- Audio element (hidden) -->
+    <!-- Audio element (hidden) with autoplay attribute similar to v1 -->
     <audio 
       src={sentence.audioUrl} 
       bind:this={audioElement} 
       preload="auto"
+      autoplay
     ></audio>
     
     <!-- Stage 2 & 3: Sentence -->
