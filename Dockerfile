@@ -4,6 +4,7 @@ WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/opt/venv/bin:$PATH"
 
+# Install ffmpeg in a more optimized way
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         wget \
@@ -19,10 +20,24 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     python -m venv /opt/venv
 
+# Copy only necessary files for installing dependencies
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt && \
+    pip cache purge
 
-COPY . .
+# Copy application files with explicit paths to avoid unnecessary files
+COPY app.py config.py db_models.py prompt_templates.py ./
+COPY utils/ ./utils/
+COPY views/ ./views/
+COPY migrations/ ./migrations/
+COPY templates/ ./templates/
+COPY static/ ./static/
+COPY gjdutils/ ./gjdutils/
+COPY frontend/src/ ./frontend/src/
+COPY frontend/package.json frontend/svelte.config.js frontend/vite.config.js ./frontend/
+
+# Create empty directory required by the application
+RUN mkdir -p logs
 
 ENV PORT=8080
 
@@ -31,7 +46,6 @@ ENV PORT=8080
 # - 4 threads per worker (reduced from 8 to be more conservative with memory)
 # - 30s timeout (good for language processing tasks)
 # - Access logging for monitoring
-# (this is all according to Claude.ai)
 CMD exec gunicorn \
     --bind :$PORT \
     --workers 2 \

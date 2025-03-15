@@ -21,7 +21,7 @@ python-slugify
 psycopg2-binary==2.9.9
 peewee-migrate>=1.12.2
 python-dotenv>=1.0.0  # For environment variable management
-spacy>=3.8.0  # For NLP processing
+# spacy>=3.8.0  # For NLP processing - not actually used in the codebase
 ujson>=5.10.0  # For JSON handling
 yt-dlp>=2023.12.30  # For YouTube audio downloads
 flask-cors>=4.0.0  # For cross-origin API access
