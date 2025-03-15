@@ -28,6 +28,8 @@ Translate the following English text to {{ target_language_name }}. Only output 
 extract_tricky_wordforms = """
 I'm learning {{ target_language_name }}{% if language_level %}, at about {{ language_level }} level{% endif %}. Please identify a comprehensive list of difficult/uncommon wordforms (but not phrases) from this text that will help me to understand it.
 
+IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause URL routing issues.
+
 Return as JSON in the following schema:
 
 {
@@ -66,6 +68,8 @@ Only output the valid JSON, with no other commentary.
 
 metadata_for_lemma = """
 We're building a rich, machine-readable dictionary of {{ target_language_name }} for English learners. Provide only the JSON output with no commentary and no other text. The JSON schema should be as follows.
+
+IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause URL routing issues.
 
 {{ target_language_name }} lemma = {{ lemma }}
 
@@ -168,6 +172,7 @@ Notes:
 - For lemmas and valid wordforms, possible_misspellings should be None
 - Raise an error if the input is empty or invalid
 - For modern languages, only use modern forms, not ancient/archaic forms
+- IMPORTANT: Never include slashes (/) in lemmas or wordforms as they cause URL routing issues
 - Format the JSON response carefully to ensure it is valid
 - Make sure all strings in lists are properly quoted
 - Do not include any trailing commas in lists or objects
