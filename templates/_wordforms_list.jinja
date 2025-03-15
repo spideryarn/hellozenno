@@ -1,25 +1,19 @@
 {% if wordforms_d %}
-<div class="wordforms-list">
-    {% for wordform in wordforms_d|sort(attribute='ordering') %}
-        {{ load_svelte_component('MiniWordform', {
-            'wordform': wordform.wordform,
-            'translation': wordform.translations[0] if wordform.translations else None,
-            'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=wordform.wordform)
-        }, component_id='miniwordform-component-' ~ loop.index) }}
-    {% endfor %}
-</div>
+{% set wordforms_list = [] %}
+{% for wordform in wordforms_d %}
+    {% set wordform_obj = {
+        'wordform': wordform.wordform,
+        'translation': wordform.translations[0] if wordform.translations else None,
+        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=wordform.wordform),
+        'ordering': wordform.ordering if wordform is defined and 'ordering' in wordform else loop.index
+    } %}
+    {% set _ = wordforms_list.append(wordform_obj) %}
+{% endfor %}
+
+{{ load_svelte_component('MiniWordformList', {
+    'wordforms': wordforms_list,
+    'emptyMessage': 'No words found in this source file'
+}, component_id='miniwordformlist-component') }}
 {% else %}
 <p class="no-entries"><em>No words found in this source file</em></p>
 {% endif %}
-
-<style>
-    .wordforms-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    .no-entries {
-        color: #666;
-        font-style: italic;
-    }
-</style>

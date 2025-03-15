@@ -16,6 +16,7 @@ const entries = {
     'minisentence': resolve(__dirname, 'src/entries/minisentence.ts'),
     'miniwordform': resolve(__dirname, 'src/entries/miniwordform.ts'),
     'minilemma': resolve(__dirname, 'src/entries/minilemma.ts'),
+    'miniwordformlist': resolve(__dirname, 'src/entries/miniwordformlist.ts'),
 };
 
 // https://vitejs.dev/config/

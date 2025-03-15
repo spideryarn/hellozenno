@@ -2,7 +2,7 @@
 {% from "base_svelte.jinja" import load_svelte_component %}
 
 {# Specify the Vite entry points for components #}
-{% set vite_entries = ['minisentence', 'miniwordform'] %}
+{% set vite_entries = ['minisentence', 'miniwordform', 'miniwordformlist'] %}
 
 {% block title %}
 {{ lemma_metadata.lemma }} in {{ target_language_name }} (lemma) - Hello Zenno
@@ -80,66 +80,80 @@
         <div class="related_words_phrases_idioms">
             {% if lemma_metadata.related_words_phrases_idioms %}
             <h2>Related Words, Phrases & Idioms</h2>
-            <ul>
-                {% for related in lemma_metadata.related_words_phrases_idioms %}
-                <li>
-                    {{ load_svelte_component('MiniWordform', {
-                        'wordform': related.lemma,
-                        'translation': related.translation,
-                        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=related.lemma)
-                    }, component_id='miniwordform-related-' ~ loop.index) }}
-                </li>
-                {% endfor %}
-            </ul>
+            {% set related_words_list = [] %}
+            {% for related in lemma_metadata.related_words_phrases_idioms %}
+                {% set related_obj = {
+                    'wordform': related.lemma,
+                    'translation': related.translation,
+                    'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=related.lemma)
+                } %}
+                {% set _ = related_words_list.append(related_obj) %}
+            {% endfor %}
+            
+            {{ load_svelte_component('MiniWordformList', {
+                'wordforms': related_words_list,
+                'emptyMessage': 'No related words available'
+            }, component_id='miniwordformlist-related-words') }}
             {% endif %}
         </div>
         
         <div class="synonyms">
             {% if lemma_metadata.synonyms %}
             <h2>Synonyms</h2>
-            <ul>
-                {% for synonym in lemma_metadata.synonyms %}
-                <li>
-                    {{ load_svelte_component('MiniWordform', {
-                        'wordform': synonym.lemma,
-                        'translation': synonym.translation,
-                        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=synonym.lemma)
-                    }, component_id='miniwordform-synonym-' ~ loop.index) }}
-                </li>
-                {% endfor %}
-            </ul>
+            {% set synonyms_list = [] %}
+            {% for synonym in lemma_metadata.synonyms %}
+                {% set synonym_obj = {
+                    'wordform': synonym.lemma,
+                    'translation': synonym.translation,
+                    'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=synonym.lemma)
+                } %}
+                {% set _ = synonyms_list.append(synonym_obj) %}
+            {% endfor %}
+            
+            {{ load_svelte_component('MiniWordformList', {
+                'wordforms': synonyms_list,
+                'emptyMessage': 'No synonyms available'
+            }, component_id='miniwordformlist-synonyms') }}
             {% endif %}
         </div>
         
         <div class="antonyms">
             {% if lemma_metadata.antonyms %}
             <h2>Antonyms</h2>
-            <ul>
-                {% for antonym in lemma_metadata.antonyms %}
-                <li>
-                    {{ load_svelte_component('MiniWordform', {
-                        'wordform': antonym.lemma,
-                        'translation': antonym.translation,
-                        'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=antonym.lemma)
-                    }, component_id='miniwordform-antonym-' ~ loop.index) }}
-                </li>
-                {% endfor %}
-            </ul>
+            {% set antonyms_list = [] %}
+            {% for antonym in lemma_metadata.antonyms %}
+                {% set antonym_obj = {
+                    'wordform': antonym.lemma,
+                    'translation': antonym.translation,
+                    'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=antonym.lemma)
+                } %}
+                {% set _ = antonyms_list.append(antonym_obj) %}
+            {% endfor %}
+            
+            {{ load_svelte_component('MiniWordformList', {
+                'wordforms': antonyms_list,
+                'emptyMessage': 'No antonyms available'
+            }, component_id='miniwordformlist-antonyms') }}
             {% endif %}
         </div>
         
         <div class="example_wordforms">
             {% if lemma_metadata.example_wordforms %}
             <h2>Example Wordforms</h2>
-            <div class="wordforms-list">
-                {% for form in lemma_metadata.example_wordforms %}
-                {{ load_svelte_component('MiniWordform', {
+            {% set example_forms_list = [] %}
+            {% for form in lemma_metadata.example_wordforms %}
+                {% set form_obj = {
                     'wordform': form,
                     'translation': lemma_metadata.translations[0] if lemma_metadata.translations else None,
                     'href': url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=form)
-                }, component_id='miniwordform-component-' ~ loop.index) }}
-                {% endfor %}
-            </div>
+                } %}
+                {% set _ = example_forms_list.append(form_obj) %}
+            {% endfor %}
+            
+            {{ load_svelte_component('MiniWordformList', {
+                'wordforms': example_forms_list,
+                'emptyMessage': 'No example wordforms available'
+            }, component_id='miniwordformlist-example-wordforms') }}
             {% endif %}
         </div>
         
