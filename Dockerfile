@@ -26,7 +26,7 @@ RUN pip install -r requirements.txt && \
     pip cache purge
 
 # Copy application files with explicit paths to avoid unnecessary files
-COPY app.py config.py db_models.py prompt_templates.py ./
+COPY app.py config.py db_models.py prompt_templates.py .env.example ./
 COPY utils/ ./utils/
 COPY views/ ./views/
 COPY migrations/ ./migrations/
