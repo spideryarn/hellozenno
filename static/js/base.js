@@ -65,83 +65,72 @@ function showModal(options) {
 
 // Initialize Tippy.js for all word links
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded - checking for Tippy.js');
+    // Initialize Tippy.js for all word links
+    tippy('.word-link', {
+        content: 'Loading...',
+        allowHTML: true,
+        theme: 'light',
+        placement: 'bottom',
+        touch: true,
+        touchHold: true,
+        interactive: true,
+        appendTo: document.body,
+        maxWidth: 300,
+        delay: [200, 0],
+        onShow(instance) {
+            // Hide all other tooltips when showing a new one
+            document.querySelectorAll('[data-tippy-root]').forEach(tooltip => {
+                const tippyInstance = tooltip._tippy;
+                if (tippyInstance && tippyInstance !== instance) {
+                    tippyInstance.hide();
+                }
+            });
 
-    // Check if Tippy.js is loaded
-    if (typeof tippy === 'undefined') {
-        console.error('Tippy.js is not loaded! This will cause errors.');
-        // Continue with other initialization that doesn't depend on tippy
-    } else {
-        console.log('Tippy.js is loaded, initializing tooltips');
-        // Initialize Tippy.js for all word links
-        tippy('.word-link', {
-            content: 'Loading...',
-            allowHTML: true,
-            theme: 'light',
-            placement: 'bottom',
-            touch: true,
-            touchHold: true,
-            interactive: true,
-            appendTo: document.body,
-            maxWidth: 300,
-            delay: [200, 0],
-            onShow(instance) {
-                // Hide all other tooltips when showing a new one
-                document.querySelectorAll('[data-tippy-root]').forEach(tooltip => {
-                    const tippyInstance = tooltip._tippy;
-                    if (tippyInstance && tippyInstance !== instance) {
-                        tippyInstance.hide();
+            // Get the word from the link text content instead of URL
+            const link = instance.reference;
+            const word = link.textContent.trim();
+            const url = new URL(link.href);
+            const pathParts = url.pathname.split('/');
+            const langCode = pathParts[1];
+
+            console.log(`Fetching preview for word: "${word}" in language: ${langCode}`);
+
+            // Fetch preview data from API
+            fetch(`/api/word-preview/${langCode}/${encodeURIComponent(word)}`)
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error(`API request failed: ${r.status}`);
                     }
+                    return r.json();
+                })
+                .then(data => {
+                    console.log(`Preview data for "${word}":`, data);
+                    instance.setContent(`
+                        <h4>${data.lemma}</h4>
+                        ${data.translation ? `<p class="translation">Translation: ${data.translation}</p>` : ''}
+                        ${data.etymology ? `<p class="etymology">Etymology: ${data.etymology}</p>` : ''}
+                    `);
+                })
+                .catch(error => {
+                    console.error(`Error fetching preview for "${word}":`, error);
+                    instance.setContent('Error loading preview');
                 });
+        }
+    });
 
-                // Get the word from the link text content instead of URL
-                const link = instance.reference;
-                const word = link.textContent.trim();
-                const url = new URL(link.href);
-                const pathParts = url.pathname.split('/');
-                const langCode = pathParts[1];
-
-                console.log(`Fetching preview for word: "${word}" in language: ${langCode}`);
-
-                // Fetch preview data from API
-                fetch(`/api/word-preview/${langCode}/${encodeURIComponent(word)}`)
-                    .then(r => {
-                        if (!r.ok) {
-                            throw new Error(`API request failed: ${r.status}`);
-                        }
-                        return r.json();
-                    })
-                    .then(data => {
-                        console.log(`Preview data for "${word}":`, data);
-                        instance.setContent(`
-                            <h4>${data.lemma}</h4>
-                            ${data.translation ? `<p class="translation">Translation: ${data.translation}</p>` : ''}
-                            ${data.etymology ? `<p class="etymology">Etymology: ${data.etymology}</p>` : ''}
-                        `);
-                    })
-                    .catch(error => {
-                        console.error(`Error fetching preview for "${word}":`, error);
-                        instance.setContent('Error loading preview');
-                    });
-            }
-        });
-
-        // Initialize Tippy.js for sourcefile icons
-        tippy('.sourcefile-icon', {
-            theme: 'light',
-            placement: 'right',
-            touch: true,
-            touchHold: true,
-            delay: [200, 0],
-            allowHTML: true,
-            content(reference) {
-                const content = reference.getAttribute('data-tippy-content');
-                return content.replace(/\n/g, '<br>');
-            }
-        });
-    }
-
-    console.log('DOM initialization complete');
+    // Initialize Tippy.js for sourcefile icons
+    tippy('.sourcefile-icon', {
+        theme: 'light',
+        placement: 'right',
+        touch: true,
+        touchHold: true,
+        delay: [200, 0],
+        allowHTML: true,
+        content(reference) {
+            const content = reference.getAttribute('data-tippy-content');
+            return content.replace(/\n/g, '<br>');
+        }
+    });
 });
 
 // Audio playback controls

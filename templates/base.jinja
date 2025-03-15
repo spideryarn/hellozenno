@@ -14,10 +14,11 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
-    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light.css">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Use local files only -->
+    <script src="{{ url_for('static', filename='js/extern/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extern/tippy-bundle.umd.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/extern/light.css') }}">
+    <script src="{{ url_for('static', filename='js/extern/phosphor.js') }}"></script>
     <script>
       window.addEventListener('DOMContentLoaded', () => {
         console.log('DOM Loaded, Tippy available:', !!window.tippy);
