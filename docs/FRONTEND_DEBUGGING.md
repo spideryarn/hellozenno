@@ -29,5 +29,5 @@ cursor-tools browser extract "Get all error messages" --url="http://localhost:30
 
 ## Additional Resources
 
-- See `.cursorrules` for complete cursor-tools documentation
+- See `.cursor/rules/cursor-tools.mdc` for complete cursor-tools documentation, which uses Stagehand to automate and inspect the browser
 - See `docs/FRONTEND_INFRASTRUCTURE.md` for details on our frontend architecture
