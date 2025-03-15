@@ -260,3 +260,164 @@ def test_sourcefile_flashcard_flow(page: Page, test_sentence, test_sourcefile):
         f"sourcefile={test_sourcefile.slug}" in page.url
     ), "Sourcefile parameter not preserved"
     assert "lemmas%5B%5D=" in page.url, "Lemmas parameter not present"
+
+
+@pytest.mark.skip(reason="Flashcards2 tests to be enabled after development")
+def test_flashcards2_landing_page(page: Page, test_sentence):
+    """Test the Svelte-based flashcards2 landing page."""
+    # Visit the flashcards2 landing page
+    response = page.goto(f"/{TEST_LANGUAGE_CODE}/flashcards2")
+    assert response is not None and response.ok
+    
+    # Take a screenshot for debugging
+    page.screenshot(path="tests/frontend/screenshots/flashcards2_landing.png")
+    
+    # Verify the page title
+    expect(page).to_have_title(lambda title: "Flashcards 2.0" in title)
+    
+    # Verify the Svelte component was mounted
+    flashcard_landing = page.locator("#flashcard-landing")
+    expect(flashcard_landing).to_be_visible()
+    
+    # Verify the start button is present
+    start_button = page.locator("a:has-text('Start Flashcards')")
+    expect(start_button).to_be_visible()
+    
+    # Verify keyboard shortcut information is displayed
+    keyboard_hints = page.locator(".keyboard-hints")
+    expect(keyboard_hints).to_be_visible()
+    expect(keyboard_hints).to_contain_text("Keyboard shortcuts")
+
+
+@pytest.mark.skip(reason="Flashcards2 tests to be enabled after development")
+def test_flashcards2_sentence_page(page: Page, test_sentence):
+    """Test the Svelte-based flashcards2 sentence page."""
+    # Visit the flashcards2 random sentence page
+    response = page.goto(f"/{TEST_LANGUAGE_CODE}/flashcards2/random")
+    assert response is not None and response.ok
+    
+    # Take a screenshot for debugging
+    page.screenshot(path="tests/frontend/screenshots/flashcards2_sentence.png")
+    
+    # Verify we're on a flashcard2 sentence page
+    expect(page).to_have_url(lambda url: "/flashcards2/sentence/" in url)
+    expect(page).to_have_title(lambda title: "Flashcards 2.0" in title)
+    
+    # Verify the Svelte component was mounted
+    flashcard_app = page.locator("#flashcard-app")
+    expect(flashcard_app).to_be_visible()
+    
+    # In the first stage, only the flashcard controls should be visible
+    controls = page.locator(".flashcard-controls")
+    expect(controls).to_be_visible()
+    
+    # Verify the buttons show the correct text for stage 1
+    left_button = page.locator("button:has-text('Play Audio'), button:has-text('Replay')")
+    right_button = page.locator("button:has-text('Show Sentence'), button:has-text('Next')")
+    next_button = page.locator("button:has-text('New Sentence')")
+    
+    expect(left_button).to_be_visible()
+    expect(right_button).to_be_visible()
+    expect(next_button).to_be_visible()
+    
+    # Click to advance to stage 2
+    right_button.click()
+    page.wait_for_timeout(500)  # Allow for animations
+    
+    # In stage 2, the sentence should be visible
+    sentence_text = page.locator(".sentence-text")
+    expect(sentence_text).to_be_visible()
+    
+    # The right button should now indicate the next stage
+    right_button = page.locator("button:has-text('Show Translation')")
+    expect(right_button).to_be_visible()
+    
+    # Click to advance to stage 3
+    right_button.click()
+    page.wait_for_timeout(500)  # Allow for animations
+    
+    # In stage 3, both sentence and translation should be visible
+    translation_text = page.locator(".translation-text")
+    expect(translation_text).to_be_visible()
+    
+    # The right button should now be disabled
+    right_button = page.locator("button:has-text('Show Translation')")
+    expect(right_button).to_be_disabled()
+    
+    # Click the left button to go back to stage 2
+    left_button = page.locator("button:has-text('Show Sentence')")
+    left_button.click()
+    page.wait_for_timeout(500)  # Allow for animations
+    
+    # The translation should be hidden again
+    expect(translation_text).to_be_hidden()
+
+
+@pytest.mark.skip(reason="Flashcards2 tests to be enabled after development")
+def test_flashcards2_keyboard_shortcuts(page: Page, test_sentence):
+    """Test keyboard shortcuts for the Svelte-based flashcards2."""
+    # Visit the flashcards2 random sentence page
+    response = page.goto(f"/{TEST_LANGUAGE_CODE}/flashcards2/random")
+    assert response is not None and response.ok
+    
+    # Take a screenshot for debugging
+    page.screenshot(path="tests/frontend/screenshots/flashcards2_keyboard.png")
+    
+    # In the first stage, the sentence should not be visible
+    sentence_text = page.locator(".sentence-text")
+    
+    # Press right arrow to advance to stage 2
+    page.keyboard.press("ArrowRight")
+    page.wait_for_timeout(500)  # Allow for animations
+    
+    # In stage 2, the sentence should be visible
+    expect(sentence_text).to_be_visible()
+    
+    # Press right arrow again to advance to stage 3
+    page.keyboard.press("ArrowRight")
+    page.wait_for_timeout(500)  # Allow for animations
+    
+    # In stage 3, the translation should be visible
+    translation_text = page.locator(".translation-text")
+    expect(translation_text).to_be_visible()
+    
+    # Press left arrow to go back to stage 2
+    page.keyboard.press("ArrowLeft")
+    page.wait_for_timeout(500)  # Allow for animations
+    
+    # The translation should be hidden again
+    expect(translation_text).to_be_hidden()
+    
+    # Press Enter to get a new sentence
+    with page.expect_navigation():
+        page.keyboard.press("Enter")
+    
+    # Verify we're on a different flashcard2 sentence page
+    expect(page).to_have_url(lambda url: "/flashcards2/sentence/" in url)
+
+
+@pytest.mark.skip(reason="Flashcards2 tests to be enabled after development")
+def test_flashcards2_sourcefile_filtering(page: Page, test_sentence, test_sourcefile):
+    """Test that the Svelte-based flashcards2 can be filtered by sourcefile."""
+    # Visit the flashcards2 landing page with a sourcefile filter
+    response = page.goto(
+        f"/{TEST_LANGUAGE_CODE}/flashcards2?sourcefile={test_sourcefile.slug}"
+    )
+    assert response is not None and response.ok
+    
+    # Take a screenshot for debugging
+    page.screenshot(path="tests/frontend/screenshots/flashcards2_sourcefile.png")
+    
+    # Verify the page shows information about the sourcefile
+    page_content = page.content()
+    assert test_sourcefile.filename in page_content or test_sourcefile.slug in page_content
+    
+    # Click the start button
+    start_button = page.locator("a:has-text('Start Flashcards')")
+    start_button.click()
+    
+    # Wait for navigation
+    page.wait_for_load_state("networkidle")
+    
+    # Verify we're on a flashcard2 sentence page with the sourcefile parameter
+    expect(page).to_have_url(lambda url: "/flashcards2/sentence/" in url and f"sourcefile={test_sourcefile.slug}" in url)

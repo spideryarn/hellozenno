@@ -83,6 +83,11 @@
         
         <!-- Load base.js at the end to ensure all other scripts are loaded first -->
         <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
+
+        {% if svelte_umd_mode is defined and svelte_umd_mode %}
+        <!-- Svelte is packaged within the UMD bundle so no need to load it separately -->
+        <script src="{{ url_for('static', filename='build/js/hz-components.umd.js') }}"></script>
+        {% endif %}
     {% endblock late_script_imports %}
 
     <!-- Reusable Modal Dialog -->

@@ -10,6 +10,8 @@ import MiniWordform from '../components/MiniWordform.svelte';
 import MiniWordformList from '../components/MiniWordformList.svelte';
 import MiniPhrase from '../components/MiniPhrase.svelte';
 import Sentence from '../components/Sentence.svelte';
+import FlashcardApp from '../components/FlashcardApp.svelte';
+import FlashcardLanding from '../components/FlashcardLanding.svelte';
 // Add other components as needed
 
 // Export all component classes
@@ -19,7 +21,9 @@ export {
   MiniWordform,
   MiniWordformList,
   MiniPhrase,
-  Sentence
+  Sentence,
+  FlashcardApp,
+  FlashcardLanding
 };
 
 // Create a component registry with factory functions
@@ -30,6 +34,8 @@ const components = {
   miniwordformlist: (target: HTMLElement, props: any) => new MiniWordformList({ target, props }),
   miniphrase: (target: HTMLElement, props: any) => new MiniPhrase({ target, props }),
   sentence: (target: HTMLElement, props: any) => new Sentence({ target, props }),
+  flashcardapp: (target: HTMLElement, props: any) => new FlashcardApp({ target, props }),
+  flashcardlanding: (target: HTMLElement, props: any) => new FlashcardLanding({ target, props })
 };
 
 // Export default component registry

@@ -22,6 +22,7 @@ const entries = {
     'miniwordformlist': resolve(__dirname, 'src/entries/miniwordformlist.ts'),
     'miniphrase': resolve(__dirname, 'src/entries/miniphrase.ts'),
     'flashcardapp': resolve(__dirname, 'src/entries/flashcardapp.ts'),
+    'flashcardlanding': resolve(__dirname, 'src/entries/flashcardlanding.ts'),
 };
 
 // Custom plugin to set correct MIME types
@@ -88,13 +89,13 @@ export default defineConfig({
             // Use a single entry point that exports all components
             entry: resolve(__dirname, 'src/entries/index.ts'),
             name: 'HzComponents',
-            formats: ['es'],
+            formats: ['es', 'umd'],
             fileName: (format) => `js/hz-components.${format}.js`
         },
 
         rollupOptions: {
             // Make sure to externalize deps that shouldn't be bundled
-            external: ['svelte'],
+            external: [],
             output: {
                 // Global variables to use in UMD build for externalized deps
                 globals: {

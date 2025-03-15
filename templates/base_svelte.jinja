@@ -26,7 +26,7 @@
       })}`);
       
       // Immediately log what we're going to try to import
-      const importUrl = 'http://localhost:5173/src/entries/{{ component_name | lower }}.ts';
+      const importUrl = 'http://localhost:5173/@id/src/entries/{{ component_name | lower }}.ts';
       debugLog("Import URL:", importUrl);
       
       // Create a test fetch to see if Vite server is accessible

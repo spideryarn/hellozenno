@@ -3,7 +3,7 @@ New Svelte-based flashcard system for language learning.
 This module mirrors the functionality of flashcard_views.py but with a new Svelte frontend.
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, send_from_directory, current_app
 from peewee import DoesNotExist
 
 from utils.lang_utils import get_language_name
@@ -14,7 +14,7 @@ from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
 from db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir
 
 # Create a new blueprint for flashcard2 views
-flashcard2_views_bp = Blueprint("flashcard2_views", __name__)
+flashcard2_views_bp = Blueprint("flashcard2_views", __name__, static_folder='../static/build')
 
 
 @flashcard2_views_bp.route("/<language_code>/flashcards2")
@@ -320,3 +320,9 @@ def api_random_flashcard2(language_code: str):
         response_data["metadata"]["sourcedir"] = sourcedir_slug
 
     return jsonify(response_data)
+
+
+@flashcard2_views_bp.route("/static/build/<path:filename>")
+def flashcards2_static(filename):
+    """Serve static files from the build directory."""
+    return send_from_directory(current_app.root_path + '/static/build', filename)

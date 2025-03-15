@@ -1,6 +1,6 @@
 {% extends "base.jinja" %}
-{% from "base_svelte.jinja" import load_svelte_component %}
-{% set vite_entries = ['flashcardapp'] %}
+{% set vite_entries = [] %}
+{% set svelte_umd_mode = True %}
 
 {% block title %}{{ target_language_name }} Flashcards 2.0 - Hello Zenno{% endblock %}
 
@@ -28,23 +28,30 @@
             <div class="card">
                 <div class="card-body text-center">
                     {% if sentence %}
-                    <div id="flashcard-app"></div>
-                    {{ load_svelte_component('FlashcardApp', {
-                        'sentence': {
-                            'id': sentence.id,
-                            'slug': sentence.slug,
-                            'text': sentence.sentence,
-                            'translation': sentence.translation,
-                            'lemmaWords': sentence.lemma_words,
-                            'audioUrl': url_for('sentence_views.get_sentence_audio', language_code=target_language_code, sentence_id=sentence.id)
-                        },
-                        'targetLanguageCode': target_language_code,
-                        'targetLanguageName': target_language_name,
-                        'sourcefile': sourcefile.slug if sourcefile else None,
-                        'sourcedir': sourcedir.slug if sourcedir else None
-                    }, component_id='flashcard-app') }}
+                    <script>
+                      // Mount the component with the proper props after page loads
+                      document.addEventListener("DOMContentLoaded", function() {
+                        console.log("HzComponents:", HzComponents);
+                        const FlashcardApp = HzComponents.default.flashcardapp;
+                        
+                        FlashcardApp(document.getElementById('flashcard-app'), {
+                          sentence: {
+                            id: {{ sentence.id }},
+                            slug: '{{ sentence.slug }}',
+                            text: {{ sentence.sentence | tojson }},
+                            translation: {{ sentence.translation | tojson }},
+                            lemmaWords: {{ sentence.lemma_words | tojson }},
+                            audioUrl: '{{ url_for("sentence_views.get_sentence_audio", language_code=target_language_code, sentence_id=sentence.id) }}'
+                          },
+                          targetLanguageCode: '{{ target_language_code }}',
+                          targetLanguageName: '{{ target_language_name }}',
+                          sourcefile: {% if sourcefile %}'{{ sourcefile.slug }}'{% else %}null{% endif %},
+                          sourcedir: {% if sourcedir %}'{{ sourcedir.slug }}'{% else %}null{% endif %}
+                        });
+                      });
+                    </script>
                     
-                    <audio id="audio-player" src="{{ url_for('sentence_views.get_sentence_audio', language_code=target_language_code, sentence_id=sentence.id) }}" style="display: none;"></audio>
+                    <div id="flashcard-app"></div>
                     {% else %}
                     <div class="alert alert-info">
                         No sentences found. Please try again later.
