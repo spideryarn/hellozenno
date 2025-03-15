@@ -1,6 +1,7 @@
 # External imports
 import os
 import tempfile
+import json
 from addict import Addict
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from config import (
 from db_models import Lemma, Wordform, SourcefileWordform
 from utils.audio_utils import transcribe_audio
 from gjdutils.dt import dt_str
+from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
 from utils.vocab_llm_utils import (
     extract_text_from_image,
@@ -72,9 +74,17 @@ def process_sourcefile_content(
     txt_en, _ = translate_to_english(txt_tgt, target_language_name, verbose=1)
 
     # 3. Extract vocabulary and phrases
-    tricky_d_orig, _ = extract_tricky_words_or_phrases(
+    tricky_d_orig, extra = extract_tricky_words_or_phrases(
         txt_tgt, target_language_name, verbose=1
     )
+    
+    # Make extra metadata JSON-serializable using gjdutils jsonify
+    # Convert it back to Python dict after serialization
+    if extra:
+        serializable_extra = json.loads(jsonify(extra))
+        # Update the existing extra_metadata with the serializable extra
+        extra_metadata.update(serializable_extra)
+    
     tricky_ad = Addict(tricky_d_orig)
     tricky_words_d = tricky_ad.wordforms
 
@@ -186,6 +196,11 @@ def get_text_from_sourcefile(
             txt_tgt, extra = extract_text_from_image(
                 temp_file.name, target_language_name, verbose=1
             )
+            
+            # Make extra metadata JSON-serializable
+            if extra:
+                extra = json.loads(jsonify(extra))
+                
             return txt_tgt, extra
 
     elif sourcefile_entry.sourcefile_type in ["audio", "youtube_audio"]:
@@ -243,6 +258,11 @@ def get_text_from_sourcefile(
 
             # Add text source to metadata
             extra["text_source"] = "whisper_transcription"
+            
+            # Make extra metadata JSON-serializable
+            if extra:
+                extra = json.loads(jsonify(extra))
+                
             return txt_tgt, extra
 
     else:

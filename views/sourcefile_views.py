@@ -1,4 +1,5 @@
 import os
+import json
 import tempfile
 from datetime import datetime
 from flask import (
@@ -36,6 +37,7 @@ from db_models import (
     fn,
 )
 from gjdutils.outloud_text_to_speech import outloud_elevenlabs
+from gjdutils.jsons import jsonify
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import generate_practice_sentences, get_all_sentences
 from utils.sourcedir_utils import (
@@ -506,11 +508,15 @@ def process_sourcefile(
             # Update sourcefile with processed data
             sourcefile_entry.text_target = source["txt_tgt"]
             sourcefile_entry.text_english = source["txt_en"]
-            # Merge extra metadata with words data
-            sourcefile_entry.metadata = {
+            # Make sure metadata is JSON-serializable
+            # Use gjdutils jsonify to handle any potential non-serializable objects
+            safe_metadata = json.loads(jsonify({
                 **extra_metadata,  # Include duration, language, etc.
                 "words": tricky_words_d,  # Keep word data for debugging
-            }
+            }))
+            
+            # Store the safe serializable metadata
+            sourcefile_entry.metadata = safe_metadata
             sourcefile_entry.save()
 
             # Create database entries for words
