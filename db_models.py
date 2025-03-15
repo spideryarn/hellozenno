@@ -337,14 +337,14 @@ class Wordform(BaseModel):
             language_code: 2-letter language code (e.g. "el" for Greek)
             sourcedir: Optional Sourcedir object or slug to filter by
             sourcefile: Optional Sourcefile object or slug to filter by
-            sort_by: Sorting method ("alpha" or "date")
+            sort_by: Sorting method ("alpha", "date", or "commonality")
             include_junction_data: Whether to include junction table data in results
 
         Returns:
             If include_junction_data is False:
               Optimized query of wordforms matching the criteria
             If include_junction_data is True:
-              List of tuples (wordform, junction_data) where junction_data contains centrality and ordering
+              List of dictionaries containing wordform data with centrality and ordering fields added
         """
         # Handle slug parameters for backwards compatibility
         sourcedir_slug = None
@@ -457,7 +457,15 @@ class Wordform(BaseModel):
         if not (include_junction_data and sourcefile):
             if sort_by == "date":
                 query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
+            elif sort_by == "commonality":
+                # For commonality sorting, order by lemma commonality (highest first)
+                # Then alphabetically for ties
+                query = query.order_by(
+                    fn.COALESCE(Lemma.commonality, 0).desc(), 
+                    fn.Lower(cls.wordform)
+                )
             else:
+                # Default alpha sorting
                 query = query.order_by(fn.Lower(cls.wordform))
             
             return query

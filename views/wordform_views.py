@@ -17,18 +17,12 @@ def wordforms_list(target_language_code: str):
     # Get sort parameter from request
     sort_by = request.args.get("sort", "alpha")
 
-    # Get all wordforms for this language from the database using the model method
-    # which now handles case-insensitive sorting
-    if sort_by == "commonality":
-        # For commonality sorting, we need to join with Lemma
-        query = Wordform.select().where(Wordform.language_code == target_language_code)
-        query = query.join(Lemma, JOIN.LEFT_OUTER).order_by(
-            fn.COALESCE(Lemma.commonality, 0).desc(), fn.Lower(Wordform.wordform)
-        )
-        wordforms = query
-    else:
-        # For alpha and date sorting, use the model method
-        wordforms = Wordform.get_all_for_language(target_language_code, sort_by)
+    # Get all wordforms for this language using the enhanced model method
+    # which now handles all sorting options including commonality
+    wordforms = Wordform.get_all_wordforms_for(
+        language_code=target_language_code,
+        sort_by=sort_by
+    )
 
     # Convert to list of dictionaries for template
     wordforms_d = [wordform.to_dict() for wordform in wordforms]
