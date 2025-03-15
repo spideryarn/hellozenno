@@ -122,6 +122,18 @@
     </div>
   {/if}
   
+  <!-- Source filter info banner -->
+  {#if state.sourceFilter.type && state.sourceFilter.slug}
+    <div class="source-filter-banner">
+      <i class="ph-fill ph-filter"></i>
+      Filtered by {state.sourceFilter.type === 'sourcedir' ? 'directory' : 'file'}: 
+      <strong>{state.sourceFilter.slug}</strong>
+      <a href="/{targetLanguageCode}/flashcards2" class="clear-filter">
+        <i class="ph-fill ph-x"></i>
+      </a>
+    </div>
+  {/if}
+  
   <div class="flashcard-content">
     <!-- Audio element (hidden) with autoplay attribute similar to v1 -->
     <audio 
@@ -282,6 +294,42 @@
     font-size: 0.9rem;
     opacity: 0.7;
     margin-left: 0.25rem;
+  }
+  
+  .source-filter-banner {
+    background-color: #f0f7ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    gap: 0.5rem;
+  }
+  
+  .source-filter-banner i {
+    font-size: 1.1rem;
+  }
+  
+  .clear-filter {
+    margin-left: auto;
+    color: #6b7280;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    transition: background-color 0.2s ease;
+  }
+  
+  .clear-filter:hover {
+    background-color: #d1d5db;
+    color: #4b5563;
   }
   
   /* Desktop layout */

@@ -24,6 +24,21 @@
 </script>
 
 <div class="flashcard-landing">
+  <!-- Source filter info banner -->
+  {#if sourcefile || sourcedir}
+    <div class="source-filter-banner">
+      <i class="ph-fill ph-filter"></i>
+      Filtered by {sourcedir ? 'directory' : 'file'}: 
+      <strong>{sourcedir || sourcefile}</strong>
+      {#if lemmaCount !== null}
+        <span class="lemma-count">({lemmaCount} words)</span>
+      {/if}
+      <a href="/{targetLanguageCode}/flashcards2" class="clear-filter">
+        <i class="ph-fill ph-x"></i>
+      </a>
+    </div>
+  {/if}
+
   <div class="flashcard-description">
     <p>
       Practice your {targetLanguageName} vocabulary with interactive flashcards.
@@ -104,5 +119,49 @@
   .shortcut-hint {
     font-size: 0.9rem;
     opacity: 0.7;
+  }
+  
+  .source-filter-banner {
+    background-color: #f0f7ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 600px;
+    align-self: center;
+  }
+  
+  .source-filter-banner i {
+    font-size: 1.1rem;
+  }
+  
+  .lemma-count {
+    color: #4b5563;
+    margin-left: 0.25rem;
+  }
+  
+  .clear-filter {
+    margin-left: auto;
+    color: #6b7280;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    transition: background-color 0.2s ease;
+  }
+  
+  .clear-filter:hover {
+    background-color: #d1d5db;
+    color: #4b5563;
   }
 </style>
