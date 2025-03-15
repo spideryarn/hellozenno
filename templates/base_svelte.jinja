@@ -1,5 +1,20 @@
 {% macro load_svelte_component(component_name, props={}, component_id='') %}
-  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}"></div>
+  {# Create div with a unique ID for the component to mount to #}
+  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}"
+       data-props="{{ props | tojson | replace('"', '&quot;') }}">
+    {# Add a loading state that will be replaced when component mounts #}
+    <div class="svelte-component-loading">
+      {% set display_text = props.text or props.lemma or props.phrase or props.sentence or '' %}
+      {% if display_text %}
+        <span class="text-content">{{ display_text }}</span>
+        {% if props.translations %}
+          <span class="translations">
+            - {% if props.translations is string %}{{ props.translations }}{% else %}{{ props.translations | join(', ') }}{% endif %}
+          </span>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
   {% if not config.IS_PRODUCTION %}
     {# Development mode - use Vite dev server #}
     <script type="module">
@@ -69,24 +84,19 @@
   {% else %}
     {# Production mode - use built files #}
     <script type="module">
-      // TODO: Remove this debugging code once Svelte components are working in production
-      // Debug flags with forced console output
-      const SVELTE_DEBUG = true;
-      const debugLog = (msg, ...args) => SVELTE_DEBUG && console.log(`[SVELTE PROD DEBUG] ${msg}`, ...args);
-      
-      // Log initial attempt
-      debugLog(`Starting mount for component: {{ component_name }}`);
+      // Debug flags for troubleshooting production issues
+      const PROD_DEBUG = true;
+      const debugLog = (msg, ...args) => PROD_DEBUG && console.log(`[SVELTE PROD] ${msg}`, ...args);
       
       try {
-        // We notice the URL is looking for -entry.js but our build files don't have that suffix
-        // Try the correct file name pattern that matches our actual build output
+        // Use correct filename pattern that matches our build output
         const importUrl = "{{ url_for('static', filename='build/js/' + component_name | lower + '.js') }}";
-        debugLog("Import URL (production):", importUrl);
+        debugLog("Loading component from:", importUrl);
         
-        // Dynamic import with detailed logging
+        // Dynamic import
         import(importUrl).then(
           module => {
-            debugLog("Module imported successfully, keys:", Object.keys(module));
+            debugLog("Module imported:", Object.keys(module));
             
             // Find target element
             const targetElement = document.getElementById('{{ component_id if component_id else component_name | lower + "-component" }}');
@@ -99,7 +109,7 @@
             const props = {{ props | tojson | safe }};
             
             if (typeof module.default !== 'function') {
-              console.error(`Module default export is not a function: ${typeof module.default}`);
+              console.error("Module default export is not a function:", typeof module.default);
             } else {
               const component = module.default(targetElement, props);
               debugLog("Component mounted successfully");
@@ -113,5 +123,23 @@
         console.error(`Error loading Svelte component {{ component_name }}:`, error);
       }
     </script>
+    
+    <style>
+      /* Styles for the loading state */
+      .svelte-component-loading {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        margin: 0.25rem 0;
+      }
+      .svelte-component-loading .text-content {
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      .svelte-component-loading .translations {
+        font-size: 0.875rem;
+        color: #64748b;
+      }
+    </style>
   {% endif %}
 {% endmacro %} 
