@@ -1,4 +1,6 @@
 {% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+{% set vite_entries = ['miniphrase'] %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -29,9 +31,14 @@
     <ul class="phrases-list">
         {% for phrase in phrases %}
             <li class="phrase-item">
-                <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug) }}" class="phrase-link">
-                    {{ phrase.canonical_form }}
-                </a>
+                <div id="phrases-list-component-{{ loop.index }}"></div>
+                {{ load_svelte_component('MiniPhrase', {
+                    'phrase': phrase.canonical_form,
+                    'translations': phrase.translations if phrase.translations else null,
+                    'href': url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug),
+                    'part_of_speech': phrase.part_of_speech if phrase.part_of_speech else null,
+                    'notes': phrase.usage_notes if phrase.usage_notes else null
+                }, component_id='phrases-list-component-' ~ loop.index) }}
             </li>
         {% else %}
             <li class="no-phrases">No phrases available</li>
@@ -52,7 +59,11 @@
         text-decoration: underline;
     }
     .phrase-item {
-        margin: 0.5em 0;
+        margin: 0.8em 0;
+    }
+    .phrases-list {
+        list-style-type: none;
+        padding-left: 0;
     }
 </style>
 {% endblock %} 

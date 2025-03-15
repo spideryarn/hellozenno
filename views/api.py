@@ -3,7 +3,7 @@ from peewee import DoesNotExist
 
 from utils.flask_view_utils import full_url_for
 from utils.word_utils import get_word_preview
-from db_models import Lemma
+from db_models import Lemma, Phrase
 
 # Create a Blueprint for our API routes
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -19,6 +19,9 @@ def urls():
     urls = {
         "word preview": full_url_for(
             "api.word_preview", target_language_code="el", word="καλός"
+        ),
+        "phrase preview": full_url_for(
+            "api.phrase_preview", target_language_code="el", phrase="καλημέρα σας"
         ),
     }
     return jsonify(urls)
@@ -63,4 +66,49 @@ def get_lemma_data(language_code: str, lemma: str):
             {"error": "Not Found", "description": f"Lemma '{lemma}' not found"}
         )
         response.status_code = 404
+        return response
+
+
+@api_bp.route("/phrase-preview/<target_language_code>/<phrase>")
+def phrase_preview(target_language_code: str, phrase: str):
+    """Get preview data for phrase tooltips."""
+    try:
+        # Try to find the phrase in the database
+        phrase_model = Phrase.select().where(
+            (Phrase.canonical_form == phrase) & 
+            (Phrase.language_code == target_language_code)
+        ).first()
+        
+        if phrase_model is None:
+            # Try to find it by a raw form
+            for p in Phrase.select().where(Phrase.language_code == target_language_code):
+                if phrase in p.raw_forms:
+                    phrase_model = p
+                    break
+        
+        if phrase_model is None:
+            response = jsonify(
+                {"error": "Not Found", "description": f"Phrase '{phrase}' not found"}
+            )
+            response.status_code = 404
+            return response
+        
+        # Create preview data
+        preview = {
+            "canonical_form": phrase_model.canonical_form,
+            "translations": phrase_model.translations,
+            "part_of_speech": phrase_model.part_of_speech,
+            "usage_notes": phrase_model.usage_notes,
+            "difficulty_level": phrase_model.difficulty_level,
+            "register": phrase_model.register,
+        }
+        
+        response = jsonify(preview)
+        response.headers["Cache-Control"] = "public, max-age=60"  # Cache for 1 minute
+        return response
+    except Exception as e:
+        response = jsonify(
+            {"error": "Internal Server Error", "description": str(e)}
+        )
+        response.status_code = 500
         return response

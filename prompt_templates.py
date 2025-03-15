@@ -242,7 +242,7 @@ Provide only the JSON output with no commentary:
 extract_phrases_from_text = """
 You are a {{ target_language_name }} language expert. Given a text, identify and analyze tricky, idiomatic phrases and expressions that are likely to be difficult for a {% if language_level %}{{ language_level }} level{% endif %} learner of {{ target_language_name }} to understand, and will need to understand the text.
 
-Only include multiple-word expressions that are idiomatic, common, and where the meaning isn't at all obvious from the individual words. In other words, don't include simple word combinations or literal phrases.
+Only include *multiple*-word expressions that are idiomatic, common, and where the meaning isn't at all obvious from the individual words. In other words, don't include simple word combinations or literal phrases.
 
 Input text:
 {{ txt_tgt }}
@@ -254,6 +254,7 @@ Return a JSON object with this structure:
             "canonical_form": str,  # standard/abstracted form using lemmas or variables like (X, Y)
             "raw_forms": list[str],  # forms found in text and other common variations
             "translations": list[str],  # one or more English translations
+            "literal_translation": str,  # word-for-word translation showing grammatical structure
             "part_of_speech": str,  # "verbal phrase", "prepositional phrase", "idiom", etc.
             "register": str,  # "neutral", "formal", "informal", "vulgar", "archaic", etc.
             "commonality": float,  # from 0-1, how frequently used this phrase is

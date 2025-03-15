@@ -395,6 +395,7 @@ def extract_phrases_from_text(
         "canonical_form": "",
         "raw_forms": [],
         "translations": [],
+        "literal_translation": "",
         "examples": [],
         "cultural_context": "",
         "register": "neutral",
@@ -773,6 +774,7 @@ def process_phrases_from_text(
             updates={
                 "raw_forms": phrase_d.get("raw_forms", [phrase_d["canonical_form"]]),
                 "translations": phrase_d.get("translations", []),
+                "literal_translation": phrase_d.get("literal_translation", ""),
                 "part_of_speech": phrase_d.get("part_of_speech", "phrase"),
                 "register": phrase_d.get("register", "neutral"),
                 "commonality": phrase_d.get("commonality", 0.5),

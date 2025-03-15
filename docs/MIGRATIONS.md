@@ -37,17 +37,24 @@ See also: DATABASE.md
    - When raw SQL is needed, use `migrator.sql()` rather than `database.execute_sql()`
    - Take advantage of PostgreSQL's JSONB fields, array types, and other advanced features
 
-## Running Migrations
+## Creating and Running Migrations
 
 N.B. Don't run things on production without being explicitly asked to.
 
-1. **Local Development**
+1. **Creating a Migration**
+   ```bash
+   # Create a new migration file with the proper template
+   python -m utils.migrate create your_migration_name
+   ```
+   This will generate a numbered migration file like `NNN_your_migration_name.py` with the proper template.
+
+2. **Local Development**
    ```bash
    # Run migrations locally
    ./scripts/local/migrate.sh
    ```
 
-2. **Production**
+3. **Production**
    ```bash
    # Run migrations in production (handled by deploy.sh)
    ./scripts/prod/migrate.sh

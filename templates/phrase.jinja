@@ -2,7 +2,7 @@
 {% from "base_svelte.jinja" import load_svelte_component %}
 
 {# Specify the Vite entry points for components #}
-{% set vite_entries = ['miniwordform', 'miniwordformlist'] %}
+{% set vite_entries = ['miniwordform', 'miniwordformlist', 'miniphrase'] %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -47,6 +47,11 @@
         </ul>
         {% endif %}
 
+        {% if phrase.literal_translation %}
+        <h2>Literal Translation</h2>
+        <p>{{ phrase.literal_translation }}</p>
+        {% endif %}
+
         {% if phrase.example_sentences %}
         <h2>Example Usage</h2>
         <ul>
@@ -83,26 +88,41 @@
 
         {% if phrase.related_to.count() > 0 or phrase.related_from.count() > 0 %}
         <h2>Related Phrases</h2>
-        <ul>
+        <ul class="related-phrases-list">
             {% for relation in phrase.related_to %}
-                <li>
-                    {{ relation.to_phrase.canonical_form }}
-                    {% if relation.to_phrase.translations and relation.to_phrase.translations|length > 0 %}
-                        ({{ relation.to_phrase.translations[0] }})
-                    {% endif %}
-                    {% if relation.relationship_type %} - {{ relation.relationship_type }}{% endif %}
+                <li class="related-phrase-item">
+                    <div id="related-phrase-to-{{ loop.index }}"></div>
+                    {{ load_svelte_component('MiniPhrase', {
+                        'phrase': relation.to_phrase.canonical_form,
+                        'translations': relation.to_phrase.translations,
+                        'href': url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=relation.to_phrase.slug),
+                        'part_of_speech': relation.to_phrase.part_of_speech,
+                        'notes': relation.relationship_type
+                    }, component_id='related-phrase-to-' ~ loop.index) }}
                 </li>
             {% endfor %}
             {% for relation in phrase.related_from %}
-                <li>
-                    {{ relation.from_phrase.canonical_form }}
-                    {% if relation.from_phrase.translations and relation.from_phrase.translations|length > 0 %}
-                        ({{ relation.from_phrase.translations[0] }})
-                    {% endif %}
-                    {% if relation.relationship_type %} - {{ relation.relationship_type }}{% endif %}
+                <li class="related-phrase-item">
+                    <div id="related-phrase-from-{{ loop.index }}"></div>
+                    {{ load_svelte_component('MiniPhrase', {
+                        'phrase': relation.from_phrase.canonical_form,
+                        'translations': relation.from_phrase.translations,
+                        'href': url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=relation.from_phrase.slug),
+                        'part_of_speech': relation.from_phrase.part_of_speech,
+                        'notes': relation.relationship_type
+                    }, component_id='related-phrase-from-' ~ loop.index) }}
                 </li>
             {% endfor %}
         </ul>
+        <style>
+            .related-phrases-list {
+                list-style-type: none;
+                padding-left: 0;
+            }
+            .related-phrase-item {
+                margin: 0.5em 0;
+            }
+        </style>
         {% endif %}
 
         {% if phrase.mnemonics %}

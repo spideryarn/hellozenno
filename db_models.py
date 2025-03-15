@@ -523,6 +523,7 @@ class Phrase(BaseModel):
     canonical_form = CharField()  # the standard form of the phrase
     raw_forms = JSONField()  # list[str] of alternative forms
     translations = JSONField()  # list[str] of English translations
+    literal_translation = TextField(null=True)  # word-for-word translation showing structure
     part_of_speech = CharField()  # e.g. "verbal phrase"
     register = CharField(null=True)  # e.g. "informal"
     commonality = FloatField(null=True)  # from 0-1, how common in regular use
@@ -560,6 +561,7 @@ class Phrase(BaseModel):
             "canonical_form": self.canonical_form,
             "raw_forms": self.raw_forms or [],
             "translations": self.translations or [],
+            "literal_translation": self.literal_translation,
             "part_of_speech": self.part_of_speech,
             "register": self.register,
             "commonality": self.commonality,

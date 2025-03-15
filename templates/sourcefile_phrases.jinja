@@ -1,5 +1,7 @@
 {% extends "base.jinja" %}
 {% from "_sourcefile_icon.jinja" import sourcefile_icon %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+{% set vite_entries = ['miniphrase'] %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
@@ -19,30 +21,21 @@
         <ul class="phrases-list">
             {% for phrase in phrases_d %}
                 <li class="phrase-item">
-                    <div class="phrase-header">
-                        <a href="{{ url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug) }}" class="phrase-link">
-                            {{ phrase.canonical_form }}
-                        </a>
-                        {% if phrase.translations %}
-                            <span class="phrase-translations">{{ phrase.translations|join(', ') }}</span>
-                        {% endif %}
-                    </div>
+                    <div id="phrase-component-{{ loop.index }}" class="phrase-header"></div>
+                    {{ load_svelte_component('MiniPhrase', {
+                        'phrase': phrase.canonical_form,
+                        'translations': phrase.translations,
+                        'href': url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug),
+                        'part_of_speech': phrase.part_of_speech,
+                        'notes': phrase.usage_notes
+                    }, component_id='phrase-component-' ~ loop.index) }}
+                    
                     {% if phrase.raw_forms %}
                         <div class="raw-forms">
                             Found as: {{ phrase.raw_forms|join(', ') }}
                         </div>
                     {% endif %}
-                    <div class="phrase-metadata">
-                        {% if phrase.part_of_speech %}
-                            <span class="metadata-item">{{ phrase.part_of_speech }}</span>
-                        {% endif %}
-                        {% if phrase.register %}
-                            <span class="metadata-item">{{ phrase.register }}</span>
-                        {% endif %}
-                        {% if phrase.usage_notes %}
-                            <span class="metadata-item">{{ phrase.usage_notes }}</span>
-                        {% endif %}
-                    </div>
+                    
                     {% if phrase.component_words %}
                         <div class="component-words">
                             Components:
