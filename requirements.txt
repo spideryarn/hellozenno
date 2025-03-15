@@ -9,6 +9,7 @@ flask
 gjdutils
 gunicorn
 jinja2
+loguru>=0.7.2  # For simplified logging
 openai
 peewee>=3.17.0
 pendulum

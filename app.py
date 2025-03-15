@@ -1,18 +1,15 @@
 """Main Flask application."""
 
-import logging
+from loguru import logger
 from flask import Flask
 from flask_cors import CORS
 from utils.env_config import is_fly_cloud, is_testing, FLASK_SECRET_KEY
+from utils.logging_utils import setup_logging
 
 # from flask_pw import Peewee as FLPeewee
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+# Configure logging with loguru
+setup_logging(log_to_file=True, max_lines=100)
 
 
 def create_app():
