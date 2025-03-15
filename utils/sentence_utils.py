@@ -98,21 +98,9 @@ def get_all_sentences(target_language_code: str) -> list[dict]:
     Returns:
         List[Dict]: List of sentence metadata dictionaries
     """
-    sentences = []
-    query = Sentence.select().where(Sentence.language_code == target_language_code)
-
-    for db_sentence in query:
-        sentences.append(
-            {
-                "id": db_sentence.id,
-                "sentence": db_sentence.sentence,
-                "translation": db_sentence.translation,
-                "lemma_words": db_sentence.lemma_words,
-                "target_language_code": db_sentence.language_code,
-                "slug": db_sentence.slug,
-            }
-        )
-
+    # Use the optimized class method to get all sentences with eager-loaded lemmas
+    sentences = Sentence.get_all_sentences_for(target_language_code, sort_by="date")
+    
     print(f"Successfully loaded {len(sentences)} sentences")
     return sentences
 

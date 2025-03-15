@@ -6,95 +6,239 @@
     <div class="svelte-component-loading" id="{{ component_id if component_id else component_name | lower + '-loading' }}">
       <!-- Loading placeholder that will be cleared on mount -->
       <p class="loading-text">Loading component...</p>
+      <!-- Debug information to check component registration -->
+      <div class="debug-info" style="font-size: 12px; color: #666; margin-top: 10px;">
+        Component: {{ component_name }}<br>
+        Mount Point: {{ component_id if component_id else component_name | lower + '-component' }}<br>
+        Entry Point: /src/entries/{{ component_name | lower }}.ts
+      </div>
     </div>
   </div>
   {% if not config.IS_PRODUCTION %}
     {# Development mode - use Vite dev server #}
     <script type="module">
-      // Debug flags - disabled in normal operation, can be enabled for troubleshooting
-      const SVELTE_DEBUG = false;
+      // Debug flags - enabled for troubleshooting, disable in normal operation
+      const SVELTE_DEBUG = true;
+      console.log("=== SVELTE DEBUG START ===");
+      console.log("DEBUG ENABLED - Trying to mount component: {{ component_name }} to #{{ component_id if component_id else component_name | lower + '-component' }}");
+      console.log("Current URL:", window.location.href);
+      console.log("Vite entries:", {{ vite_entries | default(['']) | tojson | safe }});
       const debugLog = (msg, ...args) => {
         SVELTE_DEBUG && console.log(`[SVELTE DEBUG] ${msg}`, ...args);
       };
       
+      // Show debug info in the DOM as well as console
+      // Add an immediate test fetch to diagnose server issues
+      fetch('http://localhost:5173/@vite/client')
+        .then(response => console.log('Vite server test response:', response.status))
+        .catch(err => console.error('Vite server unreachable:', err));
+      function updateDebugInfo(msg) {
+        if (SVELTE_DEBUG) {
+          const debugEl = document.querySelector('#{{ component_id if component_id else component_name | lower + "-loading" }} .debug-info');
+          if (debugEl) {
+            debugEl.innerHTML += `<br><span style="color: #900;">Debug: ${msg}</span>`;
+          } else {
+            console.warn('Debug element not found!', '#{{ component_id if component_id else component_name | lower + "-loading" }} .debug-info');
+          }
+        }
+      }
+      
+      updateDebugInfo('Test debug info system...');
+      
       // Log initial attempt
-      debugLog(`Starting mount for ${JSON.stringify({
+      const mountInfo = {
         component: "{{ component_name }}",
         mountPoint: "{{ component_id if component_id else component_name | lower + '-component' }}",
         props: {{ props | tojson | safe }},
         viteDev: true
-      })}`);
+      };
+      debugLog(`Starting mount for ${JSON.stringify(mountInfo)}`);
+      updateDebugInfo(`Starting mount at ${new Date().toISOString()}`);
       
       // Immediately log what we're going to try to import
       const importUrl = 'http://localhost:5173/src/entries/{{ component_name | lower }}.ts';
       debugLog("Import URL:", importUrl);
+      updateDebugInfo(`Importing from ${importUrl}`);
       
       // Create a test fetch to see if Vite server is accessible
       fetch(importUrl).then(
-        response => debugLog(`Vite server responded with status: ${response.status}`),
-        error => debugLog(`Vite server error: ${error.message}`)
+        response => {
+          const statusMsg = `Vite server responded with status: ${response.status}`;
+          debugLog(statusMsg);
+          updateDebugInfo(statusMsg);
+          return response.text().then(text => {
+            debugLog("File content preview:", text.substring(0, 100) + "...");
+            updateDebugInfo(`File exists: ${text.length > 0}`);
+          });
+        },
+        error => {
+          const errorMsg = `Vite server error: ${error.message}`;
+          debugLog(errorMsg);
+          updateDebugInfo(errorMsg);
+        }
       );
       
       try {
-        debugLog("Attempting dynamic import...");
+        const importMessage = "Attempting dynamic import...";
+        debugLog(importMessage);
+        updateDebugInfo(importMessage);
         
-        // Dynamic import
-        import(importUrl).then(
-          module => {
-            debugLog("Module imported successfully:", module);
+        // Try alternative import approaches in sequence
+        const componentName = '{{ component_name }}';
+        const targetId = '{{ component_id if component_id else component_name | lower + "-component" }}';
+        const props = {{ props | tojson | safe }};
+        
+        debugLog(`Component: ${componentName}, Target: ${targetId}`);
+        updateDebugInfo(`Component: ${componentName}, Target: ${targetId}`);
+        
+        // Find target element
+        const targetElement = document.getElementById(targetId);
+        if (!targetElement) {
+          const error = `Target element #${targetId} not found`;
+          debugLog(error);
+          updateDebugInfo(`ERROR: ${error}`);
+          throw new Error(error);
+        }
+        updateDebugInfo(`✓ Target element found`);
+        
+        // For FlashcardApp or FlashcardLanding, use custom handling
+        if (componentName === 'FlashcardApp' || componentName === 'FlashcardLanding') {
+          debugLog(`Using special handler for ${componentName}`);
+          updateDebugInfo(`Using special handler for ${componentName}`);
+          
+          // Special handling for these components
+          const specialImportUrl = 'http://localhost:5173/src/entries/flashcardapp.ts';
+          debugLog(`Trying direct import from: ${specialImportUrl}`);
+          updateDebugInfo(`Trying special import path`);
+          
+          import(specialImportUrl).then(module => {
+            debugLog(`Special import successful, available exports:`, Object.keys(module));
+            updateDebugInfo(`Special import successful`);
             
-            if (!module.default) {
-              throw new Error(`Module ${importUrl} does not have a default export`);
-            }
-            
-            // Find target element
-            const targetElement = document.getElementById('{{ component_id if component_id else component_name | lower + "-component" }}');
-            debugLog("Target element:", targetElement);
-            
-            if (!targetElement) {
-              throw new Error(`Target element #{{ component_id if component_id else component_name | lower + "-component" }} not found`);
-            }
-            
-            // Mount component
-            const props = {{ props | tojson | safe }};
-            
-            // Process props to ensure correct types (especially for HTML content)
-            if (props.enhanced_sentence_text !== undefined) {
-              // Ensure enhanced_sentence_text is a string
-              debugLog("Processing enhanced_sentence_text prop");
-              if (typeof props.enhanced_sentence_text !== 'string') {
-                console.warn("enhanced_sentence_text is not a string - converting");
-                props.enhanced_sentence_text = String(props.enhanced_sentence_text || '');
-              }
-            }
-            
-            debugLog("Mounting with props:", props);
-            
-            // Clear any loading state or content before mounting
-            debugLog(`Clearing mount point: ${targetElement.id}`);
+            // Clear loading content
             targetElement.innerHTML = '';
             
-            // Mount the component
-            debugLog(`Creating component with props:`, props);
-            const component = module.default(targetElement, props);
-            debugLog("Component mounted successfully:", component);
+            try {
+              // Try to use the mount function with the exact name
+              const mountFuncName = `mount${componentName}`;
+              if (typeof module[mountFuncName] === 'function') {
+                debugLog(`Using ${mountFuncName} function`);
+                updateDebugInfo(`Using ${mountFuncName} function`);
+                const component = module[mountFuncName](targetElement, props);
+                debugLog(`Component mounted successfully using ${mountFuncName}`);
+                updateDebugInfo(`✓ Component mounted successfully!`);
+                return;
+              }
+              
+              // Try to use the component class directly
+              if (typeof module[componentName] === 'function') {
+                debugLog(`Using ${componentName} class directly`);
+                updateDebugInfo(`Using ${componentName} class directly`);
+                const ComponentClass = module[componentName];
+                const component = new ComponentClass({
+                  target: targetElement,
+                  props: props
+                });
+                debugLog(`Component mounted successfully using direct class`);
+                updateDebugInfo(`✓ Component mounted via direct class!`);
+                return;
+              }
+              
+              // Fall back to the default export
+              if (typeof module.default === 'function') {
+                debugLog(`Using default export`);
+                updateDebugInfo(`Using default export`);
+                const component = module.default(targetElement, props);
+                debugLog(`Component mounted successfully using default export`);
+                updateDebugInfo(`✓ Component mounted via default export!`);
+                return;
+              }
+              
+              throw new Error(`No usable export found in ${specialImportUrl}`);
+            } catch (mountError) {
+              debugLog(`Error mounting ${componentName}:`, mountError);
+              updateDebugInfo(`ERROR mounting: ${mountError.message}`);
+              console.error(`Error mounting ${componentName}:`, mountError);
+            }
+          }).catch(error => {
+            debugLog(`Special import failed:`, error);
+            updateDebugInfo(`Special import failed: ${error.message}`);
             
-            // Dispatch event to notify successful mounting (useful for communication between components)
-            const event = new CustomEvent('SvelteComponentMounted', { 
-              detail: { 
-                componentName: '{{ component_name }}',
-                elementId: targetElement.id
-              },
-              bubbles: true 
-            });
-            document.dispatchEvent(event);
-            
-          },
-          error => {
-            debugLog("Import failed:", error);
-            console.error(`Failed to import ${importUrl}:`, error);
-          }
-        );
+            // Fall back to standard import approach
+            standardImport();
+          });
+        } else {
+          // Standard import for other components
+          standardImport();
+        }
+        
+        // Standard import approach as fallback
+        function standardImport() {
+          debugLog(`Using standard import approach for ${componentName}`);
+          updateDebugInfo(`Using standard import approach`);
+          
+          // Dynamic import
+          import(importUrl).then(
+            module => {
+              debugLog("Module imported successfully:", module);
+              updateDebugInfo("Module imported successfully");
+              
+              if (!module.default) {
+                const error = `Module ${importUrl} does not have a default export`;
+                debugLog(error);
+                updateDebugInfo(`ERROR: ${error}`);
+                throw new Error(error);
+              }
+              
+              // Process props to ensure correct types (especially for HTML content)
+              if (props.enhanced_sentence_text !== undefined) {
+                // Ensure enhanced_sentence_text is a string
+                debugLog("Processing enhanced_sentence_text prop");
+                updateDebugInfo("Processing enhanced_sentence_text prop");
+                if (typeof props.enhanced_sentence_text !== 'string') {
+                  console.warn("enhanced_sentence_text is not a string - converting");
+                  props.enhanced_sentence_text = String(props.enhanced_sentence_text || '');
+                }
+              }
+              
+              debugLog("Mounting with props:", props);
+              updateDebugInfo("Mounting component with props");
+              
+              // Clear any loading state or content before mounting
+              debugLog(`Clearing mount point: ${targetElement.id}`);
+              targetElement.innerHTML = '';
+              
+              // Mount the component
+              debugLog(`Creating component with props:`, props);
+              
+              try {
+                const component = module.default(targetElement, props);
+                debugLog("Component mounted successfully:", component);
+                updateDebugInfo("✓ Component mounted successfully!");
+                
+                // Dispatch event to notify successful mounting
+                const event = new CustomEvent('SvelteComponentMounted', { 
+                  detail: { 
+                    componentName: componentName,
+                    elementId: targetElement.id
+                  },
+                  bubbles: true 
+                });
+                document.dispatchEvent(event);
+              } catch (mountError) {
+                debugLog("Error mounting component:", mountError);
+                updateDebugInfo(`ERROR mounting: ${mountError.message}`);
+                console.error("Error mounting component:", mountError);
+              }
+            },
+            error => {
+              debugLog("Import failed:", error);
+              updateDebugInfo(`Import failed: ${error.message || 'Unknown error'}`);
+              console.error(`Failed to import ${importUrl}:`, error);
+            }
+          );
+        }
+      }
       } catch (error) {
         debugLog("Critical error in component loading:", error);
         console.error(`Error loading Svelte component {{ component_name }}:`, error);
@@ -103,48 +247,129 @@
   {% else %}
     {# Production mode - use built files #}
     <script type="module">
-      // Debug flags for troubleshooting production issues
+      // Debug flags for troubleshooting production issues - enabled for debugging
       const PROD_DEBUG = true;
       const debugLog = (msg, ...args) => PROD_DEBUG && console.log(`[SVELTE PROD] ${msg}`, ...args);
+      
+      // Helper to update debug info in the DOM
+      function updateProductionInfo(msg) {
+        if (PROD_DEBUG) {
+          const debugEl = document.querySelector('#{{ component_id if component_id else component_name | lower + "-loading" }} .debug-info');
+          if (debugEl) {
+            debugEl.innerHTML += `<br><span style="color: #009;">PROD: ${msg}</span>`;
+          }
+        }
+      }
       
       try {
         // Load the unified component bundle
         const bundleUrl = "{{ url_for('static', filename='build/js/hz-components.es.js') }}";
         debugLog("Loading component bundle from:", bundleUrl);
+        updateProductionInfo(`Loading from ${bundleUrl}`);
         
-        // Dynamic import bundle
-        import(bundleUrl).then(
-          componentsModule => {
+        // Test fetch first to check if bundle exists
+        fetch(bundleUrl)
+          .then(response => {
+            updateProductionInfo(`Bundle fetch status: ${response.status}`);
+            if (!response.ok) {
+              throw new Error(`Bundle file not found (${response.status})`);
+            }
+            return response.text();
+          })
+          .then(text => {
+            updateProductionInfo(`Bundle size: ${text.length} bytes`);
+            
+            // Now try importing
+            return import(bundleUrl);
+          })
+          .then(componentsModule => {
             debugLog("Component bundle imported:", Object.keys(componentsModule));
+            updateProductionInfo(`Bundle imported. Keys: ${Object.keys(componentsModule).join(', ')}`);
+            
+            if (componentsModule.default) {
+              updateProductionInfo(`Component registry keys: ${Object.keys(componentsModule.default).join(', ')}`);
+            } else {
+              updateProductionInfo("No default export in bundle!");
+            }
             
             // Find target element
             const targetElementId = '{{ component_id if component_id else component_name | lower + "-component" }}';
             const targetElement = document.getElementById(targetElementId);
             
             if (!targetElement) {
-              throw new Error(`Target element #${targetElementId} not found`);
+              const error = `Target element #${targetElementId} not found`;
+              updateProductionInfo(`ERROR: ${error}`);
+              throw new Error(error);
             }
+            
+            updateProductionInfo(`Target element found: ${targetElementId}`);
             
             // Get component factory from registry
             const componentName = '{{ component_name | lower }}';
-            const componentFactory = componentsModule.default[componentName];
+            updateProductionInfo(`Looking for component: ${componentName}`);
+            
+            // Try direct import first if available
+            if (componentsModule[componentName.charAt(0).toUpperCase() + componentName.slice(1)]) {
+              updateProductionInfo(`Using direct component reference`);
+              const ComponentClass = componentsModule[componentName.charAt(0).toUpperCase() + componentName.slice(1)];
+              const props = {{ props | tojson | safe }};
+              
+              try {
+                // Clear loading content
+                targetElement.innerHTML = '';
+                
+                // Create component
+                const component = new ComponentClass({
+                  target: targetElement,
+                  props: props
+                });
+                
+                debugLog(`Component ${componentName} mounted successfully via direct reference`);
+                updateProductionInfo(`✓ Component mounted successfully via direct reference`);
+                return;
+              } catch (directError) {
+                updateProductionInfo(`Direct mount error: ${directError.message}`);
+                // Continue to factory method if direct method fails
+              }
+            }
+            
+            // Try factory method
+            const componentFactory = componentsModule.default ? componentsModule.default[componentName] : null;
             
             if (typeof componentFactory !== 'function') {
-              console.error(`Component factory '${componentName}' not found in bundle:`, Object.keys(componentsModule.default));
+              const error = `Component factory '${componentName}' not found in bundle`;
+              updateProductionInfo(`ERROR: ${error}. Available: ${componentsModule.default ? Object.keys(componentsModule.default).join(', ') : 'none'}`);
+              console.error(error, componentsModule.default ? Object.keys(componentsModule.default) : 'No component registry');
               return;
             }
             
+            updateProductionInfo(`Component factory found`);
+            
             // Mount component
             const props = {{ props | tojson | safe }};
-            const component = componentFactory(targetElement, props);
-            debugLog(`Component ${componentName} mounted successfully`);
-          },
-          error => {
-            console.error(`Failed to import ${bundleUrl}:`, error);
-          }
-        );
+            
+            try {
+              // Clear loading content 
+              targetElement.innerHTML = '';
+              
+              const component = componentFactory(targetElement, props);
+              debugLog(`Component ${componentName} mounted successfully`);
+              updateProductionInfo(`✓ Component mounted successfully via factory`);
+            } catch (mountError) {
+              const error = `Error mounting component: ${mountError.message}`;
+              updateProductionInfo(`ERROR: ${error}`);
+              console.error(error, mountError);
+            }
+          })
+          .catch(error => {
+            const errorMsg = `Failed to load or import bundle: ${error.message}`;
+            updateProductionInfo(`ERROR: ${errorMsg}`);
+            console.error(errorMsg, error);
+          });
       } catch (error) {
-        console.error(`Error loading Svelte component {{ component_name }}:`, error);
+        const errorMsg = `Critical error loading component: ${error.message}`;
+        updateProductionInfo(`ERROR: ${errorMsg}`);
+        console.error(errorMsg, error);
       }
     </script>
     

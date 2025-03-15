@@ -7,6 +7,7 @@ from peewee import (
     FloatField,
     BlobField,
     IntegerField,
+    JOIN,
     fn,
     DoesNotExist,
     ForeignKeyField,
@@ -500,6 +501,68 @@ class Sentence(BaseModel):
     def lemma_words(self) -> list[str]:
         """For backwards compatibility, return list of lemma words."""
         return [sl.lemma.lemma for sl in self.lemmas]  # type: ignore
+    
+    @classmethod
+    def get_all_sentences_for(
+        cls,
+        language_code: str,
+        sort_by: str = "date",
+    ):
+        """Get sentences for a language with efficient loading of related lemmas.
+        
+        Args:
+            language_code: 2-letter language code
+            sort_by: Sorting method ("date" or "alpha")
+            
+        Returns:
+            List of sentence dictionaries with preloaded lemma data
+        """
+        # Start with a simple query for all sentences in this language
+        query = cls.select().where(cls.language_code == language_code)
+        
+        # Apply sorting
+        if sort_by == "date":
+            query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
+        else:
+            query = query.order_by(fn.Lower(cls.sentence))
+            
+        # Fetch sentences first
+        sentences = list(query)
+        
+        # Then fetch all related lemma data in one bulk query
+        lemma_data = {}
+        if sentences:
+            sentence_ids = [s.id for s in sentences]
+            
+            # Use a raw SQL query for the join to avoid ORM complexity
+            # This gets all sentence-lemma relationships in one query
+            lemma_query = (
+                SentenceLemma
+                .select(SentenceLemma.sentence, Lemma.lemma)
+                .join(Lemma)
+                .where(SentenceLemma.sentence.in_(sentence_ids))
+            )
+            
+            # Group lemmas by sentence id
+            for sl in lemma_query:
+                if sl.sentence_id not in lemma_data:
+                    lemma_data[sl.sentence_id] = []
+                lemma_data[sl.sentence_id].append(sl.lemma.lemma)
+            
+        # Convert to dictionary format with lemmas preloaded
+        results = []
+        for sentence in sentences:
+            results.append({
+                "id": sentence.id,
+                "sentence": sentence.sentence,
+                "translation": sentence.translation,
+                "lemma_words": lemma_data.get(sentence.id, []),
+                "target_language_code": sentence.language_code,
+                "slug": sentence.slug,
+                "has_audio": bool(sentence.audio_data),
+            })
+            
+        return results
 
     class Meta:
         indexes = (
