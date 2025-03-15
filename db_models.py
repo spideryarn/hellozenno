@@ -244,14 +244,6 @@ class Lemma(BaseModel):
         
         return query
         
-    @classmethod
-    def get_all_for_language(cls, language_code: str, sort_by: str = "alpha"):
-        """Get all lemmas for a language with specified sorting (Legacy method).
-        
-        This method is maintained for backward compatibility.
-        New code should use get_all_lemmas_for() instead.
-        """
-        return cls.get_all_lemmas_for(language_code, sort_by=sort_by)
 
     def get_all_wordforms(self) -> set[str]:
         """Get a flat set of all known forms of this lemma."""
@@ -527,14 +519,6 @@ class Wordform(BaseModel):
         else:
             return results
 
-    @classmethod
-    def get_all_for_language(cls, language_code: str, sort_by: str = "alpha"):
-        """Get all wordforms for a language with specified sorting (Legacy method).
-
-        This method is maintained for backward compatibility.
-        New code should use get_all_wordforms_for() instead.
-        """
-        return cls.get_all_wordforms_for(language_code, sort_by=sort_by)
 
 
 class Sentence(BaseModel):
@@ -749,14 +733,6 @@ class Phrase(BaseModel):
 
         return query
 
-    @classmethod
-    def get_all_for_language(cls, language_code: str, sort_by: str = "alpha"):
-        """Get all phrases for a language with specified sorting (Legacy method).
-
-        This method is maintained for backward compatibility.
-        New code should use get_all_phrases_for() instead.
-        """
-        return cls.get_all_phrases_for(language_code, sort_by=sort_by)
 
 
 class LemmaExampleSentence(BaseModel):
