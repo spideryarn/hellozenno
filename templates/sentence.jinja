@@ -16,11 +16,26 @@
 
 {% block content %}
 <!-- Mount point for Svelte component -->
-<div id="sentence-component"></div>
+<div id="sentence-component-container"></div>
+
+<!-- Cleanup script to prevent duplicate components -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Make sure we don't have duplicate sentence components
+    setTimeout(() => {
+      const sentenceComponents = document.querySelectorAll('.sentence-page');
+      if (sentenceComponents.length > 1) {
+        for (let i = 1; i < sentenceComponents.length; i++) {
+          sentenceComponents[i].remove();
+        }
+      }
+    }, 500);
+  });
+</script>
 
 {{ load_svelte_component('Sentence', {
     'sentence': sentence,
     'metadata': metadata,
     'enhanced_sentence_text': enhanced_sentence_text
-}) }}
+}, component_id='sentence-component-mount') }}
 {% endblock content %} 

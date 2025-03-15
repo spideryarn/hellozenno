@@ -127,3 +127,48 @@ The Sentence.svelte component is not rendering correctly in the development envi
 - Are there differences in how Sentence.svelte handles props compared to other components?
 
 This issue requires further investigation to pinpoint the exact cause, but the most likely culprit is how HTML content is being handled between Flask templates and Svelte components.
+
+## Investigation Results (March 15, 2025)
+
+After debugging, we identified several issues contributing to the rendering problem:
+
+1. **Double Rendering**: 
+   - The component was being rendered twice - once from the template's initial HTML and once from the Svelte mounting
+   - This was visible in the DOM with duplicate elements having the same classes
+
+2. **Mounting Cleanup Issue**: 
+   - The component mounting wasn't properly clearing previous content before initializing
+   - Added `targetElement.innerHTML = ''` before mounting component to ensure clean initialization
+
+3. **HTML Content Handling**: 
+   - The `enhanced_sentence_text` HTML content was being properly passed to the component
+   - Verified through console logs that the HTML content is correctly structured
+
+4. **CSS Styling Conflicts**: 
+   - Added specific styling for nested elements inside `.greek-text` to ensure consistent rendering
+   - Fixed margin/padding for paragraph elements to prevent unwanted spacing
+
+5. **DOM Cleanup**: 
+   - Added a client-side script to detect and remove duplicate components after rendering
+   - Used a simple timeout to ensure the check runs after components are fully mounted
+
+## Implemented Fixes
+
+1. **In base_svelte.jinja**:
+   - Simplified loading state to avoid complex content in placeholder
+   - Added proper HTML element clearing before mounting component
+   - Added event dispatching for component mount events to enable coordination
+   - Enhanced debugging for component mounting lifecycle
+
+2. **In Sentence.svelte**:
+   - Added debugging for component props and lifecycle
+   - Improved HTML content rendering with fallback for missing content
+   - Enhanced CSS for nested elements to ensure consistent styling
+   - Added visibility to debug information to help diagnose issues
+
+3. **In sentence.jinja**:
+   - Added post-mount cleanup script to detect and remove duplicate components
+   - Added better debug tools for component state inspection
+   - Improved structure with clearer container identification
+
+These changes collectively address the rendering issues by ensuring clean component mounting and preventing duplication of content.

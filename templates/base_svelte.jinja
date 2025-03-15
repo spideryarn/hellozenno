@@ -3,26 +3,18 @@
   <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}"
        data-props="{{ props | tojson | replace('"', '&quot;') }}">
     {# Add a loading state that will be replaced when component mounts #}
-    <div class="svelte-component-loading">
-      {% set display_text = props.text or props.lemma or props.phrase or props.sentence or '' %}
-      {% if display_text %}
-        <span class="text-content">{{ display_text }}</span>
-        {% if props.translations %}
-          <span class="translations">
-            - {% if props.translations is string %}{{ props.translations }}{% else %}{{ props.translations | join(', ') }}{% endif %}
-          </span>
-        {% endif %}
-      {% endif %}
+    <div class="svelte-component-loading" id="{{ component_id if component_id else component_name | lower + '-loading' }}">
+      <!-- Loading placeholder that will be cleared on mount -->
+      <p class="loading-text">Loading component...</p>
     </div>
   </div>
   {% if not config.IS_PRODUCTION %}
     {# Development mode - use Vite dev server #}
     <script type="module">
-      // Debug flags
-      const SVELTE_DEBUG = true;
-      console.log('SVELTE DEV COMPONENT LOADING ATTEMPT');
+      // Debug flags - disabled in normal operation, can be enabled for troubleshooting
+      const SVELTE_DEBUG = false;
       const debugLog = (msg, ...args) => {
-        {# console.log(`[SVELTE DEBUG] ${msg}`, ...args); #}
+        SVELTE_DEBUG && console.log(`[SVELTE DEBUG] ${msg}`, ...args);
       };
       
       // Log initial attempt
@@ -65,10 +57,37 @@
             
             // Mount component
             const props = {{ props | tojson | safe }};
+            
+            // Process props to ensure correct types (especially for HTML content)
+            if (props.enhanced_sentence_text !== undefined) {
+              // Ensure enhanced_sentence_text is a string
+              debugLog("Processing enhanced_sentence_text prop");
+              if (typeof props.enhanced_sentence_text !== 'string') {
+                console.warn("enhanced_sentence_text is not a string - converting");
+                props.enhanced_sentence_text = String(props.enhanced_sentence_text || '');
+              }
+            }
+            
             debugLog("Mounting with props:", props);
             
+            // Clear any loading state or content before mounting
+            debugLog(`Clearing mount point: ${targetElement.id}`);
+            targetElement.innerHTML = '';
+            
+            // Mount the component
+            debugLog(`Creating component with props:`, props);
             const component = module.default(targetElement, props);
             debugLog("Component mounted successfully:", component);
+            
+            // Dispatch event to notify successful mounting (useful for communication between components)
+            const event = new CustomEvent('SvelteComponentMounted', { 
+              detail: { 
+                componentName: '{{ component_name }}',
+                elementId: targetElement.id
+              },
+              bubbles: true 
+            });
+            document.dispatchEvent(event);
             
           },
           error => {

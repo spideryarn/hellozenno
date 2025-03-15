@@ -3,10 +3,13 @@
   import type { SentenceProps } from '../lib/types';
   import '../styles/global.css';
   import MiniLemma from './MiniLemma.svelte';
+  import { onMount } from 'svelte';
 
   export let sentence: SentenceProps['sentence'];
   export let metadata: SentenceProps['metadata'];
   export let enhanced_sentence_text: SentenceProps['enhanced_sentence_text'];
+  
+  // Component initialized
   
   // State for audio player
   let audioPlayer: HTMLAudioElement;
@@ -22,6 +25,10 @@
   };
   
   let lemmasData: Record<string, LemmaData> = {};
+  
+  onMount(() => {
+    // Component mounted successfully
+  });
   
   // Initialize lemmasData with empty values
   if (sentence.lemma_words) {
@@ -109,7 +116,8 @@
 
     <div class="main-content">
       <div class="greek-text">
-        {@html enhanced_sentence_text}
+        <!-- Render the enhanced text with fallback -->
+        {@html enhanced_sentence_text || '<p>No sentence text available</p>'}
       </div>
       
       {#if sentence.translation}
@@ -204,10 +212,23 @@
     margin-bottom: var(--spacing-4);
   }
 
+  /* Style the paragraph inside greek-text directly */
+  .greek-text > p {
+    margin: 0;
+    padding: 0;
+  }
+
   .greek-text :global(.word-link) {
     color: var(--color-primary);
     text-decoration: none;
     margin: 0 var(--spacing-1);
+  }
+  
+  /* Ensure consistent styling for any nested elements */
+  .greek-text :global(br) {
+    display: block;
+    content: "";
+    margin-top: 0.5rem;
   }
 
   .english-translation {
