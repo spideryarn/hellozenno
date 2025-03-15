@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { SentenceProps } from '../lib/types';
   import '../styles/global.css';
+  import MiniLemma from './MiniLemma.svelte';
 
   export let sentence: SentenceProps['sentence'];
   export let metadata: SentenceProps['metadata'];
@@ -10,6 +11,61 @@
   // State for audio player
   let audioPlayer: HTMLAudioElement;
   let isGeneratingAudio = false;
+  
+  // State for lemma data
+  type LemmaData = {
+    lemma: string;
+    part_of_speech: string;
+    translations: string[];
+    isLoading: boolean;
+    error: string | null;
+  };
+  
+  let lemmasData: Record<string, LemmaData> = {};
+  
+  // Initialize lemmasData with empty values
+  if (sentence.lemma_words) {
+    sentence.lemma_words.forEach(lemma => {
+      lemmasData[lemma] = {
+        lemma,
+        part_of_speech: '',
+        translations: [],
+        isLoading: true,
+        error: null
+      };
+    });
+  }
+  
+  // Fetch lemma data for each lemma
+  async function fetchLemmaData(lemma: string) {
+    try {
+      const response = await fetch(`/api/${sentence.language_code}/lemma/${lemma}/data`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch lemma data for ${lemma}`);
+      }
+      
+      const data = await response.json();
+      lemmasData[lemma] = {
+        lemma,
+        part_of_speech: data.part_of_speech || '',
+        translations: data.translations || [],
+        isLoading: false,
+        error: null
+      };
+    } catch (error) {
+      console.error('Error fetching lemma data:', error);
+      lemmasData[lemma] = {
+        ...lemmasData[lemma],
+        isLoading: false,
+        error: String(error)
+      };
+    }
+  }
+  
+  // Fetch data for all lemmas when component mounts
+  if (sentence.lemma_words) {
+    sentence.lemma_words.forEach(fetchLemmaData);
+  }
 
   // Function to generate audio
   async function generateAudio() {
@@ -94,18 +150,19 @@
       {#if sentence.lemma_words}
         <div class="words-section">
           <h3>Words</h3>
-          <ul class="words-list">
+          <div class="words-list">
             {#each sentence.lemma_words as lemma}
-              <li>
-                <a 
-                  href="/{sentence.language_code}/lemma/{lemma}" 
-                  class="lemma-link"
-                >
-                  {lemma}
-                </a>
-              </li>
+              <MiniLemma 
+                lemma={lemma}
+                partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
+                translations={lemmasData[lemma]?.translations || []}
+                href="/{sentence.language_code}/lemma/{lemma}"
+              />
+              {#if lemmasData[lemma]?.isLoading}
+                <div class="loading-indicator">Loading lemma data...</div>
+              {/if}
             {/each}
-          </ul>
+          </div>
         </div>
       {/if}
     </div>
@@ -201,21 +258,17 @@
   }
 
   .words-list {
-    list-style: none;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
   }
-
-  .words-list li {
-    margin: var(--spacing-2) 0;
-  }
-
-  .lemma-link {
-    color: var(--color-primary);
-    text-decoration: none;
-    font-size: 1rem;
-  }
-
-  .lemma-link:hover {
-    text-decoration: underline;
+  
+  .loading-indicator {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin-top: -0.5rem;
+    margin-bottom: 0.5rem;
   }
 </style> 

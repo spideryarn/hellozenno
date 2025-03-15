@@ -137,6 +137,18 @@ def get_sentence(language_code: str, slug: str):
             ),
         }
 
+        # Get lemmas both from the database relationships and from the matched wordforms
+        db_lemma_words = sentence.lemma_words if hasattr(sentence, "lemma_words") else []
+        
+        # Extract lemmas from the matched wordforms
+        matched_lemmas = []
+        for wf in wordforms_d:
+            if wf.get("lemma") and wf["lemma"] not in matched_lemmas and wf["lemma"] not in db_lemma_words:
+                matched_lemmas.append(wf["lemma"])
+        
+        # Combine both sources of lemmas, removing duplicates
+        all_lemmas = list(set(db_lemma_words + matched_lemmas))
+        
         sentence_data = {
             "id": sentence.id,
             "sentence": str(sentence.sentence),
@@ -144,9 +156,7 @@ def get_sentence(language_code: str, slug: str):
             "slug": sentence.slug,
             "language_code": sentence.language_code,
             "has_audio": bool(sentence.audio_data),
-            "lemma_words": (
-                sentence.lemma_words if hasattr(sentence, "lemma_words") else None
-            ),
+            "lemma_words": all_lemmas if all_lemmas else None,
         }
 
         return render_template(

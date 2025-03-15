@@ -1,7 +1,9 @@
 from flask import Blueprint, abort, jsonify, redirect, url_for, send_file
+from peewee import DoesNotExist
 
 from utils.flask_view_utils import full_url_for
 from utils.word_utils import get_word_preview
+from db_models import Lemma
 
 # Create a Blueprint for our API routes
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -45,3 +47,20 @@ def get_mp3(lang_code: str, word: str):
         return send_file(mp3_filen, mimetype="audio/mpeg")
     except FileNotFoundError:
         abort(404, description="MP3 file not found")
+
+
+@api_bp.route("/<language_code>/lemma/<lemma>/data")
+def get_lemma_data(language_code: str, lemma: str):
+    """Get detailed data for a specific lemma."""
+    try:
+        lemma_model = Lemma.get(
+            (Lemma.lemma == lemma) & (Lemma.language_code == language_code)
+        )
+        data = lemma_model.to_dict()
+        return jsonify(data)
+    except DoesNotExist:
+        response = jsonify(
+            {"error": "Not Found", "description": f"Lemma '{lemma}' not found"}
+        )
+        response.status_code = 404
+        return response
