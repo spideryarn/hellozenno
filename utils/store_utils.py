@@ -113,7 +113,7 @@ def get_lemma_for_wordform(wordform: str, target_language_code: str) -> Optional
     wordform_lower = wordform.lower()
 
     # Get all known lemmas for the language
-    query = Lemma.get_all_for_language(target_language_code, "alpha")
+    query = Lemma.get_all_lemmas_for(language_code=target_language_code, sort_by="alpha")
     lemmas = [lemma.lemma for lemma in query]
 
     # Helper function to get all wordforms for a lemma
