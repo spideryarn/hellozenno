@@ -1,3 +1,22 @@
+// Device detection utility
+function isMobileOrTablet() {
+    // Check if device has touch capability (most mobile/tablet devices do)
+    const hasTouchScreen = (
+        ('ontouchstart' in window) ||
+        (navigator.maxTouchPoints > 0) ||
+        (navigator.msMaxTouchPoints > 0)
+    );
+    
+    // Check user agent for common mobile/tablet identifiers
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobileUserAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i.test(userAgent);
+    
+    return hasTouchScreen && isMobileUserAgent;
+}
+
+// Expose the function globally so it can be used by other scripts
+window.isMobileOrTablet = isMobileOrTablet;
+
 // Reusable modal functions
 function showModal(options) {
     const modal = document.getElementById('reusableModal');

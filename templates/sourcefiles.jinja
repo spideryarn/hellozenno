@@ -214,7 +214,21 @@
         color: #333;
     }
     .mobile-upload-options {
-        display: none;
+        display: none; /* Hidden by default, will be shown via JS if mobile/tablet detected */
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .mobile-upload-options label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .mobile-upload-options i {
+        font-size: 1.2em;
     }
 
     /* Text input modal styling */
@@ -264,21 +278,6 @@
     }
 
     @media (max-width: 768px) {
-        .mobile-upload-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .mobile-upload-options label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .mobile-upload-options i {
-            font-size: 1.2em;
-        }
         .create-text-modal textarea {
             min-height: 200px;
         }

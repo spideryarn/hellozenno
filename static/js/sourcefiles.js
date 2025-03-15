@@ -295,6 +295,33 @@ function init() {
 
     // Initialize language selector
     initLanguageSelector();
+    
+    // Set up mobile/desktop specific UI elements
+    setupDeviceSpecificUI();
+}
+
+// Setup device-specific UI elements
+function setupDeviceSpecificUI() {
+    // Check if the global isMobileOrTablet function is available
+    if (typeof window.isMobileOrTablet === 'function') {
+        const isMobile = window.isMobileOrTablet();
+        const mobileOptions = document.querySelector('.mobile-upload-options');
+        
+        if (mobileOptions) {
+            if (isMobile) {
+                // Show mobile upload options on mobile/tablet devices
+                mobileOptions.style.display = 'flex';
+            } else {
+                // Hide mobile options on desktop
+                mobileOptions.style.display = 'none';
+            }
+            
+            // Log the detection for debugging
+            console.log(`Device detection: ${isMobile ? 'Mobile/Tablet' : 'Desktop'}`);
+        }
+    } else {
+        console.warn('isMobileOrTablet function not available, unable to set device-specific UI');
+    }
 }
 
 // Run initialization when DOM is loaded
