@@ -89,34 +89,39 @@
       const debugLog = (msg, ...args) => PROD_DEBUG && console.log(`[SVELTE PROD] ${msg}`, ...args);
       
       try {
-        // Use correct filename pattern that matches our build output
-        const importUrl = "{{ url_for('static', filename='build/js/' + component_name | lower + '.js') }}";
-        debugLog("Loading component from:", importUrl);
+        // Load the unified component bundle
+        const bundleUrl = "{{ url_for('static', filename='build/js/hz-components.es.js') }}";
+        debugLog("Loading component bundle from:", bundleUrl);
         
-        // Dynamic import
-        import(importUrl).then(
-          module => {
-            debugLog("Module imported:", Object.keys(module));
+        // Dynamic import bundle
+        import(bundleUrl).then(
+          componentsModule => {
+            debugLog("Component bundle imported:", Object.keys(componentsModule));
             
             // Find target element
-            const targetElement = document.getElementById('{{ component_id if component_id else component_name | lower + "-component" }}');
+            const targetElementId = '{{ component_id if component_id else component_name | lower + "-component" }}';
+            const targetElement = document.getElementById(targetElementId);
             
             if (!targetElement) {
-              throw new Error(`Target element #{{ component_id if component_id else component_name | lower + "-component" }} not found`);
+              throw new Error(`Target element #${targetElementId} not found`);
+            }
+            
+            // Get component factory from registry
+            const componentName = '{{ component_name | lower }}';
+            const componentFactory = componentsModule.default[componentName];
+            
+            if (typeof componentFactory !== 'function') {
+              console.error(`Component factory '${componentName}' not found in bundle:`, Object.keys(componentsModule.default));
+              return;
             }
             
             // Mount component
             const props = {{ props | tojson | safe }};
-            
-            if (typeof module.default !== 'function') {
-              console.error("Module default export is not a function:", typeof module.default);
-            } else {
-              const component = module.default(targetElement, props);
-              debugLog("Component mounted successfully");
-            }
+            const component = componentFactory(targetElement, props);
+            debugLog(`Component ${componentName} mounted successfully`);
           },
           error => {
-            console.error(`Failed to import ${importUrl}:`, error);
+            console.error(`Failed to import ${bundleUrl}:`, error);
           }
         );
       } catch (error) {

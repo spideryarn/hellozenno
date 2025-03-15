@@ -1,0 +1,36 @@
+/**
+ * Central export file for all Svelte components
+ * This file serves as the entry point for the library build
+ */
+
+// Import all component classes
+import MiniLemma from '../components/MiniLemma.svelte';
+import MiniSentence from '../components/MiniSentence.svelte';
+import MiniWordform from '../components/MiniWordform.svelte';
+import MiniWordformList from '../components/MiniWordformList.svelte';
+import MiniPhrase from '../components/MiniPhrase.svelte';
+import Sentence from '../components/Sentence.svelte';
+// Add other components as needed
+
+// Export all component classes
+export {
+  MiniLemma,
+  MiniSentence,
+  MiniWordform,
+  MiniWordformList,
+  MiniPhrase,
+  Sentence
+};
+
+// Create a component registry with factory functions
+const components = {
+  minilemma: (target: HTMLElement, props: any) => new MiniLemma({ target, props }),
+  minisentence: (target: HTMLElement, props: any) => new MiniSentence({ target, props }),
+  miniwordform: (target: HTMLElement, props: any) => new MiniWordform({ target, props }),
+  miniwordformlist: (target: HTMLElement, props: any) => new MiniWordformList({ target, props }),
+  miniphrase: (target: HTMLElement, props: any) => new MiniPhrase({ target, props }),
+  sentence: (target: HTMLElement, props: any) => new Sentence({ target, props }),
+};
+
+// Export default component registry
+export default components;

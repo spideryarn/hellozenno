@@ -64,21 +64,25 @@ export default defineConfig({
         // Ensure source maps are generated for easier debugging
         sourcemap: true,
         
-        // Disable minification for better debugging
-        minify: process.env.NODE_ENV === 'production' ? 'esbuild' : false,
+        // Configure library mode for component building
+        lib: {
+            // Use a single entry point that exports all components
+            entry: resolve(__dirname, 'src/entries/index.ts'),
+            name: 'HzComponents',
+            formats: ['es'],
+            fileName: (format) => `js/hz-components.${format}.js`
+        },
         
         rollupOptions: {
-            input: entries,
+            // Make sure to externalize deps that shouldn't be bundled
+            external: ['svelte'],
             output: {
-                entryFileNames: 'js/[name].js',
-                chunkFileNames: 'js/[name]-[hash].js',
+                // Global variables to use in UMD build for externalized deps
+                globals: {
+                    svelte: 'Svelte'
+                },
+                // Preserve directory structure for component CSS
                 assetFileNames: 'assets/[name]-[hash][extname]',
-                // Use ES module format to ensure compatibility with modern browsers
-                format: 'es',
-                // Properly name exports
-                exports: 'named',
-                // Ensure property tree-shaking doesn't remove component code
-                manualChunks: undefined
             }
         }
     },

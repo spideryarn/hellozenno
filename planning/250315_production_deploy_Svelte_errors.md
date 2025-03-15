@@ -62,51 +62,89 @@ Similar errors appear for all component files (minilemma.js, minisentence.js, mi
 
 ### Investigation Update (March 15, 2025)
 
-After initial investigation, we've confirmed several aspects of the issue:
+After thorough investigation, we've identified the root causes and implemented a solution:
 
 1. **URL Path Mismatch**: 
    - The `base_svelte.jinja` template was incorrectly looking for files with `-entry.js` suffix
    - Actual built files have just `.js` suffix (e.g., `minilemma.js`)
-   - This has been fixed by updating the import URL pattern
+   - This was fixed by updating the import URL pattern
 
 2. **Empty Component Files**:
-   - After building, component files are only ~70 bytes
-   - They contain only: `import"./index-IHki7fMi.js";`
-   - No actual component code or factory functions are included
-   - This persists even with adjusted build configurations
+   - After building, component files were only ~70 bytes
+   - They contained only: `import"./index-IHki7fMi.js";`
+   - No actual component code or factory functions were included
+   - The issue was related to how Vite optimizes code in production mode
+   - Standard build is designed for applications, not component libraries
 
-3. **Further Investigation Needed**:
-   - Need to understand why Vite is generating minimal files
-   - Research best practices for Svelte + Vite component libraries
-   - Explore alternative bundling strategies
+3. **Solution: Library Mode with Component Registry**:
+   - Implemented Vite's "library mode" designed specifically for component libraries
+   - Created a central entry point (`frontend/src/entries/index.ts`) that:
+     - Imports all Svelte components
+     - Exports them individually for TypeScript support
+     - Creates a registry of component factory functions 
+   - Updated `base_svelte.jinja` to:
+     - Load the single bundle file instead of individual component files
+     - Look up the appropriate component factory by name
+     - Add better error handling and debugging
 
-## Proposed Solutions
+4. **Results**:
+   - Single bundle (47KB) containing all components vs. empty individual files
+   - More reliable component loading in production
+   - Better aligned with industry best practices for component libraries
+   - Simplified network requests (one bundle vs. many small files)
+   - Added requirement: new components must be registered in `index.ts`
 
-### Option 1: Fix Vite Build Configuration
-1. Modify Vite configuration to preserve component code:
+## Implemented Solution
+
+We implemented **Option 3: Bundle-Based Approach** with Vite's library mode, which proved to be the most effective solution:
+
+1. **Library Mode Configuration**:
    ```javascript
    build: {
+     lib: {
+       entry: resolve(__dirname, 'src/entries/index.ts'),
+       name: 'HzComponents',
+       formats: ['es'],
+       fileName: (format) => `js/hz-components.${format}.js`
+     },
      rollupOptions: {
+       external: ['svelte'],
        output: {
-         format: 'es',
-         preserveModules: true,
-         exports: 'named'
+         globals: {
+           svelte: 'Svelte'
+         }
        }
      }
    }
    ```
-2. Correct the file path in `base_svelte.jinja` to use `.js` instead of `-entry.js`
-3. Add explicit component exports to ensure they survive tree-shaking
 
-### Option 2: Custom Build Plugin
-1. Create a Vite plugin that post-processes build output
-2. Replace component files with complete, standalone implementations
-3. Ensure each file has the necessary code to create and mount components
+2. **Component Registry Implementation**:
+   ```typescript
+   // Create a component registry with factory functions
+   const components = {
+     minilemma: (target: HTMLElement, props: any) => new MiniLemma({ target, props }),
+     minisentence: (target: HTMLElement, props: any) => new MiniSentence({ target, props }),
+     // ...other components
+   };
+   
+   export default components;
+   ```
 
-### Option 3: Bundle-Based Approach
-1. Change architecture to use a single bundle for all components
-2. Register components globally and access them by name
-3. Eliminate individual dynamic imports in favor of a unified approach
+3. **Updated Template for Component Loading**:
+   ```javascript
+   // Load the unified component bundle
+   const bundleUrl = "{{ url_for('static', filename='build/js/hz-components.es.js') }}";
+   
+   // Dynamic import bundle
+   import(bundleUrl).then(componentsModule => {
+     // Get component factory from registry
+     const componentName = '{{ component_name | lower }}';
+     const componentFactory = componentsModule.default[componentName];
+     
+     // Mount component
+     const component = componentFactory(targetElement, props);
+   });
+   ```
 
 ## Testing Plan
 

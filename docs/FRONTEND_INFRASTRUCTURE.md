@@ -83,7 +83,25 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
    }
    ```
 
-3. **Template Integration**
+3. **Register Component** in the central registry (`frontend/src/entries/index.ts`)
+   ```typescript
+   // Import the new component
+   import YourComponent from '../components/YourComponent.svelte';
+   
+   // Add to exports
+   export {
+     // existing components...
+     YourComponent
+   };
+   
+   // Add to component registry
+   const components = {
+     // existing components...
+     yourcomponent: (target: HTMLElement, props: any) => new YourComponent({ target, props })
+   };
+   ```
+
+4. **Template Integration**
    ```jinja
    {% extends "base.jinja" %}
    {% from "base_svelte.jinja" import load_svelte_component %}
@@ -96,6 +114,8 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
      }, component_id='your-component-1') }}
    {% endblock %}
    ```
+
+> **IMPORTANT:** After creating a new component, make sure to add it to the central registry in `index.ts`. This is required for components to work in the production build.
 
 ### Best Practices & Gotchas
 - Use TypeScript for props and conditional rendering for optional props
