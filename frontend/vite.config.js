@@ -12,8 +12,8 @@ if (process.env.NODE_ENV !== 'production' && !flaskPort) {
 
 // Define entry points
 const entries = {
-    'sentence': resolve(__dirname, 'src/entries/sentence-entry.ts'),
-    'minisentence': resolve(__dirname, 'src/entries/minisentence-entry.ts'),
+    'sentence': resolve(__dirname, 'src/entries/sentence.ts'),
+    'minisentence': resolve(__dirname, 'src/entries/minisentence.ts'),
     'miniwordform': resolve(__dirname, 'src/entries/miniwordform.ts'),
     'minilemma': resolve(__dirname, 'src/entries/minilemma.ts'),
 };
