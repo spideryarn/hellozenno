@@ -40,3 +40,35 @@ const components = {
 
 // Export default component registry
 export default components;
+
+// Also expose the components to window for direct script tag access
+declare global {
+  interface Window {
+    HzComponents: {
+      components: typeof components;
+      MiniLemma: typeof MiniLemma;
+      MiniSentence: typeof MiniSentence;
+      MiniWordform: typeof MiniWordform;
+      MiniWordformList: typeof MiniWordformList;
+      MiniPhrase: typeof MiniPhrase;
+      Sentence: typeof Sentence;
+      FlashcardApp: typeof FlashcardApp;
+      FlashcardLanding: typeof FlashcardLanding;
+    };
+  }
+}
+
+// Expose components to window in development mode
+if (typeof window !== 'undefined') {
+  window.HzComponents = {
+    components,
+    MiniLemma,
+    MiniSentence,
+    MiniWordform,
+    MiniWordformList,
+    MiniPhrase,
+    Sentence,
+    FlashcardApp,
+    FlashcardLanding
+  };
+}

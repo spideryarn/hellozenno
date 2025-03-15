@@ -1,6 +1,6 @@
 {% extends "base.jinja" %}
-{% set vite_entries = [] %}
-{% set svelte_umd_mode = True %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+{% set vite_entries = ['flashcardlanding'] %}
 
 {% block title %}{{ target_language_name }} Flashcards - Hello Zenno{% endblock %}
 
@@ -30,36 +30,28 @@
                     
                     <p class="lead">Practice with sentence flashcards to improve your {{ target_language_name }} skills.</p>
                     
+                    <div id="flashcard-landing-component"></div>
+                    {{ load_svelte_component('FlashcardLanding', {
+                      'targetLanguageCode': target_language_code,
+                      'targetLanguageName': target_language_name,
+                      'sourcefile': sourcefile.slug if sourcefile else None,
+                      'sourcedir': sourcedir.slug if sourcedir else None,
+                      'lemmaCount': lemma_count if lemma_count else None
+                    }, component_id='flashcard-landing-component') }}
+                    
                     <script>
-                      // Mount the component with the proper props after page loads
-                      document.addEventListener("DOMContentLoaded", function() {
-                        console.log("HzComponents:", HzComponents);
-                        const FlashcardLanding = HzComponents.default.flashcardlanding;
-                        
-                        // Instantiate the component
-                        FlashcardLanding(document.getElementById('flashcard-landing'), {
-                          targetLanguageCode: '{{ target_language_code }}',
-                          targetLanguageName: '{{ target_language_name }}',
-                          sourcefile: {% if sourcefile %}'{{ sourcefile.slug }}'{% else %}null{% endif %},
-                          sourcedir: {% if sourcedir %}'{{ sourcedir.slug }}'{% else %}null{% endif %},
-                          lemmaCount: {% if lemma_count %}{{ lemma_count }}{% else %}null{% endif %}
-                        });
-                        
-                        // Add global keyboard shortcut for ENTER
-                        const startUrl = "/{{ target_language_code }}/flashcards/random{% if sourcefile %}?sourcefile={{ sourcefile.slug }}{% elif sourcedir %}?sourcedir={{ sourcedir.slug }}{% endif %}";
-                        
-                        document.addEventListener("keydown", function(event) {
-                          // Only trigger if no input element is focused
-                          if (event.key === "Enter" && 
-                              !(document.activeElement instanceof HTMLInputElement) && 
-                              !(document.activeElement instanceof HTMLTextAreaElement)) {
-                            window.location.href = startUrl;
-                          }
-                        });
+                      // Add global keyboard shortcut for ENTER
+                      const startUrl = "/{{ target_language_code }}/flashcards/random{% if sourcefile %}?sourcefile={{ sourcefile.slug }}{% elif sourcedir %}?sourcedir={{ sourcedir.slug }}{% endif %}";
+                      
+                      document.addEventListener("keydown", function(event) {
+                        // Only trigger if no input element is focused
+                        if (event.key === "Enter" && 
+                            !(document.activeElement instanceof HTMLInputElement) && 
+                            !(document.activeElement instanceof HTMLTextAreaElement)) {
+                          window.location.href = startUrl;
+                        }
                       });
                     </script>
-                    
-                    <div id="flashcard-landing"></div>
                     
                     {% if lemma_count %}
                     <div class="mt-3">

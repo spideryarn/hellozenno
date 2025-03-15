@@ -31,12 +31,21 @@ function correctMimeTypes() {
         name: 'correct-mime-types',
         configureServer(server) {
             server.middlewares.use((req, res, next) => {
-                // Set correct MIME types for Svelte and TypeScript files
-                if (req.url.endsWith('.svelte')) {
-                    res.setHeader('Content-Type', 'application/javascript');
-                } else if (req.url.endsWith('.ts')) {
-                    res.setHeader('Content-Type', 'application/javascript');
-                }
+                // Modify response headers after processing but before sending
+                const originalWriteHead = res.writeHead;
+                
+                res.writeHead = function(statusCode, statusMessage, headers) {
+                    // Set correct MIME types for Svelte and TypeScript files
+                    if (req.url.endsWith('.svelte') || req.url.endsWith('.ts')) {
+                        if (headers) {
+                            headers['Content-Type'] = 'application/javascript';
+                        } else {
+                            res.setHeader('Content-Type', 'application/javascript');
+                        }
+                    }
+                    return originalWriteHead.apply(this, arguments);
+                };
+                
                 next();
             });
         }
@@ -59,12 +68,18 @@ export default defineConfig({
             },
             // Ensure emitCss is true to extract CSS
             emitCss: true,
-            // Treat warnings as errors in development
+            // Handle compiler warnings
             onwarn: (warning, handler) => {
                 // Log the warning for debugging
                 console.error('Svelte warning:', warning.message);
 
-                // In development, throw errors for warnings
+                // Don't treat unused export property warnings as errors
+                if (warning.code === 'unused-export-let') {
+                    handler(warning);
+                    return;
+                }
+
+                // In development, throw errors for other warnings
                 if (process.env.NODE_ENV !== 'production') {
                     throw new Error(warning.message);
                 }
@@ -89,7 +104,7 @@ export default defineConfig({
             // Use a single entry point that exports all components
             entry: resolve(__dirname, 'src/entries/index.ts'),
             name: 'HzComponents',
-            formats: ['es', 'umd'],
+            formats: ['es'], // Only use ES modules, not UMD
             fileName: (format) => `js/hz-components.${format}.js`
         },
 

@@ -61,7 +61,6 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
 - **TypeScript Errors**: Run `npm run check` in frontend directory
 - **Styling Conflicts**: Check `base.css` before adding new styles
 - **Environment Variables**: Set `FLASK_PORT` before running dev scripts (see `.env.local`)
-- **Module Loading Issues**: For components with loading issues, consider using the UMD pattern (see flashcards2 implementation)
 - **Fix the root cause** - if there is a problem, we should fix it, rather than applying a bandaid or just replacing with a fallback (e.g. to hard-coded HTML)
 - **Avoid CDN dependencies** - All JavaScript libraries should be bundled or stored locally in `/static/js/extern/` to prevent reliance on external services
 
@@ -188,11 +187,6 @@ When working with Svelte components, follow these best practices to ensure smoot
   - Verify that `vite_entries` in templates match the entry file names (without "-entry" suffix)
   - Check vite.config.js to ensure the entries object uses the same key names as in templates
   - After making changes to entry file names, restart the Vite development server
-- **Module Loading / MIME Type issues**: 
-  - If facing persistent issues with module loading, consider using the UMD pattern
-  - Set `{% set svelte_umd_mode = True %}` in your template
-  - Access components via `HzComponents.default.componentname` 
-  - See flashcards2 implementation for details
 - **Props not working**: Verify correct prop types and default values
 - **Styling issues**: Check for CSS conflicts with global styles
 - **Multiple instances**: Ensure unique component IDs when mounting multiple instances
@@ -328,7 +322,7 @@ This approach provides several benefits:
    - Use version pinning to ensure consistency
 
 ### Example: Svelte Integration
-For Svelte components, we bundle the Svelte runtime into our UMD build rather than loading it from a CDN. This is configured in the vite.config.js file:
+For Svelte components, we bundle the Svelte runtime into our build rather than loading it from a CDN. This is configured in the vite.config.js file:
 
 ```javascript
 // In vite.config.js
@@ -342,4 +336,4 @@ rollupOptions: {
 }
 ```
 
-This approach ensures our Svelte components work reliably in all environments and don't depend on external CDN availability.
+This approach ensures our Svelte components work reliably in all environments and don't depend on external CDN availability. All components are loaded as ES modules, both in development (via the Vite dev server) and in production (via the built files).
