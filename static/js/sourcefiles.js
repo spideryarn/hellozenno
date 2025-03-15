@@ -53,12 +53,24 @@ function deleteSourcedir() {
     if (confirm('Are you sure you want to delete this directory? This action cannot be undone.')) {
         fetch(`/api/sourcedir/${window.target_language_code}/${window.sourcedir_slug}`, {
             method: 'DELETE',
-        }).then(response => {
+        }).then(async response => {
             if (response.ok) {
                 window.location.href = `/${window.target_language_code}`;
             } else {
-                alert('Failed to delete directory');
+                // Try to get a more specific error message from the response
+                let errorMsg;
+                try {
+                    const data = await response.json();
+                    errorMsg = data.error;
+                } catch (e) {
+                    // If we can't parse the response as JSON
+                    errorMsg = null;
+                }
+                
+                alert(errorMsg || 'Failed to delete directory. If the directory contains files, you must delete all files first.');
             }
+        }).catch(error => {
+            alert('Failed to delete directory: ' + error.message);
         });
     }
 }

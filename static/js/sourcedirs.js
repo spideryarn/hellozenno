@@ -58,7 +58,7 @@ const confirmDelete = async (sourcedirSlug) => {
             } catch (e) {
                 errorMsg = `Server returned ${response.status}: ${response.statusText}`;
             }
-            throw new Error(errorMsg || 'Failed to delete directory');
+            throw new Error(errorMsg || 'Failed to delete directory. If the directory contains files, you must delete all files first.');
         }
 
         // Reload the page to show updated list
