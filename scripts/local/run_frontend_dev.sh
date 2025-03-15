@@ -44,10 +44,28 @@ trap cleanup EXIT INT TERM
 # Set NODE_ENV to development explicitly
 export NODE_ENV=development
 
-# Start Vite in the background with error handling
-echo "Starting Vite development server..."
+# Define log file location and max lines
+MAX_LINES=200
+LOG_FILE="../logs/vite_dev.log"
+
+# Function to limit log file size
+limit_log_file() {
+  if [ -f "$LOG_FILE" ]; then
+    echo "Limiting $LOG_FILE to $MAX_LINES lines..."
+    tail -n $MAX_LINES "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"
+  fi
+}
+
+# Create logs directory if it doesn't exist
+mkdir -p ../logs
+
+# Limit log file size before starting
+limit_log_file
+
+# Start Vite in the background with error handling and log capturing
+echo "Starting Vite development server (logs in $LOG_FILE)..."
 cd frontend
-npm run dev &
+npm run dev >> "$LOG_FILE" 2>&1 &
 VITE_PID=$!
 
 # Monitor the Vite process

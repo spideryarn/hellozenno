@@ -49,6 +49,12 @@ For local development with production database:
 - Web app logs: `fly logs --no-tail` (so it doesn't continually stream)
 - Database logs: Available in Supabase dashboard
 
+### Logging
+- Flask app logs: `logs/flask_app.log` (limited to 100 lines via LimitingFileWriter)
+- Vite dev server logs: `logs/vite_dev.log` (limited to 200 lines)
+- Log configuration: See `utils/logging_utils.py` for Flask logging setup
+- Frontend log capture: Configured in `scripts/local/run_frontend_dev.sh`
+
 ## Resource Management
 
 ### Web App Memory (fly.toml)

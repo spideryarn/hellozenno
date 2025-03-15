@@ -29,6 +29,13 @@ To understand more about the purpose of the app, see `./README.md`
 - see `DATABASE.md`, and also use the Supabase MCP (read-only)
 - see `MIGRATIONS.md` before creating or running migrations
 
+### Logging
+- **Backend logs**: `/logs/flask_app.log` (managed by Loguru via LimitingFileWriter)
+- **Frontend logs**: `/logs/vite_dev.log` (captured from Vite development server)
+- Use the `loguru` library for Python logging: `from loguru import logger`
+- Configuration in `utils/logging_utils.py` (backend) and `scripts/local/run_frontend_dev.sh` (frontend)
+- Look at logs for debugging both Flask backend and Vite/Svelte frontend issues
+
 ### Frontend Components
 
 ### Testing
