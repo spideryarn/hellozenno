@@ -83,6 +83,120 @@ def inspect_sourcefile(
         abort(404, description="File not found")
 
 
+# Helper functions for reducing redundancy in inspect_sourcefile_* views
+def _get_wordforms_data(sourcefile_entry):
+    """Get wordforms data using the optimized query, including junction table data in one query."""
+    # Use the enhanced version of get_all_wordforms_for that includes junction data
+    language_code = sourcefile_entry.sourcedir.language_code
+    
+    # This avoids N+1 queries by including junction table data in a single query
+    return Wordform.get_all_wordforms_for(
+        language_code=language_code,
+        sourcefile=sourcefile_entry,
+        include_junction_data=True  # This will return wordform dicts with centrality and ordering
+    )
+
+
+def _get_phrases_data(sourcefile_entry):
+    """Get phrases data using the optimized query with included junction data."""
+    language_code = sourcefile_entry.sourcedir.language_code
+    
+    # Use the enhanced get_all_phrases_for method with include_junction_data=True
+    # This returns phrase dictionaries with centrality and ordering already included
+    return Phrase.get_all_phrases_for(
+        language_code=language_code,
+        sourcefile=sourcefile_entry,
+        include_junction_data=True  # This will return phrase dicts with centrality and ordering
+    )
+
+
+def _get_phrases_count(sourcefile_entry):
+    """Get only the phrase count for a sourcefile."""
+    return SourcefilePhrase.select().where(
+        SourcefilePhrase.sourcefile == sourcefile_entry
+    ).count()
+
+
+def _get_wordforms_count(sourcefile_entry):
+    """Get only the wordforms count for a sourcefile."""
+    return SourcefileWordform.select().where(
+        SourcefileWordform.sourcefile == sourcefile_entry
+    ).count()
+
+
+def _create_phrase_dict(phrase, sourcefile_phrase):
+    """Create a dictionary with phrase data."""
+    return {
+        "canonical_form": phrase.canonical_form,
+        "raw_forms": phrase.raw_forms,
+        "translations": phrase.translations,
+        "part_of_speech": phrase.part_of_speech,
+        "register": phrase.register,
+        "commonality": phrase.commonality,
+        "guessability": phrase.guessability,
+        "etymology": phrase.etymology,
+        "cultural_context": phrase.cultural_context,
+        "mnemonics": phrase.mnemonics,
+        "component_words": phrase.component_words,
+        "usage_notes": phrase.usage_notes,
+        "centrality": sourcefile_phrase.centrality,
+        "ordering": sourcefile_phrase.ordering,
+        "slug": phrase.slug,
+    }
+
+
+def _get_sourcefile_metadata(sourcefile_entry):
+    """Create a metadata dictionary for a sourcefile."""
+    metadata = {
+        "created_at": sourcefile_entry.created_at,
+        "updated_at": sourcefile_entry.updated_at,
+    }
+    if (
+        sourcefile_entry.metadata
+        and "image_processing" in sourcefile_entry.metadata
+    ):
+        metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
+    
+    return metadata
+
+
+def _get_available_sourcedirs(target_language_code):
+    """Get all available sourcedirs for a language."""
+    return (
+        Sourcedir.select(Sourcedir.path, Sourcedir.slug)
+        .where(Sourcedir.language_code == target_language_code)
+        .order_by(Sourcedir.path)
+    )
+
+
+def _get_common_template_params(
+    target_language_code, 
+    target_language_name, 
+    sourcefile_entry, 
+    sourcedir_slug, 
+    sourcefile_slug, 
+    nav_info, 
+    metadata, 
+    already_processed, 
+    available_sourcedirs
+):
+    """Get common template parameters used in all sourcefile view functions."""
+    return {
+        "target_language_code": target_language_code,
+        "target_language_name": target_language_name,
+        "sourcedir": sourcefile_entry.sourcedir.path,
+        "sourcedir_slug": sourcedir_slug,
+        "sourcefile": sourcefile_entry.filename,
+        "sourcefile_slug": sourcefile_slug,
+        "sourcefile_type": sourcefile_entry.sourcefile_type,
+        "sourcefile_entry": sourcefile_entry,
+        "metadata": metadata,
+        "nav_info": nav_info,
+        "already_processed": already_processed,
+        "available_sourcedirs": available_sourcedirs,
+    }
+
+
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/text"
 )
@@ -103,44 +217,11 @@ def inspect_sourcefile_text(
             sourcefile_entry.sourcedir, sourcefile_entry.slug  # type: ignore
         )
 
-        # Get existing linked wordforms from database and convert to dicts
-        wordforms_d = []
-        for sourcefile_wordform in sourcefile_entry.wordform_entries:  # type: ignore
-            wordform = sourcefile_wordform.wordform
-            wordform_d = wordform.to_dict()
-            # Add lemma information
-            wordform_d["lemma"] = wordform.lemma_entry.lemma
-            # Add centrality and ordering from junction table
-            wordform_d["centrality"] = sourcefile_wordform.centrality
-            wordform_d["ordering"] = sourcefile_wordform.ordering
-            wordforms_d.append(wordform_d)
+        # Get existing linked wordforms from database
+        wordforms_d = _get_wordforms_data(sourcefile_entry)
 
         # Get phrases from database
-        phrases_d = []
-        for sourcefile_phrase in (
-            sourcefile_entry.phrase_entries.select()  # type: ignore
-            .join(Phrase)
-            .order_by(SourcefilePhrase.ordering)
-        ):
-            phrase = sourcefile_phrase.phrase
-            phrase_d = {
-                "canonical_form": phrase.canonical_form,
-                "raw_forms": phrase.raw_forms,
-                "translations": phrase.translations,
-                "part_of_speech": phrase.part_of_speech,
-                "register": phrase.register,
-                "commonality": phrase.commonality,
-                "guessability": phrase.guessability,
-                "etymology": phrase.etymology,
-                "cultural_context": phrase.cultural_context,
-                "mnemonics": phrase.mnemonics,
-                "component_words": phrase.component_words,
-                "usage_notes": phrase.usage_notes,
-                "centrality": sourcefile_phrase.centrality,
-                "ordering": sourcefile_phrase.ordering,
-                "slug": phrase.slug,
-            }
-            phrases_d.append(phrase_d)
+        phrases_d = _get_phrases_data(sourcefile_entry)
 
         # Create enhanced text with interactive word links
         enhanced_original_txt, found_wordforms = create_interactive_word_links(
@@ -150,46 +231,37 @@ def inspect_sourcefile_text(
         )
 
         # Create metadata dict
-        metadata = {
-            "created_at": sourcefile_entry.created_at,
-            "updated_at": sourcefile_entry.updated_at,
-        }
-        if (
-            sourcefile_entry.metadata
-            and "image_processing" in sourcefile_entry.metadata
-        ):
-            metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
+        metadata = _get_sourcefile_metadata(sourcefile_entry)
 
         # Check if file has been processed before
         already_processed = bool(wordforms_d)
         
         # Get all available sourcedirs for this language (for move dropdown)
-        available_sourcedirs = (
-            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
-            .where(Sourcedir.language_code == target_language_code)
-            .order_by(Sourcedir.path)
-        )
+        available_sourcedirs = _get_available_sourcedirs(target_language_code)
 
-        return render_template(
-            "sourcefile_text.jinja",
-            target_language_code=target_language_code,
-            target_language_name=target_language_name,
-            sourcedir=sourcefile_entry.sourcedir.path,
-            sourcedir_slug=sourcedir_slug,
-            sourcefile=sourcefile_entry.filename,
-            sourcefile_slug=sourcefile_slug,
-            sourcefile_type=sourcefile_entry.sourcefile_type,
-            sourcefile_entry=sourcefile_entry,
-            enhanced_original_txt=enhanced_original_txt,
-            translated_txt=sourcefile_entry.text_english,
-            metadata=metadata,
-            nav_info=nav_info,
-            active_tab="text",
-            already_processed=already_processed,
-            wordforms_d=wordforms_d,
-            phrases_d=phrases_d,
-            available_sourcedirs=available_sourcedirs,
+        # Get common template parameters
+        template_params = _get_common_template_params(
+            target_language_code, 
+            target_language_name, 
+            sourcefile_entry, 
+            sourcedir_slug, 
+            sourcefile_slug, 
+            nav_info, 
+            metadata, 
+            already_processed, 
+            available_sourcedirs
         )
+        
+        # Add view-specific parameters
+        template_params.update({
+            "enhanced_original_txt": enhanced_original_txt,
+            "translated_txt": sourcefile_entry.text_english,
+            "active_tab": "text",
+            "wordforms_d": wordforms_d,
+            "phrases_d": phrases_d,
+        })
+
+        return render_template("sourcefile_text.jinja", **template_params)
     except DoesNotExist:
         abort(404, description="File not found")
 
@@ -214,99 +286,44 @@ def inspect_sourcefile_words(
             sourcefile_entry.sourcedir, sourcefile_entry.slug  # type: ignore
         )
 
-        # Get existing linked wordforms from database and convert to dicts - use a join to prefetch related data
-        wordforms_d = []
-        wordform_query = (
-            SourcefileWordform.select(
-                SourcefileWordform, Wordform, Lemma
-            )
-            .join(Wordform)
-            .join(Lemma, on=(Wordform.lemma_entry == Lemma.id))
-            .where(SourcefileWordform.sourcefile == sourcefile_entry)
-            .order_by(SourcefileWordform.ordering)
-        )
-        
-        for sourcefile_wordform in wordform_query:
-            wordform = sourcefile_wordform.wordform
-            wordform_d = wordform.to_dict()
-            # Add lemma information
-            wordform_d["lemma"] = wordform.lemma_entry.lemma
-            # Add centrality and ordering from junction table
-            wordform_d["centrality"] = sourcefile_wordform.centrality
-            wordform_d["ordering"] = sourcefile_wordform.ordering
-            wordforms_d.append(wordform_d)
+        # Get existing linked wordforms from database with optimized query
+        wordforms_d = _get_wordforms_data(sourcefile_entry)
 
-        # Get phrases from database with a join
-        phrases_d = []
-        phrase_query = (
-            SourcefilePhrase.select(
-                SourcefilePhrase, Phrase
-            )
-            .join(Phrase)
-            .where(SourcefilePhrase.sourcefile == sourcefile_entry)
-            .order_by(SourcefilePhrase.ordering)
-        )
-        
-        for sourcefile_phrase in phrase_query:
-            phrase = sourcefile_phrase.phrase
-            phrase_d = {
-                "canonical_form": phrase.canonical_form,
-                "raw_forms": phrase.raw_forms,
-                "translations": phrase.translations,
-                "part_of_speech": phrase.part_of_speech,
-                "register": phrase.register,
-                "commonality": phrase.commonality,
-                "guessability": phrase.guessability,
-                "etymology": phrase.etymology,
-                "cultural_context": phrase.cultural_context,
-                "mnemonics": phrase.mnemonics,
-                "component_words": phrase.component_words,
-                "usage_notes": phrase.usage_notes,
-                "centrality": sourcefile_phrase.centrality,
-                "ordering": sourcefile_phrase.ordering,
-                "slug": phrase.slug,
-            }
-            phrases_d.append(phrase_d)
+        # For the words view, we only need phrases count for the tab, not full data
+        phrases_count = _get_phrases_count(sourcefile_entry)
+        # But for backward compatibility, we'll still get the full phrases data
+        phrases_d = _get_phrases_data(sourcefile_entry)
 
         # Create metadata dict
-        metadata = {
-            "created_at": sourcefile_entry.created_at,
-            "updated_at": sourcefile_entry.updated_at,
-        }
-        if (
-            sourcefile_entry.metadata
-            and "image_processing" in sourcefile_entry.metadata
-        ):
-            metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
+        metadata = _get_sourcefile_metadata(sourcefile_entry)
 
         # Check if file has been processed before
         already_processed = bool(wordforms_d)
         
         # Get all available sourcedirs for this language (for move dropdown)
-        available_sourcedirs = (
-            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
-            .where(Sourcedir.language_code == target_language_code)
-            .order_by(Sourcedir.path)
-        )
+        available_sourcedirs = _get_available_sourcedirs(target_language_code)
 
-        return render_template(
-            "sourcefile_words.jinja",
-            target_language_code=target_language_code,
-            target_language_name=target_language_name,
-            sourcedir=sourcefile_entry.sourcedir.path,
-            sourcedir_slug=sourcedir_slug,
-            sourcefile=sourcefile_entry.filename,
-            sourcefile_slug=sourcefile_slug,
-            sourcefile_type=sourcefile_entry.sourcefile_type,
-            sourcefile_entry=sourcefile_entry,
-            wordforms_d=wordforms_d,
-            phrases_d=phrases_d,
-            metadata=metadata,
-            nav_info=nav_info,
-            active_tab="words",
-            already_processed=already_processed,
-            available_sourcedirs=available_sourcedirs,
+        # Get common template parameters
+        template_params = _get_common_template_params(
+            target_language_code, 
+            target_language_name, 
+            sourcefile_entry, 
+            sourcedir_slug, 
+            sourcefile_slug, 
+            nav_info, 
+            metadata, 
+            already_processed, 
+            available_sourcedirs
         )
+        
+        # Add view-specific parameters
+        template_params.update({
+            "active_tab": "words",
+            "wordforms_d": wordforms_d,
+            "phrases_d": phrases_d,
+        })
+
+        return render_template("sourcefile_words.jinja", **template_params)
     except DoesNotExist:
         abort(404, description="File not found")
 
@@ -331,84 +348,44 @@ def inspect_sourcefile_phrases(
             sourcefile_entry.sourcedir, sourcefile_entry.slug  # type: ignore
         )
 
-        # Get existing linked wordforms from database and convert to dicts
-        wordforms_d = []
-        for sourcefile_wordform in sourcefile_entry.wordform_entries:  # type: ignore
-            wordform = sourcefile_wordform.wordform
-            wordform_d = wordform.to_dict()
-            # Add lemma information
-            wordform_d["lemma"] = wordform.lemma_entry.lemma
-            # Add centrality and ordering from junction table
-            wordform_d["centrality"] = sourcefile_wordform.centrality
-            wordform_d["ordering"] = sourcefile_wordform.ordering
-            wordforms_d.append(wordform_d)
+        # For the phrases view, we only need wordforms count for the tab, not full data
+        wordforms_count = _get_wordforms_count(sourcefile_entry)
+        # But for backward compatibility, we'll still get the full wordforms data
+        wordforms_d = _get_wordforms_data(sourcefile_entry)
 
-        # Get phrases from database
-        phrases_d = []
-        for sourcefile_phrase in (
-            sourcefile_entry.phrase_entries.select()  # type: ignore
-            .join(Phrase)
-            .order_by(SourcefilePhrase.ordering)
-        ):
-            phrase = sourcefile_phrase.phrase
-            phrase_d = {
-                "canonical_form": phrase.canonical_form,
-                "raw_forms": phrase.raw_forms,
-                "translations": phrase.translations,
-                "part_of_speech": phrase.part_of_speech,
-                "register": phrase.register,
-                "commonality": phrase.commonality,
-                "guessability": phrase.guessability,
-                "etymology": phrase.etymology,
-                "cultural_context": phrase.cultural_context,
-                "mnemonics": phrase.mnemonics,
-                "component_words": phrase.component_words,
-                "usage_notes": phrase.usage_notes,
-                "centrality": sourcefile_phrase.centrality,
-                "ordering": sourcefile_phrase.ordering,
-                "slug": phrase.slug,
-            }
-            phrases_d.append(phrase_d)
+        # Get phrases data with optimized query
+        phrases_d = _get_phrases_data(sourcefile_entry)
 
         # Create metadata dict
-        metadata = {
-            "created_at": sourcefile_entry.created_at,
-            "updated_at": sourcefile_entry.updated_at,
-        }
-        if (
-            sourcefile_entry.metadata
-            and "image_processing" in sourcefile_entry.metadata
-        ):
-            metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
+        metadata = _get_sourcefile_metadata(sourcefile_entry)
 
         # Check if file has been processed before
         already_processed = bool(phrases_d)
         
         # Get all available sourcedirs for this language (for move dropdown)
-        available_sourcedirs = (
-            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
-            .where(Sourcedir.language_code == target_language_code)
-            .order_by(Sourcedir.path)
-        )
+        available_sourcedirs = _get_available_sourcedirs(target_language_code)
 
-        return render_template(
-            "sourcefile_phrases.jinja",
-            target_language_code=target_language_code,
-            target_language_name=target_language_name,
-            sourcedir=sourcefile_entry.sourcedir.path,
-            sourcedir_slug=sourcedir_slug,
-            sourcefile=sourcefile_entry.filename,
-            sourcefile_slug=sourcefile_slug,
-            sourcefile_type=sourcefile_entry.sourcefile_type,
-            sourcefile_entry=sourcefile_entry,
-            phrases_d=phrases_d,
-            metadata=metadata,
-            nav_info=nav_info,
-            active_tab="phrases",
-            already_processed=already_processed,
-            wordforms_d=wordforms_d,
-            available_sourcedirs=available_sourcedirs,
+        # Get common template parameters
+        template_params = _get_common_template_params(
+            target_language_code, 
+            target_language_name, 
+            sourcefile_entry, 
+            sourcedir_slug, 
+            sourcefile_slug, 
+            nav_info, 
+            metadata, 
+            already_processed, 
+            available_sourcedirs
         )
+        
+        # Add view-specific parameters
+        template_params.update({
+            "active_tab": "phrases",
+            "phrases_d": phrases_d,
+            "wordforms_d": wordforms_d,
+        })
+
+        return render_template("sourcefile_phrases.jinja", **template_params)
     except DoesNotExist:
         abort(404, description="File not found")
 
@@ -720,6 +697,172 @@ def update_sourcefile(
             sourcefile_slug=sourcefile_slug,
         )
     )
+
+
+def _process_individual_lemma(lemma: str, target_language_code: str):
+    """Process a single lemma, generating metadata and audio for its sentences.
+
+    Includes random jitter to avoid overwhelming external APIs."""
+    # Add jitter delay between 0 and 2 seconds
+    time.sleep(random.uniform(0, 2))
+
+    try:
+        metadata = load_or_generate_lemma_metadata(
+            lemma, target_language_code, generate_if_incomplete=True
+        )
+
+        # Get example sentences
+        sentences = (
+            Sentence.select()
+            .join(SentenceLemma)
+            .join(Lemma)
+            .where(Lemma.lemma == lemma)
+        )
+
+        # Generate audio for each sentence
+        for sentence in sentences:
+            ensure_model_audio_data(sentence, should_add_delays=True, verbose=1)
+
+    except Exception as e:
+        print(f"Error processing lemma {lemma}: {str(e)}")
+        raise
+
+
+@sourcefile_views_bp.route(
+    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process_individual",
+    methods=["POST"],
+)
+def process_individual_words(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Process individual words in a sourcefile, generating full metadata and audio."""
+    # Get the sourcefile entry
+    sourcefile_entry = _get_sourcefile_entry(
+        target_language_code, sourcedir_slug, sourcefile_slug
+    )
+
+    # Get all wordforms for this sourcefile
+    wordforms = [sw.wordform for sw in sourcefile_entry.wordform_entries]  # type: ignore
+
+    # Get unique lemmas through the lemma_entry relationship
+    unique_lemmas = {wf.lemma_entry.lemma for wf in wordforms}
+
+    # Process lemmas in parallel with a thread pool
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        # Submit all tasks
+        futures = [
+            executor.submit(_process_individual_lemma, lemma, target_language_code)
+            for lemma in unique_lemmas
+        ]
+
+        # Wait for all tasks to complete
+        for future in futures:
+            try:
+                future.result()  # This will raise any exceptions from the thread
+            except Exception as e:
+                print(f"Thread failed: {str(e)}")
+                # Continue processing other lemmas even if one fails
+
+    print(f"Done processing sourcefile {sourcefile_slug}")
+    return "", 204
+
+
+@sourcefile_views_bp.route(
+    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/update_description",
+    methods=["PUT"],
+)
+def update_sourcefile_description(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Update the description of a sourcefile."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Get and validate the description from the request
+        data = request.get_json()
+        if data is None:
+            return jsonify({"error": "Missing request data"}), 400
+
+        description = data.get("description", "").strip()
+
+        # Update the description
+        setattr(sourcefile_entry, "description", description if description else None)
+        sourcefile_entry.save()
+
+        return "", 204  # No content, success
+
+    except DoesNotExist:
+        return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error updating description: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@sourcefile_views_bp.route(
+    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/move",
+    methods=["PUT"],
+)
+def move_sourcefile(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Move a sourcefile to a different sourcedir."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Get and validate the new sourcedir from the request
+        data = request.get_json()
+        if data is None or "new_sourcedir_slug" not in data:
+            return jsonify({"error": "Missing new_sourcedir_slug parameter"}), 400
+
+        new_sourcedir_slug = data.get("new_sourcedir_slug").strip()
+        if not new_sourcedir_slug:
+            return jsonify({"error": "Invalid sourcedir slug"}), 400
+
+        # Get the new sourcedir entry
+        try:
+            new_sourcedir_entry = Sourcedir.get(
+                Sourcedir.slug == new_sourcedir_slug,
+                Sourcedir.language_code == target_language_code,
+            )
+        except DoesNotExist:
+            return jsonify({"error": "Target directory not found"}), 404
+
+        # Don't do anything if it's the same sourcedir
+        if sourcefile_entry.sourcedir.id == new_sourcedir_entry.id:
+            return jsonify({"message": "File is already in this directory"}), 200
+
+        # Check if a file with the same filename already exists in the new sourcedir
+        if (
+            Sourcefile.select()
+            .where(
+                (Sourcefile.sourcedir == new_sourcedir_entry)
+                & (Sourcefile.filename == sourcefile_entry.filename)
+            )
+            .exists()
+        ):
+            return jsonify({"error": "A file with this name already exists in the target directory"}), 409
+
+        # Update the sourcedir
+        sourcefile_entry.sourcedir = new_sourcedir_entry
+        sourcefile_entry.save()  # This will also update the slug if needed
+
+        return jsonify({
+            "message": "File moved successfully",
+            "new_sourcedir_slug": new_sourcedir_slug,
+            "new_sourcefile_slug": sourcefile_entry.slug
+        }), 200
+
+    except DoesNotExist:
+        return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error moving sourcefile: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @sourcefile_views_bp.route(
@@ -1117,169 +1260,3 @@ def generate_sourcefile_audio(
                 os.unlink(temp_file.name)
             except Exception as e:
                 current_app.logger.error(f"Error cleaning up temp file: {str(e)}")
-
-
-def _process_individual_lemma(lemma: str, target_language_code: str):
-    """Process a single lemma, generating metadata and audio for its sentences.
-
-    Includes random jitter to avoid overwhelming external APIs."""
-    # Add jitter delay between 0 and 2 seconds
-    time.sleep(random.uniform(0, 2))
-
-    try:
-        metadata = load_or_generate_lemma_metadata(
-            lemma, target_language_code, generate_if_incomplete=True
-        )
-
-        # Get example sentences
-        sentences = (
-            Sentence.select()
-            .join(SentenceLemma)
-            .join(Lemma)
-            .where(Lemma.lemma == lemma)
-        )
-
-        # Generate audio for each sentence
-        for sentence in sentences:
-            ensure_model_audio_data(sentence, should_add_delays=True, verbose=1)
-
-    except Exception as e:
-        print(f"Error processing lemma {lemma}: {str(e)}")
-        raise
-
-
-@sourcefile_views_bp.route(
-    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process_individual",
-    methods=["POST"],
-)
-def process_individual_words(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
-):
-    """Process individual words in a sourcefile, generating full metadata and audio."""
-    # Get the sourcefile entry
-    sourcefile_entry = _get_sourcefile_entry(
-        target_language_code, sourcedir_slug, sourcefile_slug
-    )
-
-    # Get all wordforms for this sourcefile
-    wordforms = [sw.wordform for sw in sourcefile_entry.wordform_entries]  # type: ignore
-
-    # Get unique lemmas through the lemma_entry relationship
-    unique_lemmas = {wf.lemma_entry.lemma for wf in wordforms}
-
-    # Process lemmas in parallel with a thread pool
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        # Submit all tasks
-        futures = [
-            executor.submit(_process_individual_lemma, lemma, target_language_code)
-            for lemma in unique_lemmas
-        ]
-
-        # Wait for all tasks to complete
-        for future in futures:
-            try:
-                future.result()  # This will raise any exceptions from the thread
-            except Exception as e:
-                print(f"Thread failed: {str(e)}")
-                # Continue processing other lemmas even if one fails
-
-    print(f"Done processing sourcefile {sourcefile_slug}")
-    return "", 204
-
-
-@sourcefile_views_bp.route(
-    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/update_description",
-    methods=["PUT"],
-)
-def update_sourcefile_description(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
-):
-    """Update the description of a sourcefile."""
-    try:
-        # Get the sourcefile entry using helper
-        sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
-        )
-
-        # Get and validate the description from the request
-        data = request.get_json()
-        if data is None:
-            return jsonify({"error": "Missing request data"}), 400
-
-        description = data.get("description", "").strip()
-
-        # Update the description
-        setattr(sourcefile_entry, "description", description if description else None)
-        sourcefile_entry.save()
-
-        return "", 204  # No content, success
-
-    except DoesNotExist:
-        return jsonify({"error": "File not found"}), 404
-    except Exception as e:
-        current_app.logger.error(f"Error updating description: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-
-@sourcefile_views_bp.route(
-    "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/move",
-    methods=["PUT"],
-)
-def move_sourcefile(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
-):
-    """Move a sourcefile to a different sourcedir."""
-    try:
-        # Get the sourcefile entry using helper
-        sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
-        )
-
-        # Get and validate the new sourcedir from the request
-        data = request.get_json()
-        if data is None or "new_sourcedir_slug" not in data:
-            return jsonify({"error": "Missing new_sourcedir_slug parameter"}), 400
-
-        new_sourcedir_slug = data.get("new_sourcedir_slug").strip()
-        if not new_sourcedir_slug:
-            return jsonify({"error": "Invalid sourcedir slug"}), 400
-
-        # Get the new sourcedir entry
-        try:
-            new_sourcedir_entry = Sourcedir.get(
-                Sourcedir.slug == new_sourcedir_slug,
-                Sourcedir.language_code == target_language_code,
-            )
-        except DoesNotExist:
-            return jsonify({"error": "Target directory not found"}), 404
-
-        # Don't do anything if it's the same sourcedir
-        if sourcefile_entry.sourcedir.id == new_sourcedir_entry.id:
-            return jsonify({"message": "File is already in this directory"}), 200
-
-        # Check if a file with the same filename already exists in the new sourcedir
-        if (
-            Sourcefile.select()
-            .where(
-                (Sourcefile.sourcedir == new_sourcedir_entry)
-                & (Sourcefile.filename == sourcefile_entry.filename)
-            )
-            .exists()
-        ):
-            return jsonify({"error": "A file with this name already exists in the target directory"}), 409
-
-        # Update the sourcedir
-        sourcefile_entry.sourcedir = new_sourcedir_entry
-        sourcefile_entry.save()  # This will also update the slug if needed
-
-        return jsonify({
-            "message": "File moved successfully",
-            "new_sourcedir_slug": new_sourcedir_slug,
-            "new_sourcefile_slug": sourcefile_entry.slug
-        }), 200
-
-    except DoesNotExist:
-        return jsonify({"error": "File not found"}), 404
-    except Exception as e:
-        current_app.logger.error(f"Error moving sourcefile: {str(e)}")
-        return jsonify({"error": str(e)}), 500
