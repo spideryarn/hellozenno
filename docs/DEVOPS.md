@@ -1,6 +1,6 @@
 # Infrastructure & Development Guide
 
-see also: planning/, e.g. DATABASE.md, MIGRATIONS.md
+see also: `planning/`, e.g. `docs/DATABASE.md`, `docs/MIGRATIONS.md`, and `docs/FRONTEND_INFRASTRUCTURE.md`
 
 ## Common Operations
 
