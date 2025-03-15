@@ -19,9 +19,9 @@ def lemmas_list(target_language_code: str):
     # Get sort parameter from request
     sort = request.args.get("sort", "alpha")
 
-    # Get all lemmas for this language from the database using the model method
-    # which now handles case-insensitive sorting
-    lemmas = Lemma.get_all_for_language(target_language_code, sort)
+    # Get all lemmas for this language from the database using the enhanced model method
+    # which now handles optimized queries and multiple sorting options
+    lemmas = Lemma.get_all_lemmas_for(language_code=target_language_code, sort_by=sort)
 
     # Convert query results to the format expected by the template
     lemma_metadata = {lemma.lemma: lemma.to_dict() for lemma in lemmas}

@@ -91,14 +91,11 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
     except DoesNotExist:
         abort(404, description="Sourcedir not found")
 
-    lemmas_query = (
-        Lemma.select(Lemma.lemma)
-        .distinct()
-        .join(Wordform)  # join via Wordform.lemma_entry foreign key
-        .join(SourcefileWordform)  # join via SourcefileWordform.wordform foreign key
-        .join(Sourcefile)  # join via SourcefileWordform.sourcefile foreign key
-        .where(Sourcefile.sourcedir == sourcedir)
-        .order_by(Lemma.lemma)
+    # Use the new optimized method to get lemmas for this sourcedir
+    lemmas_query = Lemma.get_all_lemmas_for(
+        language_code=language_code,
+        sourcedir=sourcedir,
+        sort_by="alpha"
     )
     lemmas = [row.lemma for row in lemmas_query]
 
@@ -118,13 +115,11 @@ def get_sourcefile_lemmas(
     # Get the sourcefile using _get_sourcefile_entry
     sourcefile = _get_sourcefile_entry(language_code, sourcedir_slug, sourcefile_slug)
 
-    # Gather all lemmas
-    query = (
-        Lemma.select(Lemma.lemma)
-        .join(Wordform)
-        .join(SourcefileWordform)
-        .where(SourcefileWordform.sourcefile == sourcefile)
-        .distinct()
+    # Use the new optimized method to get lemmas for this sourcefile
+    query = Lemma.get_all_lemmas_for(
+        language_code=language_code,
+        sourcefile=sourcefile,
+        sort_by="alpha"
     )
 
     # Collect lemma strings, ignoring any None
@@ -132,4 +127,4 @@ def get_sourcefile_lemmas(
     if not lemmas:
         raise NotFound("Sourcefile contains no practice vocabulary.")
 
-    return sorted(lemmas)
+    return lemmas  # Already sorted by the query

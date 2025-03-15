@@ -182,10 +182,55 @@ class Lemma(BaseModel):
         return data
 
     @classmethod
-    def get_all_for_language(cls, language_code: str, sort_by: str = "alpha"):
-        """Get all lemmas for a language with specified sorting."""
-        query = cls.select().where(cls.language_code == language_code)
-
+    def get_all_lemmas_for(
+        cls,
+        language_code: str,
+        sourcedir=None,
+        sourcefile=None,
+        sort_by: str = "alpha",
+    ):
+        """Get lemmas for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
+        
+        Args:
+            language_code: 2-letter language code (e.g. "el" for Greek)
+            sourcedir: Optional Sourcedir object to filter by
+            sourcefile: Optional Sourcefile object to filter by
+            sort_by: Sorting method ("alpha", "date", or "commonality")
+            
+        Returns:
+            Optimized query of lemmas matching the criteria
+        """
+        # Start with a base query
+        if sourcefile:
+            # Filter by specific sourcefile
+            query = (
+                cls.select(cls)
+                .distinct()
+                .join(Wordform, on=(Wordform.lemma_entry == cls.id))
+                .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
+                .where(
+                    (cls.language_code == language_code) &
+                    (SourcefileWordform.sourcefile == sourcefile)
+                )
+            )
+        elif sourcedir:
+            # Filter by sourcedir
+            query = (
+                cls.select(cls)
+                .distinct()
+                .join(Wordform, on=(Wordform.lemma_entry == cls.id))
+                .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
+                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
+                .where(
+                    (cls.language_code == language_code) &
+                    (Sourcefile.sourcedir == sourcedir)
+                )
+            )
+        else:
+            # No filter, get all lemmas for the language
+            query = cls.select().where(cls.language_code == language_code)
+        
+        # Apply sorting
         if sort_by == "date":
             query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
         elif sort_by == "commonality":
@@ -194,9 +239,19 @@ class Lemma(BaseModel):
                 fn.COALESCE(cls.commonality, 0.0).desc(), fn.Lower(cls.lemma)
             )
         else:
+            # Default alpha sorting
             query = query.order_by(fn.Lower(cls.lemma))
-
+        
         return query
+        
+    @classmethod
+    def get_all_for_language(cls, language_code: str, sort_by: str = "alpha"):
+        """Get all lemmas for a language with specified sorting (Legacy method).
+        
+        This method is maintained for backward compatibility.
+        New code should use get_all_lemmas_for() instead.
+        """
+        return cls.get_all_lemmas_for(language_code, sort_by=sort_by)
 
     def get_all_wordforms(self) -> set[str]:
         """Get a flat set of all known forms of this lemma."""
