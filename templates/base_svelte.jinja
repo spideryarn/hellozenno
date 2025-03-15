@@ -1,12 +1,7 @@
 {% macro load_svelte_component(component_name, props={}, component_id='') %}
   {# Create div with a unique ID for the component to mount to #}
-  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}"
-       data-props="{{ props | tojson | replace('"', '&quot;') }}">
-    {# Add a loading state that will be replaced when component mounts #}
-    <div class="svelte-component-loading" id="{{ component_id if component_id else component_name | lower + '-loading' }}">
-      <!-- Loading placeholder that will be cleared on mount -->
-      <p class="loading-text">Loading component...</p>
-    </div>
+  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}">
+    {# Empty target div for component to mount to #}
   </div>
   {% if not config.IS_PRODUCTION %}
     {# Development mode - use Vite dev server #}
@@ -117,22 +112,6 @@
       });
     </script>
     
-    <style>
-      /* Styles for the loading state */
-      .svelte-component-loading {
-        border: 1px solid #e2e8f0;
-        border-radius: 0.375rem;
-        padding: 0.5rem 0.75rem;
-        margin: 0.25rem 0;
-      }
-      .svelte-component-loading .text-content {
-        font-weight: bold;
-        font-size: 1.1rem;
-      }
-      .svelte-component-loading .translations {
-        font-size: 0.875rem;
-        color: #64748b;
-      }
-    </style>
+    {# No loading style needed anymore #}
   {% endif %}
 {% endmacro %} 
