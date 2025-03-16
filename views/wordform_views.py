@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request
 from gjdutils.dicts import dict_as_html
 from peewee import DoesNotExist, fn, JOIN
+import urllib.parse
 
 from utils.lang_utils import get_language_name
 from db_models import Wordform, Lemma
@@ -20,8 +21,7 @@ def wordforms_list(target_language_code: str):
     # Get all wordforms for this language using the enhanced model method
     # which now handles all sorting options including commonality
     wordforms = Wordform.get_all_wordforms_for(
-        language_code=target_language_code,
-        sort_by=sort_by
+        language_code=target_language_code, sort_by=sort_by
     )
 
     # Convert to list of dictionaries for template
@@ -52,6 +52,10 @@ def wordforms_list(target_language_code: str):
 @wordform_views_bp.route("/<target_language_code>/wordform/<wordform>")
 def get_wordform_metadata(target_language_code: str, wordform: str):
     """Display metadata for a wordform and link to its lemma."""
+    # URL decode the wordform parameter to handle non-Latin characters properly
+    # Now handled by middleware in api/index.py
+    # wordform = urllib.parse.unquote(wordform)
+
     # First try to find existing wordform in database
     try:
         wordform_model = Wordform.get(
@@ -128,6 +132,10 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
 )
 def delete_wordform(target_language_code: str, wordform: str):
     """Delete a wordform from the database."""
+    # URL decode the wordform parameter to handle non-Latin characters properly
+    # Now handled by middleware in api/index.py
+    # wordform = urllib.parse.unquote(wordform)
+
     try:
         wordform_model = Wordform.get(
             Wordform.wordform == wordform,

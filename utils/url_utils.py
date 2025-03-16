@@ -1,0 +1,54 @@
+"""URL encoding and decoding utilities."""
+
+import urllib.parse
+from flask import request, g
+from loguru import logger
+
+
+def fix_url_encoding(url_part):
+    """
+    Fix URL encoding issues with non-Latin characters.
+
+    This handles the case where a URL part might be double-encoded
+    or encoded with the wrong charset.
+
+    Args:
+        url_part (str): The URL part to fix
+
+    Returns:
+        str: The properly decoded URL part
+    """
+    # If the URL part contains percent-encoded sequences that might be double-encoded
+    if "%25" in url_part:
+        # URL is double-encoded, decode it once
+        return urllib.parse.unquote(url_part)
+
+    # If the URL part contains percent-encoded sequences
+    if "%" in url_part:
+        try:
+            # Try to decode as UTF-8
+            return urllib.parse.unquote(url_part)
+        except UnicodeDecodeError:
+            # If that fails, try the Latin-1 to UTF-8 conversion
+            return url_part.encode("iso-8859-1").decode("utf-8", errors="replace")
+
+    return url_part
+
+
+def decode_url_params():
+    """
+    Decode URL path and query parameters to handle Unicode characters properly.
+
+    This function is designed to be used as a Flask before_request middleware.
+    It intercepts all requests and fixes URL encoding issues with non-Latin characters.
+    """
+    # Store the original URL for logging
+    g.original_url = request.path
+
+    # Check if the URL contains percent-encoded sequences
+    if "%" in request.path:
+        # Fix URL encoding
+        decoded_path = fix_url_encoding(request.path)
+        if decoded_path != request.path:
+            logger.info(f"Fixed URL encoding: {request.path} -> {decoded_path}")
+            request.path = decoded_path

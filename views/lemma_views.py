@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for
 from peewee import DoesNotExist, fn, JOIN
 import time
 import logging
+import urllib.parse
 
 from utils.lang_utils import get_language_name
 from db_models import Lemma, Wordform, LemmaExampleSentence
@@ -41,6 +42,10 @@ def lemmas_list(target_language_code: str):
 @lemma_views_bp.route("/<target_language_code>/lemma/<lemma>")
 def get_lemma_metadata(target_language_code: str, lemma: str):
     """Display metadata for a lemma."""
+    # URL decode the lemma parameter to handle non-Latin characters properly
+    # Now handled by middleware in api/index.py
+    # lemma = urllib.parse.unquote(lemma)
+
     start_time = time.time()
     try:
         # Time the database fetch with prefetch
@@ -132,6 +137,10 @@ def get_lemma_metadata(target_language_code: str, lemma: str):
 @lemma_views_bp.route("/<target_language_code>/lemma/<lemma>/delete", methods=["POST"])
 def delete_lemma(target_language_code: str, lemma: str):
     """Delete a lemma and its associated wordforms via cascade delete."""
+    # URL decode the lemma parameter to handle non-Latin characters properly
+    # Now handled by middleware in api/index.py
+    # lemma = urllib.parse.unquote(lemma)
+
     try:
         lemma_model = Lemma.get(
             Lemma.lemma == lemma,

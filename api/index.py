@@ -11,6 +11,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
+from utils.url_utils import decode_url_params
+
 
 # Configure logging with loguru
 setup_logging(log_to_file=True, max_lines=100)
@@ -77,6 +79,9 @@ def create_app():
     app.register_blueprint(sentence_views_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(flashcard_views_bp)
+
+    # Add middleware to handle URL decoding for all routes - see planning/250316_vercel_url_encoding_fix.md
+    app.before_request(decode_url_params)
 
     # Add a simple test route for Vercel deployment
     @app.route("/vercel-test")
