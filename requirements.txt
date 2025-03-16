@@ -12,6 +12,7 @@ jinja2
 loguru>=0.7.2  # For simplified logging
 openai
 peewee>=3.17.0
+peewee-migrate>=1.12.2
 pendulum
 Pillow
 psutil>=5.9.0
@@ -19,7 +20,6 @@ pycountry
 pydantic
 python-slugify
 psycopg2-binary==2.9.9
-peewee-migrate>=1.12.2
 python-dotenv>=1.0.0  # For environment variable management
 # spacy>=3.8.0  # For NLP processing - not actually used in the codebase
 ujson>=5.10.0  # For JSON handling

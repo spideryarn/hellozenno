@@ -1,0 +1,55 @@
+# Project specific directories
+backup/
+logs/
+obsolete/
+credentials/
+oneoff/
+tests/
+planning/
+screenshots/
+.cursor/
+hellozenno-vercel/
+
+# Frontend build artifacts
+node_modules/
+frontend/
+.svelte-kit/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vite/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.Python
+*.egg-info/
+.eggs/
+htmlcov/
+.coverage
+.tox/
+
+# System files
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Git files
+.git/
+.github/
+.gitignore
+
+# Environment files
+.env*
+!.env.example
+
+# Config files not needed for Vercel
+fly.toml
+Dockerfile
+.dockerignore 

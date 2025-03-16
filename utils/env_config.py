@@ -51,18 +51,18 @@ def is_testing() -> bool:
     return "PYTEST_CURRENT_TEST" in os.environ
 
 
-def is_fly_cloud() -> bool:
-    """Check if we're running on Fly.io.
+def is_vercel() -> bool:
+    """Check if we're running on Vercel.
 
-    Fly.io sets FLY_APP_NAME environment variable in all deployed applications.
+    Vercel sets VERCEL environment variable in all deployed applications.
     """
-    return os.getenv("FLY_APP_NAME") is not None
+    return os.getenv("VERCEL") == "1"
 
 
 def is_local_to_prod() -> bool:
     """Check if we're connecting to production database from local machine."""
     local_to_prod = os.getenv("USE_LOCAL_TO_PROD")
-    if is_fly_cloud():
+    if is_vercel():
         return False
     assert local_to_prod is None or local_to_prod in ["0", "1"]
     return local_to_prod == "1"
@@ -76,12 +76,12 @@ def decide_environment_file() -> Path:
     """
     # these should be mutually exclusive
     assert (
-        sum([is_testing(), is_fly_cloud(), is_local_to_prod()]) <= 1
-    ), "Testing, production and local-to-prod should be mutually exclusive"
+        sum([is_testing(), is_vercel(), is_local_to_prod()]) <= 1
+    ), "Testing, production, Vercel, and local-to-prod should be mutually exclusive"
 
     if is_testing():
         return ENV_FILE_TESTING
-    if is_fly_cloud():
+    if is_vercel():
         return ENV_FILE_PROD
     if is_local_to_prod():
         return ENV_FILE_LOCAL_TO_PROD

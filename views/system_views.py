@@ -1,10 +1,9 @@
 from datetime import datetime
 import logging
-import psutil
 from flask import Blueprint, jsonify
 
 from utils.db_connection import get_db
-from utils.system_utils import get_db_metrics, get_system_metrics
+from utils.env_config import is_vercel
 
 # Create blueprint for system views
 system_views_bp = Blueprint("system_views", __name__, url_prefix="/")
@@ -21,26 +20,17 @@ def health_check():
         db = get_db()
         db_metrics = get_db_metrics(db)
 
-        # Get system metrics
-        system_metrics = get_system_metrics()
-
         # Get application metrics
         app_metrics = {
             "timestamp": datetime.now().isoformat(),
-            "uptime_seconds": psutil.boot_time(),
         }
 
-        # Determine overall status
-        is_healthy = (
-            db_metrics["connected"]
-            and system_metrics["memory"]["percent"] < 90
-            and system_metrics["disk"]["percent"] < 90
-        )
+        # Determine overall status based on database connectivity
+        is_healthy = db_metrics["connected"]
 
         response = {
             "status": "healthy" if is_healthy else "unhealthy",
             "database": db_metrics,
-            "system": system_metrics,
             "application": app_metrics,
         }
 
@@ -61,3 +51,37 @@ def health_check():
             ),
             500,
         )
+
+
+def get_db_metrics(db):
+    """Get database metrics.
+
+    Args:
+        db: Database connection
+
+    Returns:
+        dict: Database metrics
+    """
+    try:
+        # Test database connection with a simple query
+        cursor = db.execute_sql("SELECT 1")
+        cursor.fetchone()
+        cursor.close()
+
+        # Get connection info
+        connection_info = {
+            "database": db.database,
+            "host": db.connect_params.get("host", "unknown"),
+            "port": db.connect_params.get("port", "unknown"),
+        }
+
+        return {
+            "connected": True,
+            "connection_info": connection_info,
+        }
+    except Exception as e:
+        logger.error(f"Database connection test failed: {str(e)}")
+        return {
+            "connected": False,
+            "error": str(e),
+        }
