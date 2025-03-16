@@ -16,7 +16,7 @@ from utils.url_utils import decode_url_params
 
 
 # Configure logging with loguru
-setup_logging(log_to_file=True, max_lines=100)
+setup_logging(log_to_file=True, max_lines=200)
 
 
 def load_vite_manifest():
