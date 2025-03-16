@@ -71,6 +71,10 @@ def search_landing(target_language_code: str):
     query = request.args.get("q", "")
 
     if query:
+        # Fix URL encoding issues with Vercel by explicitly unquoting the query parameter
+        import urllib.parse
+        query = urllib.parse.unquote(query)
+        
         # If there's a query, redirect to the search endpoint
         return redirect_to_view(
             views_bp,
@@ -93,6 +97,10 @@ def search_word(target_language_code: str, wordform: str):
     Currently just redirects to the wordform view, but can be enhanced in the future
     to support more sophisticated search functionality.
     """
+    # Fix URL encoding issues with Vercel by explicitly unquoting the wordform parameter
+    import urllib.parse
+    wordform = urllib.parse.unquote(wordform)
+    
     return redirect_to_view(
         wordform_views_bp,
         get_wordform_metadata,
