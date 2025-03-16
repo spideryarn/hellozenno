@@ -30,6 +30,10 @@ def urls():
 @api_bp.route("/word-preview/<target_language_code>/<word>")
 def word_preview(target_language_code: str, word: str):
     """Get preview data for word tooltips."""
+    # Fix URL encoding issues with Vercel by explicitly unquoting the word parameter
+    import urllib.parse
+    word = urllib.parse.unquote(word)
+    
     preview = get_word_preview(target_language_code, word)
     if preview is None:
         response = jsonify(
@@ -72,6 +76,10 @@ def get_lemma_data(language_code: str, lemma: str):
 @api_bp.route("/phrase-preview/<target_language_code>/<phrase>")
 def phrase_preview(target_language_code: str, phrase: str):
     """Get preview data for phrase tooltips."""
+    # Fix URL encoding issues with Vercel by explicitly unquoting the phrase parameter
+    import urllib.parse
+    phrase = urllib.parse.unquote(phrase)
+    
     try:
         # Try to find the phrase in the database
         phrase_model = Phrase.select().where(
