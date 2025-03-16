@@ -53,8 +53,8 @@ def wordforms_list(target_language_code: str):
 def get_wordform_metadata(target_language_code: str, wordform: str):
     """Display metadata for a wordform and link to its lemma."""
     # URL decode the wordform parameter to handle non-Latin characters properly
-    # Now handled by middleware in api/index.py
-    # wordform = urllib.parse.unquote(wordform)
+    # Defense in depth: decode explicitly here, in addition to middleware
+    wordform = urllib.parse.unquote(wordform)
 
     # First try to find existing wordform in database
     try:
@@ -133,8 +133,8 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
 def delete_wordform(target_language_code: str, wordform: str):
     """Delete a wordform from the database."""
     # URL decode the wordform parameter to handle non-Latin characters properly
-    # Now handled by middleware in api/index.py
-    # wordform = urllib.parse.unquote(wordform)
+    # Defense in depth: decode explicitly here, in addition to middleware
+    wordform = urllib.parse.unquote(wordform)
 
     try:
         wordform_model = Wordform.get(

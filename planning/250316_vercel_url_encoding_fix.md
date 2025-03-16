@@ -79,14 +79,16 @@ After reviewing the codebase, we identified three possible approaches to fix the
 2. **Defense in depth**: Use both middleware and explicit decoding in route handlers
 3. **Handler-specific only**: Rely only on explicit decoding in each route handler
 
-We initially implemented approach #2 (defense in depth) by adding explicit decoding to route handlers, but after further analysis, we chose approach #1 (global middleware only) for the following reasons:
+We initially implemented approach #2 (defense in depth), then tried approach #1 (global middleware only), but after testing in the Vercel environment, we found that the middleware-only approach wasn't sufficient. The Greek characters were still appearing as percent-encoded in the Vercel deployment.
 
-1. **Centralized fix**: The middleware provides a single point of maintenance
-2. **Complete coverage**: All routes benefit from the fix without modifying each handler
-3. **Cleaner code**: Route handlers don't need additional decoding logic
-4. **Consistency**: All URL parameters are handled the same way
+Therefore, we've reverted to the defense-in-depth approach for the following reasons:
 
-To allow for easy reverting if needed, we've commented out the explicit decoding in route handlers rather than removing it completely.
+1. **Reliability**: Both levels of decoding provide better protection against environment-specific quirks
+2. **Vercel compatibility**: The explicit decoding in route handlers addresses the specific Vercel issue
+3. **Resilience**: If one method fails, the other can still work as a fallback
+4. **Specificity**: Route-specific decoding ensures critical parameters are always properly handled
+
+This two-layer approach ensures that even if the middleware doesn't work as expected in certain environments (like Vercel), the explicit decoding in route handlers will still handle the Greek characters correctly.
 
 ## Implementation Details
 

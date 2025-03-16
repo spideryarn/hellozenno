@@ -43,8 +43,8 @@ def lemmas_list(target_language_code: str):
 def get_lemma_metadata(target_language_code: str, lemma: str):
     """Display metadata for a lemma."""
     # URL decode the lemma parameter to handle non-Latin characters properly
-    # Now handled by middleware in api/index.py
-    # lemma = urllib.parse.unquote(lemma)
+    # Defense in depth: decode explicitly here, in addition to middleware
+    lemma = urllib.parse.unquote(lemma)
 
     start_time = time.time()
     try:
@@ -138,8 +138,8 @@ def get_lemma_metadata(target_language_code: str, lemma: str):
 def delete_lemma(target_language_code: str, lemma: str):
     """Delete a lemma and its associated wordforms via cascade delete."""
     # URL decode the lemma parameter to handle non-Latin characters properly
-    # Now handled by middleware in api/index.py
-    # lemma = urllib.parse.unquote(lemma)
+    # Defense in depth: decode explicitly here, in addition to middleware
+    lemma = urllib.parse.unquote(lemma)
 
     try:
         lemma_model = Lemma.get(

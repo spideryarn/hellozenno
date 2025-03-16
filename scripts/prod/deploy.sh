@@ -97,7 +97,7 @@ else
     
     # Run health checks
     echo "Running health checks on $DEPLOYMENT_URL..."
-    if curl -s "$DEPLOYMENT_URL/health" | grep -q "ok"; then
+    if curl -s "$DEPLOYMENT_URL/health-check" | grep -q "healthy"; then
         echo_success "Health check passed!"
     else
         echo_error "Health check failed!"
