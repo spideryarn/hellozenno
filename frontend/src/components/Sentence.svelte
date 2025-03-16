@@ -212,8 +212,8 @@
     margin-bottom: var(--spacing-4);
   }
 
-  /* Global styles for injected HTML content */
-  :global(.target-lang-text p) {
+  /* Import global styles at the top level instead of using :global scope */
+  :global(p) {
     margin: 0;
     padding: 0;
   }
@@ -225,7 +225,7 @@
   }
   
   /* Ensure consistent styling for any nested elements */
-  :global(.target-lang-text br) {
+  :global(br) {
     display: block;
     content: "";
     margin-top: 0.5rem;
