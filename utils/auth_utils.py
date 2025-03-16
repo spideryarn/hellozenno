@@ -198,10 +198,16 @@ def page_auth_required(f: Callable) -> Callable:
             # For non-API routes, redirect to login page
             target_language_code = kwargs.get("target_language_code")
             # Only include target_language_code if it's a valid non-empty value
-            if target_language_code:
+            if target_language_code and target_language_code != "":
                 login_url = url_for("system_views.auth_page", target_language_code=target_language_code)
             else:
                 login_url = url_for("system_views.auth_page")
+                
+            # Add the current path as a redirect parameter
+            current_path = request.path
+            if current_path not in ['/auth', '/auth/']:
+                login_url = f"{login_url}?redirect={current_path}"
+                
             return redirect(login_url)
             
         # Store user info in Flask's g object

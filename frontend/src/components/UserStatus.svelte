@@ -70,8 +70,17 @@
         </div>
         <div class="dropdown-divider"></div>
         <button class="dropdown-item" on:click={() => {
-            // Ensure we're redirecting to profile without a trailing slash
-            window.location.href = '/profile';
+            // Use direct navigation to profile without redirection risk
+            try {
+              fetch('/profile', { method: 'HEAD' }).then(response => {
+                if (response.ok) {
+                  window.location.href = '/profile';
+                }
+              });
+            } catch (e) {
+              // Fallback if fetch fails
+              window.location.href = '/profile';  
+            }
           }}>
           My Profile
         </button>

@@ -201,10 +201,12 @@ def profile_page(target_language_code=None):
         return redirect(url_for("system_views.profile_page"))
 
     # GET request - show the profile form
+    # Explicitly set target_language_code to None to avoid language lookup errors in templates
     return render_template(
         "profile.jinja", 
         user=g.user, 
         profile=profile, 
         languages=SUPPORTED_LANGUAGES,
-        target_language_code=None  # Pass None to avoid template errors
+        target_language_code=None,  # Pass None to avoid template errors
+        target_language_name=None  # Explicitly pass None for target_language_name
     )
