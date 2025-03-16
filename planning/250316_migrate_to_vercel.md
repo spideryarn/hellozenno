@@ -48,10 +48,11 @@ The current application is a Flask-based web app deployed on Fly.io with a Supab
 
 - [x] **Deployment Preparation**
   - [x] Create a new Vercel project
-  - [ ] Configure environment variables in Vercel dashboard
-  - [ ] Deploy to Vercel preview environment
+  - [x] Configure environment variables in Vercel dashboard
+  - [x] Deploy to Vercel preview environment
 
 - [ ] **Testing and Validation**
+  - [ ] Disable authentication for preview deployment in Vercel dashboard
   - [ ] Test basic functionality (vercel-test route)
   - [ ] Test database connectivity
   - [ ] Test all routes and functionality
@@ -124,18 +125,18 @@ The current application is a Flask-based web app deployed on Fly.io with a Supab
   - [x] Login to Vercel: `vercel login`
   - [x] Link to existing Vercel account: `vercel link`
 
-- [ ] **Configure Environment Variables**
-  - [ ] Set up the following environment variables in Vercel dashboard:
-    - `DATABASE_URL`
-    - `FLASK_SECRET_KEY`
-    - `CLAUDE_API_KEY`
-    - `OPENAI_API_KEY`
-    - `ELEVENLABS_API_KEY`
-    - `VERCEL=1`
+- [x] **Configure Environment Variables**
+  - [x] Update deployment scripts for Vercel:
+    - [x] Update `scripts/prod/set_secrets.sh` to set Vercel environment variables
+    - [x] Update `scripts/prod/deploy.sh` for Vercel deployment
+    - [x] Create `scripts/prod/deploy_preview.sh` for preview deployments
+  - [x] Run `./scripts/prod/set_secrets.sh` to set environment variables in Vercel
+  - [x] Update `deploy_preview.sh` to pass environment variables directly during deployment
 
-- [ ] **Deploy to Preview**
-  - [ ] Deploy to Vercel preview: `vercel`
-  - [ ] Verify deployment was successful
+- [x] **Deploy to Preview**
+  - [x] Deploy to Vercel preview: `./scripts/prod/deploy_preview.sh`
+  - [x] Verify deployment was successful
+  - [ ] Disable authentication for preview deployment in Vercel dashboard
   - [ ] Test the `/vercel-test` route
 
 ### Testing and Validation
@@ -267,22 +268,36 @@ After researching database connection best practices for serverless environments
    vercel login
    ```
 
-3. **Initialize Vercel Project**:
+3. **Set Environment Variables**:
    ```bash
-   vercel init
+   ./scripts/prod/set_secrets.sh
    ```
 
-4. **Link to Existing Vercel Account**:
+4. **Deploy to Preview Environment**:
    ```bash
-   vercel link
+   ./scripts/prod/deploy_preview.sh
    ```
 
-5. **Deploy to Preview Environment**:
+5. **Deploy to Production**:
    ```bash
-   vercel
+   ./scripts/prod/deploy.sh
    ```
 
-6. **Deploy to Production**:
-   ```bash
-   vercel --prod
-   ``` 
+### Environment Variable Issues
+
+We encountered issues with environment variables not being properly loaded in the Vercel serverless functions. We tried several approaches:
+
+1. Setting environment variables in the Vercel dashboard
+2. Setting environment variables using the Vercel CLI
+3. Passing environment variables directly during deployment using the `-e` flag
+
+The issue appears to be related to how Vercel handles environment variables in serverless functions. According to Vercel's documentation, environment variables are only made available to the app on each deployment, and there might be differences in how they're accessed in different environments.
+
+To resolve this issue, we need to:
+
+1. Disable authentication for preview deployments in the Vercel dashboard
+2. Test if the environment variables are properly loaded in the serverless function
+3. If the issue persists, consider alternative approaches such as:
+   - Using a `.env` file in the project root
+   - Modifying the code to handle missing environment variables gracefully
+   - Using Vercel's Edge Config for storing configuration values 

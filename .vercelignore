@@ -9,6 +9,7 @@ planning/
 screenshots/
 .cursor/
 hellozenno-vercel/
+gjdutils/
 
 # Frontend build artifacts
 node_modules/
