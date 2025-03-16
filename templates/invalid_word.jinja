@@ -6,7 +6,7 @@ Invalid Word - {{ target_language_name }}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('views.languages') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     » <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a>
     » {{ wordform }}
 {% endblock breadcrumbs %}
