@@ -35,6 +35,12 @@ nav {
     gap: 1rem;
 }
 
+.user-status-container {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
 .search-box {
     flex: 0 1 300px;
 }

@@ -823,6 +823,37 @@ class SourcefilePhrase(BaseModel):
         indexes = ((("sourcefile", "phrase"), True),)  # Unique index
 
 
+class Profile(BaseModel):
+    """User profile linked to Supabase auth.users."""
+    
+    user_id = CharField(unique=True)  # References auth.users.id in Supabase
+    target_language_code = CharField(null=True)  # User's preferred language
+    
+    class Meta:
+        indexes = ((("user_id",), True),)  # Unique index
+    
+    @classmethod
+    def get_or_create_for_user(cls, user_id: str, email: str = None):
+        """Get or create a profile for a Supabase auth user.
+        
+        Args:
+            user_id: Supabase auth user ID
+            email: User's email (optional)
+            
+        Returns:
+            Tuple of (profile, created)
+        """
+        try:
+            profile = cls.get(cls.user_id == user_id)
+            return profile, False
+        except DoesNotExist:
+            # Create new profile with default values
+            profile = cls.create(
+                user_id=user_id
+            )
+            return profile, True
+
+
 def get_models():
     """Return all models for database initialization"""
     return [
@@ -838,4 +869,5 @@ def get_models():
         Sourcefile,
         SourcefileWordform,
         SourcefilePhrase,
+        Profile,
     ]  # Order matters for foreign key dependencies

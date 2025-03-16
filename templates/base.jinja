@@ -44,7 +44,7 @@
                 <a href="{{ url_for('views.languages') }}">Home</a>
                 {% block breadcrumbs %}{% endblock breadcrumbs %}
             </div>
-            {% if target_language_code is defined %}
+            {% if target_language_code is defined and target_language_code %}
             <div class="nav-menu">
                 {# <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a> #}
                 {# <a href="{{ url_for('lemma_views.lemmas_list', target_language_code=target_language_code) }}">Lemmas</a> #}
@@ -57,6 +57,12 @@
                 </form>
             </div>
             {% endif %}
+            
+            <div class="user-status-container">
+                <div id="user-status"></div>
+                {% from "base_svelte.jinja" import load_svelte_component %}
+                {{ load_svelte_component('userstatus', {}, component_id='user-status') }}
+            </div>
         </div>
     </nav>
     {% endblock top_nav %}

@@ -23,6 +23,8 @@ const entries = {
     'miniphrase': resolve(__dirname, 'src/entries/miniphrase.ts'),
     'flashcardapp': resolve(__dirname, 'src/entries/flashcardapp.ts'),
     'flashcardlanding': resolve(__dirname, 'src/entries/flashcardlanding.ts'),
+    'auth': resolve(__dirname, 'src/entries/auth.ts'),
+    'userstatus': resolve(__dirname, 'src/entries/userstatus.ts'),
 };
 
 // Custom plugin to set correct MIME types
@@ -89,6 +91,12 @@ export default defineConfig({
             }
         })
     ],
+    
+    // Define environment variables
+    define: {
+        'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
+        'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
+    },
 
     // Configure build output to Flask's static directory
     build: {

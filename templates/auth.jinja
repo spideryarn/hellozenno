@@ -1,0 +1,46 @@
+{% extends "base.jinja" %}
+{% from "base_svelte.jinja" import load_svelte_component %}
+
+{% set vite_entries = ['auth'] %}
+
+{% block title %}
+Login | Hello Zenno
+{% endblock %}
+
+{% block head_css %}
+/* Auth page specific styles */
+.auth-page-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+  margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+  color: #6b7280;
+}
+{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+  <div class="auth-header">
+    <h1>Account Login</h1>
+    <p>Sign in to your Hello Zenno account or create a new one</p>
+  </div>
+  
+  <div id="auth-component"></div>
+  
+  {{ load_svelte_component('auth', {
+    'redirectUrl': redirect_url | default('/'),
+    'showSignup': show_signup | default(false)
+  }, component_id='auth-component') }}
+</div>
+{% endblock %}

@@ -12,6 +12,8 @@ import MiniPhrase from '../components/MiniPhrase.svelte';
 import Sentence from '../components/Sentence.svelte';
 import FlashcardApp from '../components/FlashcardApp.svelte';
 import FlashcardLanding from '../components/FlashcardLanding.svelte';
+import AuthPage from '../components/AuthPage.svelte';
+import UserStatus from '../components/UserStatus.svelte';
 // Add other components as needed
 
 // Export all component classes
@@ -23,7 +25,9 @@ export {
   MiniPhrase,
   Sentence,
   FlashcardApp,
-  FlashcardLanding
+  FlashcardLanding,
+  AuthPage,
+  UserStatus
 };
 
 // Create a component registry with factory functions
@@ -35,7 +39,9 @@ const components = {
   miniphrase: (target: HTMLElement, props: any) => new MiniPhrase({ target, props }),
   sentence: (target: HTMLElement, props: any) => new Sentence({ target, props }),
   flashcardapp: (target: HTMLElement, props: any) => new FlashcardApp({ target, props }),
-  flashcardlanding: (target: HTMLElement, props: any) => new FlashcardLanding({ target, props })
+  flashcardlanding: (target: HTMLElement, props: any) => new FlashcardLanding({ target, props }),
+  auth: (target: HTMLElement, props: any) => new AuthPage({ target, props }),
+  userstatus: (target: HTMLElement, props: any) => new UserStatus({ target, props })
 };
 
 // Export default component registry
@@ -54,6 +60,8 @@ declare global {
       Sentence: typeof Sentence;
       FlashcardApp: typeof FlashcardApp;
       FlashcardLanding: typeof FlashcardLanding;
+      AuthPage: typeof AuthPage;
+      UserStatus: typeof UserStatus;
     };
   }
 }
@@ -69,6 +77,8 @@ if (typeof window !== 'undefined') {
     MiniPhrase,
     Sentence,
     FlashcardApp,
-    FlashcardLanding
+    FlashcardLanding,
+    AuthPage,
+    UserStatus
   };
 }

@@ -1,5 +1,6 @@
 addict
 anthropic
+cryptography>=41.0.0  # For JWT and encryption support
 elevenlabs
 flask
 # google-api-python-client
@@ -18,9 +19,11 @@ Pillow
 psutil>=5.9.0
 pycountry
 pydantic
+PyJWT>=2.8.0  # For JWT token handling
 python-slugify
 psycopg2-binary==2.9.9
 python-dotenv>=1.0.0  # For environment variable management
+requests>=2.31.0  # For HTTP requests to Supabase
 # spacy>=3.8.0  # For NLP processing - not actually used in the codebase
 ujson>=5.10.0  # For JSON handling
 yt-dlp>=2023.12.30  # For YouTube audio downloads

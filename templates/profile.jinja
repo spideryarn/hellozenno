@@ -1,0 +1,141 @@
+{% extends "base.jinja" %}
+
+{% block title %}
+Your Profile | Hello Zenno
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <h1>Your Profile</h1>
+  
+  <div class="profile-card">
+    <form method="POST" action="{{ url_for('system_views.profile_page') }}">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          value="{{ user.email }}" 
+          disabled
+          class="form-control"
+        >
+        <small>Email cannot be changed</small>
+      </div>
+      
+      <!-- Removed display_name field to keep it minimal -->
+      
+      <div class="form-group">
+        <label for="target_language_code">Preferred Language</label>
+        <select id="target_language_code" name="target_language_code" class="form-control">
+          <option value="" {% if not profile.target_language_code %}selected{% endif %}>-- Select a language --</option>
+          {% for code, name in languages.items() %}
+            <option value="{{ code }}" {% if profile.target_language_code == code %}selected{% endif %}>
+              {{ name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="button primary">Save Changes</button>
+        <a href="{{ url_for('system_views.protected_page') }}" class="button secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block head_css %}
+.profile-page {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+h1 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.profile-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px;
+  padding-right: 2.5rem;
+}
+
+.form-control:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.button.primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.button.primary:hover {
+  background-color: #2563eb;
+}
+
+.button.secondary {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.button.secondary:hover {
+  background-color: #e5e7eb;
+}
+{% endblock %}
