@@ -741,6 +741,7 @@ class Sourcedir(BaseModel):
     path = CharField()  # the directory path
     language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     slug = CharField(max_length=SOURCEDIR_SLUG_MAX_LENGTH)
+    description = TextField(null=True)  # description of the directory content
 
     def save(self, *args, **kwargs):
         # Generate slug from path if not set

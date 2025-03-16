@@ -14,6 +14,19 @@
 {% block content %}
 <h1>Source Files in {{ sourcedir_path }}</h1>
 
+<div class="description-container">
+    <div class="description-content" id="sourcedir-description-display">
+        {% if sourcedir_description %}
+            <p>{{ sourcedir_description }}</p>
+        {% else %}
+            <p class="no-description"><em>No description available</em></p>
+        {% endif %}
+    </div>
+    <button onclick="editSourcedirDescription()" class="button small-button">
+        <i class="fas fa-edit"></i> Edit Description
+    </button>
+</div>
+
 <div class="top-controls">
     <div class="language-selector-container">
         Language:
@@ -158,6 +171,54 @@
 </ul>
 
 <style>
+    .description-container {
+        margin: 1em 0;
+        border: 1px solid #e0e0e0;
+        padding: 1em;
+        border-radius: 4px;
+        position: relative;
+    }
+    
+    .description-content {
+        min-height: 3em;
+    }
+    
+    .no-description {
+        color: #888;
+    }
+    
+    .description-edit {
+        width: 100%;
+    }
+    
+    .description-edit textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 0.5em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: inherit;
+        resize: vertical;
+        margin-bottom: 0.5em;
+    }
+    
+    .description-edit-buttons {
+        display: flex;
+        gap: 0.5em;
+        justify-content: flex-end;
+    }
+    
+    .small-button {
+        padding: 3px 8px;
+        font-size: 0.9em;
+    }
+    
+    .success-btn {
+        background-color: #4CAF50;
+        color: white;
+    }
+    
     .top-controls {
         display: flex;
         align-items: center;

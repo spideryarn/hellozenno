@@ -151,6 +151,7 @@ def sourcefiles_for_sourcedir(target_language_code: str, sourcedir_slug: str):
             target_language_name=target_language_name,
             sourcedir_path=sourcedir_entry.path,  # Use path for display
             sourcedir_slug=sourcedir_slug,  # Use slug for URL generation
+            sourcedir_description=sourcedir_entry.description,  # Pass description to template
             sourcefiles=sourcefiles,
             supported_languages=supported_languages,
             has_vocabulary=has_vocabulary,
@@ -459,3 +460,34 @@ def upload_sourcedir_new_sourcefile(target_language_code: str, sourcedir_slug: s
     except Exception as e:
         flash(f"Upload failed: {str(e)}")
         return redirect(request.referrer)
+
+
+@sourcedir_views_bp.route(
+    "/api/sourcedir/<target_language_code>/<sourcedir_slug>/update_description", methods=["PUT"]
+)
+def update_sourcedir_description(target_language_code: str, sourcedir_slug: str):
+    """Update the description of a sourcedir."""
+    try:
+        # Get the data from the request
+        data = request.get_json()
+        if not data or "description" not in data:
+            return jsonify({"error": "Missing description parameter"}), 400
+
+        description = data["description"]
+
+        # Get the sourcedir entry
+        sourcedir_entry = Sourcedir.get(
+            Sourcedir.slug == sourcedir_slug,
+            Sourcedir.language_code == target_language_code,
+        )
+
+        # Update the description
+        sourcedir_entry.description = description
+        sourcedir_entry.save()
+
+        return "", 204  # No content response on success
+
+    except DoesNotExist:
+        return jsonify({"error": "Sourcedir not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

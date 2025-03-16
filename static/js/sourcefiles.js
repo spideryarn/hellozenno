@@ -336,5 +336,108 @@ function setupDeviceSpecificUI() {
     }
 }
 
+// Sourcedir description functionality
+function editSourcedirDescription() {
+    const descriptionDisplay = document.getElementById('sourcedir-description-display');
+    const currentDescription = descriptionDisplay.querySelector('p');
+    const currentText = currentDescription.classList.contains('no-description') ? '' : currentDescription.textContent.trim();
+    
+    // Create edit container
+    const editContainer = document.createElement('div');
+    editContainer.className = 'description-edit';
+    
+    // Create textarea
+    const textarea = document.createElement('textarea');
+    textarea.id = 'sourcedir-description-editor';
+    textarea.value = currentText;
+    textarea.placeholder = 'Enter description for this directory...';
+    
+    // Create buttons
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'description-edit-buttons';
+    
+    const saveButton = document.createElement('button');
+    saveButton.className = 'button small-button success-btn';
+    saveButton.innerHTML = '<i class="fas fa-save"></i> Save';
+    saveButton.onclick = saveSourcedirDescription;
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.className = 'button small-button';
+    cancelButton.innerHTML = '<i class="fas fa-times"></i> Cancel';
+    cancelButton.onclick = cancelEditSourcedirDescription;
+    
+    // Add elements to the DOM
+    buttonsContainer.appendChild(saveButton);
+    buttonsContainer.appendChild(cancelButton);
+    editContainer.appendChild(textarea);
+    editContainer.appendChild(buttonsContainer);
+    
+    // Replace display with edit view
+    descriptionDisplay.innerHTML = '';
+    descriptionDisplay.appendChild(editContainer);
+    
+    // Focus the textarea
+    textarea.focus();
+}
+
+function saveSourcedirDescription() {
+    const textarea = document.getElementById('sourcedir-description-editor');
+    const description = textarea.value.trim();
+    
+    // Show loading state
+    textarea.disabled = true;
+    
+    // Save the description
+    fetch(`/api/sourcedir/${window.target_language_code}/${window.sourcedir_slug}/update_description`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: description })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to update description');
+        }
+        
+        // Update the display
+        const descriptionDisplay = document.getElementById('sourcedir-description-display');
+        if (description) {
+            descriptionDisplay.innerHTML = `<p>${description}</p>`;
+        } else {
+            descriptionDisplay.innerHTML = `<p class="no-description"><em>No description available</em></p>`;
+        }
+    })
+    .catch(error => {
+        alert(`Error: ${error.message}`);
+        // Re-enable the textarea
+        textarea.disabled = false;
+    });
+}
+
+function cancelEditSourcedirDescription() {
+    // Get the current description from the server state
+    fetch(`/${window.target_language_code}/${window.sourcedir_slug}`)
+        .then(response => response.text())
+        .then(html => {
+            // Parse the HTML to extract the current description
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const descriptionElement = doc.getElementById('sourcedir-description-display');
+            
+            // Restore the display
+            if (descriptionElement) {
+                document.getElementById('sourcedir-description-display').innerHTML = descriptionElement.innerHTML;
+            } else {
+                // Fallback if we can't parse the description from the response
+                window.location.reload();
+            }
+        })
+        .catch(() => {
+            // If there's an error, just reload the page
+            window.location.reload();
+        });
+}
+
 // Run initialization when DOM is loaded
 document.addEventListener('DOMContentLoaded', init); 
