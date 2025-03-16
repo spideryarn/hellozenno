@@ -50,10 +50,11 @@ fi
 
 # Deploy to Vercel preview with environment variables
 echo "Deploying to Vercel preview environment with environment variables..."
-echo "Command: vercel $ENV_ARGS"
+# don't display because it has secret variables in it
+# echo "Command: vercel $ENV_ARGS"
 DEPLOY_CMD="vercel $ENV_ARGS"
 DEPLOY_OUTPUT=$(eval $DEPLOY_CMD)
-echo "$DEPLOY_OUTPUT"
+# echo "$DEPLOY_OUTPUT"
 
 # Extract the deployment URL from the output
 DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.vercel\.app' | head -1)
