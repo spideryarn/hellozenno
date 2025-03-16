@@ -4,7 +4,7 @@
 set -e
 
 # Check if we're in the project root
-if [ ! -f "app.py" ]; then
+if [ ! -f "api/index.py" ]; then
   echo "Error: This script must be run from the project root directory"
   exit 1
 fi
