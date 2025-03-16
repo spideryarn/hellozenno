@@ -53,7 +53,7 @@ fi
 
 # Set environment variables from .env.prod
 echo "Setting Vercel environment variables..."
-./scripts/prod/set_secrets.sh
+# ./scripts/prod/set_secrets.sh
 
 # Build the environment variables command line arguments
 echo "Building environment variables for deployment..."
