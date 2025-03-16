@@ -9,10 +9,9 @@ cd "$(dirname "$0")/../.."
 # Source common variables and functions
 source scripts/utils/common.sh
 
-echo "Running migrations on Fly.io database..."
+echo "Running migrations on Vercel database..."
 
-# Run migrations using fly ssh console with new CLI
-# Using bash -c to ensure we have a proper shell environment
-fly ssh console -C "bash -c 'cd /app && python -m utils.migrate migrate'"
+# Run migrations directly with VERCEL=1 environment variable set only for this command
+VERCEL=1 python -m utils.migrate migrate
 
 echo_success "Migrations completed successfully!" 

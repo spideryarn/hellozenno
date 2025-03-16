@@ -103,6 +103,10 @@ else
         echo_error "Health check failed!"
         exit 1
     fi
+    
+    # Run database migrations for production deployment
+    echo "Running database migrations..."
+    ./scripts/prod/migrate.sh
 fi
 
 # Extract the deployment URL from the output
