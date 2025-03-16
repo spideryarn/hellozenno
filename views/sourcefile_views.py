@@ -90,61 +90,44 @@ def _get_wordforms_data(sourcefile_entry):
     """Get wordforms data using the optimized query, including junction table data in one query."""
     # Use the enhanced version of get_all_wordforms_for that includes junction data
     language_code = sourcefile_entry.sourcedir.language_code
-    
+
     # This avoids N+1 queries by including junction table data in a single query
     return Wordform.get_all_wordforms_for(
         language_code=language_code,
         sourcefile=sourcefile_entry,
-        include_junction_data=True  # This will return wordform dicts with centrality and ordering
+        include_junction_data=True,  # This will return wordform dicts with centrality and ordering
     )
 
 
 def _get_phrases_data(sourcefile_entry):
     """Get phrases data using the optimized query with included junction data."""
     language_code = sourcefile_entry.sourcedir.language_code
-    
+
     # Use the enhanced get_all_phrases_for method with include_junction_data=True
     # This returns phrase dictionaries with centrality and ordering already included
     return Phrase.get_all_phrases_for(
         language_code=language_code,
         sourcefile=sourcefile_entry,
-        include_junction_data=True  # This will return phrase dicts with centrality and ordering
+        include_junction_data=True,  # This will return phrase dicts with centrality and ordering
     )
 
 
 def _get_phrases_count(sourcefile_entry):
     """Get only the phrase count for a sourcefile."""
-    return SourcefilePhrase.select().where(
-        SourcefilePhrase.sourcefile == sourcefile_entry
-    ).count()
+    return (
+        SourcefilePhrase.select()
+        .where(SourcefilePhrase.sourcefile == sourcefile_entry)
+        .count()
+    )
 
 
 def _get_wordforms_count(sourcefile_entry):
     """Get only the wordforms count for a sourcefile."""
-    return SourcefileWordform.select().where(
-        SourcefileWordform.sourcefile == sourcefile_entry
-    ).count()
-
-
-def _create_phrase_dict(phrase, sourcefile_phrase):
-    """Create a dictionary with phrase data."""
-    return {
-        "canonical_form": phrase.canonical_form,
-        "raw_forms": phrase.raw_forms,
-        "translations": phrase.translations,
-        "part_of_speech": phrase.part_of_speech,
-        "register": phrase.register,
-        "commonality": phrase.commonality,
-        "guessability": phrase.guessability,
-        "etymology": phrase.etymology,
-        "cultural_context": phrase.cultural_context,
-        "mnemonics": phrase.mnemonics,
-        "component_words": phrase.component_words,
-        "usage_notes": phrase.usage_notes,
-        "centrality": sourcefile_phrase.centrality,
-        "ordering": sourcefile_phrase.ordering,
-        "slug": phrase.slug,
-    }
+    return (
+        SourcefileWordform.select()
+        .where(SourcefileWordform.sourcefile == sourcefile_entry)
+        .count()
+    )
 
 
 def _get_sourcefile_metadata(sourcefile_entry):
@@ -153,12 +136,9 @@ def _get_sourcefile_metadata(sourcefile_entry):
         "created_at": sourcefile_entry.created_at,
         "updated_at": sourcefile_entry.updated_at,
     }
-    if (
-        sourcefile_entry.metadata
-        and "image_processing" in sourcefile_entry.metadata
-    ):
+    if sourcefile_entry.metadata and "image_processing" in sourcefile_entry.metadata:
         metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
-    
+
     return metadata
 
 
@@ -172,15 +152,15 @@ def _get_available_sourcedirs(target_language_code):
 
 
 def _get_common_template_params(
-    target_language_code, 
-    target_language_name, 
-    sourcefile_entry, 
-    sourcedir_slug, 
-    sourcefile_slug, 
-    nav_info, 
-    metadata, 
-    already_processed, 
-    available_sourcedirs
+    target_language_code,
+    target_language_name,
+    sourcefile_entry,
+    sourcedir_slug,
+    sourcefile_slug,
+    nav_info,
+    metadata,
+    already_processed,
+    available_sourcedirs,
 ):
     """Get common template parameters used in all sourcefile view functions."""
     return {
@@ -237,31 +217,33 @@ def inspect_sourcefile_text(
 
         # Check if file has been processed before
         already_processed = bool(wordforms_d)
-        
+
         # Get all available sourcedirs for this language (for move dropdown)
         available_sourcedirs = _get_available_sourcedirs(target_language_code)
 
         # Get common template parameters
         template_params = _get_common_template_params(
-            target_language_code, 
-            target_language_name, 
-            sourcefile_entry, 
-            sourcedir_slug, 
-            sourcefile_slug, 
-            nav_info, 
-            metadata, 
-            already_processed, 
-            available_sourcedirs
+            target_language_code,
+            target_language_name,
+            sourcefile_entry,
+            sourcedir_slug,
+            sourcefile_slug,
+            nav_info,
+            metadata,
+            already_processed,
+            available_sourcedirs,
         )
-        
+
         # Add view-specific parameters
-        template_params.update({
-            "enhanced_original_txt": enhanced_original_txt,
-            "translated_txt": sourcefile_entry.text_english,
-            "active_tab": "text",
-            "wordforms_d": wordforms_d,
-            "phrases_d": phrases_d,
-        })
+        template_params.update(
+            {
+                "enhanced_original_txt": enhanced_original_txt,
+                "translated_txt": sourcefile_entry.text_english,
+                "active_tab": "text",
+                "wordforms_d": wordforms_d,
+                "phrases_d": phrases_d,
+            }
+        )
 
         return render_template("sourcefile_text.jinja", **template_params)
     except DoesNotExist:
@@ -301,29 +283,31 @@ def inspect_sourcefile_words(
 
         # Check if file has been processed before
         already_processed = bool(wordforms_d)
-        
+
         # Get all available sourcedirs for this language (for move dropdown)
         available_sourcedirs = _get_available_sourcedirs(target_language_code)
 
         # Get common template parameters
         template_params = _get_common_template_params(
-            target_language_code, 
-            target_language_name, 
-            sourcefile_entry, 
-            sourcedir_slug, 
-            sourcefile_slug, 
-            nav_info, 
-            metadata, 
-            already_processed, 
-            available_sourcedirs
+            target_language_code,
+            target_language_name,
+            sourcefile_entry,
+            sourcedir_slug,
+            sourcefile_slug,
+            nav_info,
+            metadata,
+            already_processed,
+            available_sourcedirs,
         )
-        
+
         # Add view-specific parameters
-        template_params.update({
-            "active_tab": "words",
-            "wordforms_d": wordforms_d,
-            "phrases_d": phrases_d,
-        })
+        template_params.update(
+            {
+                "active_tab": "words",
+                "wordforms_d": wordforms_d,
+                "phrases_d": phrases_d,
+            }
+        )
 
         return render_template("sourcefile_words.jinja", **template_params)
     except DoesNotExist:
@@ -363,29 +347,31 @@ def inspect_sourcefile_phrases(
 
         # Check if file has been processed before
         already_processed = bool(phrases_d)
-        
+
         # Get all available sourcedirs for this language (for move dropdown)
         available_sourcedirs = _get_available_sourcedirs(target_language_code)
 
         # Get common template parameters
         template_params = _get_common_template_params(
-            target_language_code, 
-            target_language_name, 
-            sourcefile_entry, 
-            sourcedir_slug, 
-            sourcefile_slug, 
-            nav_info, 
-            metadata, 
-            already_processed, 
-            available_sourcedirs
+            target_language_code,
+            target_language_name,
+            sourcefile_entry,
+            sourcedir_slug,
+            sourcefile_slug,
+            nav_info,
+            metadata,
+            already_processed,
+            available_sourcedirs,
         )
-        
+
         # Add view-specific parameters
-        template_params.update({
-            "active_tab": "phrases",
-            "phrases_d": phrases_d,
-            "wordforms_d": wordforms_d,
-        })
+        template_params.update(
+            {
+                "active_tab": "phrases",
+                "phrases_d": phrases_d,
+                "wordforms_d": wordforms_d,
+            }
+        )
 
         return render_template("sourcefile_phrases.jinja", **template_params)
     except DoesNotExist:
@@ -510,11 +496,15 @@ def process_sourcefile(
             sourcefile_entry.text_english = source["txt_en"]
             # Make sure metadata is JSON-serializable
             # Use gjdutils jsonify to handle any potential non-serializable objects
-            safe_metadata = json.loads(jsonify({
-                **extra_metadata,  # Include duration, language, etc.
-                "words": tricky_words_d,  # Keep word data for debugging
-            }))
-            
+            safe_metadata = json.loads(
+                jsonify(
+                    {
+                        **extra_metadata,  # Include duration, language, etc.
+                        "words": tricky_words_d,  # Keep word data for debugging
+                    }
+                )
+            )
+
             # Store the safe serializable metadata
             sourcefile_entry.metadata = safe_metadata
             sourcefile_entry.save()
@@ -852,17 +842,29 @@ def move_sourcefile(
             )
             .exists()
         ):
-            return jsonify({"error": "A file with this name already exists in the target directory"}), 409
+            return (
+                jsonify(
+                    {
+                        "error": "A file with this name already exists in the target directory"
+                    }
+                ),
+                409,
+            )
 
         # Update the sourcedir
         sourcefile_entry.sourcedir = new_sourcedir_entry
         sourcefile_entry.save()  # This will also update the slug if needed
 
-        return jsonify({
-            "message": "File moved successfully",
-            "new_sourcedir_slug": new_sourcedir_slug,
-            "new_sourcefile_slug": sourcefile_entry.slug
-        }), 200
+        return (
+            jsonify(
+                {
+                    "message": "File moved successfully",
+                    "new_sourcedir_slug": new_sourcedir_slug,
+                    "new_sourcefile_slug": sourcefile_entry.slug,
+                }
+            ),
+            200,
+        )
 
     except DoesNotExist:
         return jsonify({"error": "File not found"}), 404
@@ -1094,8 +1096,8 @@ def create_sourcefile_from_text(target_language_code: str, sourcedir_slug: str):
         if not text_target:
             return jsonify({"error": "Text content is required"}), 400
 
-        # Generate filename with .txt extension
-        filename = f"{slugify(title)}.txt"
+        # Use the original title as filename (with .txt extension)
+        filename = f"{title}.txt"
 
         # Check if file already exists
         if (
