@@ -13,7 +13,7 @@ pytest -k test_name  # Single test
 
 ### Deployment
 ```bash
-./scripts/prod/deploy.sh  # Deploy to Fly.io
+./scripts/prod/deploy.sh  # Deploy to Vercel
 ./scripts/health-checks/check.sh  # Run health checks manually
 ```
 Includes database migrations and health checks
@@ -44,9 +44,9 @@ For local development with production database:
 - Remember to unset when done: `unset USE_LOCAL_TO_PROD`
 
 ### Monitoring
-- Web app: `fly status -a hz-app-web`
+- Web app: Monitor via Vercel dashboard
 - Database: Monitor via Supabase dashboard
-- Web app logs: `fly logs --no-tail` (so it doesn't continually stream)
+- Web app logs: Available in Vercel dashboard
 - Database logs: Available in Supabase dashboard
 
 ### Logging
@@ -57,12 +57,12 @@ For local development with production database:
 
 ## Resource Management
 
-### Web App Memory (fly.toml)
-```toml
-[[vm]]
-  memory_mb = 768  # Edit this value
-```
-Takes effect on next deploy
+### Web App Resources
+Managed through Vercel dashboard:
+- Serverless function configuration
+- Environment variables
+- Deployment settings
+- Monitoring and logs
 
 ### Database Resources
 Managed through Supabase dashboard:

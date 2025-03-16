@@ -6,11 +6,11 @@ set -e
 # Source common variables and functions
 source "$(dirname "$0")/../utils/common.sh"
 
-echo "Running health checks against https://hz-app-web.fly.dev"
+echo "Running health checks against https://hellozenno.vercel.app"
 echo "Testing health check endpoint..."
 
 # Try health check endpoint
-curl -f "https://hz-app-web.fly.dev/health-check" || {
+curl -f "https://hellozenno.vercel.app/health-check" || {
     echo_error "Health check failed"
     exit 1
 }

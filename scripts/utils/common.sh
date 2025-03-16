@@ -21,7 +21,7 @@ command_exists() {
 }
 
 # Check if required commands are available
-for cmd in python fly; do
+for cmd in python; do
     if ! command_exists "$cmd"; then
         echo_error "Required command '$cmd' not found"
         exit 1

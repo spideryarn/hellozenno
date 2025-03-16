@@ -21,7 +21,7 @@ See also: DATABASE.md
    
 2. **Environment Management**
    - Environment detection is handled by `utils/db_connection.py`
-   - Production is detected via `FLY_APP_NAME` environment variable
+   - Production is detected via `VERCEL` environment variable
    - Local-to-production mode via `USE_LOCAL_TO_PROD=1`
    - Local development is the default when no special variables are set
    - All database configuration is centralized in `utils/db_connection.py`
