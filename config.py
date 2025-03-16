@@ -1,6 +1,6 @@
 from pathlib import Path
 from utils.env_config import (
-    is_fly_cloud,
+    is_vercel,
 )
 
 
@@ -8,8 +8,8 @@ SOURCEFILES_DIRN = Path("sourcefiles")
 
 # Production uses a different metadata directory
 METADATA_DIRN = (
-    Path("/app/metadata")
-    if is_fly_cloud()
+    Path("/tmp/metadata")
+    if is_vercel()
     else Path(
         "/Users/greg/Library/Mobile Documents/3L68KQB4HG~com~readdle~CommonDocuments/Documents/Greek learning/hellozenno"
     )

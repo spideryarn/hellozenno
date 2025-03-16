@@ -61,6 +61,13 @@ The current application is a Flask-based web app deployed on Fly.io with a Supab
   - [x] Modify system_views.py to remove system metrics not available in serverless
   - [x] Focus health check on database connectivity
 
+- [x] **Serverless Environment Adaptations**
+  - [x] Fix logging to use /tmp directory in Vercel environment
+  - [x] Add null check for frame in InterceptHandler
+  - [x] Update config.py to use is_vercel instead of is_fly_cloud
+  - [x] Change metadata directory to use /tmp in Vercel environment
+  - [x] Update vercel.json to include templates and static directories
+
 - [ ] **Production Deployment**
   - [ ] Deploy to production
   - [ ] Update documentation
@@ -122,6 +129,7 @@ The current application is a Flask-based web app deployed on Fly.io with a Supab
 - [x] **Create Vercel Project**
   - [x] Install Vercel CLI: `npm i -g vercel`
   - [x] Login to Vercel: `vercel login`
+  - [x] Initialize Vercel Project: `vercel init`
   - [x] Link to existing Vercel account: `vercel link`
 
 - [x] **Configure Environment Variables**
@@ -156,6 +164,21 @@ The current application is a Flask-based web app deployed on Fly.io with a Supab
   - [x] Update `system_views.py` to remove system metrics not available in serverless
   - [x] Focus health check on database connectivity
   - [x] Test the updated health check
+
+### Serverless Environment Adaptations
+
+- [x] **Fix Logging**
+  - [x] Implement logging to use /tmp directory in Vercel environment
+  - [x] Add null check for frame in InterceptHandler
+
+- [x] **Update Configuration**
+  - [x] Replace is_fly_cloud with is_vercel in config.py
+  - [x] Change metadata directory to use /tmp in Vercel environment
+
+- [x] **Template and Static Files**
+  - [x] Update vercel.json to include templates directory
+  - [x] Update vercel.json to include static directory
+  - [x] Test template rendering
 
 ### Future Enhancements
 

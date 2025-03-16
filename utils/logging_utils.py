@@ -1,19 +1,20 @@
 """Logging utilities for the application using loguru."""
 
 import logging
+from loguru import logger
 import os
 import sys
 from typing import Optional
 
-from loguru import logger
+from utils.env_config import is_vercel
 
 
 class LimitingFileWriter:
     """Custom file handler that keeps a maximum number of lines in the log file."""
-    
+
     def __init__(self, filepath: str, max_lines: int):
         """Initialize the file writer with path and line limit.
-        
+
         Args:
             filepath: Path to the log file
             max_lines: Maximum number of lines to keep in the file
@@ -21,7 +22,7 @@ class LimitingFileWriter:
         self.filepath = filepath
         self.max_lines = max_lines
         self.buffer = []
-        
+
         # Initialize from existing file if it exists
         if os.path.exists(filepath):
             try:
@@ -31,27 +32,27 @@ class LimitingFileWriter:
                     self.buffer = self.buffer[-max_lines:]
             except Exception:
                 self.buffer = []
-    
+
     def write(self, message: str) -> None:
         """Write a new message to the log file, maintaining the line limit.
-        
+
         Args:
             message: The log message to write
         """
         # Add to buffer
         self.buffer.append(message)
         # Trim to max size
-        self.buffer = self.buffer[-self.max_lines:]
+        self.buffer = self.buffer[-self.max_lines :]
         # Write full buffer to file
         with open(self.filepath, "w") as f:
             f.writelines(self.buffer)
-    
+
     def __call__(self, message: str) -> bool:
         """Handle the log message when called by loguru.
-        
+
         Args:
             message: The log message
-            
+
         Returns:
             False to indicate message was handled
         """
@@ -61,10 +62,10 @@ class LimitingFileWriter:
 
 class InterceptHandler(logging.Handler):
     """Handler to intercept standard logging messages and redirect to loguru."""
-    
+
     def emit(self, record: logging.LogRecord) -> None:
         """Process log record by redirecting it to loguru.
-        
+
         Args:
             record: The log record to process
         """
@@ -76,7 +77,7 @@ class InterceptHandler(logging.Handler):
 
         # Find caller from where originated the logged message
         frame, depth = logging.currentframe(), 2
-        while frame.f_code.co_filename == logging.__file__:
+        while frame and frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
 
@@ -86,13 +87,13 @@ class InterceptHandler(logging.Handler):
 
 
 def setup_logging(
-    log_to_file: bool = True, 
-    max_lines: int = 100, 
+    log_to_file: bool = True,
+    max_lines: int = 100,
     logs_dir: Optional[str] = None,
-    for_cloud: bool = False
-) -> logger:
+    for_cloud: bool = False,
+):
     """Configure logging for the application.
-    
+
     Args:
         log_to_file: Whether to log to a file
         max_lines: Maximum number of lines to keep in the log file
@@ -101,30 +102,35 @@ def setup_logging(
     """
     # Remove default handler
     logger.remove()
-    
+
     # Add console output
     log_format = "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} - {message}"
     logger.add(sys.stderr, format=log_format, level="INFO")
-    
+
     # Add file logging if requested
     if log_to_file:
-        if logs_dir is None:
+        if is_vercel():
+            # In Vercel, only /tmp is writable
+            logs_dir = "/tmp"
+        elif logs_dir is None:
             # Default to a logs directory in the application root
-            logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
-        
+            logs_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
+            )
+
         os.makedirs(logs_dir, exist_ok=True)
         log_file_path = os.path.join(logs_dir, "flask_app.log")
-        
+
         # Set up line-limited file logging
         file_writer = LimitingFileWriter(log_file_path, max_lines)
         logger.add(file_writer, format=log_format, level="INFO")
-    
+
     # Configure standard library logging to use loguru
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
-    
+
     # Specifically configure Flask and Werkzeug loggers
     for logger_name in ("werkzeug", "flask.app"):
         logging.getLogger(logger_name).handlers = [InterceptHandler()]
-        
+
     # Return the logger for backward compatibility
     return logger

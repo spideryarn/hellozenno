@@ -3,7 +3,7 @@ from playhouse.pool import PooledPostgresqlExtDatabase
 import logging
 from datetime import datetime
 from config import DB_POOL_CONFIG
-from utils.env_config import DATABASE_URL, is_fly_cloud, is_local_to_prod
+from utils.env_config import DATABASE_URL, is_vercel, is_local_to_prod
 from urllib.parse import urlparse
 
 # Configure logging
@@ -72,7 +72,7 @@ def parse_database_url(url: str) -> dict:
     }
 
     # Require SSL for production and local-to-prod connections
-    if is_fly_cloud() or is_local_to_prod():
+    if is_vercel() or is_local_to_prod():
         config["sslmode"] = "require"
 
     return config

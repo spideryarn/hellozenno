@@ -20,7 +20,16 @@ def create_app():
     """Create and configure the Flask application."""
     logger.info("Creating Flask application")
 
-    app = Flask(__name__)
+    # Set template_folder to point to the templates directory at the root level
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
+        ),
+        static_folder=os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
+        ),
+    )
 
     # Enable CORS for API and flashcard endpoints
     CORS(
