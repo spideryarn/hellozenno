@@ -41,7 +41,7 @@
                     
                     <script>
                       // Add global keyboard shortcut for ENTER
-                      const startUrl = "/{{ target_language_code }}/flashcards/random{% if sourcefile %}?sourcefile={{ sourcefile.slug }}{% elif sourcedir %}?sourcedir={{ sourcedir.slug }}{% endif %}";
+                      const startUrl = "/lang/{{ target_language_code }}/flashcards/random{% if sourcefile %}?sourcefile={{ sourcefile.slug }}{% elif sourcedir %}?sourcedir={{ sourcedir.slug }}{% endif %}";
                       
                       document.addEventListener("keydown", function(event) {
                         // Only trigger if no input element is focused

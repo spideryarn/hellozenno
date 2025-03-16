@@ -23,7 +23,7 @@ from utils.vocab_llm_utils import (
 )
 
 
-sentence_views_bp = Blueprint("sentence_views", __name__)
+sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
 
 
 @sentence_views_bp.route("/<language_code>/sentences")
@@ -213,6 +213,9 @@ def rename_sentence(language_code: str, slug: str):
 
 @sentence_views_bp.route(
     "/api/sentence/<language_code>/<slug>/generate_audio", methods=["POST"]
+)
+@sentence_views_bp.route(
+    "/api/lang/<language_code>/sentence/<slug>/generate_audio", methods=["POST"]
 )
 def generate_sentence_audio(language_code: str, slug: str):
     """Generate audio for a sentence."""

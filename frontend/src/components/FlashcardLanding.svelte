@@ -6,7 +6,7 @@
   export let lemmaCount: number | null = null;
 
   // Build the URL for starting the flashcards
-  let startUrl = `/${targetLanguageCode}/flashcards/random`;
+  let startUrl = `/lang/${targetLanguageCode}/flashcards/random`;
   
   // Add query parameters if we have source filtering
   if (sourcefile) {
@@ -33,7 +33,7 @@
       {#if lemmaCount !== null}
         <span class="lemma-count">({lemmaCount} words)</span>
       {/if}
-      <a href="/{targetLanguageCode}/flashcards" class="clear-filter">
+      <a href="/lang/{targetLanguageCode}/flashcards" class="clear-filter">
         <i class="ph-fill ph-x"></i>
       </a>
     </div>

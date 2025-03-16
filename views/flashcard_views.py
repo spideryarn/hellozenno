@@ -14,7 +14,7 @@ from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
 from db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir
 
 # Create the blueprint for flashcard views
-flashcard_views_bp = Blueprint("flashcard_views", __name__, static_folder='../static/build')
+flashcard_views_bp = Blueprint("flashcard_views", __name__, url_prefix="/lang", static_folder='../static/build')
 
 
 @flashcard_views_bp.route("/<language_code>/flashcards")

@@ -61,7 +61,7 @@ import random
 import time
 from utils.word_utils import get_sourcefile_lemmas
 
-sourcefile_views_bp = Blueprint("sourcefile_views", __name__)
+sourcefile_views_bp = Blueprint("sourcefile_views", __name__, url_prefix="/lang")
 
 
 @sourcefile_views_bp.route("/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>")

@@ -28,11 +28,17 @@ from config import SUPPORTED_LANGUAGES
 # Create blueprint for system views
 system_views_bp = Blueprint("system_views", __name__, url_prefix="")
 
+# Create auth-specific blueprint
+auth_views_bp = Blueprint("auth_views", __name__, url_prefix="/auth")
+
+# Create sys-specific blueprint
+sys_views_bp = Blueprint("sys_views", __name__, url_prefix="/sys")
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
 
-@system_views_bp.route("/health-check")
+@sys_views_bp.route("/health-check")
 def health_check():
     """Health check endpoint that verifies app and database functionality."""
     try:
@@ -107,13 +113,13 @@ def get_db_metrics(db):
         }
 
 
-@system_views_bp.route("/auth", methods=["GET"])
-@system_views_bp.route("/auth/<target_language_code>", methods=["GET"])
+@auth_views_bp.route("/", methods=["GET"])
+@auth_views_bp.route("/<target_language_code>", methods=["GET"])
 def auth_page(target_language_code=None):
     """Render the auth page with login and signup forms."""
     # Catch empty string language code (from trailing slash) and redirect to /auth
     if target_language_code == "":
-        return redirect("/auth")
+        return redirect("/auth/")
         
     # Check if a redirect URL was provided
     redirect_url = request.args.get("redirect", "/")
@@ -167,7 +173,7 @@ def get_user():
     return jsonify(g.user), 200
 
 
-@system_views_bp.route("/protected")
+@auth_views_bp.route("/protected")
 @page_auth_required
 def protected_page():
     """A protected page that requires authentication."""
@@ -180,14 +186,14 @@ def protected_page():
     return render_template("protected.jinja", user=g.user, profile=profile)
 
 
-@system_views_bp.route("/profile", methods=["GET", "POST"])
-@system_views_bp.route("/profile/<target_language_code>", methods=["GET", "POST"])
+@auth_views_bp.route("/profile", methods=["GET", "POST"])
+@auth_views_bp.route("/profile/<target_language_code>", methods=["GET", "POST"])
 @page_auth_required
 def profile_page(target_language_code=None):
     """User profile page for editing preferences."""
-    # Catch empty string language code (from trailing slash) and redirect to /profile
+    # Catch empty string language code (from trailing slash) and redirect to /auth/profile
     if target_language_code == "":
-        return redirect("/profile")
+        return redirect("/auth/profile")
         
     # Get or create profile
     profile, created = Profile.get_or_create_for_user(g.user["id"], g.user["email"])
@@ -198,7 +204,7 @@ def profile_page(target_language_code=None):
         profile.save()
 
         flash("Profile updated successfully!")
-        return redirect(url_for("system_views.profile_page"))
+        return redirect(url_for("auth_views.profile_page"))
 
     # GET request - show the profile form
     # Explicitly set target_language_code to None to avoid language lookup errors in templates

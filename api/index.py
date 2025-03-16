@@ -59,9 +59,12 @@ def create_app():
         app,
         resources={
             r"/api/*": {"origins": "*"},  # Allow all origins for API endpoints
-            r"/*/flashcards/*": {
+            r"/lang/*/flashcards/*": {
                 "origins": "*"
-            },  # Allow all origins for flashcard endpoints
+            },  # Allow all origins for flashcard endpoints with new URL structure
+            r"/api/lang/*": {
+                "origins": "*"
+            },  # Allow all origins for language-related API endpoints
         },
     )
 
@@ -84,7 +87,7 @@ def create_app():
     init_db(app)
 
     # Register blueprints
-    from views.system_views import system_views_bp
+    from views.system_views import system_views_bp, auth_views_bp, sys_views_bp
     from views.views import views_bp
     from views.wordform_views import wordform_views_bp
     from views.lemma_views import lemma_views_bp
@@ -96,8 +99,12 @@ def create_app():
     from views.api import api_bp
     from views.flashcard_views import flashcard_views_bp
 
-    # Register system views first to ensure health check route is matched before language routes
+    # Register system views first to ensure essential routes are matched first
     app.register_blueprint(system_views_bp)
+
+    # Register system management blueprints
+    app.register_blueprint(sys_views_bp)
+    app.register_blueprint(auth_views_bp)
 
     # Register remaining blueprints
     app.register_blueprint(views_bp)
@@ -136,10 +143,7 @@ def create_app():
     logger.info(f"WhiteNoise configured with static folder: {static_folder}")
     logger.info(f"WhiteNoise compression enabled: {app.wsgi_app.enable_compression}")
 
-    # Add a simple test route for Vercel deployment
-    @app.route("/vercel-test")
-    def vercel_test():
-        return "Hello from Vercel serverless function!"
+    # Removed vercel-test route
 
     logger.info("Application initialized successfully")
     return app

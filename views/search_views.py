@@ -11,7 +11,7 @@ from utils.lang_utils import get_language_name
 from views.wordform_views import get_wordform_metadata, wordform_views_bp
 
 
-search_views_bp = Blueprint("search", __name__)
+search_views_bp = Blueprint("search", __name__, url_prefix="/lang")
 
 # Configure logging
 logger = logging.getLogger(__name__)

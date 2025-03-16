@@ -7,7 +7,7 @@ from utils.lang_utils import get_language_name
 from db_models import Wordform, Lemma
 from utils.vocab_llm_utils import quick_search_for_wordform
 
-wordform_views_bp = Blueprint("wordform_views", "/")
+wordform_views_bp = Blueprint("wordform_views", "/", url_prefix="/lang")
 
 
 @wordform_views_bp.route("/<target_language_code>/wordforms")

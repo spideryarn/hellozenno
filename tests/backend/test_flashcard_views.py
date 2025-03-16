@@ -122,13 +122,13 @@ def test_sourcedir_with_files(fixture_for_testing_db):
 def test_flashcard_landing(client, test_sentence_with_sourcefile, test_sourcefile):
     """Test the flashcard landing page."""
     # Test the landing page loads
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/flashcards")
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/flashcards")
     assert response.status_code == 200
     assert b"Start Flashcards" in response.data
 
     # Test with sourcefile parameter
     response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/flashcards?sourcefile={test_sourcefile.slug}"
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards?sourcefile={test_sourcefile.slug}"
     )
     assert response.status_code == 200
     assert b"Start Flashcards" in response.data
@@ -139,7 +139,7 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
     """Test flashcard functionality with sourcedir parameter."""
     # Test landing page with sourcedir parameter
     response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/flashcards?sourcedir={test_sourcedir_with_files.slug}"
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards?sourcedir={test_sourcedir_with_files.slug}"
     )
     assert response.status_code == 200
     assert b"Start Flashcards" in response.data
@@ -166,19 +166,19 @@ def test_flashcard_sentence(client, test_sentence_with_sourcefile):
     """Test viewing a specific sentence as a flashcard."""
     # Test the main page loads
     response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
     )
     assert response.status_code == 200
     assert test_sentence_with_sourcefile.sentence.encode() in response.data
 
     # Test non-existent sentence
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/flashcards/sentence/nonexistent-slug")
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/nonexistent-slug")
     assert response.status_code == 404
     assert b"Sentence not found" in response.data
 
     # Test wrong language code
     response = client.get(
-        f"/fr/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
+        f"/lang/fr/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
     )
     assert response.status_code == 404
 
@@ -187,28 +187,28 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     """Test the random flashcard redirect."""
     # Test basic redirect
     response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/flashcards/random", follow_redirects=False
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random", follow_redirects=False
     )
     assert response.status_code == 302
     assert (
-        f"/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
         in response.location
     )
 
     # Test with sourcefile parameter
     response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/flashcards/random?sourcefile={test_sourcefile.slug}",
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random?sourcefile={test_sourcefile.slug}",
         follow_redirects=False,
     )
     assert response.status_code == 302
     assert (
-        f"/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
         in response.location
     )
 
     # Test when no sentences exist
     test_sentence_with_sourcefile.delete_instance()
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/flashcards/random")
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random")
     assert response.status_code == 404
     assert b"No matching sentences found" in response.data
 
@@ -252,14 +252,14 @@ def test_sourcedir_multiple_files(
 
     # Test that lemma count is correct
     response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/flashcards?sourcedir={test_sourcedir_with_files.slug}"
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards?sourcedir={test_sourcedir_with_files.slug}"
     )
     assert response.status_code == 200
     assert b"Practicing with 3 words" in response.data
 
     # Test that random flashcard preserves sourcedir parameter
     response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/flashcards/random?sourcedir={test_sourcedir_with_files.slug}",
+        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random?sourcedir={test_sourcedir_with_files.slug}",
         follow_redirects=True,
     )
     assert response.status_code == 200

@@ -2,25 +2,25 @@
 
 ## Goal, core interaction flow
 
-Visit `/el/sentences`
+Visit `/lang/el/sentences`
 
 Then press the "Practice with Flashcards" button
 
-This takes you to `/el/flashcards`
+This takes you to `/lang/el/flashcards`
 
 Press the "Start Flashcards" button (or press ENTER)
 
-This takes you to `/el/flashcards/sentence/<sentence_slug>`
+This takes you to `/lang/el/flashcards/sentence/<sentence_slug>`
 
 ### Filtering by Source
 
 You can access flashcards filtered to specific content:
 
-1. From a sourcefile: `/el/flashcards?sourcefile=<sourcefile_slug>`
+1. From a sourcefile: `/lang/el/flashcards?sourcefile=<sourcefile_slug>`
    - Shows flashcards for sentences containing lemmas from that specific file
    - Available from the sourcefile inspection page
 
-2. From a sourcedir: `/el/flashcards?sourcedir=<sourcedir_slug>`
+2. From a sourcedir: `/lang/el/flashcards?sourcedir=<sourcedir_slug>`
    - Shows flashcards for sentences containing lemmas from any file in that directory
    - Combines vocabulary from all files in the directory
    - Randomly selects from qualifying sentences
@@ -85,7 +85,7 @@ The flashcard system can be accessed programmatically through HTTP GET requests.
 
 Get a random sentence flashcard:
 ```
-GET /el/flashcards/random
+GET /lang/el/flashcards/random
 ```
 
 This will redirect to a specific sentence flashcard URL.
@@ -94,7 +94,7 @@ This will redirect to a specific sentence flashcard URL.
 
 Access a specific sentence by its slug:
 ```
-GET /el/flashcards/sentence/khtizoun-ena-kainourgio-spiti
+GET /lang/el/flashcards/sentence/khtizoun-ena-kainourgio-spiti
 ```
 
 ### Filtered Random Flashcards
@@ -103,12 +103,12 @@ Get random flashcards filtered by source content:
 
 1. By sourcefile:
 ```
-GET /el/flashcards/random?sourcefile=t3-jpg
+GET /lang/el/flashcards/random?sourcefile=t3-jpg
 ```
 
 2. By sourcedir:
 ```
-GET /el/flashcards/random?sourcedir=250127
+GET /lang/el/flashcards/random?sourcedir=250127
 ```
 
 ### Response Format
@@ -128,7 +128,7 @@ Note: A proper JSON API may be developed in the future. For now, external softwa
 The flashcard endpoints support cross-origin requests (CORS) from any domain. This means you can access these endpoints from JavaScript running on any website. The following endpoints are CORS-enabled:
 
 - All `/api/*` endpoints
-- All flashcard endpoints (`/*/flashcards/*`)
+- All flashcard endpoints (`/lang/*/flashcards/*`)
 
 No special headers or credentials are required for cross-origin requests.
 
@@ -136,16 +136,16 @@ No special headers or credentials are required for cross-origin requests.
 
 1. Get a random sentence:
 ```
-GET /el/flashcards/random
+GET /lang/el/flashcards/random
 ```
 → Redirects to:
 ```
-GET /el/flashcards/sentence/khtizoun-ena-kainourgio-spiti
+GET /lang/el/flashcards/sentence/khtizoun-ena-kainourgio-spiti
 ```
 
 2. Get a random sentence from a specific sourcefile:
 ```
-GET /el/flashcards/random?sourcefile=t3-jpg
+GET /lang/el/flashcards/random?sourcefile=t3-jpg
 ```
 → Redirects to a sentence URL containing vocabulary from that source file
 
@@ -160,7 +160,7 @@ When scraping the HTML response, you can extract the following data structure:
         "text": "Χτίζουν ένα καινούργιο σπίτι",
         "translation": "They are building a new house",
         "lemma_words": ["χτίζω", "ένας", "καινούργιος", "σπίτι"],
-        "audio_url": "/el/sentences/123/audio"
+        "audio_url": "/lang/el/sentences/123/audio"
     },
     "metadata": {
         "language_code": "el",

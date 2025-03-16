@@ -127,7 +127,7 @@
     }
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    window.location.href = `/${targetLanguageCode}/flashcards/random${queryString}`;
+    window.location.href = `/lang/${targetLanguageCode}/flashcards/random${queryString}`;
   }
 
   // Play audio function
@@ -193,7 +193,7 @@
       <i class="ph-fill ph-filter"></i>
       Filtered by {state.sourceFilter.type === 'sourcedir' ? 'directory' : 'file'}: 
       <strong>{state.sourceFilter.slug}</strong>
-      <a href="/{targetLanguageCode}/flashcards" class="clear-filter">
+      <a href="/lang/{targetLanguageCode}/flashcards" class="clear-filter">
         <i class="ph-fill ph-x"></i>
       </a>
     </div>
@@ -226,7 +226,7 @@
                 lemma={lemma}
                 partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
                 translations={lemmasData[lemma]?.translations || []}
-                href="/{targetLanguageCode}/lemma/{lemma}"
+                href="/lang/{targetLanguageCode}/lemma/{lemma}"
               />
               {#if lemmasData[lemma]?.isLoading}
                 <div class="loading-indicator">Loading lemma data...</div>

@@ -72,14 +72,14 @@
         <button class="dropdown-item" on:click={() => {
             // Use direct navigation to profile without redirection risk
             try {
-              fetch('/profile', { method: 'HEAD' }).then(response => {
+              fetch('/auth/profile', { method: 'HEAD' }).then(response => {
                 if (response.ok) {
-                  window.location.href = '/profile';
+                  window.location.href = '/auth/profile';
                 }
               });
             } catch (e) {
               // Fallback if fetch fails
-              window.location.href = '/profile';  
+              window.location.href = '/auth/profile';  
             }
           }}>
           My Profile

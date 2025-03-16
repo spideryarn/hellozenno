@@ -290,11 +290,11 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
     assert len(found_wordforms_nfc) == 2
     assert len(found_wordforms_nfd) == 2
 
-    # Check that links are generated correctly
-    assert 'href="/el/lemma/τροφή"' in enhanced_text_nfc
-    assert 'href="/el/lemma/θυμός"' in enhanced_text_nfc
-    assert 'href="/el/lemma/τροφή"' in enhanced_text_nfd
-    assert 'href="/el/lemma/θυμός"' in enhanced_text_nfd
+    # Check that links are generated correctly with /lang/ prefix
+    assert 'href="/lang/el/lemma/τροφή"' in enhanced_text_nfc
+    assert 'href="/lang/el/lemma/θυμός"' in enhanced_text_nfc
+    assert 'href="/lang/el/lemma/τροφή"' in enhanced_text_nfd
+    assert 'href="/lang/el/lemma/θυμός"' in enhanced_text_nfd
 
     # The original form of the word should be preserved in the link text
     assert ">τροφή<" in enhanced_text_nfc

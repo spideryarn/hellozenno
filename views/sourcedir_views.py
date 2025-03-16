@@ -29,7 +29,7 @@ from config import (
     SOURCE_EXTENSIONS,
 )
 
-sourcedir_views_bp = Blueprint("sourcedir_views", __name__)
+sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/lang")
 
 
 @sourcedir_views_bp.route("/<target_language_code>/")

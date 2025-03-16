@@ -10,7 +10,7 @@ echo "Running health checks against https://hellozenno.vercel.app"
 echo "Testing health check endpoint..."
 
 # Try health check endpoint
-curl -f "https://hellozenno.vercel.app/health-check" || {
+curl -f "https://hellozenno.vercel.app/sys/health-check" || {
     echo_error "Health check failed"
     exit 1
 }

@@ -473,7 +473,7 @@ def create_interactive_word_links(
             translation = "; ".join(t for t in translations if t)
             etymology = get_etymology(lemma)
             # Use the original word (with its case) in the link text
-            return f'<a target="_blank" href="/{target_language_code}/lemma/{lemma}" class="word-link">{word}</a>'
+            return f'<a target="_blank" href="/lang/{target_language_code}/lemma/{lemma}" class="word-link">{word}</a>'
         return word
 
     # Sort wordforms by length in descending order to handle overlapping words

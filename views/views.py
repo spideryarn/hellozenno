@@ -21,7 +21,7 @@ def home():
     return redirect_to_view(views_bp, languages)
 
 
-@views_bp.route("/languages")
+@views_bp.route("/lang")
 def languages():
     supported_languages = get_all_languages()
     return render_template(
@@ -39,19 +39,19 @@ def experim():
             "lemma": "γράφω",
             "partOfSpeech": "verb",
             "translations": ["to write", "to draw", "to record"],
-            "href": "/el/lemma/γράφω",
+            "href": "/lang/el/lemma/γράφω",
         },
         {
             "lemma": "πόλη",
             "partOfSpeech": "noun",
             "translations": ["city", "town"],
-            "href": "/el/lemma/πόλη",
+            "href": "/lang/el/lemma/πόλη",
         },
         {
             "lemma": "καλός",
             "partOfSpeech": "adjective",
             "translations": ["good", "beautiful", "fine"],
-            "href": "/el/lemma/καλός",
+            "href": "/lang/el/lemma/καλός",
         },
     ]
 
