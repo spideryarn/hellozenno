@@ -46,10 +46,8 @@ if ! vercel whoami &> /dev/null; then
 fi
 
 # Build frontend assets for production (only for production deployment)
-if [[ "$PREVIEW" == "false" ]]; then
-    echo "Building frontend assets..."
-    ./scripts/prod/build-frontend.sh
-fi
+echo "Building frontend assets..."
+./scripts/prod/build-frontend.sh
 
 # Set environment variables from .env.prod
 echo "Setting Vercel environment variables..."
