@@ -1,17 +1,10 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "api/index.py",
-            "use": "@vercel/python",
-            "config": {
-                "includeFiles": [
-                    "templates/**",
-                    "static/**"
-                ]
-            }
+    "functions": {
+        "api/index.py": {
+            "maxDuration": 60
         }
-    ],
+    },
     "routes": [
         {
             "src": "/(.*)",
