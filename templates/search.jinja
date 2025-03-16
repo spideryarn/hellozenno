@@ -8,7 +8,7 @@
     
     <div class="row mt-4">
         <div class="col-md-8 offset-md-2">
-            <form method="GET" action="{{ url_for('views.search_landing', target_language_code=target_language_code) }}" class="mb-4">
+            <form method="GET" action="{{ url_for('search.search_landing', target_language_code=target_language_code) }}" class="mb-4">
                 <div class="input-group">
                     <input type="text" name="q" class="form-control" placeholder="Enter a word to search..." required>
                     <button type="submit" class="btn btn-primary">Search</button>

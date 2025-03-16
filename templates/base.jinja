@@ -51,7 +51,7 @@
                 {# <a href="{{ url_for('phrase_views.phrases_list', target_language_code=target_language_code) }}">Phrases</a> #}
             </div>
             <div class="search-box">
-                <form method="GET" action="{{ url_for('views.search_landing', target_language_code=target_language_code) }}">
+                <form method="GET" action="{{ url_for('search.search_landing', target_language_code=target_language_code) }}">
                     <input type="text" name="q" placeholder="Search {{ target_language_name }} words..." required>
                     <button type="submit" class="button">Search</button>
                 </form>

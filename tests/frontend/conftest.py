@@ -25,6 +25,7 @@ def app(fixture_for_testing_db):
     from views.sourcefile_views import sourcefile_views_bp
     from views.phrase_views import phrase_views_bp
     from views.sentence_views import sentence_views_bp
+    from views.search_views import search_views_bp
     from views.api import api_bp
     from views.flashcard_views import flashcard_views_bp
 
@@ -35,6 +36,7 @@ def app(fixture_for_testing_db):
     app.register_blueprint(sourcefile_views_bp)
     app.register_blueprint(phrase_views_bp)
     app.register_blueprint(sentence_views_bp)
+    app.register_blueprint(search_views_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(flashcard_views_bp)
 

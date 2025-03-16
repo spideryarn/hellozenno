@@ -38,6 +38,7 @@ from views.sourcedir_views import sourcedir_views_bp
 from views.sourcefile_views import sourcefile_views_bp
 from views.phrase_views import phrase_views_bp
 from views.sentence_views import sentence_views_bp
+from views.search_views import search_views_bp
 from views.api import api_bp
 from tests.mocks.search_mocks import mock_quick_search_for_wordform
 from utils.db_connection import init_db
@@ -149,6 +150,7 @@ def client(fixture_for_testing_db):
     app.register_blueprint(sourcefile_views_bp)
     app.register_blueprint(phrase_views_bp)
     app.register_blueprint(sentence_views_bp)
+    app.register_blueprint(search_views_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(flashcard_views_bp)
 

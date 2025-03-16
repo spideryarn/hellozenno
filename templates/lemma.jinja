@@ -186,7 +186,7 @@
                     {{ load_svelte_component('MiniSentence', {
                         'phrase': confused.example_usage_other_target,
                         'translation': confused.example_usage_other_source,
-                        'href': url_for('views.search_word', target_language_code=target_language_code, wordform=confused.lemma)
+                        'href': url_for('search.search_word', target_language_code=target_language_code, wordform=confused.lemma)
                     }, component_id='minisentence-component-confused-other-' ~ loop.index) }}
                     {% if confused.notes %}
                     <p><strong>Notes:</strong> {{ confused.notes }}</p>
