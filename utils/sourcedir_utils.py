@@ -1,5 +1,5 @@
 from flask import abort, redirect, url_for
-from peewee import DoesNotExist
+from peewee import DoesNotExist, fn
 from config import (
     SOURCE_EXTENSIONS,
 )
@@ -29,11 +29,11 @@ def _navigate_sourcefile(
         # Get the sourcedir entry
         sourcedir_entry = _get_sourcedir_entry(target_language_code, sourcedir_slug)
 
-        # Get all sourcefiles ordered by filename
+        # Get all sourcefiles ordered by filename (case-insensitive)
         sourcefiles = (
             Sourcefile.select()
             .where(Sourcefile.sourcedir == sourcedir_entry)
-            .order_by(Sourcefile.filename)
+            .order_by(fn.LOWER(Sourcefile.filename))
         )
 
         # Convert to list for easier manipulation
@@ -85,11 +85,11 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
     - total_files: total number of files in the directory
     - current_position: 1-based position of current file
     """
-    # Get all sourcefiles ordered by filename
+    # Get all sourcefiles ordered by filename (case-insensitive)
     sourcefiles = list(
         Sourcefile.select()
         .where(Sourcefile.sourcedir == sourcedir)
-        .order_by(Sourcefile.filename)
+        .order_by(fn.LOWER(Sourcefile.filename))
     )
 
     total_files = len(sourcefiles)

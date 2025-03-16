@@ -109,7 +109,7 @@ def sourcefiles_for_sourcedir(target_language_code: str, sourcedir_slug: str):
         for sourcefile_entry in (
             Sourcefile.select()
             .where(Sourcefile.sourcedir == sourcedir_entry)
-            .order_by(Sourcefile.filename)
+            .order_by(fn.LOWER(Sourcefile.filename))
         ):
             # Count wordforms and phrases
             wordform_count = sourcefile_entry.wordform_entries.count()
