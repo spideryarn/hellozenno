@@ -58,13 +58,15 @@ The application works correctly on localhost and the previous Fly.io deployment,
 - [x] **Review View Handlers**
   - [x] Identify route handlers that need URL decoding for Greek characters
   - [x] Initially added explicit URL decoding in lemma and wordform routes
-  - [x] Later commented out redundant decoding to rely on middleware solution
+  - [x] Temporarily commented out redundant decoding to rely on middleware solution
+  - [x] Restored explicit decoding after testing in Vercel environment
 
 - [x] **Test the Solution**
   - [x] Create unit tests for `fix_url_encoding` with various encoding scenarios
   - [x] Test middleware functionality with regular and encoded URLs
   - [x] Test simulated Vercel-like double encoding
   - [x] Verify solution works correctly with integration tests
+  - [x] Test in Vercel deployment environment to confirm fix
 
 - [ ] **Deploy and Monitor**
   - [ ] Deploy the changes to Vercel
