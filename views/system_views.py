@@ -181,9 +181,14 @@ def protected_page():
 
 
 @system_views_bp.route("/profile", methods=["GET", "POST"])
+@system_views_bp.route("/profile/<target_language_code>", methods=["GET", "POST"])
 @page_auth_required
-def profile_page():
+def profile_page(target_language_code=None):
     """User profile page for editing preferences."""
+    # Catch empty string language code (from trailing slash) and redirect to /profile
+    if target_language_code == "":
+        return redirect("/profile")
+        
     # Get or create profile
     profile, created = Profile.get_or_create_for_user(g.user["id"], g.user["email"])
 
@@ -197,5 +202,9 @@ def profile_page():
 
     # GET request - show the profile form
     return render_template(
-        "profile.jinja", user=g.user, profile=profile, languages=SUPPORTED_LANGUAGES
+        "profile.jinja", 
+        user=g.user, 
+        profile=profile, 
+        languages=SUPPORTED_LANGUAGES,
+        target_language_code=None  # Pass None to avoid template errors
     )
