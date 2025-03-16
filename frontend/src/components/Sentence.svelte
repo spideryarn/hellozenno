@@ -212,20 +212,20 @@
     margin-bottom: var(--spacing-4);
   }
 
-  /* Style paragraphs inside target-lang-text */
-  .target-lang-text :global(p) {
+  /* Global styles for injected HTML content */
+  :global(.target-lang-text p) {
     margin: 0;
     padding: 0;
   }
 
-  .target-lang-text :global(.word-link) {
+  :global(.word-link) {
     color: var(--color-primary);
     text-decoration: none;
     margin: 0 var(--spacing-1);
   }
   
   /* Ensure consistent styling for any nested elements */
-  .target-lang-text :global(br) {
+  :global(.target-lang-text br) {
     display: block;
     content: "";
     margin-top: 0.5rem;
