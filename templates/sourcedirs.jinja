@@ -25,10 +25,18 @@
     <a href="{{ url_for('sentence_views.sentences_list', language_code=target_language_code) }}">
         Sentences
     </a>
+    <a href="{{ url_for('flashcard_views.flashcard_landing', language_code=target_language_code) }}">
+        Practice with Flashcards
+    </a>
 </div>
 <hr />
 
-<button id="newSourcedirBtn" class="button success-btn">New Source Directory</button>
+<div class="top-controls">
+    <button id="newSourcedirBtn" class="button success-btn">New Source Directory</button>
+    
+    <div class="actions">
+    </div>
+</div>
 
 <div class="sort-options">
     Sort by:
@@ -98,6 +106,21 @@
     }
     .delete-btn:hover {
         background-color: #d32f2f;
+    }
+    .top-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 1em 0;
+    }
+    .actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    .button.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 </style>
 
