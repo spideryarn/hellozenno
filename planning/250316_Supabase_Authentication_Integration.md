@@ -1,8 +1,8 @@
-# Supabase Authentication Integration Plan
+# Supabase Authentication Integration Plan (Simplified)
 
 ## Goal & Context
 
-Implement a secure, seamless authentication system using Supabase Auth in our mixed Flask + Svelte application while maintaining the existing application structure and user experience.
+Implement a simple, effective authentication system using Supabase Auth in our Flask + Svelte prototype application, prioritizing developer experience and simplicity.
 
 **Current stack:**
 - Backend: Flask + Peewee ORM
@@ -10,301 +10,281 @@ Implement a secure, seamless authentication system using Supabase Auth in our mi
 - Frontend: Mix of Jinja templates and Svelte components
 - Authentication: None currently implemented
 
-**Benefits of Supabase Auth:**
-- Managed authentication service with multiple auth methods
-- JWT-based authentication that works well with our existing Supabase database
-- Built-in security features (password hashing, token management)
-- Support for social logins and passwordless authentication
-- Consistent API between frontend and backend
-
 ## Principles
 
-- **Security first**: Implement best practices for authentication security
-- **Seamless integration**: Work within our existing Flask + Svelte architecture
-- **Progressive enhancement**: Add authentication without breaking existing functionality
-- **User experience**: Make the auth flow intuitive and responsive
-- **Maintainability**: Follow established patterns and document thoroughly
+- **Simplicity first**: Keep implementation straightforward for this prototype
+- **Developer-friendly**: Make authentication easy to work with during development
+- **Focus on core flows**: Support basic signup, login, and logout
+- **Minimal changes**: Integrate with existing code with minimal disruption
+- **Use native Svelte** instead of React components for better integration
+- **Reuse Supabase libraries** rather than custom Flask auth to keep things consistent
 
 ## Technical Approach
 
-### 1. Authentication Flow
+### Authentication Flow
 
-We'll implement a hybrid authentication approach:
-- **Frontend**: Svelte components will handle login UI and initial auth with Supabase
-- **Backend**: Flask will verify JWT tokens and manage session state
-- **Cookie-based sessions**: Use Supabase's cookie-based auth for SSR compatibility
+We'll implement a streamlined approach:
 
-The authentication flow will be:
 1. User enters credentials in Svelte-based login form
-2. Supabase JS client authenticates and receives JWT
-3. JWT is stored in an HTTP-only cookie
-4. Flask middleware validates the JWT on subsequent requests
-5. Protected routes check authentication status before rendering
+2. Supabase client authenticates and receives JWT
+3. JWT is stored in HTTP-only cookies for session persistence
+4. API requests include the JWT automatically via cookies
+5. Backend validates JWT token on protected routes/endpoints
+6. User information is displayed in the UI
 
-### 2. Technical Components
-
-#### Frontend (Svelte)
-
-1. **Auth Components**:
-   - Login form component
-   - Registration form component
-   - Password reset component
-   - Auth state management (Svelte store)
-
-2. **Supabase Client**:
-   - Initialize with environment variables
-   - Handle auth state changes
-   - Provide authenticated API access
-
-3. **Protected Routes**:
-   - Component to wrap protected content
-   - Redirect logic for unauthenticated users
-
-#### Backend (Flask)
-
-1. **Auth Middleware**:
-   - JWT validation middleware
-   - Session management
-   - User context injection
-
-2. **Auth Blueprint**:
-   - Routes for auth-related operations
-   - API endpoints for auth state
-
-3. **Protected Routes**:
-   - Decorator for protecting Flask routes
-   - Integration with existing views
-
-### 3. Database Schema
-
-We'll use Supabase Auth's built-in user tables and extend with custom profile data:
-
-1. **Auth Schema** (managed by Supabase):
-   - `auth.users`: Core user data
-   - `auth.sessions`: User sessions
-   - `auth.refresh_tokens`: Token management
-
-2. **Custom Profile Schema**:
-   - `public.user_profiles`: Extended user information
-   - Foreign key relationship to `auth.users`
+This approach offers several advantages:
+- HTTP-only cookies provide better security than localStorage
+- Cookie-based approach works well with both SPA and SSR
+- Avoids complex session management on the backend
+- Leverages Supabase's built-in security features
 
 ## Implementation Plan
 
-### Stage 1: Setup & Configuration
+### Stage 1: Environment Setup
 
-1. **Configure Supabase Auth**
-   - Enable email/password authentication
-   - Configure auth settings in Supabase dashboard
-   - Set up email templates for verification/reset
+- [ ] Configure Supabase Auth
+  - [ ] Enable email/password authentication in Supabase dashboard
+  - [ ] Configure minimal email templates for verification
+  - [ ] Set site URL and redirect URLs
 
-2. **Environment Configuration**
-   - Add Supabase auth variables to `.env.local` and `.env.prod`
-   - Update Vite config to expose necessary variables
-   - Configure Flask to use Supabase auth settings
+- [ ] Environment Configuration
+  - [ ] Add Supabase auth variables to `.env.local`:
+    ```
+    SUPABASE_URL=your-project-url
+    SUPABASE_ANON_KEY=your-anon-key
+    SUPABASE_JWT_SECRET=your-jwt-secret (for testing only)
+    ```
+  - [ ] Update Vite config to expose variables to frontend
 
-3. **Install Dependencies**
-   - Add `@supabase/supabase-js` to frontend
-   - Add `pyjwt` and `httpx` to backend requirements
+- [ ] Install Dependencies
+  - [ ] Add Supabase JS client to frontend: `npm install @supabase/supabase-js`
+  - [ ] Add JWT validation to backend: `pip install pyjwt cryptography`
 
-### Stage 2: Frontend Implementation
+### Stage 2: Frontend Authentication Components
 
-1. **Create Auth Store**
-   - Implement Svelte store for auth state
-   - Handle auth state persistence
-   - Provide methods for login/logout/registration
+- [ ] Create Auth Store
+  - [ ] Create `frontend/src/lib/auth-store.ts` for state management
+  - [ ] Initialize Supabase client with appropriate config
+  - [ ] Add functions for login, signup, and logout
+  - [ ] Add auth state management with Svelte store
 
-2. **Develop Auth Components**
-   - Create login component
-   - Create registration component
-   - Create password reset component
-   - Create auth guard component for protected routes
+- [ ] Create Login Component
+  - [ ] Create `frontend/src/components/Login.svelte` with form
+  - [ ] Add error handling for invalid credentials
+  - [ ] Show loading state during authentication
 
-3. **API Integration**
-   - Create authenticated API utility
-   - Handle token refresh and auth errors
-   - Implement auth state synchronization
+- [ ] Create Signup Component
+  - [ ] Create `frontend/src/components/Signup.svelte` with form
+  - [ ] Add password confirmation and validation
+  - [ ] Add success message after registration
 
-### Stage 3: Backend Implementation
+- [ ] Create Auth Page Component
+  - [ ] Create `frontend/src/components/AuthPage.svelte` that combines login/signup
+  - [ ] Add tab navigation between views
+  - [ ] Create entry point in `frontend/src/entries/auth.ts`
+  - [ ] Update central registry in `frontend/src/entries/index.ts`
 
-1. **Create Auth Middleware**
-   - Implement JWT validation
-   - Create user context middleware
-   - Set up session management
+### Stage 3: User Status Component
 
-2. **Develop Auth Blueprint**
-   - Create routes for auth operations
-   - Implement user info endpoint
-   - Add session validation endpoints
+- [ ] Create User Status Component - see `docs/FRONTEND_INFRASTRUCTURE.md`
+  - [ ] Create `frontend/src/components/UserStatus.svelte`
+  - [ ] Show user icon in corner of header
+  - [ ] Display email on hover with a dropdown
+  - [ ] Add logout button
+  - [ ] Create entry point in `frontend/src/entries/userstatus.ts`
 
-3. **Protect Routes**
-   - Create auth decorator for Flask routes
-   - Update existing routes with protection
-   - Implement redirect logic for unauthenticated users
+- [ ] Add User Status to Base Template
+  - [ ] Update `templates/base.jinja` to include component
+  - [ ] Add appropriate styling for different states
+  - [ ] Make sure component loads on all pages
 
-### Stage 4: Database & User Profiles
+### Stage 4: Backend JWT Verification
 
-1. **Create User Profile Table**
-   - Design schema for extended user data
-   - Create migration for user profiles
-   - Set up relationships to auth.users
+- [ ] Create JWT Verification Utility
+  - [ ] Create `utils/auth_utils.py` for token validation
+  - [ ] Add function to fetch and cache Supabase public key
+  - [ ] Add function to verify JWT tokens
+  - [ ] Add function to extract token from request
 
-2. **Implement Profile Management**
-   - Create API for profile updates
-   - Implement profile data in auth responses
-   - Add profile editing UI
+- [ ] Create Auth Decorators
+  - [ ] Add `api_auth_required` decorator for API routes
+  - [ ] Add `page_auth_required` decorator for page routes
+  - [ ] Make both decorators store user data in Flask's g object
 
-### Stage 5: Testing & Security Audit
+### Stage 5: Auth Routes and Protected Test Page
 
-1. **Unit Testing**
-   - Test auth components
-   - Test JWT validation
-   - Test protected routes
+- [ ] Add Auth Routes to Flask
+  - [ ] Create or update system_views.py with auth blueprint
+  - [ ] Add route for auth page
+  - [ ] Add route for a protected test page
+  - [ ] Add API endpoint to get current user info
 
-2. **Integration Testing**
-   - Test complete auth flow
-   - Test error handling
-   - Test edge cases (expired tokens, etc.)
+- [ ] Create Auth Templates
+  - [ ] Create `templates/auth.jinja` for auth page
+  - [ ] Create `templates/protected.jinja` for test page
+  - [ ] Register routes in main app
 
-3. **Security Audit**
-   - Review JWT implementation
-   - Check for common auth vulnerabilities
-   - Validate CSRF protection
+### Stage 6: Session Persistence with Cookies
 
-### Stage 6: Documentation & Deployment
+- [ ] Add Cookie Management
+  - [ ] Update frontend auth store to use HTTP-only cookies
+  - [ ] Add API endpoints for cookie management
+  - [ ] Modify token extraction to check cookies as well as headers
 
-1. **Update Documentation**
-   - Document auth architecture
-   - Create user guide for auth features
-   - Update API documentation
+### Stage 7: User Profile Database Table
 
-2. **Deployment Planning**
-   - Plan staged rollout
-   - Create rollback strategy
-   - Update deployment scripts
+- [ ] Create Migration for User Profiles (following `docs/MIGRATIONS.md`)
+  - [ ] Create migration for `public.profiles` table
+  - [ ] Add `target_language_code` string field, nullable
+  - [ ] Set up foreign key to `auth.users`
+  - [ ] Add appropriate indexes
+
+- [ ] Update DB Models
+  - [ ] Add `Profile` model to `db_models.py`
+  - [ ] Add methods for creating/updating profiles
+
+- [ ] Add a simple profile page where a user can set their `target_language_code` (with view, Jinja template etc)
+
+### Stage 8: Error Handling
+
+- [ ] Add Token Refresh Logic
+  - [ ] Add token expiration check in frontend
+  - [ ] Implement token refresh mechanism
+  - [ ] Redirect to login on auth failures
+
+- [ ] Add Error UI Components
+  - [ ] Create component for displaying auth errors
+  - [ ] Add network status monitor for offline detection
+  - [ ] Add retry mechanisms for network failures
+
+### Stage 9: Testing and Documentation
+
+- [ ] Manual Testing Checklist
+  - [ ] Test signup flow
+  - [ ] Test login flow
+  - [ ] Test protected routes
+  - [ ] Test session persistence
+  - [ ] Test error handling
+
+- [ ] Create Documentation
+  - [ ] Document authentication architecture
+  - [ ] Add usage examples for protecting routes
+  - [ ] Document API endpoints
+  - [ ] Add troubleshooting guide
 
 ## Technical Details
 
-### JWT Validation
-
-For JWT validation, we'll use PyJWT with Supabase's public keys:
+### Simple JWT Validation
 
 ```python
-def verify_token(token):
+def verify_jwt_token(token):
+    """Verify a JWT token using Supabase's public key."""
     try:
-        # Fetch and cache Supabase's public key
-        public_key = get_jwt_public_key()
-        
-        # Decode and verify the token
+        # Get the public key
+        public_key = get_supabase_public_key()
+        if not public_key:
+            logger.error("No public key available for JWT verification")
+            return None
+            
+        # Verify the token
         payload = jwt.decode(
             token,
             public_key,
             algorithms=["RS256"],
-            audience="authenticated"
+            audience="authenticated",
+            options={"verify_exp": True}
         )
         
         return payload
+        
     except jwt.ExpiredSignatureError:
-        logger.warning("Token expired")
+        logger.warning("JWT token expired")
         return None
     except jwt.InvalidTokenError as e:
-        logger.warning(f"Invalid token: {e}")
+        logger.warning(f"Invalid JWT token: {e}")
         return None
-```
-
-### Supabase Client Initialization
-
-We'll initialize the Supabase client with proper options for SSR:
-
-```typescript
-// Frontend client
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
-  }
-);
-
-// Backend client (Python)
-supabase_client = create_client(
-    supabase_url,
-    supabase_key,
-    options=ClientOptions(
-        storage=FlaskSessionStorage(),
-        flow_type="pkce"
-    )
-)
+    except Exception as e:
+        logger.error(f"Error verifying JWT token: {e}")
+        return None
 ```
 
 ### Auth Decorator
 
-We'll create a decorator for protecting Flask routes:
-
 ```python
-def auth_required(f):
+def api_auth_required(f):
+    """Decorator for API endpoints that require authentication."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Get token from Authorization header or cookie
-        token = get_token_from_request()
+        user = get_current_user()
         
-        if not token:
-            return redirect(url_for('auth.login'))
-        
-        # Verify token
-        payload = verify_token(token)
-        
-        if not payload:
-            return redirect(url_for('auth.login'))
-        
+        if not user:
+            return jsonify({"error": "Unauthorized"}), 401
+            
         # Store user info in Flask's g object
-        g.user = {
-            "id": payload.get("sub"),
-            "email": payload.get("email"),
-            "role": payload.get("role", "user"),
-        }
-        
+        g.user = user
         return f(*args, **kwargs)
-    
+        
     return decorated
 ```
 
-## Risks & Mitigations
+### Svelte Auth Store Setup
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| JWT validation issues | High | Medium | Thorough testing of token validation, proper error handling |
-| Session management complexity | Medium | Medium | Clear documentation, follow Supabase best practices |
-| Performance impact | Medium | Low | Caching of validation results, efficient token handling |
-| User experience disruption | High | Medium | Gradual rollout, clear user communication |
-| Security vulnerabilities | High | Low | Security audit, follow OWASP guidelines |
+```typescript
+// frontend/src/lib/auth-store.ts
+import { writable } from 'svelte/store';
+import { createClient } from '@supabase/supabase-js';
 
-## Success Criteria
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-1. Users can register, login, and logout securely
-2. Protected routes are only accessible to authenticated users
-3. JWT validation is properly implemented
-4. User sessions persist appropriately
-5. Auth state is synchronized between frontend and backend
-6. Error handling is robust and user-friendly
-7. Performance impact is minimal
+// Create Supabase client
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
+  }
+});
 
-## Future Enhancements
+// Create auth store
+export const authStore = writable({
+  user: null,
+  session: null,
+  loading: true
+});
 
-1. Social login integration (Google, GitHub, etc.)
-2. Multi-factor authentication
-3. Role-based access control
-4. User management dashboard
-5. Account linking (connecting multiple auth providers)
-6. Enhanced security features (IP restrictions, etc.)
+// Initialize auth state
+export const initAuth = async () => {
+  // Get initial session
+  const { data } = await supabase.auth.getSession();
+  
+  authStore.update(state => ({
+    ...state,
+    session: data.session,
+    user: data.session?.user || null,
+    loading: false
+  }));
+  
+  // Listen for auth changes
+  supabase.auth.onAuthStateChange((event, session) => {
+    authStore.update(state => ({
+      ...state,
+      session,
+      user: session?.user || null
+    }));
+  });
+};
+```
 
-## References
+## Rationale and Future Enhancements
 
-1. [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
-2. [Flask Authentication Best Practices](https://flask.palletsprojects.com/en/2.0.x/security/)
-3. [JWT Best Practices](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-jwt-bcp-02)
-4. [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
-5. [Supabase Python Client](https://github.com/supabase-community/supabase-py) 
+We've prioritized simplicity and developer experience for this prototype application. Key decisions:
+
+1. **Email+Password Auth**: Simplest to set up without external dependencies
+2. **Svelte Native Components**: Avoid React dependencies for better integration
+3. **JWT with HTTP-only Cookies**: Balance of security and simplicity
+4. **Simple Profile Table**: Start with basic user preferences
+
+Future enhancements (post-MVP):
+
+- Social login options (Google, GitHub)
+- Password reset flow
