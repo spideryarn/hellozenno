@@ -7,4 +7,4 @@ if [ -z "$FLASK_PORT" ]; then
 fi
 
 # Run Flask in debug and development mode
-FLASK_DEBUG=1 FLASK_ENV=development FLASK_APP=app.py flask run --host=localhost --port $FLASK_PORT
+FLASK_DEBUG=1 FLASK_ENV=development FLASK_APP=api/index.py flask run --host=localhost --port $FLASK_PORT
