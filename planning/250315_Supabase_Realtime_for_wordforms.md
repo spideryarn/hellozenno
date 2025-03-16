@@ -352,7 +352,7 @@ curl https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js -o 
 Add Supabase configuration:
 
 ```python
-# In app.py or config.py
+# In index.py or config.py
 from utils.env_config import SUPABASE_URL, SUPABASE_ANON_KEY
 
 app.config['SUPABASE_URL'] = SUPABASE_URL.get_secret_value()

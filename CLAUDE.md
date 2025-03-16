@@ -7,7 +7,7 @@ To understand more about the purpose of the app, see `./README.md`
 - Make sure you read `.cursor/rules/gjdutils_rules/coding.mdc`
 
 - **Backend (Flask + PostgreSQL)**
-  - `app.py` - Main Flask application
+  - `index.py` - Main Flask application
   - `views/` - Route handlers and view functions
   - `utils/` - Helper functions
   - `db_models.py` - Database models (using Peewee ORM)
