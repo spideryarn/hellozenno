@@ -25,4 +25,5 @@ python-dotenv>=1.0.0  # For environment variable management
 ujson>=5.10.0  # For JSON handling
 yt-dlp>=2023.12.30  # For YouTube audio downloads
 flask-cors>=4.0.0  # For cross-origin API access
+whitenoise>=6.6.0  # For static file serving on Vercel
 # pytest-postgresql>=5.0.0

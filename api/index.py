@@ -5,6 +5,7 @@ import sys
 from loguru import logger
 from flask import Flask
 from flask_cors import CORS
+from whitenoise import WhiteNoise
 
 # Add the parent directory to sys.path to allow importing from the root directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -110,6 +111,24 @@ def create_app():
 
     # Add middleware to handle URL decoding for all routes - see planning/250316_vercel_url_encoding_fix.md
     app.before_request(decode_url_params)
+
+    # Configure WhiteNoise for static file serving
+    static_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+    templates_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
+    
+    # Wrap the WSGI app with WhiteNoise
+    app.wsgi_app = WhiteNoise(app.wsgi_app)
+    
+    # Add static files with appropriate prefixes
+    app.wsgi_app.add_files(static_folder, prefix='static/')
+    
+    # Enable compression and caching for better performance
+    app.wsgi_app.enable_compression = True
+    app.wsgi_app.caching = True
+    
+    # Log WhiteNoise configuration
+    logger.info(f"WhiteNoise configured with static folder: {static_folder}")
+    logger.info(f"WhiteNoise compression enabled: {app.wsgi_app.enable_compression}")
 
     # Add a simple test route for Vercel deployment
     @app.route("/vercel-test")

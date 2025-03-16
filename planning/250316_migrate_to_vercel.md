@@ -73,7 +73,7 @@ The current application is a Flask-based web app deployed on Fly.io with a Supab
   - [ ] Update documentation
 
 - [ ] **Future Enhancements**
-  - [ ] Implement static file serving with WhiteNoise
+  - [x] Implement static file serving with WhiteNoise
   - [ ] Optimize long-running operations for serverless environment
   - [ ] Implement file storage solution for serverless environment
 
