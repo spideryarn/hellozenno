@@ -18,6 +18,24 @@ from utils.url_utils import decode_url_params
 setup_logging(log_to_file=True, max_lines=100)
 
 
+def load_vite_manifest():
+    """Load the Vite manifest file for asset versioning."""
+    manifest_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "static/build/.vite/manifest.json"
+    )
+    try:
+        import json
+        if os.path.exists(manifest_path):
+            with open(manifest_path, 'r') as f:
+                return json.load(f)
+        else:
+            logger.warning(f"Vite manifest not found at {manifest_path}")
+            return {}
+    except Exception as e:
+        logger.error(f"Error loading Vite manifest: {e}")
+        return {}
+
 def create_app():
     """Create and configure the Flask application."""
     logger.info("Creating Flask application")
@@ -48,6 +66,16 @@ def create_app():
 
     # Set production flag based on environment
     app.config["IS_PRODUCTION"] = is_vercel()
+    
+    # Load Vite manifest for asset versioning
+    app.config["VITE_MANIFEST"] = load_vite_manifest()
+    
+    # Make manifest available to templates
+    @app.context_processor
+    def inject_vite_manifest():
+        return {
+            "vite_manifest": app.config["VITE_MANIFEST"]
+        }
 
     # Initialize database
     from utils.db_connection import init_db

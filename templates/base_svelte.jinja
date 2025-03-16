@@ -61,6 +61,14 @@
     </script>
   {% else %}
     {# Production mode - use built files #}
+    {# Load the CSS file for Svelte components #}
+    {% if vite_manifest and 'style.css' in vite_manifest %}
+      <link rel="stylesheet" href="{{ url_for('static', filename='build/' + vite_manifest['style.css'].file) }}">
+    {% else %}
+      {# Fallback if manifest is not available or doesn't contain style.css #}
+      <link rel="stylesheet" href="{{ url_for('static', filename='build/assets/style-DLIes3yS.css') }}">
+    {% endif %}
+    
     <script type="module">
       // Debug flags for troubleshooting production issues
       const PROD_DEBUG = true;

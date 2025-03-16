@@ -94,8 +94,8 @@ export default defineConfig({
     build: {
         outDir: '../static/build',
         emptyOutDir: true,
-        manifest: true,
-        cssCodeSplit: true,
+        manifest: true, // Generate a manifest.json
+        cssCodeSplit: false, // Disable code splitting for CSS to create a single CSS file
         // Ensure source maps are generated for easier debugging
         sourcemap: true,
 
@@ -116,6 +116,8 @@ export default defineConfig({
                 globals: {},
                 // Preserve directory structure for component CSS
                 assetFileNames: 'assets/[name]-[hash][extname]',
+                // Make sure the manifest includes CSS files
+                manualChunks: undefined
             }
         }
     },
