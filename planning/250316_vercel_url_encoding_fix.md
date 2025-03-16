@@ -176,6 +176,53 @@ This approach is minimal, general, and follows proper web standards and Flask pa
 - Monitor for any performance impact of the middleware (should be negligible)
 - If the issue persists in specific edge cases, we may need to add more sophisticated detection and handling
 
+## Recent Issues and Next Steps (March 2025)
+
+### Tooltip Preview Issue
+
+We discovered that tooltip previews were failing in production with "Error loading preview" messages. Investigation revealed:
+
+1. The `/api/word-preview/` and `/api/phrase-preview/` endpoints were missing the explicit URL unquote line added to other route handlers.
+2. The middleware seemed to be ineffective in the Vercel environment specifically for these API endpoints.
+3. Adding explicit `urllib.parse.unquote()` to these API endpoints fixed the issue, consistent with our "defense in depth" approach.
+
+### Understanding Middleware Limitations in Vercel
+
+To better understand why the middleware approach isn't working consistently in Vercel's serverless environment, we should consider several potential causes:
+
+1. **Request Path Immutability**: 
+   - Modifying `request.path` in Flask middleware might not work in Vercel's serverless environment
+   - The URL routing might be determined before Flask's middleware runs
+
+2. **WSGI vs. Serverless Architecture**: 
+   - Flask was designed for WSGI environments, but Vercel's serverless functions work differently
+   - The integration layer between Vercel and Flask might not fully support dynamic request path modifications
+
+3. **Request Processing Order**:
+   - Vercel might process URL routing before our middleware has a chance to run
+   - The adapter between Vercel's edge network and our Flask app might be rewriting paths
+
+### Potential Improvements
+
+To diagnose and potentially fix the middleware issue:
+
+1. **Enhanced Logging**:
+   - Add detailed logging to the middleware to see exactly when and how it runs in Vercel
+   - Log the original path, environment information, and any changes made
+
+2. **Alternative Path Modification Approach**:
+   - Instead of modifying `request.path`, try updating `request.environ['PATH_INFO']` directly
+   - This is a lower-level WSGI approach that might work better in Vercel's environment
+
+3. **Vercel-Specific Configuration**:
+   - Research if there are Vercel-specific configurations that can help with URL handling
+   - Consider customizing the adapter between Vercel's edge network and our Flask app
+
+4. **Edge Middleware**:
+   - Investigate if Vercel's Edge Middleware could handle the URL decoding before it reaches our Flask app
+
+For now, we've applied the "defense in depth" approach by adding explicit unquoting to view functions that need it, while keeping the middleware in place for other environments. This hybrid approach is working and follows the principle of "be liberal in what you accept, conservative in what you send."
+
 ## Appendix
 
 ### References
