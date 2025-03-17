@@ -4,6 +4,15 @@ To understand more about the purpose of the app, see `./README.md`
 
 ## Coding
 
+**Principles**
+- Prioritise simplicity, debuggability, and readability. Try to keep things concise, don't over-comment, over-log, or over-engineer. This is a an MVP, so we care more about development speed than scaling etc.
+- Keep changes minimal, and focused on the task at hand.
+- Fix the root causes rather than just put on a band-aid 
+- Raise errors early, clearly & fatally. Prefer not to wrap in try/except.
+- Aim to reuse code, and use sub-functions to make long/complex functions clearer.
+- If things don't make sense or seem like a bad idea or you need guidance, ask questions or discuss rather than just going along with it.
+
+
 - Make sure you read `.cursor/rules/gjdutils_rules/coding.mdc`
 
 - **Backend (Flask + PostgreSQL)**
