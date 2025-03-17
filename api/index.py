@@ -7,6 +7,8 @@ from flask import Flask
 from flask_cors import CORS
 from whitenoise import WhiteNoise
 
+from utils.url_utils import load_vite_manifest
+
 # Add the parent directory to sys.path to allow importing from the root directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -17,26 +19,6 @@ from utils.url_utils import decode_url_params
 
 # Configure logging with loguru
 setup_logging(log_to_file=True, max_lines=200)
-
-
-def load_vite_manifest():
-    """Load the Vite manifest file for asset versioning."""
-    manifest_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "static/build/.vite/manifest.json",
-    )
-    try:
-        import json
-
-        if os.path.exists(manifest_path):
-            with open(manifest_path, "r") as f:
-                return json.load(f)
-        else:
-            logger.warning(f"Vite manifest not found at {manifest_path}")
-            return {}
-    except Exception as e:
-        logger.error(f"Error loading Vite manifest: {e}")
-        return {}
 
 
 def create_app():
@@ -76,11 +58,6 @@ def create_app():
     # Load Vite manifest for asset versioning
     app.config["VITE_MANIFEST"] = load_vite_manifest()
 
-    # Make manifest available to templates
-    @app.context_processor
-    def inject_vite_manifest():
-        return {"vite_manifest": app.config["VITE_MANIFEST"]}
-
     # Initialize database
     from utils.db_connection import init_db
 
@@ -118,6 +95,11 @@ def create_app():
     app.register_blueprint(api_bp)
     app.register_blueprint(flashcard_views_bp)
 
+    # Register the new API blueprints
+    from views.api import sourcedir_api_bp
+
+    app.register_blueprint(sourcedir_api_bp)
+
     # Add middleware to handle URL decoding for all routes - see planning/250316_vercel_url_encoding_fix.md
     app.before_request(decode_url_params)
 
@@ -128,25 +110,6 @@ def create_app():
     templates_folder = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
     )
-
-    # Add a route to handle CSS file dynamically
-    @app.route('/static/build/assets/style.css')
-    def serve_css():
-        from flask import send_file
-        import glob
-        
-        # Find any CSS file that matches the pattern in the assets directory
-        css_pattern = os.path.join(static_folder, "build/assets", "style-*.css")
-        css_files = glob.glob(css_pattern)
-        
-        if css_files:
-            # Use the most recent one (likely the correct build)
-            latest_css = max(css_files, key=os.path.getmtime)
-            logger.info(f"Serving CSS file: {latest_css}")
-            return send_file(latest_css, mimetype='text/css')
-        else:
-            logger.error(f"No CSS files found matching pattern: {css_pattern}")
-            return "/* CSS file not found */", 404, {'Content-Type': 'text/css'}
 
     # Wrap the WSGI app with WhiteNoise
     app.wsgi_app = WhiteNoise(app.wsgi_app)

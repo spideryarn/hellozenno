@@ -1,5 +1,6 @@
 """URL encoding and decoding utilities."""
 
+import os
 import urllib.parse
 from flask import request, g
 from loguru import logger
@@ -52,3 +53,23 @@ def decode_url_params():
         if decoded_path != request.path:
             logger.info(f"Fixed URL encoding: {request.path} -> {decoded_path}")
             request.path = decoded_path
+
+
+def load_vite_manifest():
+    """Load the Vite manifest file for asset versioning."""
+    manifest_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "static/build/.vite/manifest.json",
+    )
+    try:
+        import json
+
+        if os.path.exists(manifest_path):
+            with open(manifest_path, "r") as f:
+                return json.load(f)
+        else:
+            logger.warning(f"Vite manifest not found at {manifest_path}")
+            return {}
+    except Exception as e:
+        logger.error(f"Error loading Vite manifest: {e}")
+        return {}
