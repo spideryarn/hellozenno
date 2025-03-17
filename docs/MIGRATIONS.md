@@ -157,8 +157,9 @@ Note: No need to bind models to database - they're just used for schema definiti
    - Define model classes in both `migrate` and `rollback` functions if you need to use them
    - Don't make assumptions about existing data
    - Always test migrations on a copy of production data before deploying
+   - Avoid redundant index creation: If you define a field with `unique=True` in a model definition, Peewee automatically creates a unique index for that field during `create_model(Model)`. Don't call `add_index(Model, 'field_name', unique=True)` after that or you'll get a "relation already exists" error.
 
-See `migrations/004_fix_sourcedir_language.py` for an example.
+See `migrations/004_fix_sourcedir_language.py` and `migrations/029_add_profile_table.py` for examples.
 
 ## Questions or Improvements?
 
