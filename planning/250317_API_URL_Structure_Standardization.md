@@ -36,6 +36,7 @@ We will implement the domain-specific API files approach:
 4. Keep domain logic in existing view files and import as needed. If it will help with code re-use, pull out sub-functions that can be referenced from multiple places
 5. Update frontend code to use the new standardized URLs
 6. Ensure tests work with the new URL structure
+7. Be cautious though - don't make mistakes or change more than is necessary
 
 ## Implementation Plan
 
@@ -106,7 +107,7 @@ We will implement the domain-specific API files approach:
 1. ✅ Implement the new structure for sourcedir-related APIs first
 2. ✅ Update corresponding frontend code 
 3. ✅ Roll out the approach to other domains (core, wordform, lemma, phrase, sourcefile)
-4. Update tests to reflect the new URL patterns
+4. Update tests to reflect the new URL **patterns**
    - Tests currently use the old URL structure (e.g., `/api/sourcedir/...`)
    - Tests need to be updated to use the new URL structure (e.g., `/api/lang/sourcedir/...`)
    - Test failures are expected until these updates are made
@@ -129,3 +130,12 @@ We will implement the domain-specific API files approach:
 - ⬜ Update test files to use the new URL structure
 - ⬜ Complete API documentation
 - ⬜ Perform a thorough audit of all API endpoints to ensure consistency
+- ⬜ Check and fix API route definitions in view files:
+  - ⬜ Move API endpoints from sourcedir_views.py to sourcedir_api.py
+  - ⬜ Move API endpoints from sourcefile_views.py to sourcefile_api.py
+  - ⬜ Move API endpoints from sentence_views.py to sentence_api.py
+  - ⬜ Check all other view files for API endpoints that should be moved
+- ⬜ Update all frontend JavaScript files to use the new URL patterns:
+  - ⬜ Fix sourcedirs.js to consistently use /api/lang/sourcedir/... pattern
+  - ⬜ Check and update all other JavaScript files for API URL patterns
+- Run the tests
