@@ -121,21 +121,26 @@ We will implement the domain-specific API files approach:
 - ✅ Created domain-specific API files with standardized URL patterns
 - ✅ Set up proper imports and registrations in Flask application
 - ✅ Updated frontend code to use the new URL patterns
+- ✅ Move API endpoints from sourcedir_views.py to sourcedir_api.py
+- ✅ Move API endpoints from sentence_views.py to sentence_api.py
+- ✅ Create new handlers in sourcefile_api.py for all API endpoints
+- ✅ Fixed sourcedirs.js to consistently use /api/lang/sourcedir/... pattern
+- ✅ Fixed sentence.js to consistently use /api/lang/sentence/... pattern
+- ✅ Fixed sourcefile.js to consistently use /api/lang/sourcefile/... pattern
+- ✅ Fixed sourcefiles.js to consistently use the new API URL patterns
+- ✅ Updated URL paths in client-side redirects to use /lang/ prefix
 
 ### In Progress
 - ⏳ Testing the new API structure with real-world usage
-- ⏳ Identifying any remaining endpoints that need conversion
+- ⏳ Identifying any remaining endpoints that need conversion 
+- ✅ Added key endpoints to the core_api.bp urls list for documentation
 
 ### To Do
-- ⬜ Update test files to use the new URL structure
-- ⬜ Complete API documentation
-- ⬜ Perform a thorough audit of all API endpoints to ensure consistency
-- ⬜ Check and fix API route definitions in view files:
-  - ⬜ Move API endpoints from sourcedir_views.py to sourcedir_api.py
-  - ⬜ Move API endpoints from sourcefile_views.py to sourcefile_api.py
-  - ⬜ Move API endpoints from sentence_views.py to sentence_api.py
-  - ⬜ Check all other view files for API endpoints that should be moved
-- ⬜ Update all frontend JavaScript files to use the new URL patterns:
-  - ⬜ Fix sourcedirs.js to consistently use /api/lang/sourcedir/... pattern
-  - ⬜ Check and update all other JavaScript files for API URL patterns
-- Run the tests
+- [✅] Update sentence test files to use the new URL structure
+- [ ] Update remaining test files to use the new URL structure
+- [ ] Complete API documentation
+- [ ] Perform a thorough audit of all API endpoints to ensure consistency
+- [ ] Check all other view files for API endpoints that should be moved
+- [✅] Run the sentence tests
+- [ ] Run the full test suite
+- [ ] Test the whole user workflow with the new API structure

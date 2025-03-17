@@ -71,7 +71,7 @@ function saveDescription() {
     saveButton.disabled = true;
     saveButton.innerHTML = `Saving... <div class="spinner"></div>`;
 
-    fetch(`/api/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/update_description`, {
+    fetch(`/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/update_description`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ function cancelEditDescription() {
 function generateAudio() {
     showAudioGenerationProgress();
 
-    fetch(`/api/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/generate_audio`, {
+    fetch(`/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/generate_audio`, {
         method: 'POST'
     }).then(async response => {
         if (response.status === 204) {
@@ -151,7 +151,7 @@ async function renameSourcefile() {
         });
 
         const response = await fetch(
-            `/api/sourcedir/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/rename`,
+            `/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/rename`,
             {
                 method: 'PUT',
                 headers: {
@@ -167,7 +167,7 @@ async function renameSourcefile() {
         }
 
         const { new_name, new_slug } = await response.json();
-        window.location.href = `/${window.target_language_code}/${window.sourcedir_slug}/${new_slug}`;
+        window.location.href = `/lang/${window.target_language_code}/${window.sourcedir_slug}/${new_slug}`;
     } catch (error) {
         if (error.message !== 'User cancelled') {
             alert('Error renaming file: ' + error.message);
@@ -177,11 +177,11 @@ async function renameSourcefile() {
 
 function deleteSourcefile() {
     if (confirm('Are you sure you want to delete this sourcefile? This action cannot be undone.')) {
-        fetch(`/api/sourcedir/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}`, {
+        fetch(`/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}`, {
             method: 'DELETE',
         }).then(response => {
             if (response.ok) {
-                window.location.href = `/${window.target_language_code}/${window.sourcedir_slug}`;
+                window.location.href = `/lang/${window.target_language_code}/${window.sourcedir_slug}`;
             } else {
                 alert('Failed to delete sourcefile');
             }
@@ -237,7 +237,7 @@ function initSourcedirSelector() {
                 const originalText = this.options[selectedIndex].text;
                 this.options[selectedIndex].text = 'Moving...';
                 
-                fetch(`/api/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/move`, {
+                fetch(`/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/move`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ function initSourcedirSelector() {
                     }
                     
                     // Redirect to the file in its new location
-                    window.location.href = `/${window.target_language_code}/${data.new_sourcedir_slug}/${data.new_sourcefile_slug}`;
+                    window.location.href = `/lang/${window.target_language_code}/${data.new_sourcedir_slug}/${data.new_sourcefile_slug}`;
                 }).catch(error => {
                     alert('Error moving file: ' + error.message);
                     // Reset the dropdown

@@ -102,6 +102,7 @@ def create_app():
     from views.lemma_api import lemma_api_bp
     from views.phrase_api import phrase_api_bp
     from views.sourcefile_api import sourcefile_api_bp
+    from views.sentence_api import sentence_api_bp
 
     app.register_blueprint(core_api_bp)
     app.register_blueprint(sourcedir_api_bp)
@@ -109,6 +110,7 @@ def create_app():
     app.register_blueprint(lemma_api_bp)
     app.register_blueprint(phrase_api_bp)
     app.register_blueprint(sourcefile_api_bp)
+    app.register_blueprint(sentence_api_bp)
 
     # Add middleware to handle URL decoding for all routes - see planning/250316_vercel_url_encoding_fix.md
     app.before_request(decode_url_params)

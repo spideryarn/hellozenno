@@ -31,6 +31,21 @@ def urls():
         ),
         "word_mp3": full_url_for(
             "wordform_api.get_mp3", target_language_code="el", word="καλός"
+        ),
+        "random_sentence": full_url_for(
+            "sentence_api.get_random_sentence_api", language_code="el"
+        ),
+        "sentence_audio": full_url_for(
+            "sentence_api.get_sentence_audio_api", language_code="el", sentence_id=1
+        ),
+        "sourcedir_create": full_url_for(
+            "sourcedir_api.create_sourcedir_api", target_language_code="el"
+        ),
+        "sourcefile_process": full_url_for(
+            "sourcefile_api.process_individual_words_api", 
+            target_language_code="el",
+            sourcedir_slug="example",
+            sourcefile_slug="sample"
         )
     }
     return jsonify(urls)

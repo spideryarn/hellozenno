@@ -1,21 +1,15 @@
 """Views for sentence management."""
 
-import io
 from flask import (
     Blueprint,
-    send_file,
-    jsonify,
     render_template,
-    request,
     abort,
 )
 from peewee import DoesNotExist
 
 from db_models import Sentence, Wordform
-from utils.audio_utils import ensure_model_audio_data
 from utils.lang_utils import get_language_name
-from utils.sentence_utils import get_all_sentences, get_random_sentence
-from slugify import slugify
+from utils.sentence_utils import get_all_sentences
 from utils.vocab_llm_utils import (
     create_interactive_word_links,
     normalize_text,
@@ -38,54 +32,6 @@ def sentences_list(language_code: str):
         target_language_name=target_language_name,
         sentences=sentences,
     )
-
-
-@sentence_views_bp.route("/api/<language_code>/sentences/random")
-def get_random_sentence_api(language_code: str):
-    """Get a random sentence for the given language.
-
-    Supports filtering by lemmas via the lemmas[] query parameter.
-    Returns 404 if no matching sentences are found.
-    """
-    # Get lemmas from query params if provided
-    lemmas = request.args.getlist("lemmas[]")
-
-    # Get random sentence
-    sentence = get_random_sentence(
-        target_language_code=language_code, required_lemmas=lemmas if lemmas else None
-    )
-
-    if not sentence:
-        return jsonify({"error": "No matching sentences found"}), 404
-
-    return jsonify(sentence)
-
-
-@sentence_views_bp.route("/api/<language_code>/sentences/<int:sentence_id>/audio")
-def get_sentence_audio(language_code: str, sentence_id: int):
-    """Serve audio data for a sentence from the database.
-
-    Args:
-        language_code: ISO language code
-        sentence_id: Database ID of the sentence
-
-    Returns:
-        Audio file response or 404 if not found
-    """
-    try:
-        sentence = Sentence.get(
-            (Sentence.id == sentence_id) & (Sentence.language_code == language_code)  # type: ignore
-        )
-        if not sentence.audio_data:
-            return jsonify({"error": "Audio not found"}), 404
-
-        return send_file(
-            io.BytesIO(sentence.audio_data),
-            mimetype="audio/mpeg",
-            as_attachment=False,
-        )
-    except DoesNotExist:
-        return jsonify({"error": "Sentence not found"}), 404
 
 
 @sentence_views_bp.route("/<language_code>/sentence/<slug>")
@@ -171,74 +117,3 @@ def get_sentence(language_code: str, slug: str):
         abort(404, description="Sentence not found")
 
 
-@sentence_views_bp.route("/api/sentence/<language_code>/<slug>", methods=["DELETE"])
-def delete_sentence(language_code: str, slug: str):
-    """Delete a sentence."""
-    try:
-        sentence = Sentence.get(
-            (Sentence.language_code == language_code) & (Sentence.slug == slug)
-        )
-        sentence.delete_instance()
-        return "", 204
-    except DoesNotExist:
-        return jsonify({"error": "Sentence not found"}), 404
-
-
-@sentence_views_bp.route("/api/sentence/<language_code>/<slug>/rename", methods=["PUT"])
-def rename_sentence(language_code: str, slug: str):
-    """Rename/edit a sentence."""
-    try:
-        data = request.get_json()
-        if not data or "new_text" not in data:
-            return jsonify({"error": "Missing new_text parameter"}), 400
-
-        new_text = data["new_text"].strip()
-        if not new_text:
-            return jsonify({"error": "Invalid sentence text"}), 400
-
-        sentence = Sentence.get(
-            (Sentence.language_code == language_code) & (Sentence.slug == slug)
-        )
-
-        # Update the sentence text - this will trigger slug regeneration in save()
-        sentence.sentence = new_text
-        sentence.slug = slugify(new_text)  # Manually update slug
-        sentence.save()
-
-        return jsonify({"new_text": new_text, "new_slug": sentence.slug}), 200
-
-    except DoesNotExist:
-        return jsonify({"error": "Sentence not found"}), 404
-
-
-@sentence_views_bp.route(
-    "/api/sentence/<language_code>/<slug>/generate_audio", methods=["POST"]
-)
-@sentence_views_bp.route(
-    "/api/lang/<language_code>/sentence/<slug>/generate_audio", methods=["POST"]
-)
-@sentence_views_bp.route(
-    "/lang/api/sentence/<language_code>/<slug>/generate_audio", methods=["POST"]
-)
-def generate_sentence_audio(language_code: str, slug: str):
-    """Generate audio for a sentence."""
-    try:
-        sentence = Sentence.get(
-            (Sentence.language_code == language_code) & (Sentence.slug == slug)
-        )
-
-        if not sentence.sentence:
-            return (
-                jsonify({"error": "No text content available for audio generation"}),
-                400,
-            )
-
-        # Generate audio data
-        ensure_model_audio_data(sentence, should_add_delays=True, verbose=1)
-
-        return "", 204
-
-    except DoesNotExist:
-        return jsonify({"error": "Sentence not found"}), 404
-    except Exception as e:
-        return jsonify({"error": f"Failed to generate audio: {str(e)}"}), 500
