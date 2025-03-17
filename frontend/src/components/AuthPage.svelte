@@ -18,12 +18,12 @@
   
   // Handle successful auth
   function handleAuthSuccess() {
-    // Redirect to specified URL or home page, ensuring no trailing slash for auth URLs
+    // Redirect to specified URL or home page
     let url = redirectUrl || '/';
     
-    // Prevent "/auth/" which causes language code error by removing trailing slash
-    if (url.startsWith('/auth/')) {
-      url = '/auth';
+    // Prevent trailing slashes on auth URLs, but preserve specific paths
+    if (url.endsWith('/') && url !== '/') {
+      url = url.slice(0, -1);
     }
     
     window.location.href = url;

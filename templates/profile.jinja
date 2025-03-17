@@ -9,7 +9,7 @@ Your Profile | Hello Zenno
   <h1>Your Profile</h1>
   
   <div class="profile-card">
-    <form method="POST" action="{{ url_for('system_views.profile_page') }}">
+    <form method="POST" action="{{ url_for('auth_views.profile_page') }}">
       <div class="form-group">
         <label for="email">Email</label>
         <input 
@@ -38,7 +38,7 @@ Your Profile | Hello Zenno
       
       <div class="form-actions">
         <button type="submit" class="button primary">Save Changes</button>
-        <a href="{{ url_for('system_views.protected_page') }}" class="button secondary">Cancel</a>
+        <a href="{{ url_for('auth_views.protected_page') }}" class="button secondary">Cancel</a>
       </div>
     </form>
   </div>
