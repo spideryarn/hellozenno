@@ -1,3 +1,15 @@
+"""DEPRECATED: This file is being replaced with domain-specific API files.
+
+See planning/250317_API_URL_Structure_Standardization.md for details on the new API structure.
+The endpoints in this file have been migrated to:
+- views/core_api.py - for core API endpoints
+- views/wordform_api.py - for word-related endpoints
+- views/lemma_api.py - for lemma-related endpoints
+- views/phrase_api.py - for phrase-related endpoints
+- views/sourcefile_api.py - for sourcefile-related endpoints
+- views/sourcedir_api.py - for sourcedir-related endpoints
+"""
+
 from flask import Blueprint, abort, jsonify, redirect, url_for, send_file, request
 from peewee import DoesNotExist
 
@@ -133,3 +145,5 @@ def process_individual_words_api(target_language_code, sourcedir_slug, sourcefil
         response = jsonify({"error": str(e)})
         response.status_code = 500
         return response
+
+# Sourcedir API endpoints have been moved to views/api/sourcedir_api.py

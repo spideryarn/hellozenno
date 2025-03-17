@@ -39,7 +39,12 @@ from views.sourcefile_views import sourcefile_views_bp
 from views.phrase_views import phrase_views_bp
 from views.sentence_views import sentence_views_bp
 from views.search_views import search_views_bp
-from views.api import api_bp
+from views.core_api import core_api_bp
+from views.wordform_api import wordform_api_bp
+from views.lemma_api import lemma_api_bp
+from views.phrase_api import phrase_api_bp
+from views.sourcedir_api import sourcedir_api_bp
+from views.sourcefile_api import sourcefile_api_bp
 from tests.mocks.search_mocks import mock_quick_search_for_wordform
 from utils.db_connection import init_db
 from views.flashcard_views import flashcard_views_bp
@@ -151,7 +156,13 @@ def client(fixture_for_testing_db):
     app.register_blueprint(phrase_views_bp)
     app.register_blueprint(sentence_views_bp)
     app.register_blueprint(search_views_bp)
-    app.register_blueprint(api_bp)
+    # Register API blueprints
+    app.register_blueprint(core_api_bp)
+    app.register_blueprint(wordform_api_bp)
+    app.register_blueprint(lemma_api_bp)
+    app.register_blueprint(phrase_api_bp)
+    app.register_blueprint(sourcedir_api_bp)
+    app.register_blueprint(sourcefile_api_bp)
     app.register_blueprint(flashcard_views_bp)
 
     with app.test_client() as client:

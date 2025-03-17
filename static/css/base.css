@@ -781,7 +781,8 @@ nav a:hover {
 button.button,
 input[type="submit"].button,
 form button.button,
-a.button {
+a.button,
+span.button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -805,7 +806,8 @@ a.button {
 button.button:hover,
 input[type="submit"].button:hover,
 form button.button:hover,
-a.button:hover {
+a.button:hover,
+span.button:hover {
     background-color: #2563eb;
     color: #fff;
 }
@@ -851,20 +853,24 @@ a.button.success-btn:hover {
 button.button.disabled,
 input[type="submit"].button.disabled,
 form button.button.disabled,
-a.button.disabled {
+a.button.disabled,
+span.button.disabled {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
     /* Prevents clicking */
+    background-color: #fff !important;
+    color: #2563eb !important;
 }
 
 .button.disabled:hover,
 button.button.disabled:hover,
 input[type="submit"].button.disabled:hover,
 form button.button.disabled:hover,
-a.button.disabled:hover {
-    background-color: #fff;
-    color: #2563eb;
+a.button.disabled:hover,
+span.button.disabled:hover {
+    background-color: #fff !important;
+    color: #2563eb !important;
 }
 
 .button-group {

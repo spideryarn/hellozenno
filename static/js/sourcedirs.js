@@ -9,7 +9,7 @@ btn.onclick = async () => {
             cancelText: "Cancel"
         });
 
-        const response = await fetch(`/api/sourcedir/${window.target_language_code}`, {
+        const response = await fetch(`/api/lang/sourcedir/${window.target_language_code}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ btn.onclick = async () => {
 
         const { slug } = await response.json();
         // Navigate to the new sourcedir's page using slug
-        window.location.href = `/${window.target_language_code}/${slug}`;
+        window.location.href = `/lang/${window.target_language_code}/${slug}`;
     } catch (error) {
         if (error.message !== 'User cancelled') {
             alert('Error creating directory: ' + error.message);
@@ -46,7 +46,7 @@ const confirmDelete = async (sourcedirSlug) => {
     }
 
     try {
-        const response = await fetch(`/api/sourcedir/${window.target_language_code}/${sourcedirSlug}`, {
+        const response = await fetch(`/api/lang/sourcedir/${window.target_language_code}/${sourcedirSlug}`, {
             method: 'DELETE'
         });
 
