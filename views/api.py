@@ -1,9 +1,10 @@
-from flask import Blueprint, abort, jsonify, redirect, url_for, send_file
+from flask import Blueprint, abort, jsonify, redirect, url_for, send_file, request
 from peewee import DoesNotExist
 
 from utils.flask_view_utils import full_url_for
 from utils.word_utils import get_word_preview
 from db_models import Lemma, Phrase
+import views.sourcefile_views as sourcefile_views
 
 # Create a Blueprint for our API routes
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -118,5 +119,17 @@ def phrase_preview(target_language_code: str, phrase: str):
         response = jsonify(
             {"error": "Internal Server Error", "description": str(e)}
         )
+        response.status_code = 500
+        return response
+
+
+@api_bp.route("/lang/<target_language_code>/sourcefile/<sourcedir_slug>/<sourcefile_slug>/process_individual", methods=["POST"])
+def process_individual_words_api(target_language_code, sourcedir_slug, sourcefile_slug):
+    """Process individual words of a sourcefile."""
+    try:
+        sourcefile_views.process_individual_words(target_language_code, sourcedir_slug, sourcefile_slug)
+        return jsonify({"success": True})
+    except Exception as e:
+        response = jsonify({"error": str(e)})
         response.status_code = 500
         return response

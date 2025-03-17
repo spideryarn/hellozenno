@@ -196,7 +196,7 @@ function processIndividualWords() {
     button.disabled = true;
     button.innerHTML = `Processing... <div class="spinner"></div>`;
 
-    fetch(`/api/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${window.sourcefile_slug}/process_individual`, {
+    fetch(`/api/lang/${window.target_language_code}/sourcefile/${window.sourcedir_slug}/${window.sourcefile_slug}/process_individual`, {
         method: 'POST'
     }).then(async response => {
         if (!response.ok) {

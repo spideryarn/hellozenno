@@ -129,6 +129,25 @@ def create_app():
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
     )
 
+    # Add a route to handle CSS file dynamically
+    @app.route('/static/build/assets/style.css')
+    def serve_css():
+        from flask import send_file
+        import glob
+        
+        # Find any CSS file that matches the pattern in the assets directory
+        css_pattern = os.path.join(static_folder, "build/assets", "style-*.css")
+        css_files = glob.glob(css_pattern)
+        
+        if css_files:
+            # Use the most recent one (likely the correct build)
+            latest_css = max(css_files, key=os.path.getmtime)
+            logger.info(f"Serving CSS file: {latest_css}")
+            return send_file(latest_css, mimetype='text/css')
+        else:
+            logger.error(f"No CSS files found matching pattern: {css_pattern}")
+            return "/* CSS file not found */", 404, {'Content-Type': 'text/css'}
+
     # Wrap the WSGI app with WhiteNoise
     app.wsgi_app = WhiteNoise(app.wsgi_app)
 
