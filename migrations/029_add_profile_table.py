@@ -34,11 +34,12 @@ def migrate(migrator: Migrator, database: pw.Database, *, fake=False):
     
     # Create profile table with all fields
     with database.atomic():
-        # Create the profile table
+        # Create the profile table - This will automatically create a unique index for user_id
+        # since we defined user_id as CharField(unique=True)
         migrator.create_model(Profile)
         
-        # Add a unique index on user_id
-        migrator.add_index(Profile, 'user_id', unique=True)
+        # Log what's happening - we won't create an explicit index since it's already created
+        print("DEBUGGING: Profile table created with implicit index on user_id")
         
         # Add a comment explaining the table's purpose
         migrator.sql(
