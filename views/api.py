@@ -27,7 +27,7 @@ def urls():
     return jsonify(urls)
 
 
-@api_bp.route("/word-preview/<target_language_code>/<word>")
+@api_bp.route("/lang/<target_language_code>/word-preview/<word>")
 def word_preview(target_language_code: str, word: str):
     """Get preview data for word tooltips."""
     # Fix URL encoding issues with Vercel by explicitly unquoting the word parameter
@@ -73,7 +73,7 @@ def get_lemma_data(language_code: str, lemma: str):
         return response
 
 
-@api_bp.route("/phrase-preview/<target_language_code>/<phrase>")
+@api_bp.route("/lang/<target_language_code>/phrase-preview/<phrase>")
 def phrase_preview(target_language_code: str, phrase: str):
     """Get preview data for phrase tooltips."""
     # Fix URL encoding issues with Vercel by explicitly unquoting the phrase parameter

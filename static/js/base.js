@@ -110,12 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const word = link.textContent.trim();
             const url = new URL(link.href);
             const pathParts = url.pathname.split('/');
-            const langCode = pathParts[1];
+            // For URLs with /lang/ prefix, langCode will be pathParts[2]
+            const langCode = pathParts[1] === 'lang' ? pathParts[2] : pathParts[1];
 
             console.log(`Fetching preview for word: "${word}" in language: ${langCode}`);
 
-            // Fetch preview data from API
-            fetch(`/api/word-preview/${langCode}/${encodeURIComponent(word)}`)
+            // Fetch preview data from API using updated URL format
+            fetch(`/api/lang/${langCode}/word-preview/${encodeURIComponent(word)}`)
                 .then(r => {
                     if (!r.ok) {
                         throw new Error(`API request failed: ${r.status}`);

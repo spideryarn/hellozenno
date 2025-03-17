@@ -44,8 +44,9 @@
       return;
     }
     
-    // Extract language code from href (assumes URL format like /el/wordform/...)
-    const langCode = href.split('/')[1];
+    // Extract language code from href (handles both /el/... and /lang/el/... formats)
+    const pathParts = href.split('/');
+    const langCode = pathParts[1] === 'lang' ? pathParts[2] : pathParts[1];
     console.log('Extracted language code:', langCode);
 
     // Initialize Tippy for this wordform
@@ -71,8 +72,8 @@
 
         console.log(`Fetching preview for word: "${wordform}" in language: ${langCode}`);
 
-        // Fetch preview data from API
-        fetch(`/api/word-preview/${langCode}/${encodeURIComponent(wordform)}`)
+        // Fetch preview data from API using updated URL format
+        fetch(`/api/lang/${langCode}/word-preview/${encodeURIComponent(wordform)}`)
           .then(r => {
             if (!r.ok) {
               throw new Error(`API request failed: ${r.status}`);
