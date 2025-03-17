@@ -28,5 +28,14 @@ fi
 
 # Build the frontend
 cd frontend && npm run build
+cd ..
+
+# Copy the Vite manifest to a more accessible location for Vercel
+if [ -f "static/build/.vite/manifest.json" ]; then
+  echo "Copying Vite manifest to static/build/ for better Vercel compatibility..."
+  cp static/build/.vite/manifest.json static/build/manifest.json
+else
+  echo "Warning: Vite manifest not found at static/build/.vite/manifest.json"
+fi
 
 echo "Frontend build complete. Assets are in static/build/" 
