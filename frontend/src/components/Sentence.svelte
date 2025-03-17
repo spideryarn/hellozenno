@@ -80,8 +80,9 @@
     
     isGeneratingAudio = true;
     try {
+      // Use the updated URL route
       const response = await fetch(
-        `/api/sentence/${sentence.language_code}/${sentence.slug}/generate_audio`,
+        `/lang/api/sentence/${sentence.language_code}/${sentence.slug}/generate_audio`,
         { method: 'POST' }
       );
       
@@ -132,7 +133,7 @@
           <audio
             bind:this={audioPlayer}
             controls
-            src="/api/{sentence.language_code}/sentences/{sentence.id}/audio"
+            src="/lang/api/{sentence.language_code}/sentences/{sentence.id}/audio"
             class="audio-player"
           >
             Your browser does not support the audio element.
@@ -164,7 +165,7 @@
                 lemma={lemma}
                 partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
                 translations={lemmasData[lemma]?.translations || []}
-                href="/{sentence.language_code}/lemma/{lemma}"
+                href="/lang/{sentence.language_code}/lemma/{lemma}"
               />
               {#if lemmasData[lemma]?.isLoading}
                 <div class="loading-indicator">Loading lemma data...</div>

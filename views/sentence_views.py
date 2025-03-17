@@ -217,6 +217,9 @@ def rename_sentence(language_code: str, slug: str):
 @sentence_views_bp.route(
     "/api/lang/<language_code>/sentence/<slug>/generate_audio", methods=["POST"]
 )
+@sentence_views_bp.route(
+    "/lang/api/sentence/<language_code>/<slug>/generate_audio", methods=["POST"]
+)
 def generate_sentence_audio(language_code: str, slug: str):
     """Generate audio for a sentence."""
     try:
