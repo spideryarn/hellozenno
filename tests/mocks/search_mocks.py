@@ -4,19 +4,31 @@ def mock_quick_search_for_wordform(
     """Mock function to simulate quick_search_for_wordform."""
     if wordform in ["nonexistent", "καλή"]:  # Treat καλή as nonexistent after deletion
         return {
-            "wordform": None,
-            "lemma": None,
-            "part_of_speech": None,
-            "translations": None,
-            "inflection_type": None,
-            "possible_misspellings": ["test"],
+            "target_language_results": {
+                "matches": [],
+                "possible_misspellings": ["test"]
+            },
+            "english_results": {
+                "matches": [],
+                "possible_misspellings": None
+            }
         }, {}
     else:
         return {
-            "wordform": wordform,
-            "lemma": wordform,  # For simplicity, use wordform as lemma
-            "part_of_speech": "noun",
-            "translations": ["test translation"],
-            "inflection_type": "nominative",
-            "possible_misspellings": None,
+            "target_language_results": {
+                "matches": [
+                    {
+                        "target_language_wordform": wordform,
+                        "target_language_lemma": wordform,  # For simplicity, use wordform as lemma
+                        "part_of_speech": "noun",
+                        "english": ["test translation"],
+                        "inflection_type": "nominative"
+                    }
+                ],
+                "possible_misspellings": None
+            },
+            "english_results": {
+                "matches": [],
+                "possible_misspellings": None
+            }
         }, {}

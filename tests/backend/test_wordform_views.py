@@ -53,7 +53,7 @@ def test_get_nonexistent_wordform(mock_search, client):
     response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/nonexistent")
     assert response.status_code == 200
     data = response.data.decode()
-    assert "Invalid Word" in data
+    assert "Search Results" in data
     assert "test" in data  # from mock possible_misspellings
 
 
@@ -63,11 +63,10 @@ def test_get_nonexistent_wordform(mock_search, client):
 )
 def test_get_new_wordform(mock_search, client):
     """Test getting metadata for a new wordform that will be created."""
+    # With the new implementation, a single match should redirect to the wordform page
     response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/newword")
-    assert response.status_code == 200
-    data = response.data.decode()
-    assert "newword" in data
-    assert "test translation" in data
+    assert response.status_code == 302  # Redirect status code
+    assert "newword" in response.headers["Location"]
 
 
 @pytest.mark.skip("Template needs to be updated for new URL patterns")
