@@ -124,9 +124,17 @@ IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause UR
 """
 
 quick_search_for_wordform = """
-This is a quick search for a {{ target_language_name }} wordform typed directly by the user, as the first stage of a dictionary lookup. Your task is to analyze the input and return appropriate metadata based on these cases:
+This is a quick search for a wordform typed directly by the user, as the first stage of a dictionary lookup.
 
-1. If the input is a lemma (dictionary form):
+The input is probably a {{ target_language_name }} word, but it might be a word in English, or it might be invalid.
+
+We will respond with a JSON data structure (see below) that contains zero/one/more {{ target_language_name }} results and zero/one/more English results. The ideal case is when we return exactly one result across both languages, because then we can redirect to that page, otherwise we'll have to show a results page for the user to select from.
+
+Note: even if the input is an English word, the wordform(s) that we return will be in {{ target_language_name }},i.e. translation(s) of the English word.
+
+Your task is to analyze the input and return appropriate metadata based on these cases:
+
+1. If the input is a {{ target_language_name }} lemma (dictionary form):
    - Return all fields with appropriate values
    - Set inflection_type to describe the lemma form (e.g. "first-person singular present" for verbs)
    - Set possible_misspellings to None
@@ -134,7 +142,7 @@ This is a quick search for a {{ target_language_name }} wordform typed directly 
    - Missing accents are ok (e.g. "επειτα" -> "έπειτα")
    - Case variations are ok (e.g. "ΕΠΕΙΤΑ" -> "έπειτα")
 
-2. If the input is a valid wordform but not a lemma:
+2. If the input is a valid {{ target_language_name }} wordform but not a lemma:
    - Return all fields with appropriate values
    - Set lemma to the dictionary form this wordform belongs to
    - Set inflection_type to describe this specific form
@@ -142,13 +150,18 @@ This is a quick search for a {{ target_language_name }} wordform typed directly 
    - For modern languages, use modern forms only
    - Missing accents are ok (e.g. "ανθρωπος" -> "άνθρωπος")
    - Case variations are ok (e.g. "ΚΑΛΟΣ" -> "καλός")
-   - The translations should reflect the INFLECTED FORM, not just the lemma, e.g. "προσγειώθηκαν" -> "they landed" rather than just "land"
+   - The translations should reflect the INFLECTED form, not the lemma, e.g. "προσγειώθηκαν" -> "they landed" rather than just "land"
    - For ambiguous cases, always prefer the interpretation that has a different lemma. For example:
      * "μόνο" -> lemma="μόνος" (adjective) not lemma="μόνο" (adverb)
      * "καλά" -> lemma="καλός" (adjective) not lemma="καλά" (adverb)
      * "πολύ" -> lemma="πολύς" (adjective) not lemma="πολύ" (adverb)
 
-3. If the input looks like a typo or misspelling:
+3. If the input is an English word:
+   - Return all fields with appropriate values
+   - Set inflection_type to describe this specific form
+   - Set possible_misspellings to None
+
+4. If the input looks like a typo or misspelling:
    - Set all fields to None except possible_misspellings
    - For modern languages, set possible_misspellings to a list of closest correct modern forms, ordered by similarity
    - When deciding between typo vs valid word:
@@ -178,81 +191,208 @@ Notes:
 - Make sure all strings in lists are properly quoted
 - Do not include any trailing commas in lists or objects
 
-Example valid JSON responses:
+Example valid JSON responses using Greek (modern) as the target language:
 
-1. For a lemma (with missing accent):
+1. For a {{ target_language_name }} lemma (with missing accent) "επειτα":
 {
-    "wordform": "έπειτα",
-    "lemma": "έπειτα",
-    "part_of_speech": "adverb",
-    "translations": ["then", "afterwards", "later"],
-    "inflection_type": "adverb",
-    "possible_misspellings": null
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": "έπειτα",
+                "target_language_lemma": "έπειτα",
+                "part_of_speech": "adverb",
+                "english": ["then", "afterwards", "later"],
+                "inflection_type": "adverb",
+            }
+        ],
+        "possible_misspellings": null
+    },
+    "english_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null
+            }
+        ],
+        "possible_misspellings": null
+    }
 }
 
-2. For a wordform (with missing accent):
+2. For a {{ target_language_name }} inflected wordform (with missing accent) "ανθρωποι":
 {
-    "wordform": "άνθρωπος",
-    "lemma": "άνθρωπος",
-    "part_of_speech": "noun",
-    "translations": ["human", "person", "man"],
-    "inflection_type": "masculine singular nominative",
-    "possible_misspellings": null
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": "άνθρωποι",
+                "target_language_lemma": "άνθρωπος",
+                "part_of_speech": "noun",
+                "english": ["people", "mankind", "humankind", "humanity"],
+                "inflection_type": "masculine plural nominative",
+            },
+        ],
+        "possible_misspellings": null
+    },
+    "english_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null
+            }
+        ],
+        "possible_misspellings": null
+    }
 }
 
-2b. For an inflected verb form:
+2b. For a {{ target_language_name }} inflected verb form (with missing accent) "προσγειωθηκαν":
 {
-    "wordform": "προσγειώθηκαν",
-    "lemma": "προσγειώνομαι",
-    "part_of_speech": "verb",
-    "translations": ["they landed", "they touched down"],
-    "inflection_type": "third-person plural passive aorist",
-    "possible_misspellings": null
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": "προσγειώθηκαν",
+                "target_language_lemma": "προσγειώνομαι",
+                "part_of_speech": "verb",
+                "english": ["they landed", "they touched down"],
+                "inflection_type": "third-person plural passive aorist",
+            },
+        ],
+        "possible_misspellings": null
+    },
+    "english_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null
+            }
+        ],
+        "possible_misspellings": null
+    }
 }
 
-3. For an ambiguous case:
+3. For an English word (e.g. "examples"):
 {
-    "wordform": "μόνο",
-    "lemma": "μόνος",
-    "part_of_speech": "adjective",
-    "translations": ["alone", "only", "sole"],
-    "inflection_type": "neuter singular nominative/accusative",
-    "possible_misspellings": null
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": "παραδείγματα",
+                "target_language_lemma": "παράδειγμα",
+                "part_of_speech": "noun",
+                "english": ["example", "illustration", "instance"],
+                "inflection_type": "neuter plural nominative"
+            }
+        ],
+        "possible_misspellings": null
+    },
+    "english_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null
+            }
+        ],
+        "possible_misspellings": null
+    }
 }
 
-4. For a typo:
+4. For a {{ target_language_name }} typo "μηλώ":
 {
-    "wordform": null,
-    "lemma": null,
-    "part_of_speech": null,
-    "translations": null,
-    "inflection_type": null,
-    "possible_misspellings": ["μιλώ"]
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null,
+            }
+        ],
+        "possible_misspellings": ["μιλώ"]
+    },
+    "english_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null
+            }
+        ],
+        "possible_misspellings": null
+    }
 }
 
-5. For an invalid word:
+5. For an invalid word, e.g. "asdf" or "bonjour":
 {
-    "wordform": null,
-    "lemma": null,
-    "part_of_speech": null,
-    "translations": null,
-    "inflection_type": null,
-    "possible_misspellings": null
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null,
+            }
+        ],
+        "possible_misspellings": null
+    },
+    "english_results": {
+        "matches": [
+            {
+                "target_language_wordform": null,
+                "target_language_lemma": null,
+                "part_of_speech": null,
+                "english": null,
+                "inflection_type": null
+            }
+        ],
+        "possible_misspellings": null
+    }
 }
 
 Provide only the JSON output with no commentary:
+
 {
-    "wordform": Optional[str],  # the sanitized form if valid, None if invalid
-    "lemma": Optional[str],  # the dictionary form this belongs to, None if invalid
-    "part_of_speech": Optional[str],  # e.g. "verb", "adjective", "noun", etc.
-    "translations": Optional[list[str]],  # English translations
-    "inflection_type": Optional[str],  # e.g. "first-person singular present", "feminine plural genitive"
-    "possible_misspellings": Optional[list[str]]  # ordered list of suggested corrections, or None if valid
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": "..." or null, # the sanitized form if valid, None if invalid
+                "target_language_lemma": "..." or null, # the dictionary form this belongs to, None if invalid
+                "part_of_speech": "..." or null, # e.g. "verb", "adjective", "noun", etc.
+                "english": ["..."] or null, # English translations
+                "inflection_type": "..." or null # e.g. "first-person singular present", "feminine plural genitive"
+            }
+        ],
+        "possible_misspellings": ["..."] or null # ordered list of suggested corrections, or None if valid
+    },
+    "english_results": {
+        "matches": [
+            {
+                "target_language_wordform": "..." or null,
+                "target_language_lemma": "..." or null,
+                "part_of_speech": "..." or null,
+                "english": ["..."] or null, # English input word
+                "inflection_type": "..." or null
+            }
+        ],
+        "possible_misspellings": ["..."] or null
+    }
 }
 
 ----
 
-{{ target_language_name }} input = {{ wordform }}
+Input: {{ wordform }}
 """
 
 extract_phrases_from_text = """
