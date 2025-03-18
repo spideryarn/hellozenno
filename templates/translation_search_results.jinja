@@ -1,0 +1,141 @@
+{% extends "base.jinja" %}
+
+{% block title %}
+Search Results - {{ target_language_name }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    » <a href="{{ url_for('views.languages') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a>
+    » Search "{{ search_term }}"
+{% endblock breadcrumbs %}
+
+{% block content %}
+<div class="container">
+    <h1>Search Results for "{{ search_term }}"</h1>
+    
+    {% if target_language_results.matches %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">{{ target_language_name }} Matches</h2>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for match in target_language_results.matches %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=match.target_language_wordform) }}" class="h5 mb-1">
+                                {{ match.target_language_wordform }}
+                            </a>
+                            <small class="text-muted d-block">
+                                {{ match.part_of_speech }} • {{ match.inflection_type }}
+                            </small>
+                            <small class="d-block">
+                                {% if match.target_language_lemma != match.target_language_wordform %}
+                                <strong>Lemma:</strong> <a href="{{ url_for('lemma_views.get_lemma_by_slug', target_language_code=target_language_code, lemma=match.target_language_lemma) }}">{{ match.target_language_lemma }}</a>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <div class="translations">
+                                {{ match.english|join(", ") }}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if target_language_results.possible_misspellings %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Did you mean one of these?</h2>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for suggestion in target_language_results.possible_misspellings %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=suggestion) }}">
+                        {{ suggestion }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if english_results.matches %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">{{ target_language_name }} words matching English term "{{ search_term }}"</h2>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for match in english_results.matches %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=match.target_language_wordform) }}" class="h5 mb-1">
+                                {{ match.target_language_wordform }}
+                            </a>
+                            <small class="text-muted d-block">
+                                {{ match.part_of_speech }} • {{ match.inflection_type }}
+                            </small>
+                            <small class="d-block">
+                                {% if match.target_language_lemma != match.target_language_wordform %}
+                                <strong>Lemma:</strong> <a href="{{ url_for('lemma_views.get_lemma_by_slug', target_language_code=target_language_code, lemma=match.target_language_lemma) }}">{{ match.target_language_lemma }}</a>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <div class="translations">
+                                {{ match.english|join(", ") }}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if english_results.possible_misspellings %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="h5 mb-0">Did you mean one of these English words?</h2>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for suggestion in english_results.possible_misspellings %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('search.search_word', target_language_code=target_language_code, wordform=suggestion) }}">
+                        {{ suggestion }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not target_language_results.matches and not english_results.matches and not target_language_results.possible_misspellings and not english_results.possible_misspellings %}
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">No Results Found</h4>
+        <p>"{{ search_term }}" did not match any words in {{ target_language_name }} or English translations.</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('search.search_landing', target_language_code=target_language_code) }}" class="btn btn-primary">
+            Try Another Search
+        </a>
+    </div>
+</div>
+{% endblock %}

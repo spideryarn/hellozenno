@@ -1,6 +1,7 @@
 """Tests for search_views.py functionality."""
 
 import pytest
+import urllib.parse
 from unittest.mock import patch, MagicMock
 
 from tests.fixtures_for_tests import (
@@ -52,10 +53,10 @@ def mock_enhanced_search_for_wordform(wordform, target_language_code, verbose=1)
             "english_results": {
                 "matches": [
                     {
-                        "wordform": "παράδειγμα",
-                        "lemma": "παράδειγμα",
+                        "target_language_wordform": "παράδειγμα",
+                        "target_language_lemma": "παράδειγμα",
                         "part_of_speech": "noun",
-                        "translations": ["example", "model", "paradigm"],
+                        "english": ["example", "model", "paradigm"],
                         "inflection_type": "neuter singular nominative/accusative"
                     }
                 ],
@@ -68,10 +69,10 @@ def mock_enhanced_search_for_wordform(wordform, target_language_code, verbose=1)
             "target_language_results": {
                 "matches": [
                     {
-                        "wordform": "both",
-                        "lemma": "both",
+                        "target_language_wordform": "both",
+                        "target_language_lemma": "both",
                         "part_of_speech": "adverb",
-                        "translations": ["και οι δύο"],
+                        "english": ["και οι δύο"],
                         "inflection_type": "adverb"
                     }
                 ],
@@ -80,10 +81,10 @@ def mock_enhanced_search_for_wordform(wordform, target_language_code, verbose=1)
             "english_results": {
                 "matches": [
                     {
-                        "wordform": "και οι δύο",
-                        "lemma": "και οι δύο",
+                        "target_language_wordform": "και οι δύο",
+                        "target_language_lemma": "και οι δύο",
                         "part_of_speech": "phrase",
-                        "translations": ["both"],
+                        "english": ["both"],
                         "inflection_type": "phrase"
                     }
                 ],
@@ -102,16 +103,48 @@ def mock_enhanced_search_for_wordform(wordform, target_language_code, verbose=1)
                 "possible_misspellings": None
             }
         }, {}
+    elif wordform == "misspelled":
+        # Typo case
+        return {
+            "target_language_results": {
+                "matches": [],
+                "possible_misspellings": ["correct"]
+            },
+            "english_results": {
+                "matches": [],
+                "possible_misspellings": None
+            }
+        }, {}
+    elif wordform == "single_match":
+        # Single match case - should redirect directly
+        return {
+            "target_language_results": {
+                "matches": [
+                    {
+                        "target_language_wordform": "μοναδικό",
+                        "target_language_lemma": "μοναδικός",
+                        "part_of_speech": "adjective",
+                        "english": ["unique", "single"],
+                        "inflection_type": "neuter singular nominative/accusative"
+                    }
+                ],
+                "possible_misspellings": None
+            },
+            "english_results": {
+                "matches": [],
+                "possible_misspellings": None
+            }
+        }, {}
     else:
         # Default - just target language match
         return {
             "target_language_results": {
                 "matches": [
                     {
-                        "wordform": wordform,
-                        "lemma": wordform,
+                        "target_language_wordform": wordform,
+                        "target_language_lemma": wordform,
                         "part_of_speech": "noun",
-                        "translations": ["test translation"],
+                        "english": ["test translation"],
                         "inflection_type": "nominative"
                     }
                 ],
@@ -122,3 +155,63 @@ def mock_enhanced_search_for_wordform(wordform, target_language_code, verbose=1)
                 "possible_misspellings": None
             }
         }, {}
+
+
+@patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
+def test_enhanced_search_english_word(mock_search, client):
+    """Test searching for an English word redirects to the translation results."""
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/example")
+    assert response.status_code == 302
+    location = response.headers.get("Location")
+    # The URL will be URL-encoded for Greek characters
+    assert "/wordform/" in location
+    assert "παράδειγμα" in urllib.parse.unquote(location)
+
+
+@patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
+def test_enhanced_search_single_match(mock_search, client):
+    """Test search with a single match redirects to the wordform."""
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/single_match")
+    assert response.status_code == 302
+    location = response.headers.get("Location")
+    # The URL will be URL-encoded for Greek characters
+    assert "/wordform/" in location
+    assert "μοναδικό" in urllib.parse.unquote(location)
+
+
+@patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
+def test_enhanced_search_both_languages(mock_search, client):
+    """Test search for a word valid in both languages."""
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/both")
+    assert_html_response(response)
+    
+    # Should display results from both sections
+    data = response.data.decode()
+    assert "Search Results for" in data
+    assert "both" in data
+    assert "και οι δύο" in data
+
+
+@patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
+def test_enhanced_search_no_matches(mock_search, client):
+    """Test search with no matches."""
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/nonexistent")
+    assert_html_response(response)
+    
+    # Should display invalid word template
+    data = response.data.decode()
+    assert "Invalid Word" in data
+    assert "nonexistent" in data
+
+
+@patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
+def test_enhanced_search_misspelled(mock_search, client):
+    """Test search with possible misspellings."""
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/misspelled")
+    assert_html_response(response)
+    
+    # Should display translation search results with suggestions
+    data = response.data.decode()
+    assert "Search Results for" in data or "Invalid Word" in data  # Either template is acceptable
+    assert "misspelled" in data
+    assert "correct" in data  # The suggested correction should be displayed

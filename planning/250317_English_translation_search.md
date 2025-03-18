@@ -104,3 +104,6 @@ Create a new test file `tests/backend/test_search_views.py` with tests for:
 - Maintain backward compatibility
 - Follow the existing code style and patterns
 - Add comprehensive comments to explain the new functionality
+- Use direct dictionary access with `[]` instead of `.get()` for expected data structures to fail fast when there are structural issues
+- In `wordform_views.py`, use `search_result["target_language_results"]["possible_misspellings"]` instead of `search_result.get("target_language_results", {}).get("possible_misspellings")` to catch structural bugs early
+- Redirect to the actual wordform URL rather than creating entries directly, which avoids redirect loops and simplifies the code

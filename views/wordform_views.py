@@ -4,6 +4,7 @@ from peewee import DoesNotExist, fn, JOIN
 import urllib.parse
 
 from utils.lang_utils import get_language_name
+from utils.flask_view_utils import redirect_to_view
 from db_models import Wordform, Lemma
 from utils.vocab_llm_utils import quick_search_for_wordform
 
@@ -84,74 +85,51 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
         )
     except DoesNotExist:
         # If not found, use quick search to get metadata
-        quick_search_result, _ = quick_search_for_wordform(
+        search_result, _ = quick_search_for_wordform(
             wordform, target_language_code, 1
         )
-
-        # If the word is invalid (no lemma and possibly has misspellings)
-        if quick_search_result.get("lemma") is None:
+        
+        # Count total matches from both result types
+        target_matches = search_result["target_language_results"]["matches"]
+        english_matches = search_result["english_results"]["matches"]
+        total_matches = len(target_matches) + len(english_matches)
+        
+        # Check for possible misspellings
+        target_misspellings = search_result["target_language_results"]["possible_misspellings"]
+        english_misspellings = search_result["english_results"]["possible_misspellings"]
+        
+        # If there are multiple matches or misspellings, show search results
+        if total_matches > 1 or target_misspellings or english_misspellings:
+            return render_template(
+                "translation_search_results.jinja",
+                target_language_code=target_language_code,
+                target_language_name=get_language_name(target_language_code),
+                search_term=wordform,
+                target_language_results=search_result["target_language_results"],
+                english_results=search_result["english_results"],
+            )
+        
+        # If there's exactly one match, redirect to that wordform
+        elif total_matches == 1:
+            # Get the single match (either from target or english results)
+            match = target_matches[0] if target_matches else english_matches[0]
+            match_wordform = match.get("target_language_wordform")
+            
+            if match_wordform:
+                # Simply redirect to the wordform URL - it will be created when it's viewed
+                return redirect(url_for(
+                    "wordform_views.get_wordform_metadata",
+                    target_language_code=target_language_code,
+                    wordform=match_wordform
+                ))
+        
+        # If no matches or misspellings, show invalid word template
+        else:
             return render_template(
                 "invalid_word.jinja",
                 target_language_code=target_language_code,
                 target_language_name=get_language_name(target_language_code),
                 wordform=wordform,
-                possible_misspellings=quick_search_result.get("possible_misspellings"),
-                metadata=None,  # Add metadata as None for invalid words
+                possible_misspellings=target_misspellings,
+                metadata=None,
             )
-
-        # Create new database entries from the quick search result
-        wordform_model, _ = Wordform.get_or_create_from_metadata(
-            wordform=wordform,
-            language_code=target_language_code,
-            metadata=quick_search_result,
-        )
-        wordform_metadata = wordform_model.to_dict()
-        lemma_metadata = (
-            wordform_model.lemma_entry.to_dict() if wordform_model.lemma_entry else {}
-        )
-
-        # Prepare metadata for template
-        metadata = {
-            "created_at": wordform_model.created_at,
-            "updated_at": wordform_model.updated_at,
-        }
-
-        return render_template(
-            "wordform.jinja",
-            wordform_metadata=wordform_metadata,
-            lemma_metadata=lemma_metadata,
-            target_language_code=target_language_code,
-            target_language_name=get_language_name(target_language_code),
-            dict_html=dict_as_html(wordform_metadata),
-            metadata=metadata,  # Add metadata to template context
-        )
-
-
-@wordform_views_bp.route(
-    "/<target_language_code>/wordform/<wordform>/delete", methods=["POST"]
-)
-def delete_wordform(target_language_code: str, wordform: str):
-    """Delete a wordform from the database."""
-    # URL decode the wordform parameter to handle non-Latin characters properly
-    # Defense in depth: decode explicitly here, in addition to middleware
-    wordform = urllib.parse.unquote(wordform)
-
-    try:
-        wordform_model = Wordform.get(
-            Wordform.wordform == wordform,
-            Wordform.language_code == target_language_code,
-        )
-        wordform_model.delete_instance()
-        return redirect(
-            url_for(
-                "wordform_views.wordforms_list",
-                target_language_code=target_language_code,
-            )
-        )
-    except DoesNotExist:
-        return redirect(
-            url_for(
-                "wordform_views.wordforms_list",
-                target_language_code=target_language_code,
-            )
-        )
