@@ -67,6 +67,17 @@ def test_get_new_wordform(mock_search, client):
     response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/newword")
     assert response.status_code == 302  # Redirect status code
     assert "newword" in response.headers["Location"]
+    
+    # Follow the redirect and make sure we don't get into a loop
+    response = client.get(response.headers["Location"])
+    assert response.status_code == 200  # Should render the page now, not redirect again
+    
+    # Verify the wordform was created in the database
+    wordform = Wordform.get(
+        Wordform.wordform == "newword",
+        Wordform.language_code == TEST_LANGUAGE_CODE
+    )
+    assert wordform is not None
 
 
 @pytest.mark.skip("Template needs to be updated for new URL patterns")

@@ -116,7 +116,25 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
             match_wordform = match.get("target_language_wordform")
 
             if match_wordform:
-                # Simply redirect to the wordform URL - it will be created when it's viewed
+                # First create the wordform in the database to avoid redirect loops
+                # Convert from new response format to metadata format expected by get_or_create_from_metadata
+                metadata = {
+                    "wordform": match_wordform,
+                    "lemma": match.get("target_language_lemma"),
+                    "part_of_speech": match.get("part_of_speech"),
+                    "translations": match.get("english", []),
+                    "inflection_type": match.get("inflection_type"),
+                    "possible_misspellings": None,
+                }
+                
+                # Create the wordform in the database
+                Wordform.get_or_create_from_metadata(
+                    wordform=match_wordform,
+                    language_code=target_language_code,
+                    metadata=metadata,
+                )
+                
+                # Now redirect to the wordform URL
                 return redirect(
                     url_for(
                         "wordform_views.get_wordform_metadata",
