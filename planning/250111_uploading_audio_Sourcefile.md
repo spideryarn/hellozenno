@@ -1,8 +1,10 @@
-"""
 # Adding Audio Sourcefile Support
 
 ## Goal Statement
-Enable creating Sourcefiles from audio files (MP3 format) using OpenAI's Whisper API for speech-to-text transcription. This will allow users to upload audio content (like podcasts, lectures, or conversations) and have them automatically transcribed for vocabulary extraction, similar to how we handle images with OCR.
+from db_models import Sourcefile
+
+
+Enable creating Sourcefile from audio files (MP3 format) using OpenAI's Whisper API for speech-to-text transcription. This will allow users to upload audio content (like podcasts, lectures, or conversations) and have them automatically transcribed for vocabulary extraction, similar to how we handle images with OCR.
 
 ## Current Status
 Phase 1 in progress - Core backend changes being implemented.
@@ -84,4 +86,4 @@ TODO:
 4. Add support for audio file deletion and renaming
 5. Add progress indicators for long-running transcription tasks
 
-"""
+
