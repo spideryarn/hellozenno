@@ -85,19 +85,19 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
         )
     except DoesNotExist:
         # If not found, use quick search to get metadata
-        search_result, _ = quick_search_for_wordform(
-            wordform, target_language_code, 1
-        )
-        
+        search_result, _ = quick_search_for_wordform(wordform, target_language_code, 1)
+
         # Count total matches from both result types
         target_matches = search_result["target_language_results"]["matches"]
         english_matches = search_result["english_results"]["matches"]
         total_matches = len(target_matches) + len(english_matches)
-        
+
         # Check for possible misspellings
-        target_misspellings = search_result["target_language_results"]["possible_misspellings"]
+        target_misspellings = search_result["target_language_results"][
+            "possible_misspellings"
+        ]
         english_misspellings = search_result["english_results"]["possible_misspellings"]
-        
+
         # If there are multiple matches or misspellings, show search results
         if total_matches > 1 or target_misspellings or english_misspellings:
             return render_template(
@@ -108,21 +108,23 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
                 target_language_results=search_result["target_language_results"],
                 english_results=search_result["english_results"],
             )
-        
+
         # If there's exactly one match, redirect to that wordform
         elif total_matches == 1:
             # Get the single match (either from target or english results)
             match = target_matches[0] if target_matches else english_matches[0]
             match_wordform = match.get("target_language_wordform")
-            
+
             if match_wordform:
                 # Simply redirect to the wordform URL - it will be created when it's viewed
-                return redirect(url_for(
-                    "wordform_views.get_wordform_metadata",
-                    target_language_code=target_language_code,
-                    wordform=match_wordform
-                ))
-        
+                return redirect(
+                    url_for(
+                        "wordform_views.get_wordform_metadata",
+                        target_language_code=target_language_code,
+                        wordform=match_wordform,
+                    )
+                )
+
         # If no matches or misspellings, show invalid word template
         else:
             return render_template(
@@ -133,3 +135,33 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
                 possible_misspellings=target_misspellings,
                 metadata=None,
             )
+
+
+@wordform_views_bp.route(
+    "/<target_language_code>/wordform/<wordform>/delete", methods=["POST"]
+)
+def delete_wordform(target_language_code: str, wordform: str):
+    """Delete a wordform from the database."""
+    # URL decode the wordform parameter to handle non-Latin characters properly
+    # Defense in depth: decode explicitly here, in addition to middleware
+    wordform = urllib.parse.unquote(wordform)
+
+    try:
+        wordform_model = Wordform.get(
+            Wordform.wordform == wordform,
+            Wordform.language_code == target_language_code,
+        )
+        wordform_model.delete_instance()
+        return redirect(
+            url_for(
+                "wordform_views.wordforms_list",
+                target_language_code=target_language_code,
+            )
+        )
+    except DoesNotExist:
+        return redirect(
+            url_for(
+                "wordform_views.wordforms_list",
+                target_language_code=target_language_code,
+            )
+        )
