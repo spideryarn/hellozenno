@@ -208,20 +208,12 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     },
     "english_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null
-            }
-        ],
+        "matches": [],
         "possible_misspellings": null
     }
 }
 
-2. For a {{ target_language_name }} inflected wordform (with missing accent) "ανθρωποι":
+2. For a {{ target_language_name }} inflected noun wordform "άνθρωποι":
 {
     "target_language_results": {
         "matches": [
@@ -236,15 +228,7 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     },
     "english_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null
-            }
-        ],
+        "matches": [],
         "possible_misspellings": null
     }
 }
@@ -264,15 +248,7 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     },
     "english_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null
-            }
-        ],
+        "matches": [],
         "possible_misspellings": null
     }
 }
@@ -280,6 +256,10 @@ Example valid JSON responses using Greek (modern) as the target language:
 3. For an English word (e.g. "examples"):
 {
     "target_language_results": {
+        "matches": [],
+        "possible_misspellings": null
+    },
+    "english_results": {
         "matches": [
             {
                 "target_language_wordform": "παραδείγματα",
@@ -290,45 +270,17 @@ Example valid JSON responses using Greek (modern) as the target language:
             }
         ],
         "possible_misspellings": null
-    },
-    "english_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null
-            }
-        ],
-        "possible_misspellings": null
     }
 }
 
 4. For a {{ target_language_name }} typo "μηλώ":
 {
     "target_language_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null,
-            }
-        ],
+        "matches": [],
         "possible_misspellings": ["μιλώ"]
     },
     "english_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null
-            }
-        ],
+        "matches": [],
         "possible_misspellings": null
     }
 }
@@ -336,27 +288,11 @@ Example valid JSON responses using Greek (modern) as the target language:
 5. For an invalid word, e.g. "asdf" or "bonjour":
 {
     "target_language_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null,
-            }
-        ],
+        "matches": [],
         "possible_misspellings": null
     },
     "english_results": {
-        "matches": [
-            {
-                "target_language_wordform": null,
-                "target_language_lemma": null,
-                "part_of_speech": null,
-                "english": null,
-                "inflection_type": null
-            }
-        ],
+        "matches": [],
         "possible_misspellings": null
     }
 }
@@ -367,11 +303,11 @@ Provide only the JSON output with no commentary:
     "target_language_results": {
         "matches": [
             {
-                "target_language_wordform": "..." or null, # the sanitized form if valid, None if invalid
-                "target_language_lemma": "..." or null, # the dictionary form this belongs to, None if invalid
-                "part_of_speech": "..." or null, # e.g. "verb", "adjective", "noun", etc.
-                "english": ["..."] or null, # English translations
-                "inflection_type": "..." or null # e.g. "first-person singular present", "feminine plural genitive"
+                "target_language_wordform": "...", # the sanitized form if valid
+                "target_language_lemma": "...", # the dictionary form this belongs to
+                "part_of_speech": "...", # e.g. "verb", "adjective", "noun", etc.
+                "english": ["..."], # English translations
+                "inflection_type": "..." # e.g. "first-person singular present", "feminine plural genitive"
             }
         ],
         "possible_misspellings": ["..."] or null # ordered list of suggested corrections, or None if valid
@@ -379,11 +315,11 @@ Provide only the JSON output with no commentary:
     "english_results": {
         "matches": [
             {
-                "target_language_wordform": "..." or null,
-                "target_language_lemma": "..." or null,
-                "part_of_speech": "..." or null,
-                "english": ["..."] or null, # English input word
-                "inflection_type": "..." or null
+                "target_language_wordform": "...",
+                "target_language_lemma": "...",
+                "part_of_speech": "...",
+                "english": ["..."], # English input word
+                "inflection_type": "..."
             }
         ],
         "possible_misspellings": ["..."] or null
