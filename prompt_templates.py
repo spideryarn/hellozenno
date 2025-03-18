@@ -157,8 +157,9 @@ Your task is to analyze the input and return appropriate metadata based on these
      * "πολύ" -> lemma="πολύς" (adjective) not lemma="πολύ" (adverb)
 
 3. If the input is an English word:
+   - Return results in the `english_results` section, not target_language_results
    - Return all fields with appropriate values
-   - Set inflection_type to describe this specific form
+   - Set inflection_type to describe the {{ target_language_name }} word form
    - Set possible_misspellings to None
 
 4. If the input looks like a typo or misspelling:
@@ -177,7 +178,7 @@ Your task is to analyze the input and return appropriate metadata based on these
        - Wrong letter order (e.g. "καλσς" -> "καλός")
        - Double initial consonants (e.g. "κκαι" -> "και")
 
-4. If the input is definitely invalid (wrong language, nonsense, etc.):
+5. If the input is definitely invalid (wrong language, nonsense, etc.):
    - Set all fields to None
 
 Notes:

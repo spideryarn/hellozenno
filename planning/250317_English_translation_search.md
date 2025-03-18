@@ -19,10 +19,10 @@ We'll update the response format from `quick_search_for_wordform()` to consisten
   "target_language_results": {
     "matches": [
       {
-        "wordform": "...",
-        "lemma": "...",
+        "target_language_wordform": "...",
+        "target_language_lemma": "...",
         "part_of_speech": "...",
-        "translations": ["..."],
+        "english": ["..."],
         "inflection_type": "..."
       }
     ],
@@ -31,10 +31,10 @@ We'll update the response format from `quick_search_for_wordform()` to consisten
   "english_results": {
     "matches": [
       {
-        "wordform": "...",
-        "lemma": "...",
+        "target_language_wordform": "...",
+        "target_language_lemma": "...",
         "part_of_speech": "...",
-        "translations": ["..."],
+        "english": ["..."],
         "inflection_type": "..."
       }
     ],
