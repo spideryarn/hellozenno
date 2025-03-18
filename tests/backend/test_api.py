@@ -16,7 +16,7 @@ def test_word_preview(client, fixture_for_testing_db):
         )
 
         # Test existing word
-        response = client.get(f"/api/word-preview/{TEST_LANGUAGE_CODE}/preview_testing")
+        response = client.get(f"/api/lang/word/{TEST_LANGUAGE_CODE}/preview/preview_testing")
         assert response.status_code == 200
         data = response.get_json()
         assert data["lemma"] == SAMPLE_LEMMA_DATA["lemma"]
@@ -26,7 +26,7 @@ def test_word_preview(client, fixture_for_testing_db):
         assert "max-age=60" in response.headers["Cache-Control"]
 
         # Test nonexistent word
-        response = client.get(f"/api/word-preview/{TEST_LANGUAGE_CODE}/nonexistent")
+        response = client.get(f"/api/lang/word/{TEST_LANGUAGE_CODE}/preview/nonexistent")
         assert response.status_code == 404
         data = response.get_json()
         assert data["error"] == "Not Found"

@@ -54,7 +54,7 @@ def test_lemmas_list_basic(client, fixture_for_testing_db):
     )
 
     # Test accessing the lemmas list view
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/lemmas")
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
     assert response.status_code == 200
 
     # Check that the lemma and visible metadata are present in the page
@@ -93,7 +93,7 @@ def test_lemma_detail_view(client, fixture_for_testing_db):
         LemmaExampleSentence.create(lemma=lemma, sentence=sentence)
 
         # Test accessing the lemma detail view
-        response = client.get(f"/{TEST_LANGUAGE_CODE}/lemma/{lemma.lemma}")
+        response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemma/{lemma.lemma}")
         assert response.status_code == 200
 
         # Check that all metadata is displayed correctly
@@ -132,7 +132,7 @@ def test_lemma_detail_view(client, fixture_for_testing_db):
 
 def test_nonexistent_lemma(client):
     """Test accessing a lemma that doesn't exist."""
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/lemma/nonexistent")
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemma/nonexistent")
     assert response.status_code == 200  # Should return invalid_lemma.jinja template
     assert "was not found" in response.data.decode()
 
@@ -163,7 +163,7 @@ def test_lemmas_list_sorting(client, fixture_for_testing_db):
     )
 
     # Test alphabetical sorting (default) - should be case-insensitive
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/lemmas")
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
     assert response.status_code == 200
 
     # Get the lemmas from the database in the expected order
@@ -219,14 +219,14 @@ def test_delete_lemma(client, fixture_for_testing_db):
         )
 
         # First verify the lemma exists
-        response = client.get(f"/{TEST_LANGUAGE_CODE}/lemma/test_delete")
+        response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemma/test_delete")
         assert response.status_code == 200
         assert "test_delete" in response.data.decode()
 
         # Delete the lemma
-        response = client.post(f"/{TEST_LANGUAGE_CODE}/lemma/test_delete/delete")
+        response = client.post(f"/lang/{TEST_LANGUAGE_CODE}/lemma/test_delete/delete")
         assert response.status_code == 302  # Redirect after deletion
-        assert response.headers["Location"].endswith(f"/{TEST_LANGUAGE_CODE}/lemmas")
+        assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
 
         # Verify the lemma is deleted from the database
         with pytest.raises(DoesNotExist):
@@ -245,9 +245,9 @@ def test_delete_lemma(client, fixture_for_testing_db):
 
 def test_delete_nonexistent_lemma(client):
     """Test deleting a lemma that doesn't exist."""
-    response = client.post(f"/{TEST_LANGUAGE_CODE}/lemma/nonexistent/delete")
+    response = client.post(f"/lang/{TEST_LANGUAGE_CODE}/lemma/nonexistent/delete")
     assert response.status_code == 302  # Should redirect even if lemma doesn't exist
-    assert response.headers["Location"].endswith(f"/{TEST_LANGUAGE_CODE}/lemmas")
+    assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
 
 
 def test_wordforms_list_with_no_lemma(client, fixture_for_testing_db):
@@ -260,7 +260,7 @@ def test_wordforms_list_with_no_lemma(client, fixture_for_testing_db):
     )
 
     # Test accessing the wordforms list view
-    response = client.get(f"/{TEST_LANGUAGE_CODE}/wordforms")
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordforms")
     assert response.status_code == 200
 
     # In the test environment with no real front-end,
@@ -282,7 +282,7 @@ def test_wordform_detail_with_no_lemma(client, fixture_for_testing_db):
         )
 
         # Test accessing the wordform detail view
-        response = client.get(f"/{TEST_LANGUAGE_CODE}/wordform/test_no_lemma")
+        response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/test_no_lemma")
         assert response.status_code == 200
 
         # Check that the wordform is displayed correctly without a lemma
