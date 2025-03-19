@@ -73,7 +73,7 @@
         console.log(`Fetching preview for word: "${wordform}" in language: ${langCode}`);
 
         // Fetch preview data from API using updated URL format
-        fetch(`/api/lang/${langCode}/word-preview/${encodeURIComponent(wordform)}`)
+        fetch(`/api/lang/word/${langCode}/${encodeURIComponent(wordform)}/preview`)
           .then(r => {
             if (!r.ok) {
               throw new Error(`API request failed: ${r.status}`);

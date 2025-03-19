@@ -6,11 +6,11 @@ function isMobileOrTablet() {
         (navigator.maxTouchPoints > 0) ||
         (navigator.msMaxTouchPoints > 0)
     );
-    
+
     // Check user agent for common mobile/tablet identifiers
     const userAgent = navigator.userAgent.toLowerCase();
     const isMobileUserAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i.test(userAgent);
-    
+
     return hasTouchScreen && isMobileUserAgent;
 }
 
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Fetching preview for word: "${word}" in language: ${langCode}`);
 
             // Fetch preview data from API using updated URL format
-            fetch(`/api/lang/${langCode}/word-preview/${encodeURIComponent(word)}`)
+            fetch(`/api/lang/word/${langCode}/${encodeURIComponent(word)}/preview`)
                 .then(r => {
                     if (!r.ok) {
                         throw new Error(`API request failed: ${r.status}`);

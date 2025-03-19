@@ -82,7 +82,7 @@
     try {
       // Use the updated URL route
       const response = await fetch(
-        `/lang/api/sentence/${sentence.language_code}/${sentence.slug}/generate_audio`,
+        `/api/lang/sentence/${sentence.language_code}/${sentence.slug}/generate_audio`,
         { method: 'POST' }
       );
       
