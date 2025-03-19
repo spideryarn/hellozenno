@@ -14,38 +14,3 @@ core_api_bp = Blueprint("core_api", __name__, url_prefix="/api")
 def home():
     """API home page."""
     return redirect(url_for("core_api.urls"))
-
-
-@core_api_bp.route("/urls")
-def urls():
-    """List available API URLs and examples."""
-    urls = {
-        "word_preview": full_url_for(
-            "wordform_api.word_preview", target_language_code="el", word="καλός"
-        ),
-        "phrase_preview": full_url_for(
-            "phrase_api.phrase_preview", target_language_code="el", phrase="καλημέρα σας"
-        ),
-        "lemma_data": full_url_for(
-            "lemma_api.get_lemma_data", target_language_code="el", lemma="καλός"
-        ),
-        "word_mp3": full_url_for(
-            "wordform_api.get_mp3", target_language_code="el", word="καλός"
-        ),
-        "random_sentence": full_url_for(
-            "sentence_api.get_random_sentence_api", language_code="el"
-        ),
-        "sentence_audio": full_url_for(
-            "sentence_api.get_sentence_audio_api", language_code="el", sentence_id=1
-        ),
-        "sourcedir_create": full_url_for(
-            "sourcedir_api.create_sourcedir_api", target_language_code="el"
-        ),
-        "sourcefile_process": full_url_for(
-            "sourcefile_api.process_individual_words_api", 
-            target_language_code="el",
-            sourcedir_slug="example",
-            sourcefile_slug="sample"
-        )
-    }
-    return jsonify(urls)
