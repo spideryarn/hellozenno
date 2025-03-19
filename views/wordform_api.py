@@ -13,12 +13,12 @@ import urllib.parse
 wordform_api_bp = Blueprint("wordform_api", __name__, url_prefix="/api/lang/word")
 
 
-@wordform_api_bp.route("/<target_language_code>/preview/<word>")
+@wordform_api_bp.route("/<target_language_code>/<word>/preview")
 def word_preview(target_language_code: str, word: str):
     """Get preview data for word tooltips."""
     # Fix URL encoding issues with Vercel by explicitly unquoting the word parameter
     word = urllib.parse.unquote(word)
-    
+
     preview = get_word_preview(target_language_code, word)
     if preview is None:
         response = jsonify(
