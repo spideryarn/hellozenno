@@ -49,7 +49,7 @@ To understand more about the purpose of the app, see `./README.md`
 
 ### Browser Testing and Web Search with cursor-tools
 
-The `cursor-tools` command provides powerful browser automation and web search capabilities:
+The `cursor-tools` command provides powerful browser automation and web search capabilities. For more information, read `.cursor/rules/cursor-tools.mdc`
 
 #### Browser Automation
 ```bash
