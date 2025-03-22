@@ -28,7 +28,7 @@ sourcedir_api_bp = Blueprint(
 )
 
 
-@sourcedir_api_bp.route("/api/sourcedir/<target_language_code>", methods=["POST"])
+@sourcedir_api_bp.route("/<target_language_code>", methods=["POST"])
 def create_sourcedir_api(target_language_code: str):
     """Create a new source directory."""
     data = request.get_json()
@@ -81,7 +81,7 @@ def create_sourcedir_api(target_language_code: str):
 
 
 @sourcedir_api_bp.route(
-    "/api/sourcedir/<target_language_code>/<sourcedir_slug>", methods=["DELETE"]
+    "/<target_language_code>/<sourcedir_slug>", methods=["DELETE"]
 )
 def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """Delete a source directory if it's empty."""
@@ -109,7 +109,7 @@ def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
 
 
 @sourcedir_api_bp.route(
-    "/api/sourcedir/<target_language_code>/<sourcedir_slug>/language", methods=["PUT"]
+    "/<target_language_code>/<sourcedir_slug>/language", methods=["PUT"]
 )
 def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str):
     """Update the language of a source directory."""
@@ -158,7 +158,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
 
 
 @sourcedir_api_bp.route(
-    "/api/sourcedir/<target_language_code>/<sourcedir_slug>/rename", methods=["PUT"]
+    "/<target_language_code>/<sourcedir_slug>/rename", methods=["PUT"]
 )
 def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """Rename a source directory."""
@@ -203,7 +203,7 @@ def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
 
 
 @sourcedir_api_bp.route(
-    "/api/sourcedir/<target_language_code>/<sourcedir_slug>/upload", methods=["POST"]
+    "/<target_language_code>/<sourcedir_slug>/upload", methods=["POST"]
 )
 def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slug: str):
     """Handle file upload to a source directory."""
@@ -330,7 +330,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
 
 
 @sourcedir_api_bp.route(
-    "/api/sourcedir/<target_language_code>/<sourcedir_slug>/update_description",
+    "/<target_language_code>/<sourcedir_slug>/update_description",
     methods=["PUT"],
 )
 def update_sourcedir_description_api(target_language_code: str, sourcedir_slug: str):
