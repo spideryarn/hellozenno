@@ -186,7 +186,8 @@ def create_app():
         from views.sentence_views import sentence_views_bp
         from views.search_views import search_views_bp, search_landing
         from views.flashcard_views import flashcard_views_bp
-        from views.sourcedir_views import sourcedir_views_bp, sourcedirs_for_language, sourcefiles_for_sourcedir
+        from views.sourcedir_views import sourcedir_views_bp, sourcedirs_for_language, sourcefiles_for_sourcedir, upload_sourcedir_new_sourcefile
+        from views.sourcefile_views import sourcefile_views_bp, inspect_sourcefile
         
         return {
             # Blueprints
@@ -198,6 +199,7 @@ def create_app():
             'search_views_bp': search_views_bp,
             'flashcard_views_bp': flashcard_views_bp,
             'sourcedir_views_bp': sourcedir_views_bp,
+            'sourcefile_views_bp': sourcefile_views_bp,
             
             # Common view functions
             'languages': languages,
@@ -206,7 +208,9 @@ def create_app():
             'phrases_list': phrases_list,
             'search_landing': search_landing,
             'sourcedirs_for_language': sourcedirs_for_language,
-            'sourcefiles_for_sourcedir': sourcefiles_for_sourcedir
+            'sourcefiles_for_sourcedir': sourcefiles_for_sourcedir,
+            'upload_sourcedir_new_sourcefile': upload_sourcedir_new_sourcefile,
+            'inspect_sourcefile': inspect_sourcefile
         }
     
     # Added CLI command to generate routes
