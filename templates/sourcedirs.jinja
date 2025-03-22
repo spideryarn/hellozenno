@@ -9,6 +9,12 @@
 {{ target_language_name }} Learning Materials - Hello Zenno
 {% endblock %}
 
+<div class="nav-menu">
+    <a href="{{ url_for(endpoint_for(wordforms_list), target_language_code=target_language_code) }}">Wordforms</a>
+    <a href="{{ url_for(endpoint_for(lemmas_list), target_language_code=target_language_code) }}">Lemmas</a>
+    <a href="{{ url_for(endpoint_for(phrases_list), target_language_code=target_language_code) }}">Phrases</a>
+</div>
+
 {% block content %}
 <h1>Source Directories for {{ target_language_name }}</h1>
 

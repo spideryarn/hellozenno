@@ -23,28 +23,15 @@ from utils.url_registry import generate_route_registry, generate_typescript_rout
 def inject_base_view_functions():
     """Inject view functions needed by the base template.
 
-    This minimal context processor only includes functions needed by base.jinja.
+    This minimal context processor only includes functions needed by `base.jinja`.
     """
-    from views.core_views import languages
-    from views.search_views import search_landing
-    from views.sourcedir_views import sourcedirs_for_language, sourcefiles_for_sourcedir
-    from views.lemma_views import lemmas_list
-    from views.wordform_views import wordforms_list
-    from views.phrase_views import phrases_list
-    from views.sentence_views import sentences_list
-    from views.flashcard_views import flashcard_landing
-    
+    from views.core_views import languages_vw
+    from views.search_views import search_landing_vw
+
     return {
         # Only the functions required by base.jinja and navigation
-        "languages_view_func": languages,  # The actual function reference
-        "search_landing": search_landing,
-        "sourcedirs_for_language": sourcedirs_for_language,
-        "sourcefiles_for_sourcedir": sourcefiles_for_sourcedir,
-        "lemmas_list": lemmas_list,
-        "wordforms_list": wordforms_list,
-        "phrases_list": phrases_list,
-        "sentences_list": sentences_list,
-        "flashcard_landing": flashcard_landing,
+        "languages": languages_vw,  # The actual function reference
+        "search_landing": search_landing_vw,
     }
 
 
