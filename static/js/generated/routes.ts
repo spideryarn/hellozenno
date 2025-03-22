@@ -28,17 +28,9 @@ export enum RouteName {
   SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW = "SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW",
   SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW = "SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW",
   SOURCEFILE_VIEWS_UPDATE_SOURCEFILE = "SOURCEFILE_VIEWS_UPDATE_SOURCEFILE",
-  SOURCEFILE_VIEWS_PROCESS_INDIVIDUAL_WORDS_VW = "SOURCEFILE_VIEWS_PROCESS_INDIVIDUAL_WORDS_VW",
-  SOURCEFILE_VIEWS_UPDATE_SOURCEFILE_DESCRIPTION_VW = "SOURCEFILE_VIEWS_UPDATE_SOURCEFILE_DESCRIPTION_VW",
-  SOURCEFILE_VIEWS_MOVE_SOURCEFILE_VW = "SOURCEFILE_VIEWS_MOVE_SOURCEFILE_VW",
   SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW = "SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW",
-  SOURCEFILE_VIEWS_DELETE_SOURCEFILE_VW = "SOURCEFILE_VIEWS_DELETE_SOURCEFILE_VW",
-  SOURCEFILE_VIEWS_RENAME_SOURCEFILE_VW = "SOURCEFILE_VIEWS_RENAME_SOURCEFILE_VW",
   SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW = "SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW",
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW = "SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW",
-  SOURCEFILE_VIEWS_CREATE_SOURCEFILE_FROM_TEXT_VW = "SOURCEFILE_VIEWS_CREATE_SOURCEFILE_FROM_TEXT_VW",
-  SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW = "SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW",
-  SOURCEFILE_VIEWS_GENERATE_SOURCEFILE_AUDIO_VW = "SOURCEFILE_VIEWS_GENERATE_SOURCEFILE_AUDIO_VW",
   PHRASE_VIEWS_PHRASES_LIST_VW = "PHRASE_VIEWS_PHRASES_LIST_VW",
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW = "PHRASE_VIEWS_GET_PHRASE_METADATA_VW",
   SENTENCE_VIEWS_SENTENCES_LIST_VW = "SENTENCE_VIEWS_SENTENCES_LIST_VW",
@@ -65,6 +57,7 @@ export enum RouteName {
   SOURCEFILE_API_DELETE_SOURCEFILE_API = "SOURCEFILE_API_DELETE_SOURCEFILE_API",
   SOURCEFILE_API_RENAME_SOURCEFILE_API = "SOURCEFILE_API_RENAME_SOURCEFILE_API",
   SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API = "SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API",
+  SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API = "SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API",
   SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API = "SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API",
   SENTENCE_API_GET_RANDOM_SENTENCE_API = "SENTENCE_API_GET_RANDOM_SENTENCE_API",
   SENTENCE_API_GET_SENTENCE_AUDIO_API = "SENTENCE_API_GET_SENTENCE_AUDIO_API",
@@ -103,17 +96,9 @@ export const ROUTES = {
   SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process",
   SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/audio",
   SOURCEFILE_VIEWS_UPDATE_SOURCEFILE: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/update",
-  SOURCEFILE_VIEWS_PROCESS_INDIVIDUAL_WORDS_VW: "/lang/api/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process_individual",
-  SOURCEFILE_VIEWS_UPDATE_SOURCEFILE_DESCRIPTION_VW: "/lang/api/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/update_description",
-  SOURCEFILE_VIEWS_MOVE_SOURCEFILE_VW: "/lang/api/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/move",
   SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/sentences",
-  SOURCEFILE_VIEWS_DELETE_SOURCEFILE_VW: "/lang/api/sourcedir/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}",
-  SOURCEFILE_VIEWS_RENAME_SOURCEFILE_VW: "/lang/api/sourcedir/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/rename",
   SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/next",
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/prev",
-  SOURCEFILE_VIEWS_CREATE_SOURCEFILE_FROM_TEXT_VW: "/lang/api/sourcedir/{target_language_code}/{sourcedir_slug}/create_from_text",
-  SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW: "/lang/{target_language_code}/{sourcedir_slug}/add_from_youtube",
-  SOURCEFILE_VIEWS_GENERATE_SOURCEFILE_AUDIO_VW: "/lang/api/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/generate_audio",
   PHRASE_VIEWS_PHRASES_LIST_VW: "/lang/{target_language_code}/phrases",
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW: "/lang/{target_language_code}/phrases/{slug}",
   SENTENCE_VIEWS_SENTENCES_LIST_VW: "/lang/{target_language_code}/sentences",
@@ -140,6 +125,7 @@ export const ROUTES = {
   SOURCEFILE_API_DELETE_SOURCEFILE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}",
   SOURCEFILE_API_RENAME_SOURCEFILE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/rename",
   SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/create_from_text",
+  SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/youtube",
   SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/generate_audio",
   SENTENCE_API_GET_RANDOM_SENTENCE_API: "/api/lang/sentence/{target_language_code}/random",
   SENTENCE_API_GET_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{sentence_id}/audio",
@@ -178,17 +164,9 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_UPDATE_SOURCEFILE]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_PROCESS_INDIVIDUAL_WORDS_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_UPDATE_SOURCEFILE_DESCRIPTION_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_MOVE_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_DELETE_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_RENAME_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_CREATE_SOURCEFILE_FROM_TEXT_VW]: { target_language_code: string; sourcedir_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW]: { target_language_code: string; sourcedir_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_GENERATE_SOURCEFILE_AUDIO_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.PHRASE_VIEWS_PHRASES_LIST_VW]: { target_language_code: string };
   [RouteName.PHRASE_VIEWS_GET_PHRASE_METADATA_VW]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_VIEWS_SENTENCES_LIST_VW]: { target_language_code: string };
@@ -215,6 +193,7 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_API_DELETE_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_RENAME_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API]: { target_language_code: string; sourcedir_slug: string };
+  [RouteName.SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SENTENCE_API_GET_RANDOM_SENTENCE_API]: { target_language_code: string };
   [RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API]: { target_language_code: string; sentence_id: string };

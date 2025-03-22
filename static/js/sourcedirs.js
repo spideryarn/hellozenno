@@ -9,7 +9,7 @@ btn.onclick = async () => {
             cancelText: "Cancel"
         });
 
-        const url = resolveRoute('SOURCEDIR_API_CREATE_SOURCEDIR', {target_language_code: window.target_language_code});
+        const url = resolveRoute('SOURCEDIR_API_CREATE_SOURCEDIR_API', {target_language_code: window.target_language_code});
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -51,7 +51,7 @@ const confirmDelete = async (sourcedirSlug) => {
     }
 
     try {
-        const url = resolveRoute('SOURCEDIR_API_DELETE_SOURCEDIR', {
+        const url = resolveRoute('SOURCEDIR_API_DELETE_SOURCEDIR_API', {
             target_language_code: window.target_language_code,
             sourcedir_slug: sourcedirSlug
         });

@@ -84,6 +84,7 @@ def sourcedirs_for_language_vw(target_language_code: str):
         supported_languages=supported_languages,
         sourcedir_stats=sourcedir_stats,
         languages_vw=languages_vw,
+        sourcefiles_for_sourcedir_vw=sourcefiles_for_sourcedir_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         wordforms_list_vw=wordforms_list_vw,
         lemmas_list_vw=lemmas_list_vw,

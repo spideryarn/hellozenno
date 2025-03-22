@@ -1,41 +1,42 @@
 def endpoint_for(view_func):
     """Get the endpoint string for url_for from a view function.
-    
+
     This helps avoid hardcoding endpoint strings in url_for() calls,
     making them more resistant to function renames.
-    
+
     Args:
         view_func: The view function to get the endpoint for
-        
+
     Returns:
         str: The endpoint string in the format 'blueprint.function_name'
-        
+
     Example:
         from views.sourcedir_views import sourcedirs_list
         url_for(endpoint_for(sourcedirs_list), target_language_code='el')
     """
     # Get the module name where the function is defined
     module_name = view_func.__module__
-    
+
     # Extract the module part from module name
-    parts = module_name.split('.')
+    parts = module_name.split(".")
     if len(parts) > 1:
         # For views modules, extract the blueprint name from the module name
         module_part = parts[-1]
-        
+
         # Special case for search_views module which uses "search" as blueprint name
-        if module_part == 'search_views':
-            blueprint_name = 'search'
-        # Regular case: most blueprints follow the pattern module_name = blueprint_name 
+        if module_part == "search_views":
+            blueprint_name = "search"
+        # Regular case: most blueprints follow the pattern module_name = blueprint_name
         # (e.g. core_views -> core_views, lemma_views -> lemma_views)
         else:
             blueprint_name = module_part
     else:
         # Fallback if the module structure is different
         blueprint_name = module_name
-    
+
     # Return in blueprint.function_name format
     return f"{blueprint_name}.{view_func.__name__}"
+
 
 def generate_route_registry(app):
     """Generate route registry from Flask app.url_map.
