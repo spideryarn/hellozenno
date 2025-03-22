@@ -25,7 +25,7 @@ However, JavaScript code primarily uses hard-coded URL strings, creating a maint
 
 ## Solution Options
 
-### Option 1: Template-Injected Routes (CHOSEN)
+### Option 1: Template-Injected Routes (PREVIOUSLY FAVOURED, but not any more)
 
 Inject a complete route registry into the base template, making it available to all JavaScript.
 
@@ -179,6 +179,231 @@ def generate_typescript_routes():
         f.write('};\n')
 ```
 
+### Option 4: Generating Routes from app.url_map
+
+An alternative approach is to generate the Routes class dynamically from Flask's `app.url_map`, which provides several advantages:
+
+1. **Single Source of Truth**: Routes are defined only once (in Flask decorators)
+2. **Always Up-to-Date**: No manual synchronization needed
+3. **Correct Parameter Syntax**: Uses Flask's native route syntax and converts it appropriately
+
+#### Implementation Example
+
+```python
+def generate_route_registry(app):
+    """Generate route registry from Flask app.url_map."""
+    routes = {}
+    for rule in app.url_map.iter_rules():
+        # Skip static and other special routes
+        if rule.endpoint.startswith('static') or '.' not in rule.endpoint:
+            continue
+            
+        # Extract blueprint and function name
+        blueprint, view_func = rule.endpoint.split('.')
+        
+        # Convert to BLUEPRINT_VIEWFUNC format
+        route_name = f"{blueprint.upper()}_{view_func.upper()}"
+        
+        # Convert Flask route syntax to template syntax
+        route_template = str(rule)
+        # Replace Flask's <param> with {param}
+        for arg in rule.arguments:
+            route_template = route_template.replace(f"<{arg}>", f"{{{arg}}}")
+            route_template = route_template.replace(f"<{arg}:path>", f"{{{arg}}}")
+            # Handle other converters like int, float, etc.
+            
+        routes[route_name] = route_template
+        
+    return routes
+```
+
+#### Integration with Flask
+
+The route registry would be generated during app initialization:
+
+```python
+# In api/index.py
+from utils.url_registry import generate_route_registry
+
+# ... existing app setup code ...
+
+# Generate route registry from Flask routes
+with app.app_context():
+    route_registry = generate_route_registry(app)
+
+@app.context_processor
+def inject_routes():
+    return {'routes': route_registry}
+```
+
+#### Using Generated Routes in Python Tests
+
+For Python tests, there are several effective approaches to make the route registry available:
+
+1. **Use Test Fixtures**:
+
+```python
+@pytest.fixture
+def route_registry(app):
+    """Fixture that provides access to the route registry in tests."""
+    with app.test_request_context():
+        return generate_route_registry(app)
+
+def test_something(route_registry):
+    # Now you can use route_registry in your tests
+    assert route_registry["SOURCEDIR_API_LIST_SOURCEDIRS"] == "/api/lang/sourcedir/{language_code}"
+```
+
+2. **Create a Test Utility Function**:
+
+```python
+# utils/test_helpers.py
+def get_test_route_registry(app):
+    """Get route registry for tests without needing app context in each test."""
+    with app.test_request_context():
+        return generate_route_registry(app)
+```
+
+3. **Mock for Tests**:
+
+```python
+@pytest.fixture
+def mock_route_registry():
+    """Provide a mock route registry for tests that don't need the real routes."""
+    return {
+        "SOURCEDIR_API_LIST_SOURCEDIRS": "/api/lang/sourcedir/{language_code}",
+        "SOURCEDIR_API_CREATE_SOURCEDIR": "/api/lang/sourcedir/{language_code}"
+    }
+```
+
+#### Generating TypeScript Types
+
+A significant advantage of the `app.url_map` approach is the ability to generate strongly-typed TypeScript definitions:
+
+```python
+def generate_typescript_routes(app, output_path="static/js/generated/routes.ts"):
+    """Generate TypeScript route definitions from Flask app.url_map."""
+    import re
+    import os
+    
+    with app.app_context():
+        routes = generate_route_registry(app)
+        
+    # Create TypeScript type for route names
+    route_names = list(routes.keys())
+    route_name_type = "export type RouteName = " + " | ".join([f'"{name}"' for name in route_names]) + ";"
+    
+    # Create parameter types based on route patterns
+    param_types = {}
+    for name, path in routes.items():
+        # Extract parameter names from {param} patterns
+        params = re.findall(r'\{([^}]+)\}', path)
+        if params:
+            param_types[name] = "{ " + "; ".join([f"{param}: string" for param in params]) + " }"
+        else:
+            param_types[name] = "{}"
+    
+    # Generate TypeScript interfaces for params
+    param_interface = "export type RouteParams = {\n"
+    for name, param_type in param_types.items():
+        param_interface += f"  [RouteName.{name}]: {param_type};\n"
+    param_interface += "};\n"
+    
+    # Generate route constants
+    route_constants = "export const ROUTES = {\n"
+    for name, path in routes.items():
+        route_constants += f'  {name}: "{path}",\n'
+    route_constants += "} as const;\n"
+    
+    # Generate enum for route names (better IDE autocomplete)
+    route_enum = "export enum RouteName {\n"
+    for name in routes.keys():
+        route_enum += f"  {name} = \"{name}\",\n"
+    route_enum += "}\n"
+    
+    # Combine all TypeScript code
+    typescript_code = f"""// Auto-generated from Flask app.url_map
+{route_enum}
+
+{route_constants}
+
+{param_interface}
+
+/**
+ * Resolve a route template with parameters.
+ * 
+ * @param routeName Name of the route from ROUTES
+ * @param params Parameters to substitute in the route template
+ * @returns Resolved URL with parameters
+ */
+export function resolveRoute<T extends RouteName>(
+  routeName: T, 
+  params: RouteParams[T]
+): string {{
+  let url = ROUTES[routeName];
+  
+  // Replace template parameters with actual values
+  Object.entries(params).forEach(([key, value]) => {{
+    url = url.replace(`{{${{key}}}}`, encodeURIComponent(String(value)));
+  }});
+  
+  return url;
+}}
+"""
+    
+    # Write the TypeScript file
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        f.write(typescript_code)
+    
+    return typescript_code
+```
+
+The generated TypeScript file would provide:
+- An enum for all route names with IDE autocompletion
+- Type-safe parameter objects for each route
+- A strongly-typed `resolveRoute` function that enforces correct parameters
+
+#### Integration with Build Process
+
+To automate TypeScript generation, you can add a CLI command to Flask:
+
+```python
+@app.cli.command("generate-routes-ts")
+def generate_routes_ts_command():
+    """Generate TypeScript route definitions from Flask app.url_map."""
+    output_path = "static/js/generated/routes.ts"
+    typescript_code = generate_typescript_routes(app, output_path)
+    print(f"Generated TypeScript routes at {output_path}")
+```
+
+This command could be run:
+- During development when routes change
+- As part of a pre-commit hook
+- In CI/CD pipelines
+- During the build process
+
+### Working with URL Map in Tests
+
+Tests cannot access `app.url_map` without an application context, but it can be accessed using:
+
+```python
+with app.test_request_context():
+    url_map = app.url_map
+```
+
+### Accessing Parameter Types
+
+Flask's `url_map` includes type information that could be useful for documentation or TypeScript type generation:
+
+```python
+for rule in app.url_map.iter_rules():
+    for arg in rule.arguments:
+        converter = rule._converters[arg]
+        # converter.regex gives you the regex pattern
+        # type(converter).__name__ gives you the converter type ('IntegerConverter', etc.)
+```
+
 ## Trade-offs
 
 | Approach | Pros | Cons |
@@ -219,45 +444,68 @@ def generate_typescript_routes():
    - Verify correct escaping of URL parameters
    - Check for performance impact
 
-## Actions
+## Implementation Progress (Option 4 - Generating Routes from app.url_map)
 
-1. **Delete Unused Code**
-   - Remove the unused `core_api.py` file since the `/api/urls` endpoint is not being used
-   - Update imports in `api/index.py` and `tests/backend/conftest.py` that reference `core_api_bp`
+### ✅ Phase 1: Core Implementation (Completed)
 
-2. **Create Initial Route Registry**
-   - Create a new file `utils/url_registry.py` with the `Routes` class
-   - Include both view and API routes, organized by domain
-   - Include function to extract routes for templates
+1. **Basic Infrastructure**
+   - ✅ Created `utils/url_registry.py` with functions to:
+     - ✅ Generate route registry from Flask's `app.url_map`
+     - ✅ Generate TypeScript type definitions and utilities
+   - ✅ Added context processor to inject route registry into templates
+   - ✅ Created JavaScript utility `static/js/route-client.js` for client-side URL resolution
+   - ✅ Added script to inject routes into global JavaScript context via `base.jinja`
 
-3. **Register Context Processor**
-   - Add a context processor in `api/index.py` to make routes available to templates:
-   ```python
-   @app.context_processor
-   def inject_routes():
-       from utils.url_registry import get_routes
-       return {'get_routes': get_routes}
-   ```
+2. **Testing & Developer Tools**
+   - ✅ Created a test page at `/route-test` to visualize and test all routes
+   - ✅ Added CLI command `flask generate-routes-ts` to generate TypeScript definitions
+   - ✅ Created documentation in `docs/URL_REGISTRY.md`
 
-4. **Update Base Template**
-   - Add route injection script to `templates/base.jinja` in the `<head>` section
+3. **Proof of Concept**
+   - ✅ Updated `static/js/sourcedirs.js` to use the new route resolution system
+   - ✅ Tested URL resolution with parameters
 
-5. **Create JavaScript Utility**
-   - Create `static/js/route-client.js` with the `resolveRoute` function
-   - Add appropriate JSDoc comments for developer usage
+### ⏳ Phase 2: Migration & Adoption (In Progress)
 
-6. **Update Key JavaScript Files**
-   - Modify one JavaScript file as a proof of concept (e.g., `static/js/sourcedirs.js`)
-   - Test functionality to ensure routes are resolved correctly
+4. **Gradual Migration of JavaScript Files**
+   - ⏳ Update remaining JavaScript files to use the route registry
+   - ⬜ Prioritize files with recent URL breakages
 
-7. **Documentation**
-   - Document the approach in the codebase README
-   - Add example usage to developer documentation
+5. **TypeScript Integration**
+   - ⬜ Create example usage in a TypeScript component
+   - ⬜ Test TypeScript type definitions and utilities
 
-8. **Gradual Migration**
-   - Identify files using hardcoded URLs with `GrepTool` 
-   - Prioritize files with recent URL breakages for conversion
-   - Convert files one at a time, testing after each change
+6. **Testing**
+   - ⬜ Test all JavaScript files that use the route registry
+   - ⬜ Add tests for the route registry functions
+
+### ⬜ Phase 3: Completion & Refinement (To Do)
+
+7. **Documentation & Tutorials**
+   - ⬜ Create developer documentation with examples
+   - ⬜ Add route registry information to onboarding documents
+
+8. **Quality Assurance**
+   - ⬜ Review all URL patterns for consistency
+   - ⬜ Ensure all frontend code uses the route registry
+
+## Next Steps
+
+1. **Continue Migration**: Update more JavaScript files to use `resolveRoute`
+   - Identify files using URL patterns with `GrepTool`
+   - Prioritize files that have had URL-related issues
+
+2. **TypeScript Integration**: Create examples for TypeScript components
+   - Generate the TypeScript definitions file
+   - Update a Svelte/TypeScript component to use the typed routes
+
+3. **Testing**: Ensure the system works correctly
+   - Test route resolution in various scenarios
+   - Verify parameter handling and URL encoding
+
+4. **Documentation**: Expand the documentation
+   - Add more examples for different use cases
+   - Create guidelines for naming new routes
 
 ## Potential Questions/Concerns
 
@@ -266,3 +514,44 @@ def generate_typescript_routes():
 - **Documentation**: How will these routes be documented for developers?
 - **Performance**: Will the larger template size impact page load time?
 - **Error Handling**: How should resolveRoute handle missing routes or parameters?
+
+## Appendix: Discussion on Route Generation from app.url_map
+
+The original template-injected routes approach has a key challenge: the mismatch between Flask route syntax (`/<target_language_code>`) and the proposed URL registry format (`{language_code}`). Additionally, there's uncertainty about how to handle blueprint prefixes in the route definitions.
+
+### Option 5: Alternative Hybrid Approach
+
+If maintaining a declarative Routes class is preferred for documentation and organization, a hybrid approach could work:
+
+```python
+class Routes:
+    """Central registry of route templates."""
+    # Blueprint prefixes
+    PREFIX_SOURCEDIR_API = "/api/lang/sourcedir"
+    
+    # Routes without prefixes
+    SOURCEDIR_LIST = "/<language_code>"
+    SOURCEDIR_CREATE = "/<language_code>"
+    SOURCEDIR_DELETE = "/<language_code>/<sourcedir_slug>/delete"
+    
+    # Full routes (for JavaScript)
+    @classmethod
+    def get_full_routes(cls):
+        return {
+            "API_SOURCEDIR_LIST": f"{cls.PREFIX_SOURCEDIR_API}{cls.SOURCEDIR_LIST}",
+            "API_SOURCEDIR_CREATE": f"{cls.PREFIX_SOURCEDIR_API}{cls.SOURCEDIR_CREATE}",
+            # etc.
+        }
+```
+
+This approach would allow using the route components in Flask decorators while still providing full URLs for JavaScript.
+
+### Recommendation
+
+The dynamic generation approach using `app.url_map` is recommended for its maintainability and consistency. It eliminates the need to manually keep routes in sync and handles the route syntax conversion automatically.
+
+Implementation would involve:
+1. Creating the generation function in `utils/url_registry.py`
+2. Adding it to application initialization
+3. Creating a JavaScript utility to use these routes
+4. Gradually updating JavaScript code to use the generated routes

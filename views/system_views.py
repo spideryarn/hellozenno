@@ -113,6 +113,12 @@ def get_db_metrics(db):
         }
 
 
+# Route test page for URL registry
+@system_views_bp.route('/route-test')
+def route_test():
+    """Test page for URL registry and route resolution."""
+    return render_template('route_test.jinja')
+
 @auth_views_bp.route("/", methods=["GET"])
 @auth_views_bp.route("/<target_language_code>", methods=["GET"])
 def auth_page(target_language_code=None):

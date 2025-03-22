@@ -17,6 +17,36 @@ from utils.url_utils import load_vite_manifest
 from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
+from utils.url_registry import generate_route_registry, generate_typescript_routes
+
+def setup_route_registry(app, static_folder):
+    """Set up route registry and generate TypeScript definitions.
+    
+    Args:
+        app: The Flask application
+        static_folder: Path to the static files directory
+    """
+    with app.app_context():
+        # Generate route registry
+        route_registry = generate_route_registry(app)
+        
+        # Make route registry available to templates
+        @app.context_processor
+        def inject_routes():
+            """Make route registry available to all templates."""
+            return {'route_registry': route_registry}
+        
+        # In development mode, generate TypeScript routes file
+        if not app.config["IS_PRODUCTION"]:
+            # Create a directory for generated files if it doesn't exist
+            os.makedirs(os.path.join(static_folder, "js", "generated"), exist_ok=True)
+            
+            # Generate TypeScript routes
+            ts_output_path = os.path.join(static_folder, "js", "generated", "routes.ts")
+            generate_typescript_routes(app, ts_output_path)
+            logger.info(f"Generated TypeScript routes at {ts_output_path}")
+    
+    return route_registry
 
 
 # Configure logging with loguru
@@ -137,7 +167,20 @@ def create_app():
     logger.info(f"WhiteNoise configured with static folder: {static_folder}")
     logger.info(f"WhiteNoise compression enabled: {app.wsgi_app.enable_compression}")
 
-    # Removed vercel-test route
+    # Generate route registry and TypeScript definitions
+    setup_route_registry(app, static_folder)
+    
+    # Added CLI command to generate routes
+    @app.cli.command("generate-routes-ts")
+    def generate_routes_ts_command():
+        """Generate TypeScript route definitions from Flask app.url_map."""
+        static_folder = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
+        )
+        output_path = os.path.join(static_folder, "js", "generated", "routes.ts")
+        with app.app_context():
+            generate_typescript_routes(app, output_path)
+        logger.info(f"Generated TypeScript routes at {output_path}")
 
     logger.info("Application initialized successfully")
     return app
