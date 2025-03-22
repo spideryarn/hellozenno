@@ -1,6 +1,7 @@
 import pytest
 from db_models import Lemma, Wordform
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
+from tests.backend.utils_for_testing import build_url_with_query
 
 
 def test_word_preview(client, fixture_for_testing_db):
@@ -16,7 +17,14 @@ def test_word_preview(client, fixture_for_testing_db):
         )
 
         # Test existing word
-        response = client.get(f"/api/lang/word/{TEST_LANGUAGE_CODE}/preview/preview_testing")
+        from views.wordform_api import word_preview_api
+        url = build_url_with_query(
+            client,
+            word_preview_api,
+            target_language_code=TEST_LANGUAGE_CODE,
+            word="preview_testing"
+        )
+        response = client.get(url)
         assert response.status_code == 200
         data = response.get_json()
         assert data["lemma"] == SAMPLE_LEMMA_DATA["lemma"]
@@ -26,7 +34,14 @@ def test_word_preview(client, fixture_for_testing_db):
         assert "max-age=60" in response.headers["Cache-Control"]
 
         # Test nonexistent word
-        response = client.get(f"/api/lang/word/{TEST_LANGUAGE_CODE}/preview/nonexistent")
+        from views.wordform_api import word_preview_api
+        url = build_url_with_query(
+            client,
+            word_preview_api,
+            target_language_code=TEST_LANGUAGE_CODE,
+            word="nonexistent"
+        )
+        response = client.get(url)
         assert response.status_code == 404
         data = response.get_json()
         assert data["error"] == "Not Found"

@@ -55,8 +55,14 @@ def test_lemmas_list_basic(client, fixture_for_testing_db):
         etymology="test etymology",
     )
 
-    # Test accessing the lemmas list view
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
+    # Use build_url_with_query instead of hardcoded URL
+    from views.lemma_views import lemmas_list_vw
+    url = build_url_with_query(
+        client,
+        lemmas_list_vw,
+        target_language_code=TEST_LANGUAGE_CODE
+    )
+    response = client.get(url)
     assert response.status_code == 200
 
     # Check that the lemma and visible metadata are present in the page
@@ -94,8 +100,15 @@ def test_lemma_detail_view(client, fixture_for_testing_db):
         # Create example sentence link
         LemmaExampleSentence.create(lemma=lemma, sentence=sentence)
 
-        # Test accessing the lemma detail view
-        response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemma/{lemma.lemma}")
+        # Use build_url_with_query instead of hardcoded URL
+        from views.lemma_views import get_lemma_metadata_vw
+        url = build_url_with_query(
+            client,
+            get_lemma_metadata_vw,
+            target_language_code=TEST_LANGUAGE_CODE,
+            lemma=lemma.lemma
+        )
+        response = client.get(url)
         assert response.status_code == 200
 
         # Check that all metadata is displayed correctly
@@ -134,7 +147,15 @@ def test_lemma_detail_view(client, fixture_for_testing_db):
 
 def test_nonexistent_lemma(client):
     """Test accessing a lemma that doesn't exist."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemma/nonexistent")
+    # Use build_url_with_query instead of hardcoded URL
+    from views.lemma_views import get_lemma_metadata_vw
+    url = build_url_with_query(
+        client,
+        get_lemma_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        lemma="nonexistent"
+    )
+    response = client.get(url)
     assert response.status_code == 200  # Should return invalid_lemma.jinja template
     assert "was not found" in response.data.decode()
 
@@ -164,8 +185,14 @@ def test_lemmas_list_sorting(client, fixture_for_testing_db):
         translations=["test3"],
     )
 
-    # Test alphabetical sorting (default) - should be case-insensitive
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
+    # Use build_url_with_query instead of hardcoded URL
+    from views.lemma_views import lemmas_list_vw
+    url = build_url_with_query(
+        client,
+        lemmas_list_vw,
+        target_language_code=TEST_LANGUAGE_CODE
+    )
+    response = client.get(url)
     assert response.status_code == 200
 
     # Get the lemmas from the database in the expected order
@@ -221,12 +248,26 @@ def test_delete_lemma(client, fixture_for_testing_db):
         )
 
         # First verify the lemma exists
-        response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/lemma/test_delete")
+        from views.lemma_views import get_lemma_metadata_vw
+        url = build_url_with_query(
+            client,
+            get_lemma_metadata_vw,
+            target_language_code=TEST_LANGUAGE_CODE,
+            lemma="test_delete"
+        )
+        response = client.get(url)
         assert response.status_code == 200
         assert "test_delete" in response.data.decode()
 
-        # Delete the lemma
-        response = client.post(f"/lang/{TEST_LANGUAGE_CODE}/lemma/test_delete/delete")
+        # Use build_url_with_query instead of hardcoded URL
+        from views.lemma_views import delete_lemma_vw
+        delete_url = build_url_with_query(
+            client,
+            delete_lemma_vw,
+            target_language_code=TEST_LANGUAGE_CODE,
+            lemma="test_delete"
+        )
+        response = client.post(delete_url)
         assert response.status_code == 302  # Redirect after deletion
         assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
 
@@ -247,7 +288,15 @@ def test_delete_lemma(client, fixture_for_testing_db):
 
 def test_delete_nonexistent_lemma(client):
     """Test deleting a lemma that doesn't exist."""
-    response = client.post(f"/lang/{TEST_LANGUAGE_CODE}/lemma/nonexistent/delete")
+    # Use build_url_with_query instead of hardcoded URL
+    from views.lemma_views import delete_lemma_vw
+    delete_url = build_url_with_query(
+        client,
+        delete_lemma_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        lemma="nonexistent"
+    )
+    response = client.post(delete_url)
     assert response.status_code == 302  # Should redirect even if lemma doesn't exist
     assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
 
@@ -285,7 +334,14 @@ def test_wordform_detail_with_no_lemma(client, fixture_for_testing_db):
         )
 
         # Test accessing the wordform detail view
-        response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/test_no_lemma")
+        from views.wordform_views import get_wordform_metadata_vw
+        url = build_url_with_query(
+            client,
+            get_wordform_metadata_vw,
+            target_language_code=TEST_LANGUAGE_CODE,
+            wordform="test_no_lemma"
+        )
+        response = client.get(url)
         assert response.status_code == 200
 
         # Check that the wordform is displayed correctly without a lemma
