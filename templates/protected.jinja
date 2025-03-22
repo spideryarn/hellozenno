@@ -31,8 +31,8 @@ Protected Page | Hello Zenno
     {% endif %}
     
     <div class="actions">
-      <a href="{{ url_for('system_views.profile_page') }}" class="button">Edit Profile</a>
-      <a href="{{ url_for('views.languages') }}" class="button secondary">Back to Home</a>
+      <a href="{{ url_for(endpoint_for(profile_page_vw)) }}" class="button">Edit Profile</a>
+      <a href="{{ url_for(endpoint_for(languages_vw)) }}" class="button secondary">Back to Home</a>
     </div>
   </div>
 </div>

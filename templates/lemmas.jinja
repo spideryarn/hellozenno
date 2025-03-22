@@ -5,7 +5,7 @@
 {% set vite_entries = ['minilemma'] %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(languages_view)) }}">Languages</a>
     » <a href="{{ url_for(endpoint_for(sourcedirs_for_language), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     » Dictionary Entries
 {% endblock breadcrumbs %}
@@ -26,7 +26,7 @@
                 'lemma': lemma,
                 'partOfSpeech': lemma_metadata[lemma].part_of_speech if lemma_metadata[lemma].part_of_speech else "",
                 'translations': lemma_metadata[lemma].translations if lemma_metadata[lemma].translations else [],
-                'href': url_for(endpoint_for(lemma_views_bp.get_lemma_metadata), target_language_code=target_language_code, lemma=lemma)
+                'href': url_for(endpoint_for(get_lemma_metadata), target_language_code=target_language_code, lemma=lemma)
             }, component_id='minilemma-component-' ~ loop.index) }}
         {% else %}
             <div class="no-entries">No dictionary entries available</div>

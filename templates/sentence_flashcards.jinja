@@ -3,19 +3,20 @@
 {% block title %}{{ target_language_name }} sentence flashcards - Hello Zenno{% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for('views.languages') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     {% if not sourcedir and not sourcefile %}
-    » <a href="{{ url_for('sentence_views.sentences_list', language_code=target_language_code) }}">Sentences</a>
+    » <a href="{{ url_for(endpoint_for(sentences_list_vw), language_code=target_language_code) }}">Sentences</a>
     {% endif %}
     {% if sourcedir %}
-    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir.slug) }}">{{ sourcedir.path }}</a>
+    » <a href="{{ url_for(endpoint_for(sourcefiles_for_sourcedir_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir.slug) }}">{{ sourcedir.path }}</a>
     {% endif %}
     {% if sourcefile is not string and sourcefile %}
-    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug) }}">{{ sourcefile.sourcedir.path }}</a>
-    » <a href="{{ url_for('sourcefile_views.inspect_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug, sourcefile_slug=sourcefile.slug) }}">{{ sourcefile.filename }}</a>
+    » <a href="{{ url_for(endpoint_for(sourcefiles_for_sourcedir_vw), target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug) }}">{{ sourcefile.sourcedir.path }}</a>
+    » <a href="{{ url_for(endpoint_for(inspect_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcefile.sourcedir.slug, sourcefile_slug=sourcefile.slug) }}">{{ sourcefile.filename }}</a>
     {% endif %}
-    » Flashcards
+    » <a href="{{ url_for(endpoint_for(flashcard_landing_vw), language_code=target_language_code) }}">Flashcards</a>
+    » Practice
 {% endblock breadcrumbs %}
 
 {% block content %}
@@ -48,7 +49,7 @@
                         <p id="translation" class="text-muted d-none" style="display: none !important;">{{ sentence.translation }}</p>
                     </div>
 
-                    <audio id="audio-player" autoplay src="{{ url_for('sentence_views.get_sentence_audio', language_code=target_language_code, sentence_id=sentence.id) }}"></audio>
+                    <audio id="audio-player" autoplay src="{{ url_for(endpoint_for(get_sentence_audio_vw), language_code=target_language_code, sentence_id=sentence.id) }}"></audio>
                     {% else %}
                     <div class="alert alert-info">
                         No sentences found for these words. Please try again later.

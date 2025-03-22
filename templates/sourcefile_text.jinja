@@ -1,10 +1,11 @@
 {% extends "base.jinja" %}
 {% from "_sourcefile_icon.jinja" import sourcefile_icon %}
+{% from "base_svelte.jinja" import load_svelte_component %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for('views.languages') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
+    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for(endpoint_for(sourcefiles_for_sourcedir_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
     » {{ sourcefile }}
 {% endblock breadcrumbs %}
 

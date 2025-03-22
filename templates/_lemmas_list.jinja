@@ -1,7 +1,7 @@
 <ul class="lemmas-list"></ul>
     {% for lemma in lemmas %}
         <li class="lemma-item">
-            <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=lemma) }}" class="lemma-link">
+            <a href="{{ url_for(endpoint_for(get_lemma_metadata_vw), target_language_code=target_language_code, lemma=lemma) }}" class="lemma-link">
                 {{ lemma }}
             </a>
         </li>

@@ -7,6 +7,15 @@ import urllib.parse
 from utils.lang_utils import get_language_name
 from db_models import Lemma, Wordform, LemmaExampleSentence
 from utils.store_utils import load_or_generate_lemma_metadata
+from utils.url_registry import endpoint_for
+
+# Import necessary view functions
+from views.core_views import languages_vw
+from views.sourcedir_views import sourcedirs_for_language_vw
+from views.sentence_views import get_sentence_vw
+# Import search views
+from views.search_views import search_word_vw, search_landing_vw
+# Moving wordform import inside functions to avoid circular imports
 
 lemma_views_bp = Blueprint("lemma_views", __name__, url_prefix="/lang")
 logger = logging.getLogger(__name__)
@@ -118,6 +127,9 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             "updated_at": lemma_model.updated_at,
         }
 
+        # Import here to avoid circular dependencies
+        from views.wordform_views import get_wordform_metadata_vw
+        
         return render_template(
             "lemma.jinja",
             target_language_code=target_language_code,
@@ -125,6 +137,14 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             lemma_metadata=lemma_data,
             dict_html="",  # TODO: Implement this
             metadata=metadata,  # Add metadata to template context
+            # Add view functions for endpoint_for
+            languages_vw=languages_vw,
+            sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+            lemmas_list_vw=lemmas_list_vw,
+            delete_lemma_vw=delete_lemma_vw,
+            get_sentence_vw=get_sentence_vw,
+            get_wordform_metadata_vw=get_wordform_metadata_vw,
+            search_word_vw=search_word_vw,
         )
     except DoesNotExist:
         return render_template(
@@ -133,6 +153,11 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             target_language_name=get_language_name(target_language_code),
             lemma=lemma,
             metadata=None,  # Add metadata as None for non-existent lemmas
+            # Add view functions for endpoint_for
+            languages_vw=languages_vw,
+            sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+            lemmas_list_vw=lemmas_list_vw,
+            search_landing_vw=search_landing_vw,
         )
 
 
@@ -152,14 +177,14 @@ def delete_lemma_vw(target_language_code: str, lemma: str):
         lemma_model.delete_instance()
         return redirect(
             url_for(
-                "lemma_views.lemmas_list",
+                endpoint_for(lemmas_list_vw),
                 target_language_code=target_language_code,
             )
         )
     except DoesNotExist:
         return redirect(
             url_for(
-                "lemma_views.lemmas_list",
+                endpoint_for(lemmas_list_vw),
                 target_language_code=target_language_code,
             )
         )

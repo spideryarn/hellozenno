@@ -15,6 +15,12 @@ from utils.vocab_llm_utils import (
     normalize_text,
     extract_tokens,
 )
+from utils.url_registry import endpoint_for
+
+# Import necessary view functions for templates
+from views.core_views import languages_vw
+from views.sourcedir_views import sourcedirs_for_language_vw
+from views.flashcard_views import flashcard_landing_vw
 
 
 sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
@@ -31,12 +37,20 @@ def sentences_list_vw(language_code: str):
         target_language_code=language_code,
         target_language_name=target_language_name,
         sentences=sentences,
+        languages_vw=languages_vw,
+        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+        sentences_list_vw=sentences_list_vw,
+        get_sentence_vw=get_sentence_vw,
+        flashcard_landing_vw=flashcard_landing_vw,
     )
 
 
 @sentence_views_bp.route("/<language_code>/sentence/<slug>")
 def get_sentence_vw(language_code: str, slug: str):
     """Display a specific sentence."""
+    from views.core_views import languages_vw
+    from views.sourcedir_views import sourcedirs_for_language_vw
+
     target_language_name = get_language_name(language_code)
 
     try:
@@ -118,6 +132,9 @@ def get_sentence_vw(language_code: str, slug: str):
             sentence=sentence_data,
             metadata=metadata,
             enhanced_sentence_text=enhanced_sentence_text,
+            languages_vw=languages_vw,
+            sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+            sentences_list_vw=sentences_list_vw,
         )
     except DoesNotExist:
         abort(404, description="Sentence not found")

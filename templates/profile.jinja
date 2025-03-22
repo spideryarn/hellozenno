@@ -9,7 +9,7 @@ Your Profile | Hello Zenno
   <h1>Your Profile</h1>
   
   <div class="profile-card">
-    <form method="POST" action="{{ url_for('auth_views.profile_page') }}">
+    <form method="POST" action="{{ url_for(endpoint_for(profile_page_vw)) }}">
       <div class="form-group">
         <label for="email">Email</label>
         <input 

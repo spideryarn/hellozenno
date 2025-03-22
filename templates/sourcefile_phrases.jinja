@@ -4,9 +4,9 @@
 {% set vite_entries = ['miniphrase'] %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for('views.languages') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
+    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for(endpoint_for(sourcefiles_for_sourcedir_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
     » {{ sourcefile }}
 {% endblock breadcrumbs %}
 
@@ -25,7 +25,7 @@
                     {{ load_svelte_component('MiniPhrase', {
                         'phrase': phrase.canonical_form,
                         'translations': phrase.translations,
-                        'href': url_for('phrase_views.get_phrase_metadata', target_language_code=target_language_code, slug=phrase.slug),
+                        'href': url_for(endpoint_for(get_phrase_metadata_vw), target_language_code=target_language_code, slug=phrase.slug),
                         'part_of_speech': phrase.part_of_speech,
                         'notes': phrase.usage_notes
                     }, component_id='phrase-component-' ~ loop.index) }}

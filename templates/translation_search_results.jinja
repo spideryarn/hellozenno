@@ -5,9 +5,9 @@ Search Results - {{ target_language_name }}
 {% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for('views.languages') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a>
+    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for(endpoint_for(wordforms_list_vw), target_language_code=target_language_code) }}">Wordforms</a>
     » Search "{{ search_term }}"
 {% endblock breadcrumbs %}
 
@@ -26,7 +26,7 @@ Search Results - {{ target_language_name }}
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=match.target_language_wordform) }}" class="h5 mb-1">
+                            <a href="{{ url_for(endpoint_for(get_wordform_metadata_vw), target_language_code=target_language_code, wordform=match.target_language_wordform) }}" class="h5 mb-1">
                                 {{ match.target_language_wordform }}
                             </a>
                             <small class="text-muted d-block">
@@ -34,7 +34,7 @@ Search Results - {{ target_language_name }}
                             </small>
                             <small class="d-block">
                                 {% if match.target_language_lemma != match.target_language_wordform %}
-                                <strong>Lemma:</strong> <a href="{{ url_for('lemma_views.get_lemma_by_slug', target_language_code=target_language_code, lemma=match.target_language_lemma) }}">{{ match.target_language_lemma }}</a>
+                                <strong>Lemma:</strong> <a href="{{ url_for(endpoint_for(get_lemma_metadata_vw), target_language_code=target_language_code, lemma=match.target_language_lemma) }}">{{ match.target_language_lemma }}</a>
                                 {% endif %}
                             </small>
                         </div>
@@ -60,7 +60,7 @@ Search Results - {{ target_language_name }}
             <ul class="list-group list-group-flush">
                 {% for suggestion in target_language_results.possible_misspellings %}
                 <li class="list-group-item">
-                    <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=suggestion) }}">
+                    <a href="{{ url_for(endpoint_for(get_wordform_metadata_vw), target_language_code=target_language_code, wordform=suggestion) }}">
                         {{ suggestion }}
                     </a>
                 </li>
@@ -81,7 +81,7 @@ Search Results - {{ target_language_name }}
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <a href="{{ url_for('wordform_views.get_wordform_metadata', target_language_code=target_language_code, wordform=match.target_language_wordform) }}" class="h5 mb-1">
+                            <a href="{{ url_for(endpoint_for(get_wordform_metadata_vw), target_language_code=target_language_code, wordform=match.target_language_wordform) }}" class="h5 mb-1">
                                 {{ match.target_language_wordform }}
                             </a>
                             <small class="text-muted d-block">
@@ -89,7 +89,7 @@ Search Results - {{ target_language_name }}
                             </small>
                             <small class="d-block">
                                 {% if match.target_language_lemma != match.target_language_wordform %}
-                                <strong>Lemma:</strong> <a href="{{ url_for('lemma_views.get_lemma_by_slug', target_language_code=target_language_code, lemma=match.target_language_lemma) }}">{{ match.target_language_lemma }}</a>
+                                <strong>Lemma:</strong> <a href="{{ url_for(endpoint_for(get_lemma_metadata_vw), target_language_code=target_language_code, lemma=match.target_language_lemma) }}">{{ match.target_language_lemma }}</a>
                                 {% endif %}
                             </small>
                         </div>
@@ -115,7 +115,7 @@ Search Results - {{ target_language_name }}
             <ul class="list-group list-group-flush">
                 {% for suggestion in english_results.possible_misspellings %}
                 <li class="list-group-item">
-                    <a href="{{ url_for('search.search_word', target_language_code=target_language_code, wordform=suggestion) }}">
+                    <a href="{{ url_for(endpoint_for(search_word_vw), target_language_code=target_language_code, wordform=suggestion) }}">
                         {{ suggestion }}
                     </a>
                 </li>
@@ -132,8 +132,8 @@ Search Results - {{ target_language_name }}
     </div>
     {% endif %}
 
-    <div class="mt-4">
-        <a href="{{ url_for('search.search_landing', target_language_code=target_language_code) }}" class="btn btn-primary">
+    <div class="d-grid gap-2 col-md-4 mx-auto mt-4">
+        <a href="{{ url_for(endpoint_for(search_landing_vw), target_language_code=target_language_code) }}" class="btn btn-primary">
             Try Another Search
         </a>
     </div>

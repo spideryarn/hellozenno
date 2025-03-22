@@ -5,6 +5,7 @@ These endpoints follow the standard pattern:
 /api/lang/sourcedir/<target_language_code>/...
 """
 
+import datetime
 from flask import Blueprint, flash, jsonify, redirect, request, url_for
 from peewee import DoesNotExist
 
@@ -27,7 +28,7 @@ sourcedir_api_bp = Blueprint(
 )
 
 
-@sourcedir_views_bp.route("/api/sourcedir/<target_language_code>", methods=["POST"])
+@sourcedir_api_bp.route("/api/sourcedir/<target_language_code>", methods=["POST"])
 def create_sourcedir(target_language_code: str):
     """Create a new source directory."""
     data = request.get_json()
@@ -79,7 +80,7 @@ def create_sourcedir(target_language_code: str):
         return jsonify({"error": str(e)}), 500
 
 
-@sourcedir_views_bp.route(
+@sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>", methods=["DELETE"]
 )
 def delete_sourcedir(target_language_code: str, sourcedir_slug: str):
@@ -107,7 +108,7 @@ def delete_sourcedir(target_language_code: str, sourcedir_slug: str):
         return jsonify({"error": str(e)}), 500
 
 
-@sourcedir_views_bp.route(
+@sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/language", methods=["PUT"]
 )
 def update_sourcedir_language(target_language_code: str, sourcedir_slug: str):
@@ -156,7 +157,7 @@ def update_sourcedir_language(target_language_code: str, sourcedir_slug: str):
         return jsonify({"error": str(e)}), 500
 
 
-@sourcedir_views_bp.route(
+@sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/rename", methods=["PUT"]
 )
 def rename_sourcedir(target_language_code: str, sourcedir_slug: str):
@@ -201,7 +202,7 @@ def rename_sourcedir(target_language_code: str, sourcedir_slug: str):
         return jsonify({"error": str(e)}), 500
 
 
-@sourcedir_views_bp.route(
+@sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/upload", methods=["POST"]
 )
 def upload_sourcedir_new_sourcefile(target_language_code: str, sourcedir_slug: str):
@@ -328,7 +329,7 @@ def upload_sourcedir_new_sourcefile(target_language_code: str, sourcedir_slug: s
         return redirect(request.referrer)
 
 
-@sourcedir_views_bp.route(
+@sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/update_description",
     methods=["PUT"],
 )

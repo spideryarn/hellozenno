@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for('views.languages') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a>
+    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for(endpoint_for(wordforms_list_vw), target_language_code=target_language_code) }}">Wordforms</a>
     » {{ wordform_metadata.wordform }}
 {% endblock breadcrumbs %}
 
@@ -28,7 +28,7 @@
         <p><strong>Form Type:</strong> {{ wordform_metadata.inflection_type }}</p>
         <p><strong>Dictionary Form (Lemma):</strong> 
             {% if wordform_metadata.lemma %}
-            <a href="{{ url_for('lemma_views.get_lemma_metadata', target_language_code=target_language_code, lemma=wordform_metadata.lemma) }}">
+            <a href="{{ url_for(endpoint_for(get_lemma_metadata_vw), target_language_code=target_language_code, lemma=wordform_metadata.lemma) }}">
                 {{ wordform_metadata.lemma }}
             </a>
             {% else %}
@@ -39,7 +39,7 @@
         <p><strong>Possible Misspellings:</strong> {{ wordform_metadata.possible_misspellings|join(', ') }}</p>
         {% endif %}
 
-        <form action="{{ url_for('wordform_views.delete_wordform', target_language_code=target_language_code, wordform=wordform_metadata.wordform) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this wordform? This action cannot be undone.');">
+        <form action="{{ url_for(endpoint_for(delete_wordform_vw), target_language_code=target_language_code, wordform=wordform_metadata.wordform) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this wordform? This action cannot be undone.');">
             <button type="submit" class="button delete-btn">Delete wordform</button>
         </form>
     </div>

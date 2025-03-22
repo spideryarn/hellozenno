@@ -60,6 +60,11 @@ from concurrent.futures import ThreadPoolExecutor
 import random
 import time
 from utils.word_utils import get_sourcefile_lemmas
+from views.core_views import languages_vw
+from views.sourcedir_views import (
+    sourcedirs_for_language_vw,
+    sourcefiles_for_sourcedir_vw,
+)
 
 sourcefile_views_bp = Blueprint("sourcefile_views", __name__, url_prefix="/lang")
 
@@ -176,6 +181,9 @@ def _get_common_template_params(
         "nav_info": nav_info,
         "already_processed": already_processed,
         "available_sourcedirs": available_sourcedirs,
+        # Add view functions for endpoint_for
+        "view_sourcefile_vw": view_sourcefile_vw,
+        "download_sourcefile_vw": download_sourcefile_vw,
     }
 
 

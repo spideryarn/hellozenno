@@ -21,8 +21,7 @@ def home_vw():
     return redirect_to_view(core_views_bp, languages_vw)
 
 
-@core_views_bp.route("/lang", defaults={"trailing_slash": ""})
-@core_views_bp.route("/lang/", defaults={"trailing_slash": "/"})
+@core_views_bp.route("/lang")
 def languages_vw(trailing_slash=""):
     """Display all supported languages."""
     supported_languages = get_all_languages()
