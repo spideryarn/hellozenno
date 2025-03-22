@@ -38,13 +38,15 @@ def wordforms_list(target_language_code: str):
     for lemma_entry in lemma_entries:
         lemma_metadata[lemma_entry.lemma] = lemma_entry.to_dict()
 
+    from utils.url_registry import endpoint_for
+    
     return render_template(
         "wordforms.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         wordforms_d=wordforms_d,
         lemma_metadata=lemma_metadata,
-        view_name="wordform_views.wordforms_list",
+        view_name=endpoint_for(wordforms_list),
         current_sort=sort_by,
         show_commonality=True,  # We can show commonality by joining with Lemma
     )

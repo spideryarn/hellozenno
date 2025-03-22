@@ -27,13 +27,15 @@ def lemmas_list(target_language_code: str):
     # Convert query results to the format expected by the template
     lemma_metadata = {lemma.lemma: lemma.to_dict() for lemma in lemmas}
 
+    from utils.url_registry import endpoint_for
+    
     return render_template(
         "lemmas.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         lemmas=[lemma.lemma for lemma in lemmas],  # Just pass the lemma strings
         lemma_metadata=lemma_metadata,  # Pass the metadata dictionary
-        view_name="lemma_views.lemmas_list",
+        view_name=endpoint_for(lemmas_list),
         current_sort=sort,
         show_commonality=True,  # We have commonality data for lemmas
     )

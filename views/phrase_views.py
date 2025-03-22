@@ -24,12 +24,15 @@ def phrases_list(target_language_code):
         # Default alphabetical sort
         query = query.order_by(Phrase.canonical_form)
 
+    from utils.url_registry import endpoint_for
+    
     return render_template(
         "phrases.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         phrases=query,
         current_sort=sort_by,
+        phrase_views_bp=phrase_views_bp
     )
 
 
