@@ -130,7 +130,7 @@ def route_registry_example():
 def url_demo():
     """Example page showing Jinja URL generation with endpoint_for."""
     from utils.url_registry import endpoint_for
-    from views.sourcedir_views import sourcedirs_list
+    from views.sourcedir_views import sourcedirs_for_language
     from views.lemma_views import lemmas_list, get_lemma_metadata
     
     # Common language code for examples
@@ -139,7 +139,7 @@ def url_demo():
     return render_template(
         'url_demo.jinja',
         endpoint_for=endpoint_for,  # This would typically be provided by a context processor
-        sourcedirs_list=sourcedirs_list,
+        sourcedirs_for_language=sourcedirs_for_language,
         lemmas_list=lemmas_list,
         get_lemma_metadata=get_lemma_metadata,
         target_language_code=target_language_code
