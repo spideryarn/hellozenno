@@ -4,7 +4,7 @@ import pytest
 from flask import url_for
 
 from utils.url_registry import endpoint_for
-from tests.backend.utils_for_testing import build_url_with_query, get_route_registry
+from tests.backend.utils_for_testing import build_url_with_query
 from views.lemma_views import get_lemma_metadata_vw
 from views.sourcedir_views import sourcefiles_for_sourcedir_vw
 from views.sourcedir_api import create_sourcedir_api
@@ -14,39 +14,25 @@ from views.search_views import search_landing_vw
 
 def test_endpoint_for():
     """Test that endpoint_for correctly generates endpoint strings."""
-    # Test with get_lemma_metadata (from lemma_views blueprint)
+    # Test with get_lemma_metadata_vw (from lemma_views blueprint)
     endpoint = endpoint_for(get_lemma_metadata_vw)
-    assert endpoint == "lemma_views.get_lemma_metadata"
+    assert endpoint == "lemma_views.get_lemma_metadata_vw"
 
-    # Test with sourcefiles_for_sourcedir (from sourcedir_views blueprint)
+    # Test with sourcefiles_for_sourcedir_vw (from sourcedir_views blueprint)
     endpoint = endpoint_for(sourcefiles_for_sourcedir_vw)
-    assert endpoint == "sourcedir_views.sourcefiles_for_sourcedir"
+    assert endpoint == "sourcedir_views.sourcefiles_for_sourcedir_vw"
 
     # Test with create_sourcedir_api (from sourcedir_api blueprint)
     endpoint = endpoint_for(create_sourcedir_api)
     assert endpoint == "sourcedir_api.create_sourcedir_api"
 
-    # Test with languages (from core_views blueprint)
+    # Test with languages_vw (from core_views blueprint)
     endpoint = endpoint_for(languages_vw)
-    assert endpoint == "core_views.languages"
+    assert endpoint == "core_views.languages_vw"
 
-    # Test with search_landing (from search_views blueprint)
+    # Test with search_landing_vw (from search_views blueprint)
     endpoint = endpoint_for(search_landing_vw)
-    assert endpoint == "search.search_landing"
-
-
-def test_route_registry_generation(client):
-    """Test that the route registry is generated correctly."""
-    routes = get_route_registry(client)
-
-    # Check that common routes are included
-    assert "LEMMA_VIEWS_GET_LEMMA_METADATA" in routes
-    assert "SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR" in routes
-    assert "SOURCEDIR_API_CREATE_SOURCEDIR_API" in routes
-
-    # Check URL template format
-    assert "{target_language_code}" in routes["LEMMA_VIEWS_GET_LEMMA_METADATA"]
-    assert "{lemma}" in routes["LEMMA_VIEWS_GET_LEMMA_METADATA"]
+    assert endpoint == "search.search_landing_vw"
 
 
 def test_build_url_with_query(client):

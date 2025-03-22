@@ -53,10 +53,15 @@ def get_sourcedir_and_file(
     Returns:
         A tuple of (sourcedir, sourcefile) or (None, None) if not found
     """
-    from views.sourcedir_views import sourcedirs_for_language_vw, sourcefiles_for_sourcedir_vw
-    
+    from views.sourcedir_views import (
+        sourcedirs_for_language_vw,
+        sourcefiles_for_sourcedir_vw,
+    )
+
     # Get the list of sourcedirs
-    url = build_url_with_query(client, sourcedirs_for_language_vw, target_language_code=language_code)
+    url = build_url_with_query(
+        client, sourcedirs_for_language_vw, target_language_code=language_code
+    )
     response = client.get(url)
     if response.status_code != 200:
         return None, None
@@ -67,9 +72,12 @@ def get_sourcedir_and_file(
         return None, None
 
     # Get sourcedir contents
-    url = build_url_with_query(client, sourcefiles_for_sourcedir_vw, 
-                              target_language_code=language_code, 
-                              sourcedir_slug=sourcedir)
+    url = build_url_with_query(
+        client,
+        sourcefiles_for_sourcedir_vw,
+        target_language_code=language_code,
+        sourcedir_slug=sourcedir,
+    )
     response = client.get(url)
     if response.status_code != 200:
         return sourcedir, None
@@ -122,16 +130,16 @@ def with_wordform_search_mock(func: Callable) -> Callable:
 
 def build_url_with_query(client, view_func, query_params=None, **url_params):
     """Build a URL with query parameters for testing.
-    
+
     This is a test-specific helper that safely builds URLs with both
     route parameters and query parameters.
-    
+
     Args:
         client: The Flask test client
         view_func: The view function to build the URL for
         query_params: A dictionary of query parameters
         **url_params: Parameters for url_for()
-        
+
     Returns:
         str: The full URL
     """
@@ -140,24 +148,9 @@ def build_url_with_query(client, view_func, query_params=None, **url_params):
         # Get the correct endpoint string using our helper
         endpoint_string = endpoint_for(view_func)
         base_url = url_for(endpoint_string, **url_params)
-        
+
     if query_params:
         query_string = urlencode(query_params)
         return f"{base_url}?{query_string}"
-    
+
     return base_url
-
-
-def get_route_registry(client):
-    """Get the route registry for testing.
-    
-    This allows tests to use the route registry for URL resolution.
-    
-    Args:
-        client: The Flask test client
-        
-    Returns:
-        dict: The route registry
-    """
-    with client.application.app_context():
-        return generate_route_registry(client.application)

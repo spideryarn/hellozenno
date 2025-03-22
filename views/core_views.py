@@ -8,7 +8,6 @@ import os
 
 from utils.flask_view_utils import redirect_to_view
 from utils.lang_utils import get_all_languages
-from utils.url_registry import get_route_registry
 
 
 core_views_bp = Blueprint("core_views", __name__)
