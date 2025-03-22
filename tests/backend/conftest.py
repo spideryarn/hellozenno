@@ -31,7 +31,7 @@ from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,
     create_complete_test_data,
 )
-from views.views import views_bp
+from views.core_views import core_views_bp
 from views.wordform_views import wordform_views_bp
 from views.lemma_views import lemma_views_bp
 from views.sourcedir_views import sourcedir_views_bp
@@ -39,7 +39,8 @@ from views.sourcefile_views import sourcefile_views_bp
 from views.phrase_views import phrase_views_bp
 from views.sentence_views import sentence_views_bp
 from views.search_views import search_views_bp
-from views.core_api import core_api_bp
+# Commented out missing API blueprint
+# from views.core_api import core_api_bp
 from views.wordform_api import wordform_api_bp
 from views.lemma_api import lemma_api_bp
 from views.phrase_api import phrase_api_bp
@@ -149,7 +150,7 @@ def client(fixture_for_testing_db):
     init_db(app, fixture_for_testing_db)
 
     # Register blueprints
-    app.register_blueprint(views_bp)
+    app.register_blueprint(core_views_bp)
     app.register_blueprint(wordform_views_bp)
     app.register_blueprint(lemma_views_bp)
     app.register_blueprint(sourcedir_views_bp)
@@ -158,7 +159,8 @@ def client(fixture_for_testing_db):
     app.register_blueprint(sentence_views_bp)
     app.register_blueprint(search_views_bp)
     # Register API blueprints
-    app.register_blueprint(core_api_bp)
+    # Commented out missing API blueprint
+    # app.register_blueprint(core_api_bp)
     app.register_blueprint(wordform_api_bp)
     app.register_blueprint(lemma_api_bp)
     app.register_blueprint(phrase_api_bp)
@@ -166,6 +168,37 @@ def client(fixture_for_testing_db):
     app.register_blueprint(sourcefile_api_bp)
     app.register_blueprint(sentence_api_bp)
     app.register_blueprint(flashcard_views_bp)
+
+    # Register custom context processors for testing
+    from utils.url_registry import endpoint_for, generate_route_registry
+
+    # Create route registry for tests
+    with app.app_context():
+        route_registry = generate_route_registry(app)
+
+        @app.context_processor
+        def inject_routes():
+            """Make route registry available to all templates."""
+            return {
+                "route_registry": route_registry,
+                "endpoint_for": endpoint_for,  # Make endpoint_for available in all templates
+            }
+
+        # Create our own minimal function that matches production
+        @app.context_processor
+        def inject_base_view_functions():
+            """Inject minimal view functions needed by the base template.
+            
+            This matches the function in api/index.py without importing it directly.
+            """
+            from views.core_views import languages_vw
+            from views.search_views import search_landing_vw
+            
+            return {
+                # Only the functions required by base.jinja
+                "languages_vw": languages_vw,
+                "search_landing_vw": search_landing_vw,
+            }
 
     with app.test_client() as client:
         yield client

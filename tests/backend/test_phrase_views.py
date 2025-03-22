@@ -35,7 +35,12 @@ def test_phrases_list_basic(client, fixture_for_testing_db):
     )
 
     # Test accessing the phrases list view
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/phrases")
+    url = build_url_with_query(
+        client,
+        phrases_list_vw,
+        target_language_code=TEST_LANGUAGE_CODE
+    )
+    response = client.get(url)
     assert_html_response(response)
 
     # Check that the phrase and its metadata are present
@@ -52,7 +57,13 @@ def test_phrase_detail_view(client, fixture_for_testing_db):
     assert phrase.slug is not None
 
     # Test accessing the phrase detail view using slug
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/phrases/{phrase.slug}")
+    url = build_url_with_query(
+        client,
+        get_phrase_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        slug=phrase.slug
+    )
+    response = client.get(url)
     assert_html_response(response)
 
     # Check that all metadata is displayed correctly
@@ -69,7 +80,13 @@ def test_phrase_detail_view(client, fixture_for_testing_db):
 def test_nonexistent_phrase(client):
     """Test accessing a phrase that doesn't exist."""
     # Test the new slug-based route
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/phrases/nonexistent")
+    url = build_url_with_query(
+        client,
+        get_phrase_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        slug="nonexistent"
+    )
+    response = client.get(url)
     assert_html_response(
         response, status_code=404
     )  # Should return 404 for non-existent phrase
@@ -101,7 +118,12 @@ def test_phrases_list_sorting(client, fixture_for_testing_db):
     )
 
     # Test alphabetical sorting (default)
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/phrases")
+    url = build_url_with_query(
+        client,
+        phrases_list_vw,
+        target_language_code=TEST_LANGUAGE_CODE
+    )
+    response = client.get(url)
     assert_html_response(response)
     content = response.data.decode()
     # Check order: alpha, beta, gamma
@@ -116,7 +138,13 @@ def test_phrases_list_sorting(client, fixture_for_testing_db):
     phrase2.save()
     phrase3.save()
 
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/phrases?sort=date")
+    url = build_url_with_query(
+        client,
+        phrases_list_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        query_params={"sort": "date"}
+    )
+    response = client.get(url)
     assert_html_response(response)
     content = response.data.decode()
     # Most recently updated should appear first

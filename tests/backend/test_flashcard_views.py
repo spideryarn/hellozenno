@@ -143,7 +143,7 @@ def test_flashcard_landing(client, test_sentence_with_sourcefile, test_sourcefil
     url = build_url_with_query(
         client,
         flashcard_landing_vw,
-        _query_parameters={"sourcefile": test_sourcefile.slug},
+        query_params={"sourcefile": test_sourcefile.slug},
         language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url)
@@ -159,7 +159,7 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
     url = build_url_with_query(
         client,
         flashcard_landing_vw,
-        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        query_params={"sourcedir": test_sourcedir_with_files.slug},
         language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url)
@@ -171,7 +171,7 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
     url = build_url_with_query(
         client,
         flashcard_landing_vw,
-        _query_parameters={"sourcedir": "nonexistent"},
+        query_params={"sourcedir": "nonexistent"},
         language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url)
@@ -181,7 +181,7 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
     url = build_url_with_query(
         client,
         random_flashcard_vw,
-        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        query_params={"sourcedir": test_sourcedir_with_files.slug},
         language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=True)
@@ -251,7 +251,7 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     url = build_url_with_query(
         client,
         random_flashcard_vw,
-        _query_parameters={"sourcefile": test_sourcefile.slug},
+        query_params={"sourcefile": test_sourcefile.slug},
         language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=False)
@@ -310,7 +310,7 @@ def test_sourcedir_multiple_files(
     url = build_url_with_query(
         client,
         flashcard_landing_vw,
-        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        query_params={"sourcedir": test_sourcedir_with_files.slug},
         language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url)
@@ -321,7 +321,7 @@ def test_sourcedir_multiple_files(
     url = build_url_with_query(
         client,
         random_flashcard_vw,
-        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        query_params={"sourcedir": test_sourcedir_with_files.slug},
         language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=True)

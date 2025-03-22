@@ -10,12 +10,18 @@ from tests.fixtures_for_tests import (
     create_test_lemma,
     create_test_wordform,
 )
-from tests.backend.utils_for_testing import assert_html_response
+from tests.backend.utils_for_testing import assert_html_response, build_url_with_query
+from views.search_views import search_landing_vw, search_word_vw
 
 
 def test_search_landing_page(client):
     """Test the search landing page loads correctly."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/search")
+    url = build_url_with_query(
+        client, 
+        search_landing_vw, 
+        target_language_code=TEST_LANGUAGE_CODE
+    )
+    response = client.get(url)
     assert_html_response(response)
     assert "Search" in response.data.decode()
     assert TEST_LANGUAGE_NAME in response.data.decode()
@@ -23,7 +29,13 @@ def test_search_landing_page(client):
 
 def test_search_landing_with_query_redirects(client):
     """Test that search landing with query redirects to search_word."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/search?q=test")
+    url = build_url_with_query(
+        client,
+        search_landing_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        query_params={"q": "test"}
+    )
+    response = client.get(url)
     assert response.status_code == 302
     assert f"/lang/{TEST_LANGUAGE_CODE}/search/test" in response.headers.get("Location")
 
@@ -35,7 +47,13 @@ def test_search_word_redirects_to_wordform(client, fixture_for_testing_db):
     wordform = create_test_wordform(fixture_for_testing_db, lemma)
     
     # Test the search redirect
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/search/{wordform.wordform}")
+    url = build_url_with_query(
+        client,
+        search_word_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform=wordform.wordform
+    )
+    response = client.get(url)
     assert response.status_code == 302
     assert f"/lang/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}" in response.headers.get("Location")
 
@@ -160,7 +178,15 @@ def mock_enhanced_search_for_wordform(wordform, target_language_code, verbose=1)
 @patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
 def test_enhanced_search_english_word(mock_search, client):
     """Test searching for an English word redirects to the translation results."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/example")
+    from views.wordform_views import get_wordform_metadata_vw
+    
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="example"
+    )
+    response = client.get(url)
     assert response.status_code == 302
     location = response.headers.get("Location")
     # The URL will be URL-encoded for Greek characters
@@ -171,7 +197,15 @@ def test_enhanced_search_english_word(mock_search, client):
 @patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
 def test_enhanced_search_single_match(mock_search, client):
     """Test search with a single match redirects to the wordform."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/single_match")
+    from views.wordform_views import get_wordform_metadata_vw
+    
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="single_match"
+    )
+    response = client.get(url)
     assert response.status_code == 302
     location = response.headers.get("Location")
     # The URL will be URL-encoded for Greek characters
@@ -182,7 +216,15 @@ def test_enhanced_search_single_match(mock_search, client):
 @patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
 def test_enhanced_search_both_languages(mock_search, client):
     """Test search for a word valid in both languages."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/both")
+    from views.wordform_views import get_wordform_metadata_vw
+    
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="both"
+    )
+    response = client.get(url)
     assert_html_response(response)
     
     # Should display results from both sections
@@ -195,7 +237,15 @@ def test_enhanced_search_both_languages(mock_search, client):
 @patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
 def test_enhanced_search_no_matches(mock_search, client):
     """Test search with no matches."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/nonexistent")
+    from views.wordform_views import get_wordform_metadata_vw
+    
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="nonexistent"
+    )
+    response = client.get(url)
     assert_html_response(response)
     
     # Should display invalid word template
@@ -207,7 +257,15 @@ def test_enhanced_search_no_matches(mock_search, client):
 @patch("views.wordform_views.quick_search_for_wordform", side_effect=mock_enhanced_search_for_wordform)
 def test_enhanced_search_misspelled(mock_search, client):
     """Test search with possible misspellings."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/misspelled")
+    from views.wordform_views import get_wordform_metadata_vw
+    
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="misspelled"
+    )
+    response = client.get(url)
     assert_html_response(response)
     
     # Should display translation search results with suggestions
