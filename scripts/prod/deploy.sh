@@ -45,6 +45,10 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
+# Generate TypeScript route definitions before building frontend
+echo "Generating TypeScript route definitions..."
+FLASK_APP=api.index flask generate-routes-ts
+
 # Build frontend assets for production (only for production deployment)
 echo "Building frontend assets..."
 ./scripts/prod/build-frontend.sh

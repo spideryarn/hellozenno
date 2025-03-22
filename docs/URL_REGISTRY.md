@@ -2,32 +2,6 @@
 
 The URL Registry system provides a centralized source of truth for URL definitions in the HelloZenno application. It automatically extracts routes from Flask's `app.url_map` and makes them available to both server-side templates and client-side JavaScript.
 
-## Implementation Status
-
-As of March 2025, the URL Registry has been implemented in the following areas:
-
-### Server-Side (Python)
-- ✅ Core `endpoint_for` function in `utils/url_registry.py`
-- ✅ Global context processor providing key view functions
-- ✅ Updated view functions to use `endpoint_for` when rendering templates
-
-### Client-Side (JavaScript)
-- ✅ Client-side route resolution via `resolveRoute` function
-- ✅ Updated JavaScript files to use route registry:
-  - `static/js/sourcefile.js`
-  - `static/js/sourcefiles.js`
-  - `static/js/sentence.js`
-  - `static/js/sourcedirs.js`
-
-### Templates
-- ✅ Updated key templates to use `endpoint_for`:
-  - `templates/base.jinja`
-  - `templates/sourcedirs.jinja`
-  - `templates/sourcefiles.jinja`
-  - `templates/lemmas.jinja`
-  - `templates/wordforms.jinja`
-  - `templates/phrases.jinja`
-  - Partial template: `templates/_wordforms_list.jinja`
 
 ## Benefits
 
@@ -289,8 +263,16 @@ You can test route resolution using the route testing page at `/route-test`. Thi
 When you add new routes to the Flask application:
 
 1. The URL registry is automatically updated at application startup
-2. In development, TypeScript definitions are regenerated automatically
-3. For production, run `flask generate-routes-ts` to update TypeScript definitions
+2. In development, TypeScript definitions are generated automatically when Flask starts
+3. After adding or modifying routes in development, you need to:
+   - Restart the Flask server to update the registry
+   - Run `FLASK_APP=api.index flask generate-routes-ts` to regenerate TypeScript definitions
+4. For production, TypeScript routes are automatically regenerated during deployment via the `deploy.sh` script
+
+**Important Notes:**
+- Routes in `routes.ts` must be kept in sync with Flask routes to avoid runtime errors
+- The `routes.ts` file is tracked in Git as it represents the API contract between backend and frontend
+- Vite will hot-reload when `routes.ts` changes, but you may need to refresh your browser
 
 ## Naming Conventions
 
