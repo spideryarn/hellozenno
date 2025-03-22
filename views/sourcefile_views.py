@@ -1145,11 +1145,11 @@ def create_sourcefile_from_text_vw(target_language_code: str, sourcedir_slug: st
 
 
 @sourcefile_views_bp.route(
-    "/<language_code>/<sourcedir_slug>/add_from_youtube", methods=["POST"]
+    "/<target_language_code>/<sourcedir_slug>/add_from_youtube", methods=["POST"]
 )
-def add_sourcefile_from_youtube_vw(language_code, sourcedir_slug):
+def add_sourcefile_from_youtube_vw(target_language_code, sourcedir_slug):
     """Add a new sourcefile from a YouTube video's audio."""
-    sourcedir = get_sourcedir_or_404(language_code, sourcedir_slug)
+    sourcedir = get_sourcedir_or_404(target_language_code, sourcedir_slug)
 
     data = request.get_json()
     if not data or "youtube_url" not in data:

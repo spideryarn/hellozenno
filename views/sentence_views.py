@@ -25,18 +25,18 @@ from views.sourcedir_views import sourcedirs_for_language_vw
 sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
 
 
-@sentence_views_bp.route("/<language_code>/sentences")
-def sentences_list_vw(language_code: str):
+@sentence_views_bp.route("/<target_language_code>/sentences")
+def sentences_list_vw(target_language_code: str):
     """Display all sentences for a language."""
     # Import here to avoid circular imports
     from views.flashcard_views import flashcard_landing_vw
     
-    target_language_name = get_language_name(language_code)
-    sentences = get_all_sentences(language_code)
+    target_language_name = get_language_name(target_language_code)
+    sentences = get_all_sentences(target_language_code)
 
     return render_template(
         "sentences.jinja",
-        target_language_code=language_code,
+        target_language_code=target_language_code,
         target_language_name=target_language_name,
         sentences=sentences,
         languages_vw=languages_vw,
@@ -47,17 +47,17 @@ def sentences_list_vw(language_code: str):
     )
 
 
-@sentence_views_bp.route("/<language_code>/sentence/<slug>")
-def get_sentence_vw(language_code: str, slug: str):
+@sentence_views_bp.route("/<target_language_code>/sentence/<slug>")
+def get_sentence_vw(target_language_code: str, slug: str):
     """Display a specific sentence."""
     from views.core_views import languages_vw
     from views.sourcedir_views import sourcedirs_for_language_vw
 
-    target_language_name = get_language_name(language_code)
+    target_language_name = get_language_name(target_language_code)
 
     try:
         sentence = Sentence.get(
-            (Sentence.language_code == language_code) & (Sentence.slug == slug)
+            (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
         )
 
         # Extract tokens from the sentence text
@@ -65,7 +65,7 @@ def get_sentence_vw(language_code: str, slug: str):
 
         # Query database for all wordforms in this language
         wordforms = list(
-            Wordform.select().where((Wordform.language_code == language_code))
+            Wordform.select().where((Wordform.language_code == target_language_code))
         )
 
         # Filter wordforms in Python using normalize_text
@@ -86,7 +86,7 @@ def get_sentence_vw(language_code: str, slug: str):
         enhanced_sentence_text, found_wordforms = create_interactive_word_links(
             text=str(sentence.sentence),
             wordforms=wordforms_d,
-            target_language_code=language_code,
+            target_language_code=target_language_code,
         )
 
         # Create serializable versions of the data
@@ -129,7 +129,7 @@ def get_sentence_vw(language_code: str, slug: str):
 
         return render_template(
             "sentence.jinja",
-            target_language_code=language_code,
+            target_language_code=target_language_code,
             target_language_name=target_language_name,
             sentence=sentence_data,
             metadata=metadata,

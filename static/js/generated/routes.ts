@@ -1,13 +1,12 @@
 // Auto-generated from Flask app.url_map
 export enum RouteName {
   SYSTEM_VIEWS_ROUTE_TEST_VW = "SYSTEM_VIEWS_ROUTE_TEST_VW",
-  SYSTEM_VIEWS_ROUTE_REGISTRY_EXAMPLE_VW = "SYSTEM_VIEWS_ROUTE_REGISTRY_EXAMPLE_VW",
-  SYSTEM_VIEWS_MANAGE_SESSION_API = "SYSTEM_VIEWS_MANAGE_SESSION_API",
-  SYSTEM_VIEWS_GET_USER_API = "SYSTEM_VIEWS_GET_USER_API",
   SYS_VIEWS_HEALTH_CHECK_VW = "SYS_VIEWS_HEALTH_CHECK_VW",
   AUTH_VIEWS_AUTH_PAGE_VW = "AUTH_VIEWS_AUTH_PAGE_VW",
   AUTH_VIEWS_PROTECTED_PAGE_VW = "AUTH_VIEWS_PROTECTED_PAGE_VW",
   AUTH_VIEWS_PROFILE_PAGE_VW = "AUTH_VIEWS_PROFILE_PAGE_VW",
+  AUTH_API_MANAGE_SESSION_API = "AUTH_API_MANAGE_SESSION_API",
+  AUTH_API_GET_USER_API = "AUTH_API_GET_USER_API",
   CORE_VIEWS_HOME_VW = "CORE_VIEWS_HOME_VW",
   CORE_VIEWS_LANGUAGES_VW = "CORE_VIEWS_LANGUAGES_VW",
   CORE_VIEWS_EXPERIM_VW = "CORE_VIEWS_EXPERIM_VW",
@@ -50,12 +49,11 @@ export enum RouteName {
   FLASHCARD_VIEWS_FLASHCARD_LANDING_VW = "FLASHCARD_VIEWS_FLASHCARD_LANDING_VW",
   FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW = "FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW",
   FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW = "FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW",
-  CORE_API_HOME_API = "CORE_API_HOME_API",
-  SOURCEDIR_API_CREATE_SOURCEDIR = "SOURCEDIR_API_CREATE_SOURCEDIR",
-  SOURCEDIR_API_DELETE_SOURCEDIR = "SOURCEDIR_API_DELETE_SOURCEDIR",
-  SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE = "SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE",
-  SOURCEDIR_API_RENAME_SOURCEDIR = "SOURCEDIR_API_RENAME_SOURCEDIR",
-  SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE = "SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE",
+  SOURCEDIR_API_CREATE_SOURCEDIR_API = "SOURCEDIR_API_CREATE_SOURCEDIR_API",
+  SOURCEDIR_API_DELETE_SOURCEDIR_API = "SOURCEDIR_API_DELETE_SOURCEDIR_API",
+  SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE_API = "SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE_API",
+  SOURCEDIR_API_RENAME_SOURCEDIR_API = "SOURCEDIR_API_RENAME_SOURCEDIR_API",
+  SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API = "SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API",
   SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API = "SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API",
   WORDFORM_API_WORD_PREVIEW_API = "WORDFORM_API_WORD_PREVIEW_API",
   WORDFORM_API_GET_MP3_API = "WORDFORM_API_GET_MP3_API",
@@ -78,18 +76,17 @@ export enum RouteName {
 
 export const ROUTES = {
   SYSTEM_VIEWS_ROUTE_TEST_VW: "/route-test",
-  SYSTEM_VIEWS_ROUTE_REGISTRY_EXAMPLE_VW: "/route-registry-example",
-  SYSTEM_VIEWS_MANAGE_SESSION_API: "/api/auth/session",
-  SYSTEM_VIEWS_GET_USER_API: "/api/auth/user",
   SYS_VIEWS_HEALTH_CHECK_VW: "/sys/health-check",
   AUTH_VIEWS_AUTH_PAGE_VW: "/auth/",
   AUTH_VIEWS_PROTECTED_PAGE_VW: "/auth/protected",
   AUTH_VIEWS_PROFILE_PAGE_VW: "/auth/profile",
+  AUTH_API_MANAGE_SESSION_API: "/api/auth/session",
+  AUTH_API_GET_USER_API: "/api/auth/user",
   CORE_VIEWS_HOME_VW: "/",
   CORE_VIEWS_LANGUAGES_VW: "/lang",
   CORE_VIEWS_EXPERIM_VW: "/experim",
   CORE_VIEWS_FAVICON_VW: "/favicon.ico",
-  WORDFORM_VIEWS_WORDFORMS_LIST_VW: "/lang/{target_language_code}/wordforms",
+  WORDFORM_VIEWS_WORDFORMS_LIST_VW: "/lang/{target_language_code}/wordforms/",
   WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW: "/lang/{target_language_code}/wordform/{wordform}",
   WORDFORM_VIEWS_DELETE_WORDFORM_VW: "/lang/{target_language_code}/wordform/{wordform}/delete",
   LEMMA_VIEWS_LEMMAS_LIST_VW: "/lang/{target_language_code}/lemmas",
@@ -115,25 +112,24 @@ export const ROUTES = {
   SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/next",
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/prev",
   SOURCEFILE_VIEWS_CREATE_SOURCEFILE_FROM_TEXT_VW: "/lang/api/sourcedir/{target_language_code}/{sourcedir_slug}/create_from_text",
-  SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW: "/lang/{language_code}/{sourcedir_slug}/add_from_youtube",
+  SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW: "/lang/{target_language_code}/{sourcedir_slug}/add_from_youtube",
   SOURCEFILE_VIEWS_GENERATE_SOURCEFILE_AUDIO_VW: "/lang/api/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/generate_audio",
   PHRASE_VIEWS_PHRASES_LIST_VW: "/lang/{target_language_code}/phrases",
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW: "/lang/{target_language_code}/phrases/{slug}",
-  SENTENCE_VIEWS_SENTENCES_LIST_VW: "/lang/{language_code}/sentences",
-  SENTENCE_VIEWS_GET_SENTENCE_VW: "/lang/{language_code}/sentence/{slug}",
+  SENTENCE_VIEWS_SENTENCES_LIST_VW: "/lang/{target_language_code}/sentences",
+  SENTENCE_VIEWS_GET_SENTENCE_VW: "/lang/{target_language_code}/sentence/{slug}",
   SEARCH_SEARCH_LANDING_VW: "/lang/{target_language_code}/search",
   SEARCH_SEARCH_WORD_VW: "/lang/{target_language_code}/search/{wordform}",
   FLASHCARD_VIEWS_STATIC: "/lang/build/{filename}",
-  FLASHCARD_VIEWS_FLASHCARD_LANDING_VW: "/lang/{language_code}/flashcards",
-  FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW: "/lang/{language_code}/flashcards/sentence/{slug}",
-  FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW: "/lang/{language_code}/flashcards/random",
-  CORE_API_HOME_API: "/api/",
-  SOURCEDIR_API_CREATE_SOURCEDIR: "/api/lang/sourcedir/api/sourcedir/{target_language_code}",
-  SOURCEDIR_API_DELETE_SOURCEDIR: "/api/lang/sourcedir/api/sourcedir/{target_language_code}/{sourcedir_slug}",
-  SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE: "/api/lang/sourcedir/api/sourcedir/{target_language_code}/{sourcedir_slug}/language",
-  SOURCEDIR_API_RENAME_SOURCEDIR: "/api/lang/sourcedir/api/sourcedir/{target_language_code}/{sourcedir_slug}/rename",
-  SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE: "/api/lang/sourcedir/api/sourcedir/{target_language_code}/{sourcedir_slug}/upload",
-  SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API: "/api/lang/sourcedir/api/sourcedir/{target_language_code}/{sourcedir_slug}/update_description",
+  FLASHCARD_VIEWS_FLASHCARD_LANDING_VW: "/lang/{target_language_code}/flashcards",
+  FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW: "/lang/{target_language_code}/flashcards/sentence/{slug}",
+  FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW: "/lang/{target_language_code}/flashcards/random",
+  SOURCEDIR_API_CREATE_SOURCEDIR_API: "/api/lang/sourcedir/{target_language_code}",
+  SOURCEDIR_API_DELETE_SOURCEDIR_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}",
+  SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/language",
+  SOURCEDIR_API_RENAME_SOURCEDIR_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/rename",
+  SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/upload",
+  SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/update_description",
   WORDFORM_API_WORD_PREVIEW_API: "/api/lang/word/{target_language_code}/{word}/preview",
   WORDFORM_API_GET_MP3_API: "/api/lang/word/{target_language_code}/{word}/mp3",
   LEMMA_API_GET_LEMMA_DATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/data",
@@ -155,13 +151,12 @@ export const ROUTES = {
 
 export type RouteParams = {
   [RouteName.SYSTEM_VIEWS_ROUTE_TEST_VW]: {};
-  [RouteName.SYSTEM_VIEWS_ROUTE_REGISTRY_EXAMPLE_VW]: {};
-  [RouteName.SYSTEM_VIEWS_MANAGE_SESSION_API]: {};
-  [RouteName.SYSTEM_VIEWS_GET_USER_API]: {};
   [RouteName.SYS_VIEWS_HEALTH_CHECK_VW]: {};
   [RouteName.AUTH_VIEWS_AUTH_PAGE_VW]: {};
   [RouteName.AUTH_VIEWS_PROTECTED_PAGE_VW]: {};
   [RouteName.AUTH_VIEWS_PROFILE_PAGE_VW]: {};
+  [RouteName.AUTH_API_MANAGE_SESSION_API]: {};
+  [RouteName.AUTH_API_GET_USER_API]: {};
   [RouteName.CORE_VIEWS_HOME_VW]: {};
   [RouteName.CORE_VIEWS_LANGUAGES_VW]: {};
   [RouteName.CORE_VIEWS_EXPERIM_VW]: {};
@@ -192,24 +187,23 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_CREATE_SOURCEFILE_FROM_TEXT_VW]: { target_language_code: string; sourcedir_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW]: { language_code: string; sourcedir_slug: string };
+  [RouteName.SOURCEFILE_VIEWS_ADD_SOURCEFILE_FROM_YOUTUBE_VW]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEFILE_VIEWS_GENERATE_SOURCEFILE_AUDIO_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.PHRASE_VIEWS_PHRASES_LIST_VW]: { target_language_code: string };
   [RouteName.PHRASE_VIEWS_GET_PHRASE_METADATA_VW]: { target_language_code: string; slug: string };
-  [RouteName.SENTENCE_VIEWS_SENTENCES_LIST_VW]: { language_code: string };
-  [RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW]: { language_code: string; slug: string };
+  [RouteName.SENTENCE_VIEWS_SENTENCES_LIST_VW]: { target_language_code: string };
+  [RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW]: { target_language_code: string; slug: string };
   [RouteName.SEARCH_SEARCH_LANDING_VW]: { target_language_code: string };
   [RouteName.SEARCH_SEARCH_WORD_VW]: { target_language_code: string; wordform: string };
   [RouteName.FLASHCARD_VIEWS_STATIC]: { filename: string };
-  [RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW]: { language_code: string };
-  [RouteName.FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW]: { language_code: string; slug: string };
-  [RouteName.FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW]: { language_code: string };
-  [RouteName.CORE_API_HOME_API]: {};
-  [RouteName.SOURCEDIR_API_CREATE_SOURCEDIR]: { target_language_code: string };
-  [RouteName.SOURCEDIR_API_DELETE_SOURCEDIR]: { target_language_code: string; sourcedir_slug: string };
-  [RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE]: { target_language_code: string; sourcedir_slug: string };
-  [RouteName.SOURCEDIR_API_RENAME_SOURCEDIR]: { target_language_code: string; sourcedir_slug: string };
-  [RouteName.SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE]: { target_language_code: string; sourcedir_slug: string };
+  [RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW]: { target_language_code: string };
+  [RouteName.FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW]: { target_language_code: string; slug: string };
+  [RouteName.FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW]: { target_language_code: string };
+  [RouteName.SOURCEDIR_API_CREATE_SOURCEDIR_API]: { target_language_code: string };
+  [RouteName.SOURCEDIR_API_DELETE_SOURCEDIR_API]: { target_language_code: string; sourcedir_slug: string };
+  [RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE_API]: { target_language_code: string; sourcedir_slug: string };
+  [RouteName.SOURCEDIR_API_RENAME_SOURCEDIR_API]: { target_language_code: string; sourcedir_slug: string };
+  [RouteName.SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.WORDFORM_API_WORD_PREVIEW_API]: { target_language_code: string; word: string };
   [RouteName.WORDFORM_API_GET_MP3_API]: { target_language_code: string; word: string };
