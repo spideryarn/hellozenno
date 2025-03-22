@@ -34,8 +34,8 @@ Let's create a detailed list of the remaining tasks to fully implement the URL r
 1. **Run backend tests and fix URL-related issues**
    - [x] Run the full test suite to identify broken tests
    - [x] Create a list of tests that need to be fixed
-   - [ ] Update tests to use the new `build_url_with_query` helper
-   - [ ] Fix any URL-related issues in the tests
+   - [x] Update tests to use the new `build_url_with_query` helper
+   - [x] Fix any URL-related issues in the tests
    
    **Test Issues Identified:**
    - Most test failures are related to template issues, not the URL registry directly
@@ -204,6 +204,7 @@ After considering the various approaches, we selected Option 4 (Generating Route
    - ⏳ Review all URL patterns for consistency
    - ✅ Ensure JavaScript code uses the route registry
    - ✅ Fix AttributeError with Blueprint objects in templates
+   - ✅ Refactor context processor to use minimal function-based approach
    - ⏳ Ensure Jinja templates use endpoint_for
 
 ## Next Steps

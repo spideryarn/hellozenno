@@ -19,6 +19,21 @@ from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
 from utils.url_registry import generate_route_registry, generate_typescript_routes
 
+def inject_base_view_functions():
+    """Inject view functions needed by the base template.
+    
+    This minimal context processor only includes functions needed by base.jinja.
+    """
+    from views.views import languages, views_bp
+    from views.search_views import search_landing
+    
+    return {
+        # Only the functions required by base.jinja
+        'languages_view_func': languages,  # The actual function reference
+        'search_landing': search_landing,
+    }
+
+
 def setup_route_registry(app, static_folder):
     """Set up route registry and generate TypeScript definitions.
     
@@ -175,71 +190,8 @@ def create_app():
     # Generate route registry and TypeScript definitions
     setup_route_registry(app, static_folder)
     
-    # Add a context processor to provide blueprint and view function references to templates
-    @app.context_processor
-    def inject_view_functions():
-        """Inject commonly used view functions and blueprints into all templates."""
-        from views.views import views_bp, languages
-        from views.wordform_views import wordform_views_bp, wordforms_list, get_wordform_metadata
-        from views.lemma_views import lemma_views_bp, lemmas_list, get_lemma_metadata
-        from views.phrase_views import phrase_views_bp, phrases_list, get_phrase_metadata
-        from views.sentence_views import sentence_views_bp, sentences_list, generate_audio_for_sentence, rename_sentence, delete_sentence
-        from views.search_views import search_views_bp, search_landing
-        from views.flashcard_views import flashcard_views_bp, flashcard_landing
-        from views.sourcedir_views import (
-            sourcedir_views_bp, sourcedirs_for_language, sourcefiles_for_sourcedir, 
-            upload_sourcedir_new_sourcefile, rename_sourcedir, delete_sourcedir,
-            update_sourcedir_language, update_sourcedir_description
-        )
-        from views.sourcefile_views import (
-            sourcefile_views_bp, inspect_sourcefile, create_sourcefile_from_text,
-            add_sourcefile_from_youtube, delete_sourcefile
-        )
-        
-        return {
-            # Common view functions by category
-            # Views
-            'languages': languages,
-            
-            # Wordforms
-            'wordforms_list': wordforms_list,
-            'get_wordform_metadata': get_wordform_metadata,
-            
-            # Lemmas
-            'lemmas_list': lemmas_list,
-            'get_lemma_metadata': get_lemma_metadata,
-            
-            # Phrases
-            'phrases_list': phrases_list,
-            'get_phrase_metadata': get_phrase_metadata,
-            
-            # Sentences
-            'sentences_list': sentences_list,
-            'generate_audio_for_sentence': generate_audio_for_sentence,
-            'rename_sentence': rename_sentence,
-            'delete_sentence': delete_sentence,
-            
-            # Search
-            'search_landing': search_landing,
-            
-            # Flashcards
-            'flashcard_landing': flashcard_landing,
-            
-            # Source directories
-            'sourcedirs_for_language': sourcedirs_for_language,
-            'sourcefiles_for_sourcedir': sourcefiles_for_sourcedir,
-            'upload_sourcedir_new_sourcefile': upload_sourcedir_new_sourcefile,
-            'rename_sourcedir': rename_sourcedir,
-            'delete_sourcedir': delete_sourcedir,
-            'update_sourcedir_language': update_sourcedir_language,
-            'update_sourcedir_description': update_sourcedir_description,
-            
-            # Source files
-            'inspect_sourcefile': inspect_sourcefile,
-            'create_sourcefile_from_text': create_sourcefile_from_text,
-            'add_sourcefile_from_youtube': add_sourcefile_from_youtube,
-            'delete_sourcefile': delete_sourcefile
-        }
+    # Register minimal context processor for base template view functions
+    app.context_processor(inject_base_view_functions)
     
     # Added CLI command to generate routes
     @app.cli.command("generate-routes-ts")
