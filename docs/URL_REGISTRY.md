@@ -24,6 +24,18 @@ url = url_for('sourcedir_api.create_sourcedir', target_language_code='el')
 {{ url_for('sourcedir_api.create_sourcedir', target_language_code='el') }}
 ```
 
+For more type safety, you can use the `endpoint_for()` function to avoid hardcoding endpoint strings:
+
+```python
+from views.sourcedir_api import create_sourcedir
+from utils.url_registry import endpoint_for
+
+# Now the IDE can warn you if the function name changes
+url = url_for(endpoint_for(create_sourcedir), target_language_code='el')
+```
+
+This approach makes your code more resistant to function renames and refactoring.
+
 ### In JavaScript Code
 
 Use the `resolveRoute()` function to generate URLs:
@@ -55,6 +67,12 @@ const url = resolveRoute(RouteName.SOURCEDIR_API_CREATE_SOURCEDIR, {
     target_language_code: 'el'
 });
 ```
+
+The TypeScript enum approach provides several benefits:
+- **IDE autocompletion** - You get full autocompletion of available routes
+- **Type checking** - TypeScript validates that you're using a valid route name
+- **Parameter type safety** - TypeScript checks that you provide the correct parameters
+- **Refactoring support** - IDEs can find all references to a particular route
 
 ## Testing the Registry
 
