@@ -26,6 +26,8 @@ def setup_route_registry(app, static_folder):
         app: The Flask application
         static_folder: Path to the static files directory
     """
+    from utils.url_registry import endpoint_for
+    
     with app.app_context():
         # Generate route registry
         route_registry = generate_route_registry(app)
@@ -34,7 +36,10 @@ def setup_route_registry(app, static_folder):
         @app.context_processor
         def inject_routes():
             """Make route registry available to all templates."""
-            return {'route_registry': route_registry}
+            return {
+                'route_registry': route_registry,
+                'endpoint_for': endpoint_for  # Make endpoint_for available in all templates
+            }
         
         # In development mode, generate TypeScript routes file
         if not app.config["IS_PRODUCTION"]:

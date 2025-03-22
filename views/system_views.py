@@ -125,6 +125,26 @@ def route_registry_example():
     """Example page showing TypeScript URL registry usage in Svelte."""
     return render_template('route_registry_example.jinja')
 
+# Example page for Jinja URL generation
+@system_views_bp.route('/url-demo')
+def url_demo():
+    """Example page showing Jinja URL generation with endpoint_for."""
+    from utils.url_registry import endpoint_for
+    from views.sourcedir_views import sourcedirs_list
+    from views.lemma_views import lemmas_list, get_lemma_metadata
+    
+    # Common language code for examples
+    target_language_code = 'el'
+    
+    return render_template(
+        'url_demo.jinja',
+        endpoint_for=endpoint_for,  # This would typically be provided by a context processor
+        sourcedirs_list=sourcedirs_list,
+        lemmas_list=lemmas_list,
+        get_lemma_metadata=get_lemma_metadata,
+        target_language_code=target_language_code
+    )
+
 @auth_views_bp.route("/", methods=["GET"])
 @auth_views_bp.route("/<target_language_code>", methods=["GET"])
 def auth_page(target_language_code=None):
