@@ -40,7 +40,7 @@
     </div>
 
     <div class="actions">
-        <a href="{{ url_for(endpoint_for(flashcard_views_bp.flashcard_landing), language_code=target_language_code, sourcedir=sourcedir_slug) }}"
+        <a href="{{ url_for(endpoint_for(flashcard_landing), language_code=target_language_code, sourcedir=sourcedir_slug) }}"
         class="button {% if not has_vocabulary %}disabled{% endif %}"
         {% if not has_vocabulary %}disabled title="No vocabulary found"{% endif %}>
         Practice with Flashcards
@@ -55,7 +55,7 @@
 
 <div class="upload-section">
     <div class="button-group">
-        <form action="{{ url_for(endpoint_for(sourcedir_views_bp.upload_sourcedir_new_sourcefile), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" method="post" enctype="multipart/form-data" id="uploadForm">
+        <form action="{{ url_for(endpoint_for(upload_sourcedir_new_sourcefile), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" method="post" enctype="multipart/form-data" id="uploadForm">
             <label for="fileInput" class="button">Upload image files</label>
             <input type="file" name="files[]" multiple accept="image/*" capture="environment" id="fileInput">
             
@@ -143,7 +143,7 @@
     {% for sourcefile in sourcefiles %}
         <li class="source-file-item">
             {{ sourcefile_icon(sourcefile.sourcefile_type, sourcefile.metadata) }}
-            <a href="{{ url_for(endpoint_for(sourcefile_views_bp.inspect_sourcefile), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile.slug) }}">
+            <a href="{{ url_for(endpoint_for(inspect_sourcefile), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile.slug) }}">
                 {{ sourcefile.filename }}
             </a>
             <div class="stats">

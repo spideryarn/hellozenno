@@ -180,37 +180,65 @@ def create_app():
     def inject_view_functions():
         """Inject commonly used view functions and blueprints into all templates."""
         from views.views import views_bp, languages
-        from views.wordform_views import wordform_views_bp, wordforms_list
-        from views.lemma_views import lemma_views_bp, lemmas_list
-        from views.phrase_views import phrase_views_bp, phrases_list
-        from views.sentence_views import sentence_views_bp
+        from views.wordform_views import wordform_views_bp, wordforms_list, get_wordform_metadata
+        from views.lemma_views import lemma_views_bp, lemmas_list, get_lemma_metadata
+        from views.phrase_views import phrase_views_bp, phrases_list, get_phrase_metadata
+        from views.sentence_views import sentence_views_bp, sentences_list, generate_audio_for_sentence, rename_sentence, delete_sentence
         from views.search_views import search_views_bp, search_landing
-        from views.flashcard_views import flashcard_views_bp
-        from views.sourcedir_views import sourcedir_views_bp, sourcedirs_for_language, sourcefiles_for_sourcedir, upload_sourcedir_new_sourcefile
-        from views.sourcefile_views import sourcefile_views_bp, inspect_sourcefile
+        from views.flashcard_views import flashcard_views_bp, flashcard_landing
+        from views.sourcedir_views import (
+            sourcedir_views_bp, sourcedirs_for_language, sourcefiles_for_sourcedir, 
+            upload_sourcedir_new_sourcefile, rename_sourcedir, delete_sourcedir,
+            update_sourcedir_language, update_sourcedir_description
+        )
+        from views.sourcefile_views import (
+            sourcefile_views_bp, inspect_sourcefile, create_sourcefile_from_text,
+            add_sourcefile_from_youtube, delete_sourcefile
+        )
         
         return {
-            # Blueprints
-            'views_bp': views_bp,
-            'wordform_views_bp': wordform_views_bp,
-            'lemma_views_bp': lemma_views_bp,
-            'phrase_views_bp': phrase_views_bp,
-            'sentence_views_bp': sentence_views_bp,
-            'search_views_bp': search_views_bp,
-            'flashcard_views_bp': flashcard_views_bp,
-            'sourcedir_views_bp': sourcedir_views_bp,
-            'sourcefile_views_bp': sourcefile_views_bp,
-            
-            # Common view functions
+            # Common view functions by category
+            # Views
             'languages': languages,
+            
+            # Wordforms
             'wordforms_list': wordforms_list,
-            'lemmas_list': lemmas_list, 
+            'get_wordform_metadata': get_wordform_metadata,
+            
+            # Lemmas
+            'lemmas_list': lemmas_list,
+            'get_lemma_metadata': get_lemma_metadata,
+            
+            # Phrases
             'phrases_list': phrases_list,
+            'get_phrase_metadata': get_phrase_metadata,
+            
+            # Sentences
+            'sentences_list': sentences_list,
+            'generate_audio_for_sentence': generate_audio_for_sentence,
+            'rename_sentence': rename_sentence,
+            'delete_sentence': delete_sentence,
+            
+            # Search
             'search_landing': search_landing,
+            
+            # Flashcards
+            'flashcard_landing': flashcard_landing,
+            
+            # Source directories
             'sourcedirs_for_language': sourcedirs_for_language,
             'sourcefiles_for_sourcedir': sourcefiles_for_sourcedir,
             'upload_sourcedir_new_sourcefile': upload_sourcedir_new_sourcefile,
-            'inspect_sourcefile': inspect_sourcefile
+            'rename_sourcedir': rename_sourcedir,
+            'delete_sourcedir': delete_sourcedir,
+            'update_sourcedir_language': update_sourcedir_language,
+            'update_sourcedir_description': update_sourcedir_description,
+            
+            # Source files
+            'inspect_sourcefile': inspect_sourcefile,
+            'create_sourcefile_from_text': create_sourcefile_from_text,
+            'add_sourcefile_from_youtube': add_sourcefile_from_youtube,
+            'delete_sourcefile': delete_sourcefile
         }
     
     # Added CLI command to generate routes
