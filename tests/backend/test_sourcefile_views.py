@@ -19,11 +19,66 @@ from tests.fixtures_for_tests import (
     TEST_SOURCE_FILE,
     TEST_IMAGE_PATH_PNG,
 )
+from tests.backend.utils_for_testing import build_url_with_query
 from tests.mocks import mock_download_audio
 from utils.sourcedir_utils import _get_navigation_info
 from utils.vocab_llm_utils import extract_tokens
 from utils.youtube_utils import YouTubeDownloadError
 from views import sourcefile_views
+from views.sourcefile_views import (
+    inspect_sourcefile_vw,
+    view_sourcefile_vw,
+    download_sourcefile_vw,
+    play_sourcefile_audio_vw,
+    sourcefile_sentences_vw,
+    next_sourcefile_vw,
+    prev_sourcefile_vw,
+    inspect_sourcefile_phrases_vw,
+    process_sourcefile_vw,
+)
+from views.sourcefile_api import (
+    process_individual_words_api,
+    delete_sourcefile_api,
+    rename_sourcefile_api,
+    add_sourcefile_from_youtube_api,
+    generate_sourcefile_audio_api,
+    create_sourcefile_from_text_api,
+)
+from flask import url_for
+
+# NOTE: This test file is in the process of being updated to use `build_url_with_query` 
+# instead of hardcoded URL strings. However, there are significant issues with URL routing in the
+# test Flask app compared to the production app:
+#
+# 1. There are inconsistencies between blueprint prefixes and route decorations that make
+#    it challenging to use build_url_with_query consistently.
+# 2. Some routes work in production but fail in tests due to different routing configurations.
+# 3. API routes often have issues with `build_url_with_query` due to prefixing inconsistencies.
+# 4. View functions defined with routes like '/api/...' within a blueprint already registered 
+#    at '/api/...' cause conflicts in URL generation.
+#
+# For now, we've implemented a mixed approach:
+# 1. Use build_url_with_query for standard view routes where it works reliably (such as delete_sourcefile_vw,
+#    process_sourcefile_vw, generate_sourcefile_audio_vw, process_individual_words_vw, etc.)
+# 2. Use direct URL strings for:
+#    - API routes (e.g., upload endpoints, YouTube-related endpoints)
+#    - Complicated view routes (e.g., sourcefile inspect/phrases endpoints)
+#    - Routes with known issues in the test environment
+#
+# Working URLs with build_url_with_query:
+# - view_sourcefile_vw, download_sourcefile_vw, play_sourcefile_audio_vw
+# - delete_sourcefile_vw, process_sourcefile_vw, rename_sourcefile_vw, etc.
+#
+# Routes requiring direct URL strings:
+# - inspect_sourcefile_vw: f"/{lang_code}/{sourcedir_slug}/{sourcefile_slug}"
+# - inspect_sourcefile_phrases_vw: f"/{lang_code}/{sourcedir_slug}/{sourcefile_slug}/phrases" 
+# - add_sourcefile_from_youtube_vw: f"/{lang_code}/{sourcedir_slug}/add_from_youtube"
+# - upload_sourcedir_new_sourcefile_api: f"/api/lang/sourcedir/{lang_code}/{sourcedir_slug}/upload"
+#
+# This approach maintains test functionality while providing a path forward toward
+# using build_url_with_query in the future once URL routing is standardized.
+#
+# TODO: Once URL standardization is complete, update all tests to use build_url_with_query.
 
 
 def test_inspect_sourcefile(client, test_data, monkeypatch):
@@ -264,11 +319,10 @@ def test_delete_sourcefile(client):
 
     # Test the HTTP endpoint using build_url_with_query
     from tests.backend.utils_for_testing import build_url_with_query
-    from views.sourcefile_views import delete_sourcefile_vw
     
     url = build_url_with_query(
         client, 
-        delete_sourcefile_vw, 
+        delete_sourcefile_api, 
         target_language_code=TEST_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug
@@ -286,7 +340,7 @@ def test_delete_sourcefile(client):
     # Test deleting non-existent file
     url = build_url_with_query(
         client, 
-        delete_sourcefile_vw, 
+        delete_sourcefile_api, 
         target_language_code=TEST_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent-txt"
@@ -298,7 +352,7 @@ def test_delete_sourcefile(client):
     # Test deleting from non-existent directory
     url = build_url_with_query(
         client, 
-        delete_sourcefile_vw, 
+        delete_sourcefile_api, 
         target_language_code=TEST_LANGUAGE_CODE,
         sourcedir_slug="nonexistent_dir",
         sourcefile_slug="test.txt"
@@ -386,11 +440,10 @@ def test_auto_linking_wordforms(client, fixture_for_testing_db):
             is_lemma=False,
         )
 
-        # View the sourcefile
-        response = client.get(
-            f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}",
-            follow_redirects=True,
-        )
+        # Use direct URL since build_url_with_query has issues with this route
+        url = f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}"
+        
+        response = client.get(url, follow_redirects=True)
         assert response.status_code == 200
         assert b"test.txt" in response.data
         assert b"Good morning! How are you?" in response.data
@@ -431,11 +484,10 @@ def test_auto_linking_case_insensitive(client, fixture_for_testing_db):
             is_lemma=True,
         )
 
-        # View the sourcefile
-        response = client.get(
-            f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}",
-            follow_redirects=True,
-        )
+        # Use direct URL since build_url_with_query has issues with this route
+        url = f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}"
+        
+        response = client.get(url, follow_redirects=True)
         assert response.status_code == 200
         assert b"test.txt" in response.data
         assert b"Good morning good morning good morning" in response.data
@@ -482,11 +534,10 @@ def test_auto_linking_preserves_existing(client, fixture_for_testing_db):
             ordering=1,
         )
 
-        # View the sourcefile
-        response = client.get(
-            f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}",
-            follow_redirects=True,
-        )
+        # Use direct URL since build_url_with_query has issues with this route
+        url = f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}"
+        
+        response = client.get(url, follow_redirects=True)
         assert response.status_code == 200
         assert b"test.txt" in response.data
         assert b"Good morning!" in response.data
@@ -508,9 +559,19 @@ def test_rename_sourcefile(client):
     )
     original_slug = sourcefile.slug
 
-    # Test successful rename
+    # Already imported the API function rename_sourcefile_api
+    
+    # Test successful rename using build_url_with_query
+    url = build_url_with_query(
+        client,
+        rename_sourcefile_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=original_slug
+    )
+    
     response = client.put(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{original_slug}/rename",
+        url,
         json={"new_name": "new_test.txt"},
     )
     assert response.status_code == 200
@@ -529,22 +590,46 @@ def test_rename_sourcefile(client):
     assert sourcefile.slug != original_slug  # Verify slug was changed
 
     # Test nonexistent file
+    url = build_url_with_query(
+        client,
+        rename_sourcefile_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug="nonexistent-txt"
+    )
+    
     response = client.put(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/nonexistent.txt/rename",
+        url,
         json={"new_name": "new_nonexistent.txt"},
     )
     assert response.status_code == 404
 
     # Test invalid filename
+    url = build_url_with_query(
+        client,
+        rename_sourcefile_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug="new-test-txt"
+    )
+    
     response = client.put(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/new-test-txt/rename",
+        url,
         json={"new_name": ""},
     )
     assert response.status_code == 400
 
     # Test changing extension
+    url = build_url_with_query(
+        client,
+        rename_sourcefile_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug="new-test-txt"
+    )
+    
     response = client.put(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/new-test-txt/rename",
+        url,
         json={"new_name": "test.jpg"},
     )
     assert response.status_code == 400
@@ -559,8 +644,17 @@ def test_rename_sourcefile(client):
         metadata={"words": []},  # Add default metadata
         sourcefile_type="image",  # Add required field
     )
+    
+    url = build_url_with_query(
+        client,
+        rename_sourcefile_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug="new-test-txt"
+    )
+    
     response = client.put(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/new-test-txt/rename",
+        url,
         json={"new_name": "existing.txt"},
     )
     assert response.status_code == 409
@@ -611,37 +705,63 @@ def test_sourcefile_navigation(client, fixture_for_testing_db):
 
     # Test navigation endpoints
     # Middle file -> next
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefiles[1].slug}/next"
+    # We'll continue using build_url_with_query for view functions
+    url = build_url_with_query(
+        client,
+        next_sourcefile_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefiles[1].slug
     )
+    response = client.get(url)
     assert response.status_code == 302
     assert sourcefiles[2].slug in response.headers["Location"]
 
     # Middle file -> prev
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefiles[1].slug}/prev"
+    url = build_url_with_query(
+        client,
+        prev_sourcefile_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefiles[1].slug
     )
+    response = client.get(url)
     assert response.status_code == 302
     assert sourcefiles[0].slug in response.headers["Location"]
 
     # First file -> prev (should stay on same page)
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefiles[0].slug}/prev"
+    url = build_url_with_query(
+        client,
+        prev_sourcefile_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefiles[0].slug
     )
+    response = client.get(url)
     assert response.status_code == 302
     assert sourcefiles[0].slug in response.headers["Location"]
 
     # Last file -> next (should stay on same page)
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefiles[2].slug}/next"
+    url = build_url_with_query(
+        client,
+        next_sourcefile_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefiles[2].slug
     )
+    response = client.get(url)
     assert response.status_code == 302
     assert sourcefiles[2].slug in response.headers["Location"]
 
     # Test non-existent file (should redirect to directory)
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/nonexistent-txt/next"
+    url = build_url_with_query(
+        client,
+        next_sourcefile_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug="nonexistent-txt"
     )
+    response = client.get(url)
     assert response.status_code == 302
     assert sourcedir.slug in response.headers["Location"]
     assert "nonexistent-txt" not in response.headers["Location"]
@@ -658,10 +778,10 @@ def test_sourcefile_phrases(client, test_data):
     # Get the sourcefile to get its slug
     sourcefile = test_data["sourcefile"]
 
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}",
-        follow_redirects=True,
-    )
+    # Use direct URL since build_url_with_query has issues with this route
+    url = f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}/phrases"
+    
+    response = client.get(url)
     assert response.status_code == 200
     assert b"test.txt" in response.data
 
@@ -677,10 +797,10 @@ def test_sourcefile_phrase_metadata(client, test_data):
     # Get the sourcefile to get its slug
     sourcefile = test_data["sourcefile"]
 
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}",
-        follow_redirects=True,
-    )
+    # Use direct URL since build_url_with_query has issues with this route
+    url = f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}/phrases"
+    
+    response = client.get(url)
     assert response.status_code == 200
     assert b"test.txt" in response.data
 
@@ -712,10 +832,10 @@ def test_sourcefile_phrase_ordering(client, test_data):
         ordering=2,
     )
 
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}",
-        follow_redirects=True,
-    )
+    # Use direct URL since build_url_with_query has issues with this route
+    url = f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}/phrases"
+    
+    response = client.get(url)
     assert response.status_code == 200
     assert b"test.txt" in response.data
 
@@ -820,8 +940,16 @@ def test_process_sourcefile(client, monkeypatch):
         sourcefile_type="text",
     )
 
-    # Process the sourcefile
-    response = client.get(f"/el/{sourcedir.slug}/{sourcefile.slug}/process")
+    # Process the sourcefile using build_url_with_query
+    url = build_url_with_query(
+        client,
+        process_sourcefile_vw,
+        target_language_code="el",
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefile.slug
+    )
+    
+    response = client.get(url)
     assert response.status_code == 302  # Redirect after success
 
     # Verify the sourcefile was updated
@@ -845,9 +973,18 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
         language_code=TEST_LANGUAGE_CODE,
     )
 
-    # Test successful creation
+    # Already imported the API function create_sourcefile_from_text_api
+    
+    # Test successful creation using build_url_with_query
+    url = build_url_with_query(
+        client,
+        create_sourcefile_from_text_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug
+    )
+    
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/create_from_text",
+        url,
         json={
             "title": "Test Title",
             "text_target": "Test content in target language",
@@ -868,7 +1005,7 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
 
     # Test missing title
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/create_from_text",
+        url,
         json={
             "text_target": "Test content",
         },
@@ -878,7 +1015,7 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
 
     # Test missing text
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/create_from_text",
+        url,
         json={
             "title": "Test Title",
         },
@@ -888,7 +1025,7 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
 
     # Test duplicate filename
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/create_from_text",
+        url,
         json={
             "title": "Test Title",  # Will generate same filename
             "text_target": "Different content",
@@ -911,15 +1048,17 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     sourcedir = Sourcedir.create(
         path="test_dir_audio", language_code=TEST_LANGUAGE_CODE
     )
-
-    # Test successful audio upload
+    
+    # Keep using direct URL for file upload since build_url_with_query has issues here
+    url = f"/api/lang/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload"
+    
     test_audio = b"fake mp3 content" * 1000  # Some fake MP3 content
     data = {
         "files[]": (BytesIO(test_audio), "test.mp3"),
     }
 
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload",
+        url,
         data=data,
         follow_redirects=True,
     )
@@ -942,7 +1081,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     }
 
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload",
+        url,
         data=data,
         follow_redirects=True,
     )
@@ -955,7 +1094,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     }
 
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload",
+        url,
         data=data,
         follow_redirects=True,
     )
@@ -966,14 +1105,21 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
 def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db):
     """Test adding a sourcefile from YouTube."""
 
-    monkeypatch.setattr("views.sourcefile_views.download_audio", mock_download_audio)
+    monkeypatch.setattr("utils.youtube_utils.download_audio", mock_download_audio)
 
     # Create test sourcedir
     sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
-
-    # Test successful YouTube download
+    
+    # Use build_url_with_query for API function
+    url = build_url_with_query(
+        client,
+        add_sourcefile_from_youtube_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug
+    )
+    
     response = client.post(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/add_from_youtube",
+        url,
         json={"youtube_url": "https://www.youtube.com/watch?v=test_id"},
     )
     assert response.status_code == 200
@@ -990,7 +1136,7 @@ def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db
 
     # Test missing URL
     response = client.post(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/add_from_youtube",
+        url,
         json={},
     )
     assert response.status_code == 400
@@ -998,7 +1144,7 @@ def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db
 
     # Test empty URL
     response = client.post(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/add_from_youtube",
+        url,
         json={"youtube_url": ""},
     )
     assert response.status_code == 400
@@ -1006,7 +1152,7 @@ def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db
 
     # Test duplicate filename
     response = client.post(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/add_from_youtube",
+        url,
         json={"youtube_url": "https://www.youtube.com/watch?v=test_id"},
     )
     assert response.status_code == 409
@@ -1016,10 +1162,10 @@ def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db
     def mock_download_error(url):
         raise YouTubeDownloadError("Test error")
 
-    monkeypatch.setattr("views.sourcefile_views.download_audio", mock_download_error)
+    monkeypatch.setattr("utils.youtube_utils.download_audio", mock_download_error)
 
     response = client.post(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/add_from_youtube",
+        url,
         json={"youtube_url": "https://www.youtube.com/watch?v=error_id"},
     )
     assert response.status_code == 400
@@ -1039,7 +1185,7 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
             f.write(b"test audio data")
 
     monkeypatch.setattr(
-        "views.sourcefile_views.outloud_elevenlabs", mock_outloud_elevenlabs
+        "gjdutils.outloud_text_to_speech.outloud_elevenlabs", mock_outloud_elevenlabs
     )
 
     # Create test sourcedir and sourcefile
@@ -1056,10 +1202,18 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
         sourcefile_type="text",
     )
 
+    # Already imported the API function generate_sourcefile_audio_api
+
     # Test successful audio generation
-    response = client.post(
-        f"/api/sourcefile/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}/generate_audio"
+    url = build_url_with_query(
+        client,
+        generate_sourcefile_audio_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefile.slug
     )
+    
+    response = client.post(url)
     assert response.status_code == 204
 
     # Verify audio was stored in database
@@ -1068,9 +1222,15 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
     assert bytes(sourcefile.audio_data) == b"test audio data"
 
     # Test sourcefile not found
-    response = client.post(
-        f"/api/sourcefile/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/nonexistent/generate_audio"
+    url_nonexistent = build_url_with_query(
+        client,
+        generate_sourcefile_audio_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug="nonexistent"
     )
+    
+    response = client.post(url_nonexistent)
     assert response.status_code == 404
 
     # Test sourcefile with no text
@@ -1082,9 +1242,16 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
         metadata={},
         sourcefile_type="text",
     )
-    response = client.post(
-        f"/api/sourcefile/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{empty_sourcefile.slug}/generate_audio"
+    
+    url_empty = build_url_with_query(
+        client,
+        generate_sourcefile_audio_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=empty_sourcefile.slug
     )
+    
+    response = client.post(url_empty)
     assert response.status_code == 400
     assert b"No text content available for audio generation" in response.data
 
@@ -1097,9 +1264,16 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
         metadata={},
         sourcefile_type="text",
     )
-    response = client.post(
-        f"/api/sourcefile/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{long_sourcefile.slug}/generate_audio"
+    
+    url_long = build_url_with_query(
+        client,
+        generate_sourcefile_audio_api,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=long_sourcefile.slug
     )
+    
+    response = client.post(url_long)
     assert response.status_code == 500
     assert b"Text too long for ElevenLabs API" in response.data
 
@@ -1143,10 +1317,16 @@ def test_delete_sourcefile_with_wordforms(client):
         ordering=1,
     )
 
-    # Test deletion
-    response = client.delete(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}"
+    # Test deletion using build_url_with_query
+    url = build_url_with_query(
+        client,
+        delete_sourcefile_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefile.slug
     )
+    
+    response = client.delete(url)
     assert response.status_code == 204
     assert (
         not Sourcefile.select()
@@ -1206,10 +1386,16 @@ def test_process_individual_words(client, fixture_for_testing_db):
             ordering=1,
         )
 
-        # Process individual words
-        response = client.post(
-            f"/api/sourcefile/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}/process_individual"
+        # Process individual words using build_url_with_query
+        url = build_url_with_query(
+            client,
+            process_individual_words_api,
+            target_language_code=TEST_LANGUAGE_CODE,
+            sourcedir_slug=sourcedir.slug,
+            sourcefile_slug=sourcefile.slug
         )
+        
+        response = client.post(url)
         assert response.status_code == 204
 
 
@@ -1243,14 +1429,16 @@ def test_process_png_file(client, monkeypatch, fixture_for_testing_db):
     # Read the PNG fixture
     with open(TEST_IMAGE_PATH_PNG, "rb") as f:
         png_content = f.read()
-
-    # Upload the PNG file
+    
+    # Keep using direct URL for file upload since build_url_with_query has issues here
+    upload_url = f"/api/lang/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload"
+    
     data = {
         "files[]": (BytesIO(png_content), "test.png"),
     }
 
     response = client.post(
-        f"/api/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload",
+        upload_url,
         data=data,
         follow_redirects=True,
     )
@@ -1265,10 +1453,16 @@ def test_process_png_file(client, monkeypatch, fixture_for_testing_db):
     assert sourcefile.sourcefile_type == "image"
     assert bytes(sourcefile.image_data) == png_content
 
-    # Process the file
-    response = client.get(
-        f"/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/{sourcefile.slug}/process"
+    # Use build_url_with_query for the process_sourcefile_vw view function
+    process_url = build_url_with_query(
+        client,
+        process_sourcefile_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        sourcedir_slug=sourcedir.slug,
+        sourcefile_slug=sourcefile.slug
     )
+    
+    response = client.get(process_url)
     assert response.status_code == 302  # Redirect after success
 
     # Verify the sourcefile was processed
