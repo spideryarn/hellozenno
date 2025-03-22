@@ -51,17 +51,17 @@
     <nav>
         <div class="nav-content">
             <div class="breadcrumbs">
-                <a href="{{ url_for('views.languages') }}">Home</a>
+                <a href="{{ url_for(endpoint_for(views_bp.languages)) }}">Home</a>
                 {% block breadcrumbs %}{% endblock breadcrumbs %}
             </div>
             {% if target_language_code is defined and target_language_code %}
             <div class="nav-menu">
-                {# <a href="{{ url_for('wordform_views.wordforms_list', target_language_code=target_language_code) }}">Wordforms</a> #}
-                {# <a href="{{ url_for('lemma_views.lemmas_list', target_language_code=target_language_code) }}">Lemmas</a> #}
-                {# <a href="{{ url_for('phrase_views.phrases_list', target_language_code=target_language_code) }}">Phrases</a> #}
+                {# <a href="{{ url_for(endpoint_for(wordforms_list), target_language_code=target_language_code) }}">Wordforms</a> #}
+                {# <a href="{{ url_for(endpoint_for(lemmas_list), target_language_code=target_language_code) }}">Lemmas</a> #}
+                {# <a href="{{ url_for(endpoint_for(phrases_list), target_language_code=target_language_code) }}">Phrases</a> #}
             </div>
             <div class="search-box">
-                <form method="GET" action="{{ url_for('search.search_landing', target_language_code=target_language_code) }}">
+                <form method="GET" action="{{ url_for(endpoint_for(search_landing), target_language_code=target_language_code) }}">
                     <input type="text" name="q" placeholder="Search {{ target_language_name }} words..." required>
                     <button type="submit" class="button">Search</button>
                 </form>

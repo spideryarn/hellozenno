@@ -1,7 +1,11 @@
 // File deletion
 function deleteSourcefile(slug) {
     if (confirm('Are you sure you want to delete this sourcefile? This action cannot be undone.')) {
-        fetch(`/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/${slug}`, {
+        fetch(resolveRoute('SOURCEFILE_VIEWS_DELETE_SOURCEFILE', {
+            target_language_code: window.target_language_code,
+            sourcedir_slug: window.sourcedir_slug,
+            sourcefile_slug: slug
+        }), {
             method: 'DELETE',
         }).then(response => {
             if (response.ok) {
@@ -24,7 +28,10 @@ async function renameSourcedir() {
         });
 
         const response = await fetch(
-            `/api/lang/sourcedir/${window.target_language_code}/${window.sourcedir_slug}/rename`,
+            resolveRoute('SOURCEDIR_VIEWS_RENAME_SOURCEDIR', {
+                target_language_code: window.target_language_code,
+                sourcedir_slug: window.sourcedir_slug
+            }),
             {
                 method: 'PUT',
                 headers: {
@@ -41,7 +48,10 @@ async function renameSourcedir() {
 
         const data = await response.json();
         // Redirect to the new URL with the new slug
-        window.location.href = `/lang/${window.target_language_code}/${data.slug}`;
+        window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILE_LIST', {
+            target_language_code: window.target_language_code,
+            sourcedir_slug: data.slug
+        });
     } catch (error) {
         if (error.message !== 'User cancelled') {
             alert('Error renaming directory: ' + error.message);
@@ -51,11 +61,16 @@ async function renameSourcedir() {
 
 function deleteSourcedir() {
     if (confirm('Are you sure you want to delete this directory? This action cannot be undone.')) {
-        fetch(`/api/lang/sourcedir/${window.target_language_code}/${window.sourcedir_slug}`, {
+        fetch(resolveRoute('SOURCEDIR_VIEWS_DELETE_SOURCEDIR', {
+            target_language_code: window.target_language_code,
+            sourcedir_slug: window.sourcedir_slug
+        }), {
             method: 'DELETE',
         }).then(async response => {
             if (response.ok) {
-                window.location.href = `/lang/${window.target_language_code}`;
+                window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEDIRS_FOR_LANGUAGE', {
+                    target_language_code: window.target_language_code
+                });
             } else {
                 // Try to get a more specific error message from the response
                 let errorMsg;
@@ -99,7 +114,10 @@ async function uploadFiles(files) {
 
     try {
         const response = await fetch(
-            `/api/lang/sourcedir/${window.target_language_code}/${window.sourcedir_slug}/upload`,
+            resolveRoute('SOURCEDIR_VIEWS_UPLOAD_FILES', {
+                target_language_code: window.target_language_code,
+                sourcedir_slug: window.sourcedir_slug
+            }),
             {
                 method: 'POST',
                 body: formData
@@ -124,7 +142,10 @@ function initLanguageSelector() {
     document.querySelector('.language-selector').addEventListener('change', function (e) {
         const newLanguage = e.target.value;
 
-        fetch(`/api/lang/sourcedir/${window.target_language_code}/${window.sourcedir_slug}/language`, {
+        fetch(resolveRoute('SOURCEDIR_VIEWS_UPDATE_SOURCEDIR_LANGUAGE', {
+                target_language_code: window.target_language_code,
+                sourcedir_slug: window.sourcedir_slug
+            }), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -132,7 +153,10 @@ function initLanguageSelector() {
             body: JSON.stringify({ language_code: newLanguage })
         }).then(response => {
             if (response.ok) {
-                window.location.href = `/lang/${newLanguage}/${e.target.dataset.sourcedirSlug}`;
+                window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILE_LIST', {
+                    target_language_code: newLanguage,
+                    sourcedir_slug: e.target.dataset.sourcedirSlug
+                });
             } else {
                 alert('Failed to update language');
             }
@@ -172,7 +196,10 @@ function showCreateFromTextModal() {
 
         try {
             const response = await fetch(
-                `/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/create_from_text`,
+                resolveRoute('SOURCEFILE_VIEWS_CREATE_FROM_TEXT', {
+                    target_language_code: window.target_language_code,
+                    sourcedir_slug: window.sourcedir_slug
+                }),
                 {
                     method: 'POST',
                     headers: {
@@ -191,7 +218,11 @@ function showCreateFromTextModal() {
             }
 
             const data = await response.json();
-            window.location.href = `/lang/${window.target_language_code}/${window.sourcedir_slug}/${data.slug}`;
+            window.location.href = resolveRoute('SOURCEFILE_VIEWS_GET_SOURCEFILE', {
+                target_language_code: window.target_language_code,
+                sourcedir_slug: window.sourcedir_slug,
+                sourcefile_slug: data.slug
+            });
         } catch (error) {
             alert(error.message);
         }
@@ -237,7 +268,10 @@ function showYouTubeModal() {
             progressDiv.style.display = 'block';
 
             const response = await fetch(
-                `/api/lang/sourcefile/${window.target_language_code}/${window.sourcedir_slug}/add_from_youtube`,
+                resolveRoute('SOURCEFILE_VIEWS_ADD_FROM_YOUTUBE', {
+                    target_language_code: window.target_language_code,
+                    sourcedir_slug: window.sourcedir_slug
+                }),
                 {
                     method: 'POST',
                     headers: {
@@ -252,7 +286,11 @@ function showYouTubeModal() {
                 throw new Error(data.error || 'Failed to download audio');
             }
 
-            window.location.href = `/lang/${window.target_language_code}/${window.sourcedir_slug}/${data.slug}`;
+            window.location.href = resolveRoute('SOURCEFILE_VIEWS_GET_SOURCEFILE', {
+                target_language_code: window.target_language_code,
+                sourcedir_slug: window.sourcedir_slug,
+                sourcefile_slug: data.slug
+            });
         } catch (error) {
             // More informative error messages
             let errorMessage = error.message;
@@ -388,7 +426,10 @@ function saveSourcedirDescription() {
     textarea.disabled = true;
     
     // Save the description
-    fetch(`/api/lang/sourcedir/${window.target_language_code}/${window.sourcedir_slug}/update_description`, {
+    fetch(resolveRoute('SOURCEDIR_VIEWS_UPDATE_SOURCEDIR_DESCRIPTION', {
+            target_language_code: window.target_language_code,
+            sourcedir_slug: window.sourcedir_slug
+        }), {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -417,7 +458,10 @@ function saveSourcedirDescription() {
 
 function cancelEditSourcedirDescription() {
     // Get the current description from the server state
-    fetch(`/lang/${window.target_language_code}/${window.sourcedir_slug}`)
+    fetch(resolveRoute('SOURCEDIR_VIEWS_SOURCEFILE_LIST', {
+        target_language_code: window.target_language_code,
+        sourcedir_slug: window.sourcedir_slug
+    }))
         .then(response => response.text())
         .then(html => {
             // Parse the HTML to extract the current description

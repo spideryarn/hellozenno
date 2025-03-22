@@ -1,5 +1,7 @@
 # URL Registry: Standardizing URL Management in HelloZenno
 
+**Status: Phase 2 - Migration & Adoption In Progress**
+
 ## Problem Statement
 
 The HelloZenno application is experiencing issues with URL management during the ongoing API URL structure standardization:
@@ -55,6 +57,9 @@ Let's create a detailed list of the remaining tasks to fully implement the URL r
 4. **Jinja Template Integration**
    - [x] Document approaches for making Jinja templates refactoring-proof
    - [x] Choose a consistent approach for Jinja template URL generation
+   - [x] Add `endpoint_for` to global context processor
+   - [x] Update base template to use `endpoint_for`
+   - [x] Add view functions to global context processor
    - [ ] Update key templates to use the chosen approach
 
 5. **Documentation Updates**
@@ -162,12 +167,12 @@ After considering the various approaches, we selected Option 4 (Generating Route
 #### ⏳ Phase 2: Migration & Adoption (In Progress)
 
 4. **Gradual Migration of JavaScript Files**
-   - ⏳ Update remaining JavaScript files to use the route registry
+   - ✅ Update remaining JavaScript files to use the route registry
      - ✅ Updated `static/js/sourcedirs.js` to use the route registry
      - ✅ Updated `static/js/sourcefile.js` to use the route registry 
-     - ⬜ Update `static/js/sentence.js` to use the route registry
-     - ⬜ Update `static/js/sourcefiles.js` to use the route registry
-   - ⬜ Prioritize files with recent URL breakages
+     - ✅ Updated `static/js/sentence.js` to use the route registry
+     - ✅ Updated `static/js/sourcefiles.js` to use the route registry
+   - ✅ Prioritized files with recent URL breakages
 
 5. **TypeScript Integration**
    - ✅ Created example Svelte component using TypeScript route utilities
@@ -192,21 +197,25 @@ After considering the various approaches, we selected Option 4 (Generating Route
 
 ## Next Steps
 
-1. **Continue Migration**: Update more JavaScript files to use `resolveRoute`
-   - Identify files using URL patterns with `GrepTool`
-   - Prioritize files that have had URL-related issues
+1. **Jinja Template Updates**: Update Jinja templates to use the URL registry
+   - Find templates using hardcoded URL strings
+   - Update views to pass necessary function references
+   - Use the injected `endpoint_for` function in templates
 
-2. **TypeScript Integration**: Create examples for TypeScript components
-   - Generate the TypeScript definitions file
-   - Update a Svelte/TypeScript component to use the typed routes
+2. **Test Refinement**: Ensure all tests use the URL registry
+   - Fix any remaining test failures
+   - Update test utilities to use `build_url_with_query` consistently
+   - Add tests for the URL registry itself
 
-3. **Testing**: Ensure the system works correctly
-   - Test route resolution in various scenarios
-   - Verify parameter handling and URL encoding
+3. **Quality Assurance**: Final review and refinement
+   - Review all URL patterns for consistency
+   - Verify all frontend components use the route registry
+   - Run a full test suite to verify everything works
 
-4. **Documentation**: Expand the documentation
-   - Add more examples for different use cases
-   - Create guidelines for naming new routes
+4. **Documentation**: Finalize documentation
+   - Add examples of common patterns and edge cases
+   - Update onboarding documentation
+   - Create migration guides for developers
 
 ## Potential Questions/Concerns
 

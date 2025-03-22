@@ -175,6 +175,40 @@ def create_app():
     # Generate route registry and TypeScript definitions
     setup_route_registry(app, static_folder)
     
+    # Add a context processor to provide blueprint and view function references to templates
+    @app.context_processor
+    def inject_view_functions():
+        """Inject commonly used view functions and blueprints into all templates."""
+        from views.views import views_bp, languages
+        from views.wordform_views import wordform_views_bp, wordforms_list
+        from views.lemma_views import lemma_views_bp, lemmas_list
+        from views.phrase_views import phrase_views_bp, phrases_list
+        from views.sentence_views import sentence_views_bp
+        from views.search_views import search_views_bp, search_landing
+        from views.flashcard_views import flashcard_views_bp
+        from views.sourcedir_views import sourcedir_views_bp, sourcedirs_for_language, sourcefiles_for_sourcedir
+        
+        return {
+            # Blueprints
+            'views_bp': views_bp,
+            'wordform_views_bp': wordform_views_bp,
+            'lemma_views_bp': lemma_views_bp,
+            'phrase_views_bp': phrase_views_bp,
+            'sentence_views_bp': sentence_views_bp,
+            'search_views_bp': search_views_bp,
+            'flashcard_views_bp': flashcard_views_bp,
+            'sourcedir_views_bp': sourcedir_views_bp,
+            
+            # Common view functions
+            'languages': languages,
+            'wordforms_list': wordforms_list,
+            'lemmas_list': lemmas_list, 
+            'phrases_list': phrases_list,
+            'search_landing': search_landing,
+            'sourcedirs_for_language': sourcedirs_for_language,
+            'sourcefiles_for_sourcedir': sourcefiles_for_sourcedir
+        }
+    
     # Added CLI command to generate routes
     @app.cli.command("generate-routes-ts")
     def generate_routes_ts_command():

@@ -17,7 +17,10 @@ function setPlaybackRate(rate) {
 function generateAudio() {
     showAudioGenerationProgress();
 
-    fetch(`/api/lang/sentence/${window.target_language_code}/${window.sentence_slug}/generate_audio`, {
+    fetch(resolveRoute('SENTENCE_VIEWS_GENERATE_AUDIO', {
+        target_language_code: window.target_language_code,
+        sentence_slug: window.sentence_slug
+    }), {
         method: 'POST'
     }).then(async response => {
         if (response.status === 204) {
@@ -47,7 +50,10 @@ async function renameSentence() {
         });
 
         const response = await fetch(
-            `/api/lang/sentence/${window.target_language_code}/${window.sentence_slug}/rename`,
+            resolveRoute('SENTENCE_VIEWS_RENAME_SENTENCE', {
+                target_language_code: window.target_language_code,
+                sentence_slug: window.sentence_slug
+            }),
             {
                 method: 'PUT',
                 headers: {
@@ -63,7 +69,10 @@ async function renameSentence() {
         }
 
         const { new_text, new_slug } = await response.json();
-        window.location.href = `/lang/${window.target_language_code}/sentence/${new_slug}`;
+        window.location.href = resolveRoute('SENTENCE_VIEWS_GET_SENTENCE', {
+            target_language_code: window.target_language_code,
+            sentence_slug: new_slug
+        });
     } catch (error) {
         if (error.message !== 'User cancelled') {
             alert('Error renaming sentence: ' + error.message);
@@ -73,11 +82,16 @@ async function renameSentence() {
 
 function deleteSentence() {
     if (confirm('Are you sure you want to delete this sentence? This action cannot be undone.')) {
-        fetch(`/api/lang/sentence/${window.target_language_code}/${window.sentence_slug}`, {
+        fetch(resolveRoute('SENTENCE_VIEWS_DELETE_SENTENCE', {
+            target_language_code: window.target_language_code,
+            sentence_slug: window.sentence_slug
+        }), {
             method: 'DELETE',
         }).then(response => {
             if (response.ok) {
-                window.location.href = `/lang/${window.target_language_code}/sentences`;
+                window.location.href = resolveRoute('SENTENCE_VIEWS_LIST_SENTENCES', {
+                    target_language_code: window.target_language_code
+                });
             } else {
                 alert('Failed to delete sentence');
             }
