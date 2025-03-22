@@ -64,11 +64,16 @@ Let's create a detailed list of the remaining tasks to fully implement the URL r
      - [x] Updated `templates/base.jinja`
      - [x] Updated `templates/sourcedirs.jinja`
      - [x] Updated `templates/sourcefiles.jinja`
+     - [x] Updated `templates/lemmas.jinja`
+     - [x] Updated `templates/wordforms.jinja`
+     - [x] Updated `templates/phrases.jinja`
+     - [x] Updated `templates/_wordforms_list.jinja` partial
    - [ ] Continue updating remaining templates as needed
 
 5. **Documentation Updates**
    - [x] Add comprehensive documentation in `docs/URL_REGISTRY.md`
    - [x] Add examples for Python, JavaScript, and TypeScript usage
+   - [x] Add implementation status to documentation
    - [ ] Update onboarding documentation to include URL registry information
 
 6. **Quality Assurance**
@@ -192,8 +197,8 @@ After considering the various approaches, we selected Option 4 (Generating Route
 #### ⏳ Phase 3: Completion & Refinement (In Progress)
 
 7. **Documentation & Tutorials**
-   - ⏳ Add examples of real-world usage to the documentation
-   - ⬜ Add route registry information to onboarding documents
+   - ✅ Add examples of real-world usage to the documentation
+   - ⏳ Add route registry information to onboarding documents
 
 8. **Quality Assurance**
    - ⏳ Review all URL patterns for consistency

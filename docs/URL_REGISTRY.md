@@ -2,6 +2,33 @@
 
 The URL Registry system provides a centralized source of truth for URL definitions in the HelloZenno application. It automatically extracts routes from Flask's `app.url_map` and makes them available to both server-side templates and client-side JavaScript.
 
+## Implementation Status
+
+As of March 2025, the URL Registry has been implemented in the following areas:
+
+### Server-Side (Python)
+- ✅ Core `endpoint_for` function in `utils/url_registry.py`
+- ✅ Global context processor providing key view functions
+- ✅ Updated view functions to use `endpoint_for` when rendering templates
+
+### Client-Side (JavaScript)
+- ✅ Client-side route resolution via `resolveRoute` function
+- ✅ Updated JavaScript files to use route registry:
+  - `static/js/sourcefile.js`
+  - `static/js/sourcefiles.js`
+  - `static/js/sentence.js`
+  - `static/js/sourcedirs.js`
+
+### Templates
+- ✅ Updated key templates to use `endpoint_for`:
+  - `templates/base.jinja`
+  - `templates/sourcedirs.jinja`
+  - `templates/sourcefiles.jinja`
+  - `templates/lemmas.jinja`
+  - `templates/wordforms.jinja`
+  - `templates/phrases.jinja`
+  - Partial template: `templates/_wordforms_list.jinja`
+
 ## Benefits
 
 - **Single Source of Truth**: All routes are defined in one place (Flask route decorators)
