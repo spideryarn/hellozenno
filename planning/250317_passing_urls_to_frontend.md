@@ -60,7 +60,11 @@ Let's create a detailed list of the remaining tasks to fully implement the URL r
    - [x] Add `endpoint_for` to global context processor
    - [x] Update base template to use `endpoint_for`
    - [x] Add view functions to global context processor
-   - [ ] Update key templates to use the chosen approach
+   - [x] Update key templates to use the chosen approach:
+     - [x] Updated `templates/base.jinja`
+     - [x] Updated `templates/sourcedirs.jinja`
+     - [x] Updated `templates/sourcefiles.jinja`
+   - [ ] Continue updating remaining templates as needed
 
 5. **Documentation Updates**
    - [x] Add comprehensive documentation in `docs/URL_REGISTRY.md`
@@ -185,37 +189,38 @@ After considering the various approaches, we selected Option 4 (Generating Route
    - ⏳ Update tests to use the new URL test utilities
    - ⬜ Ensure all tests pass with the new URL approach
 
-#### ⬜ Phase 3: Completion & Refinement (To Do)
+#### ⏳ Phase 3: Completion & Refinement (In Progress)
 
 7. **Documentation & Tutorials**
-   - ⬜ Add examples of real-world usage to the documentation
+   - ⏳ Add examples of real-world usage to the documentation
    - ⬜ Add route registry information to onboarding documents
 
 8. **Quality Assurance**
-   - ⬜ Review all URL patterns for consistency
-   - ⬜ Ensure all frontend code uses the route registry
+   - ⏳ Review all URL patterns for consistency
+   - ✅ Ensure JavaScript code uses the route registry
+   - ⏳ Ensure Jinja templates use endpoint_for
 
 ## Next Steps
 
-1. **Jinja Template Updates**: Update Jinja templates to use the URL registry
-   - Find templates using hardcoded URL strings
-   - Update views to pass necessary function references
-   - Use the injected `endpoint_for` function in templates
+1. **Continue Jinja Template Updates**: 
+   - Identify remaining templates with hardcoded URLs
+   - Update additional key templates (lemmas, wordforms, etc.)
+   - Update partial templates and includes
 
-2. **Test Refinement**: Ensure all tests use the URL registry
-   - Fix any remaining test failures
+2. **Test Refinement**: 
+   - Fix any test failures related to URL changes
    - Update test utilities to use `build_url_with_query` consistently
-   - Add tests for the URL registry itself
+   - Add specific tests for the URL registry functionality
 
-3. **Quality Assurance**: Final review and refinement
-   - Review all URL patterns for consistency
-   - Verify all frontend components use the route registry
-   - Run a full test suite to verify everything works
+3. **Quality Assurance**: 
+   - Run backend tests to verify endpoint_for works correctly
+   - Test JavaScript URL resolution in the browser
+   - Verify TypeScript components use typed routes
 
-4. **Documentation**: Finalize documentation
-   - Add examples of common patterns and edge cases
-   - Update onboarding documentation
-   - Create migration guides for developers
+4. **Documentation Finalization**:
+   - Update onboarding documentation to include URL registry
+   - Create examples showing before/after for reference
+   - Document best practices for adding new routes
 
 ## Potential Questions/Concerns
 
