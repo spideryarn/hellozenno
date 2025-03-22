@@ -243,9 +243,11 @@ def build_url_with_query(client, view_func, query_params=None, **url_params):
     Returns:
         str: The full URL
     """
+    # Using client.application.test_request_context for Flask context
     with client.application.test_request_context():
-        endpoint = endpoint_for(view_func)
-        base_url = url_for(endpoint, **url_params)
+        # Get the correct endpoint string using our helper
+        endpoint_string = endpoint_for(view_func)
+        base_url = url_for(endpoint_string, **url_params)
         
     if query_params:
         query_string = urlencode(query_params)

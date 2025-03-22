@@ -119,6 +119,12 @@ def route_test():
     """Test page for URL registry and route resolution."""
     return render_template('route_test.jinja')
 
+# Example page for TypeScript URL registry usage
+@system_views_bp.route('/route-registry-example')
+def route_registry_example():
+    """Example page showing TypeScript URL registry usage in Svelte."""
+    return render_template('route_registry_example.jinja')
+
 @auth_views_bp.route("/", methods=["GET"])
 @auth_views_bp.route("/<target_language_code>", methods=["GET"])
 def auth_page(target_language_code=None):

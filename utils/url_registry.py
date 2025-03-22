@@ -17,18 +17,12 @@ def endpoint_for(view_func):
     # Get the module name where the function is defined
     module_name = view_func.__module__
     
-    # Extract the blueprint name from module name (assumes module = views.blueprint_name_views)
+    # Extract the module part from module name
     parts = module_name.split('.')
     if len(parts) > 1:
-        module_part = parts[-1]
-        
-        # Handle special cases for different view types
-        if module_part.endswith('_views'):
-            blueprint_name = module_part[:-6]  # Remove '_views' suffix
-        elif module_part.endswith('_api'):
-            blueprint_name = f"{module_part}"  # Keep '_api' suffix for API blueprints
-        else:
-            blueprint_name = module_part
+        # For views modules, use the module name directly as the blueprint name
+        # This matches how Flask registers blueprints in our application
+        blueprint_name = parts[-1]
     else:
         # Fallback if the module structure is different
         blueprint_name = module_name

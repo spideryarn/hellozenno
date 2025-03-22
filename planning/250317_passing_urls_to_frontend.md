@@ -30,34 +30,44 @@ Let's create a detailed list of the remaining tasks to fully implement the URL r
 ## Actions
 
 1. **Run backend tests and fix URL-related issues**
-   - [ ] Run the full test suite to identify broken tests
-   - [ ] Create a list of tests that need to be fixed
+   - [x] Run the full test suite to identify broken tests
+   - [x] Create a list of tests that need to be fixed
    - [ ] Update tests to use the new `build_url_with_query` helper
    - [ ] Fix any URL-related issues in the tests
+   
+   **Test Issues Identified:**
+   - Most test failures are related to template issues, not the URL registry directly
+   - The URL registry implementation itself is working correctly with our tests
+   - Many tests are failing due to Jinja template errors that need to be addressed separately
 
 2. **Update remaining JavaScript files**
-   - [ ] Identify JavaScript files with hardcoded URLs using grep
-   - [ ] Update `static/js/sourcefile.js` to use `resolveRoute`
+   - [x] Identify JavaScript files with hardcoded URLs using grep
+   - [x] Update `static/js/sourcefile.js` to use `resolveRoute`
    - [ ] Update `static/js/sentence.js` to use `resolveRoute` 
    - [ ] Update `static/js/sourcefiles.js` to use `resolveRoute`
    - [ ] Update any other JavaScript files with hardcoded URLs
 
 3. **TypeScript/Svelte Integration**
-   - [ ] Generate the TypeScript definitions file using the CLI command
-   - [ ] Update a Svelte component to use the TypeScript route utilities
-   - [ ] Create an example in the documentation
+   - [x] Generate the TypeScript definitions file using the CLI command
+   - [x] Create example Svelte component using the TypeScript route utilities
+   - [x] Create comprehensive documentation with examples
 
-4. **Documentation Updates**
-   - [ ] Add more real-world examples to `docs/URL_REGISTRY.md`
+4. **Jinja Template Integration**
+   - [x] Document approaches for making Jinja templates refactoring-proof
+   - [x] Choose a consistent approach for Jinja template URL generation
+   - [ ] Update key templates to use the chosen approach
+
+5. **Documentation Updates**
+   - [x] Add comprehensive documentation in `docs/URL_REGISTRY.md`
+   - [x] Add examples for Python, JavaScript, and TypeScript usage
    - [ ] Update onboarding documentation to include URL registry information
-   - [ ] Create a tutorial for new developers
 
-5. **Quality Assurance**
+6. **Quality Assurance**
    - [ ] Review all URL patterns for consistency
    - [ ] Ensure all frontend code uses the route registry
    - [ ] Run a full test suite to verify everything works
 
-6. **Deployment**
+7. **Deployment**
    - [ ] Test the entire system in the development environment
    - [ ] Deploy to production when ready
 
@@ -136,6 +146,7 @@ After considering the various approaches, we selected Option 4 (Generating Route
    - ✅ Added context processor to inject route registry into templates
    - ✅ Created JavaScript utility `static/js/route-client.js` for client-side URL resolution
    - ✅ Added script to inject routes into global JavaScript context via `base.jinja`
+   - ✅ Set up integration with Jinja templates using `endpoint_for`
 
 2. **Testing & Developer Tools**
    - ✅ Created a test page at `/route-test` to visualize and test all routes
@@ -152,11 +163,17 @@ After considering the various approaches, we selected Option 4 (Generating Route
 
 4. **Gradual Migration of JavaScript Files**
    - ⏳ Update remaining JavaScript files to use the route registry
+     - ✅ Updated `static/js/sourcedirs.js` to use the route registry
+     - ✅ Updated `static/js/sourcefile.js` to use the route registry 
+     - ⬜ Update `static/js/sentence.js` to use the route registry
+     - ⬜ Update `static/js/sourcefiles.js` to use the route registry
    - ⬜ Prioritize files with recent URL breakages
 
 5. **TypeScript Integration**
-   - ⬜ Update Svelte components to use the TypeScript route utilities
-   - ⬜ Test TypeScript type definitions in real components
+   - ✅ Created example Svelte component using TypeScript route utilities
+   - ✅ Created Route Registry Example page to demo TypeScript integration
+   - ✅ Generated and tested TypeScript type definitions
+   - ⬜ Update existing Svelte components to use route utilities
 
 6. **Testing**
    - ⏳ Fix broken tests related to URL changes
@@ -198,6 +215,150 @@ After considering the various approaches, we selected Option 4 (Generating Route
 - **Documentation**: How will these routes be documented for developers?
 - **Performance**: Will the larger template size impact page load time?
 - **Error Handling**: How should resolveRoute handle missing routes or parameters?
+
+## Appendix: Jinja Template URL Generation
+
+The URL registry approach also addresses the problem of URL generation in Jinja templates. We explored several approaches to make Jinja templates more resilient to refactoring:
+
+### Approach 1: Passing Explicit View Functions to Templates
+
+```python
+# In view function
+from views.sourcedir_views import sourcedirs_list
+from utils.url_registry import endpoint_for
+
+# Pass the endpoint string to the template
+endpoint = endpoint_for(sourcedirs_list)
+return render_template('template.jinja', sourcedirs_endpoint=endpoint)
+
+# In Jinja template
+<a href="{{ url_for(sourcedirs_endpoint, target_language_code='el') }}">Source Directories</a>
+```
+
+**Pros:**
+- Simple and explicit
+- Clear which view functions are referenced
+- Refactoring-proof (rename the function and the template still works)
+
+**Cons:**
+- Need to pass each view function explicitly to templates
+- More verbose when creating template context
+
+### Approach 2: Creating URL Helper Functions
+
+```python
+# Helper function
+def get_sourcedirs_url(target_language_code):
+    from views.sourcedir_views import sourcedirs_list
+    from utils.url_registry import endpoint_for
+    return url_for(endpoint_for(sourcedirs_list), target_language_code=target_language_code)
+
+# Pass the helper to templates
+return render_template('template.jinja', get_sourcedirs_url=get_sourcedirs_url)
+
+# In Jinja template
+<a href="{{ get_sourcedirs_url('el') }}">Source Directories</a>
+```
+
+**Pros:**
+- Clean template code
+- Encapsulates URL generation logic
+- Reusable across multiple templates
+
+**Cons:**
+- Need to create a helper for each URL type
+- Still need to pass helpers to each template
+
+### Approach 3: Global Context Processor with Dynamic Registry
+
+```python
+# In app initialization
+def get_endpoints():
+    # Import common view functions
+    from views.sourcedir_views import sourcedirs_list
+    from views.lemma_views import lemmas_list
+    
+    # Create a registry of endpoints
+    registry = {}
+    
+    # Register common view functions
+    for name, func in [('sourcedirs_list', sourcedirs_list), ('lemmas_list', lemmas_list)]:
+        registry[name] = endpoint_for(func)
+    
+    return registry
+
+@app.context_processor
+def inject_endpoints():
+    return {'endpoints': get_endpoints()}
+
+# In Jinja template
+<a href="{{ url_for(endpoints.sourcedirs_list, target_language_code='el') }}">Source Directories</a>
+```
+
+**Pros:**
+- Available in all templates
+- Centralized management
+- No need to pass context to each template
+
+**Cons:**
+- Less explicit dependencies
+- Need to update the registry for new URLs
+- Potential naming conflicts
+
+### Approach 4: Direct Injection of endpoint_for
+
+```python
+# In app initialization
+from utils.url_registry import endpoint_for
+
+@app.context_processor
+def inject_url_helpers():
+    return {'endpoint_for': endpoint_for}
+
+# In view function
+from views.sourcedir_views import sourcedirs_list
+return render_template('template.jinja', sourcedirs_list=sourcedirs_list)
+
+# In Jinja template
+<a href="{{ url_for(endpoint_for(sourcedirs_list), target_language_code='el') }}">Source Directories</a>
+```
+
+**Pros:**
+- Uses the same pattern as Python code
+- Most direct approach
+- Minimal abstraction overhead
+
+**Cons:**
+- Still need to pass view functions to templates
+- Slightly more complex template syntax
+
+### Selected Approach: Combination of 1 and 4
+
+After evaluating all options, we've chosen to use a combination of approaches 1 and 4:
+
+1. Make `endpoint_for` available in all templates via a context processor
+2. Pass view functions explicitly to templates as needed
+3. For commonly used URLs, create helper functions
+
+This approach balances explicitness with convenience and maintains the connection between templates and view functions to catch refactoring issues early.
+
+Implementation:
+
+```python
+# In app initialization (api/index.py)
+from utils.url_registry import endpoint_for
+
+@app.context_processor
+def inject_url_helpers():
+    return {'endpoint_for': endpoint_for}
+
+# In view functions
+from views.sourcedir_views import sourcedirs_list
+return render_template('template.jinja', sourcedirs_list=sourcedirs_list)
+
+# In templates
+<a href="{{ url_for(endpoint_for(sourcedirs_list), target_language_code='el') }}">Source Directories</a>
+```
 
 ## Appendix: Discussion on Route Generation from app.url_map
 

@@ -5,24 +5,24 @@ from flask import url_for
 
 from utils.url_registry import endpoint_for
 from tests.backend.utils_for_testing import build_url_with_query, get_route_registry
-from views.lemma_views import lemma_detail
-from views.sourcedir_views import sourcedirs_list
-from views.sourcedir_api import create_sourcedir
+from views.lemma_views import get_lemma_metadata
+from views.sourcedir_views import sourcefiles_for_sourcedir
+from views.sourcedir_api import create_sourcedir_api
 
 
 def test_endpoint_for():
     """Test that endpoint_for correctly generates endpoint strings."""
-    # Test with lemma_detail (from lemma_views blueprint)
-    endpoint = endpoint_for(lemma_detail)
-    assert endpoint == "lemma.lemma_detail"
+    # Test with get_lemma_metadata (from lemma_views blueprint)
+    endpoint = endpoint_for(get_lemma_metadata)
+    assert endpoint == "lemma_views.get_lemma_metadata"
     
-    # Test with sourcedirs_list (from sourcedir_views blueprint)
-    endpoint = endpoint_for(sourcedirs_list)
-    assert endpoint == "sourcedir.sourcedirs_list"
+    # Test with sourcefiles_for_sourcedir (from sourcedir_views blueprint)
+    endpoint = endpoint_for(sourcefiles_for_sourcedir)
+    assert endpoint == "sourcedir_views.sourcefiles_for_sourcedir"
     
-    # Test with create_sourcedir (from sourcedir_api blueprint)
-    endpoint = endpoint_for(create_sourcedir)
-    assert endpoint == "sourcedir_api.create_sourcedir"
+    # Test with create_sourcedir_api (from sourcedir_api blueprint)
+    endpoint = endpoint_for(create_sourcedir_api)
+    assert endpoint == "sourcedir_api.create_sourcedir_api"
 
 
 def test_route_registry_generation(client):
@@ -30,13 +30,13 @@ def test_route_registry_generation(client):
     routes = get_route_registry(client)
     
     # Check that common routes are included
-    assert "LEMMA_LEMMA_DETAIL" in routes
-    assert "SOURCEDIR_SOURCEDIRS_LIST" in routes
-    assert "SOURCEDIR_API_CREATE_SOURCEDIR" in routes
+    assert "LEMMA_VIEWS_GET_LEMMA_METADATA" in routes
+    assert "SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR" in routes
+    assert "SOURCEDIR_API_CREATE_SOURCEDIR_API" in routes
     
     # Check URL template format
-    assert "{target_language_code}" in routes["LEMMA_LEMMA_DETAIL"]
-    assert "{lemma}" in routes["LEMMA_LEMMA_DETAIL"]
+    assert "{target_language_code}" in routes["LEMMA_VIEWS_GET_LEMMA_METADATA"]
+    assert "{lemma}" in routes["LEMMA_VIEWS_GET_LEMMA_METADATA"]
 
 
 def test_build_url_with_query(client):
@@ -44,7 +44,7 @@ def test_build_url_with_query(client):
     # Test with route parameters only
     url = build_url_with_query(
         client,
-        lemma_detail,
+        get_lemma_metadata,
         target_language_code="el",
         lemma="test"
     )
@@ -55,7 +55,7 @@ def test_build_url_with_query(client):
     # Test with query parameters
     url = build_url_with_query(
         client,
-        lemma_detail,
+        get_lemma_metadata,
         query_params={"tab": "sentences", "page": "2"},
         target_language_code="el",
         lemma="test"
