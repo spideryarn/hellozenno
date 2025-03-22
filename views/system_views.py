@@ -114,36 +114,20 @@ def get_db_metrics(db):
 
 
 # Route test page for URL registry
-@system_views_bp.route('/route-test')
+@system_views_bp.route("/route-test")
 def route_test():
     """Test page for URL registry and route resolution."""
-    return render_template('route_test.jinja')
+    return render_template("route_test.jinja")
+
 
 # Example page for TypeScript URL registry usage
-@system_views_bp.route('/route-registry-example')
+@system_views_bp.route("/route-registry-example")
 def route_registry_example():
     """Example page showing TypeScript URL registry usage in Svelte."""
-    return render_template('route_registry_example.jinja')
+    return render_template("route_registry_example.jinja")
 
-# Example page for Jinja URL generation
-@system_views_bp.route('/url-demo')
-def url_demo():
-    """Example page showing Jinja URL generation with endpoint_for."""
-    from utils.url_registry import endpoint_for
-    from views.sourcedir_views import sourcedirs_for_language
-    from views.lemma_views import lemmas_list, get_lemma_metadata
-    
-    # Common language code for examples
-    target_language_code = 'el'
-    
-    return render_template(
-        'url_demo.jinja',
-        endpoint_for=endpoint_for,  # This would typically be provided by a context processor
-        sourcedirs_for_language=sourcedirs_for_language,
-        lemmas_list=lemmas_list,
-        get_lemma_metadata=get_lemma_metadata,
-        target_language_code=target_language_code
-    )
+
+
 
 @auth_views_bp.route("/", methods=["GET"])
 @auth_views_bp.route("/<target_language_code>", methods=["GET"])
@@ -152,7 +136,7 @@ def auth_page(target_language_code=None):
     # Catch empty string language code (from trailing slash) and redirect to /auth
     if target_language_code == "":
         return redirect("/auth/")
-        
+
     # Check if a redirect URL was provided
     redirect_url = request.args.get("redirect", "/")
     show_signup = request.args.get("signup", "false").lower() == "true"
@@ -226,7 +210,7 @@ def profile_page(target_language_code=None):
     # Catch empty string language code (from trailing slash) and redirect to /auth/profile
     if target_language_code == "":
         return redirect("/auth/profile")
-        
+
     # Get or create profile
     profile, created = Profile.get_or_create_for_user(g.user["id"], g.user["email"])
 
@@ -241,10 +225,10 @@ def profile_page(target_language_code=None):
     # GET request - show the profile form
     # Explicitly set target_language_code to None to avoid language lookup errors in templates
     return render_template(
-        "profile.jinja", 
-        user=g.user, 
-        profile=profile, 
+        "profile.jinja",
+        user=g.user,
+        profile=profile,
         languages=SUPPORTED_LANGUAGES,
         target_language_code=None,  # Pass None to avoid template errors
-        target_language_name=None  # Explicitly pass None for target_language_name
+        target_language_name=None,  # Explicitly pass None for target_language_name
     )
