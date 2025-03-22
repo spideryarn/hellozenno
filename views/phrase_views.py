@@ -4,6 +4,10 @@ from peewee import DoesNotExist, fn
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import extract_phrases_from_text
 from slugify import slugify
+from utils.url_registry import endpoint_for
+from views.core_views import languages_list_vw
+from views.sourcedir_views import sourcedirs_for_language_vw
+from views.wordform_views import get_wordform_metadata_vw
 
 phrase_views_bp = Blueprint("phrase_views", __name__, url_prefix="/lang")
 
@@ -34,7 +38,7 @@ def phrases_list_vw(target_language_code):
         target_language_name=target_language_name,
         phrases=query,
         current_sort=sort_by,
-        languages_vw=languages_list_vw,
+        languages_list_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         phrases_list_vw=phrases_list_vw,
         get_phrase_metadata_vw=get_phrase_metadata_vw,
@@ -49,7 +53,8 @@ def get_phrase_metadata_vw(target_language_code, slug):
     try:
         # First try to find existing phrase in database by slug
         phrase = Phrase.get(
-            (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
+            (Phrase.language_code == target_language_code)
+            & (Phrase.slug == slug)
         )
     except DoesNotExist:
         abort(404, description=f"Phrase with slug '{slug}' not found")
@@ -66,4 +71,9 @@ def get_phrase_metadata_vw(target_language_code, slug):
         target_language_name=target_language_name,
         phrase=phrase,
         metadata=metadata,  # Add metadata to template context
+        languages_list_vw=languages_list_vw,
+        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+        phrases_list_vw=phrases_list_vw,
+        get_phrase_metadata_vw=get_phrase_metadata_vw,
+        get_wordform_metadata_vw=get_wordform_metadata_vw,
     )

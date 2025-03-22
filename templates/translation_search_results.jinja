@@ -5,7 +5,7 @@ Search Results - {{ target_language_name }}
 {% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
     » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     » <a href="{{ url_for(endpoint_for(wordforms_list_vw), target_language_code=target_language_code) }}">Wordforms</a>
     » Search "{{ search_term }}"

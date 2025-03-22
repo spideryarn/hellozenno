@@ -30,7 +30,7 @@ def inject_base_view_functions():
 
     return {
         # Only the functions required by base.jinja and navigation
-        "languages_vw": languages_list_vw,  # The actual function reference
+        "languages_list_vw": languages_list_vw,  # The actual function reference
         "search_landing_vw": search_landing_vw,
     }
 
@@ -118,7 +118,7 @@ def create_app():
     init_db(app)
 
     # Register blueprints
-    from views.system_views import system_views_bp, sys_views_bp
+    from views.system_views import system_views_bp
     from views.auth_views import auth_views_bp
     from views.auth_api import auth_api_bp
     from views.core_views import core_views_bp
@@ -135,7 +135,6 @@ def create_app():
     app.register_blueprint(system_views_bp)
 
     # Register system management blueprints
-    app.register_blueprint(sys_views_bp)
     app.register_blueprint(auth_views_bp)
     app.register_blueprint(auth_api_bp)
 

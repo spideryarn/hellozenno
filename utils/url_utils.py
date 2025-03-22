@@ -2,7 +2,7 @@
 
 import os
 import urllib.parse
-from flask import request, g
+from flask import request, g, url_for
 from loguru import logger
 
 
@@ -53,6 +53,32 @@ def decode_url_params():
         if decoded_path != request.path:
             logger.info(f"Fixed URL encoding: {request.path} -> {decoded_path}")
             request.path = decoded_path
+
+
+def url_with_query(endpoint, _query_parameters=None, **kwargs):
+    """Generate a URL with both path parameters and query parameters.
+    
+    This function extends Flask's url_for to handle query parameters separately.
+    
+    Args:
+        endpoint: The endpoint to generate a URL for (can be a string or function)
+        _query_parameters: A dictionary of query parameters to append
+        **kwargs: Path parameters to pass to url_for
+        
+    Returns:
+        str: The URL with both path and query parameters
+        
+    Example:
+        url_with_query(wordforms_list, {'sort': 'frequency'}, target_language_code='el')
+        # Returns "/lang/el/wordforms?sort=frequency"
+    """
+    base_url = url_for(endpoint, **kwargs)
+    
+    if not _query_parameters:
+        return base_url
+        
+    query_string = urllib.parse.urlencode(_query_parameters)
+    return f"{base_url}?{query_string}"
 
 
 def load_vite_manifest():

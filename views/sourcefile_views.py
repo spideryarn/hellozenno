@@ -39,6 +39,7 @@ from utils.sourcedir_utils import (
     _navigate_sourcefile,
 )
 from utils.sourcefile_processing import process_sourcefile_content
+from utils.url_registry import endpoint_for
 from utils.vocab_llm_utils import (
     create_interactive_word_links,
     extract_tricky_words_or_phrases,
@@ -60,7 +61,7 @@ def inspect_sourcefile_vw(
 
         return redirect(
             url_for(
-                "sourcefile_views.inspect_sourcefile_text_vw",
+                endpoint_for(inspect_sourcefile_text_vw),
                 target_language_code=target_language_code,
                 sourcedir_slug=sourcedir_slug,
                 sourcefile_slug=sourcefile_slug,
@@ -148,6 +149,15 @@ def _get_common_template_params(
     available_sourcedirs,
 ):
     """Get common template parameters used in all sourcefile view functions."""
+    # Import functions here to avoid circular imports
+    from views.core_views import languages_list_vw
+    from views.sourcedir_views import (
+        sourcedirs_for_language_vw,
+        sourcefiles_for_sourcedir_vw,
+    )
+    from views.flashcard_views import flashcard_landing_vw
+    from views.phrase_views import get_phrase_metadata_vw
+
     return {
         "target_language_code": target_language_code,
         "target_language_name": target_language_name,
@@ -164,6 +174,20 @@ def _get_common_template_params(
         # Add view functions for endpoint_for
         "view_sourcefile_vw": view_sourcefile_vw,
         "download_sourcefile_vw": download_sourcefile_vw,
+        "process_sourcefile_vw": process_sourcefile_vw,
+        "update_sourcefile_vw": update_sourcefile,  # Add missing update_sourcefile function with template-expected name
+        "inspect_sourcefile_vw": inspect_sourcefile_vw,
+        "inspect_sourcefile_text_vw": inspect_sourcefile_text_vw,
+        "inspect_sourcefile_words_vw": inspect_sourcefile_words_vw,
+        "inspect_sourcefile_phrases_vw": inspect_sourcefile_phrases_vw,
+        "prev_sourcefile_vw": prev_sourcefile_vw,
+        "next_sourcefile_vw": next_sourcefile_vw,
+        "languages_list_vw": languages_list_vw,
+        "flashcard_landing_vw": flashcard_landing_vw,
+        # Add imported view functions for navigation
+        "sourcedirs_for_language_vw": sourcedirs_for_language_vw,
+        "sourcefiles_for_sourcedir_vw": sourcefiles_for_sourcedir_vw,
+        "get_phrase_metadata_vw": get_phrase_metadata_vw,
     }
 
 

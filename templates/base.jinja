@@ -51,7 +51,7 @@
     <nav>
         <div class="nav-content">
             <div class="breadcrumbs">
-                <a href="{{ url_for(endpoint_for(languages_vw)) }}">Home</a>
+                <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Home</a>
                 {% block breadcrumbs %}{% endblock breadcrumbs %}
             </div>
             {% if target_language_code is defined and target_language_code %}

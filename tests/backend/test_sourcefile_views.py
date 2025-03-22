@@ -27,6 +27,7 @@ from utils.youtube_utils import YouTubeDownloadError
 from views import sourcefile_views
 from views.sourcedir_api import upload_sourcedir_new_sourcefile_api
 from views.sourcefile_views import (
+    inspect_sourcefile_text_vw,
     inspect_sourcefile_vw,
     view_sourcefile_vw,
     download_sourcefile_vw,
@@ -45,7 +46,6 @@ from views.sourcefile_api import (
     generate_sourcefile_audio_api,
     create_sourcefile_from_text_api,
 )
-from flask import url_for
 
 # NOTE: This test file is in the process of being updated to use `build_url_with_query`
 # instead of hardcoded URL strings. However, there are significant issues with URL routing in the
@@ -409,7 +409,7 @@ def test_auto_linking_wordforms(client, fixture_for_testing_db):
         # Create some wordforms in the database (but not linked to sourcefile)
         lemma1 = Lemma.create(
             lemma="καλημέρα",
-            target_language_code=TEST_LANGUAGE_CODE,
+            language_code=TEST_LANGUAGE_CODE,
             part_of_speech="expression",
             translations=["good morning"],
         )
@@ -424,7 +424,7 @@ def test_auto_linking_wordforms(client, fixture_for_testing_db):
 
         lemma2 = Lemma.create(
             lemma="είμαι",
-            target_language_code=TEST_LANGUAGE_CODE,
+            language_code=TEST_LANGUAGE_CODE,
             part_of_speech="verb",
             translations=["to be"],
         )
@@ -475,7 +475,7 @@ def test_auto_linking_case_insensitive(client, fixture_for_testing_db):
         # Create wordform in database (lowercase)
         lemma = Lemma.create(
             lemma="καλημέρα",
-            target_language_code=TEST_LANGUAGE_CODE,
+            language_code=TEST_LANGUAGE_CODE,
             part_of_speech="expression",
             translations=["good morning"],
         )
@@ -545,7 +545,7 @@ def test_auto_linking_preserves_existing(client, fixture_for_testing_db):
 
         url = build_url_with_query(
             client,
-            inspect_sourcefile_vw,
+            inspect_sourcefile_text_vw,
             target_language_code=TEST_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
             sourcefile_slug=sourcefile.slug,
@@ -838,7 +838,7 @@ def test_sourcefile_phrase_ordering(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.target_language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.language_code == TEST_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -1319,6 +1319,9 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
 
 def test_delete_sourcefile_with_wordforms(client):
     """Test deleting a source file that has associated wordforms."""
+    # Import the view function we need
+    from views.sourcefile_api import delete_sourcefile_api
+
     # Create test sourcedir and sourcefile with language code
     sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
     sourcefile = Sourcefile.create(
@@ -1359,7 +1362,7 @@ def test_delete_sourcefile_with_wordforms(client):
     # Test deletion using build_url_with_query
     url = build_url_with_query(
         client,
-        delete_sourcefile_vw,
+        delete_sourcefile_api,
         target_language_code=TEST_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,

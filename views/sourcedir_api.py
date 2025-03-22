@@ -18,6 +18,7 @@ from config import (
 from db_models import Sourcedir, Sourcefile
 from utils.lang_utils import VALID_LANGUAGE_CODES
 from utils.sourcedir_utils import _get_sourcedir_entry, allowed_file
+from loguru import logger
 from utils.sourcefile_processing import process_uploaded_file
 from views.sourcedir_views import sourcedir_views_bp
 from slugify import slugify

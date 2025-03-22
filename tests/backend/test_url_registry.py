@@ -1,10 +1,8 @@
 """Tests for the URL registry functionality."""
 
 import os
-import json
 import re
 import pytest
-from flask import url_for, current_app
 
 from utils.url_registry import endpoint_for, generate_route_registry
 from tests.backend.utils_for_testing import build_url_with_query
@@ -29,9 +27,9 @@ def test_endpoint_for():
     endpoint = endpoint_for(create_sourcedir_api)
     assert endpoint == "sourcedir_api.create_sourcedir_api"
 
-    # Test with languages_vw (from core_views blueprint)
+    # Test with languages_list_vw (from core_views blueprint)
     endpoint = endpoint_for(languages_list_vw)
-    assert endpoint == "core_views.languages_vw"
+    assert endpoint == "core_views.languages_list_vw"
 
     # Test with search_landing_vw (from search_views blueprint)
     endpoint = endpoint_for(search_landing_vw)

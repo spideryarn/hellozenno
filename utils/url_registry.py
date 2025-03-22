@@ -14,6 +14,30 @@ def endpoint_for(view_func):
         from views.sourcedir_views import sourcedirs_list
         url_for(endpoint_for(sourcedirs_list), target_language_code='el')
     """
+    # Add diagnostic checks
+    if view_func is None:
+        raise ValueError("endpoint_for received None instead of a view function")
+        
+    if not callable(view_func):
+        raise TypeError(
+            f"endpoint_for expected a callable function but got {type(view_func).__name__}. "
+            f"Make sure the view function is correctly imported at module level and passed to the template. "
+            f"Value: {repr(view_func)}"
+        )
+    
+    if not hasattr(view_func, '__name__'):
+        raise AttributeError(
+            f"View function {view_func} has no __name__ attribute. "
+            f"This can happen with lambda functions or partials. "
+            f"Make sure to pass an actual function."
+        )
+    
+    if not hasattr(view_func, '__module__'):
+        raise AttributeError(
+            f"View function {view_func} has no __module__ attribute. "
+            f"Make sure it's a proper function imported at module level."
+        )
+    
     # Get the module name where the function is defined
     module_name = view_func.__module__
 

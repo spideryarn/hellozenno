@@ -39,7 +39,7 @@ def sentences_list_vw(target_language_code: str):
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         sentences=sentences,
-        languages_vw=languages_list_vw,
+        languages_list_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         sentences_list_vw=sentences_list_vw,
         get_sentence_vw=get_sentence_vw,
@@ -134,7 +134,7 @@ def get_sentence_vw(target_language_code: str, slug: str):
             sentence=sentence_data,
             metadata=metadata,
             enhanced_sentence_text=enhanced_sentence_text,
-            languages_vw=languages_list_vw,
+            languages_list_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             sentences_list_vw=sentences_list_vw,
         )

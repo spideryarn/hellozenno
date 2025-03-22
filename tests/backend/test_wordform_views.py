@@ -1,11 +1,9 @@
 import pytest
 from unittest.mock import patch
-from flask import url_for
 from peewee import DoesNotExist
-import time
 from peewee import fn
 
-from db_models import Lemma, Wordform
+from db_models import Wordform
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,

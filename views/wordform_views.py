@@ -47,6 +47,10 @@ def wordforms_list_vw(target_language_code: str):
     # Import necessary view functions inside this function to avoid circular imports
     from views.core_views import languages_list_vw
     from views.sourcedir_views import sourcedirs_for_language_vw
+    
+    # We need this one for the _wordforms_list.jinja template
+    # The circular import is handled by importing inside the function
+    from views.wordform_views import get_wordform_metadata_vw
 
     return render_template(
         "wordforms.jinja",
@@ -58,9 +62,10 @@ def wordforms_list_vw(target_language_code: str):
         current_sort=sort_by,
         show_commonality=True,  # We can show commonality by joining with Lemma
         # Add view functions for endpoint_for
-        languages_vw=languages_list_vw,
+        languages_list_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         wordforms_list_vw=wordforms_list_vw,
+        get_wordform_metadata_vw=get_wordform_metadata_vw,  # Add this view function that's used in _wordforms_list.jinja
     )
 
 
@@ -100,7 +105,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
             dict_html=dict_as_html(wordform_metadata),
             metadata=metadata,  # Add metadata to template context
             # Add view functions for endpoint_for
-            languages_vw=languages_list_vw,
+            languages_list_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             wordforms_list_vw=wordforms_list_vw,
             delete_wordform_vw=delete_wordform_vw,
@@ -135,7 +140,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
                 target_language_results=search_result["target_language_results"],
                 english_results=search_result["english_results"],
                 # Add view functions for endpoint_for
-                languages_vw=languages_list_vw,
+                languages_list_vw=languages_list_vw,
                 sourcedirs_for_language_vw=sourcedirs_for_language_vw,
                 wordforms_list_vw=wordforms_list_vw,
                 get_wordform_metadata_vw=get_wordform_metadata_vw,
@@ -191,7 +196,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
                 possible_misspellings=target_misspellings,
                 metadata=None,
                 # Add view functions for endpoint_for
-                languages_vw=languages_list_vw,
+                languages_list_vw=languages_list_vw,
                 sourcedirs_for_language_vw=sourcedirs_for_language_vw,
                 wordforms_list_vw=wordforms_list_vw,
                 get_wordform_metadata_vw=get_wordform_metadata_vw,

@@ -39,6 +39,8 @@ from views.sourcefile_views import sourcefile_views_bp
 from views.phrase_views import phrase_views_bp
 from views.sentence_views import sentence_views_bp
 from views.search_views import search_views_bp
+from views.auth_views import auth_views_bp
+from views.system_views import system_views_bp
 
 # Commented out missing API blueprint
 # from views.core_api import core_api_bp
@@ -159,6 +161,9 @@ def client(fixture_for_testing_db):
     app.register_blueprint(phrase_views_bp)
     app.register_blueprint(sentence_views_bp)
     app.register_blueprint(search_views_bp)
+    app.register_blueprint(auth_views_bp)
+    app.register_blueprint(system_views_bp)
+    app.register_blueprint(flashcard_views_bp)
     # Register API blueprints
     # Commented out missing API blueprint
     # app.register_blueprint(core_api_bp)
@@ -168,7 +173,6 @@ def client(fixture_for_testing_db):
     app.register_blueprint(sourcedir_api_bp)
     app.register_blueprint(sourcefile_api_bp)
     app.register_blueprint(sentence_api_bp)
-    app.register_blueprint(flashcard_views_bp)
 
     # Register custom context processors for testing
     from utils.url_registry import endpoint_for, generate_route_registry
@@ -197,7 +201,7 @@ def client(fixture_for_testing_db):
 
             return {
                 # Only the functions required by base.jinja
-                "languages_vw": languages_list_vw,
+                "languages_list_vw": languages_list_vw,
                 "search_landing_vw": search_landing_vw,
             }
 

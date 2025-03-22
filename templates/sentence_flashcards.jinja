@@ -3,7 +3,7 @@
 {% block title %}{{ target_language_name }} sentence flashcards - Hello Zenno{% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
     » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     {% if not sourcedir and not sourcefile %}
     » <a href="{{ url_for(endpoint_for(sentences_list_vw), language_code=target_language_code) }}">Sentences</a>

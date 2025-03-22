@@ -5,7 +5,7 @@ import logging
 import urllib.parse
 
 from utils.lang_utils import get_language_name
-from db_models import Lemma, Wordform, LemmaExampleSentence
+from db_models import Lemma, LemmaExampleSentence
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.url_registry import endpoint_for
 
@@ -51,9 +51,10 @@ def lemmas_list_vw(target_language_code: str):
         view_name=endpoint_for(lemmas_list_vw),
         current_sort=sort,
         show_commonality=True,  # We have commonality data for lemmas
-        languages_vw=languages_list_vw,
+        languages_list_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         lemmas_list_vw=lemmas_list_vw,
+        get_lemma_metadata_vw=get_lemma_metadata_vw,
     )
 
 
@@ -137,7 +138,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
         # Import here to avoid circular dependencies
         from views.wordform_views import get_wordform_metadata_vw
         from views.sentence_views import get_sentence_vw
-        
+
         return render_template(
             "lemma.jinja",
             target_language_code=target_language_code,
@@ -146,7 +147,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             dict_html="",  # TODO: Implement this
             metadata=metadata,  # Add metadata to template context
             # Add view functions for endpoint_for
-            languages_vw=languages_list_vw,
+            languages_list_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             lemmas_list_vw=lemmas_list_vw,
             delete_lemma_vw=delete_lemma_vw,
@@ -162,7 +163,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             lemma=lemma,
             metadata=None,  # Add metadata as None for non-existent lemmas
             # Add view functions for endpoint_for
-            languages_vw=languages_list_vw,
+            languages_list_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             lemmas_list_vw=lemmas_list_vw,
             search_landing_vw=search_landing_vw,

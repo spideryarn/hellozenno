@@ -1,8 +1,6 @@
 """Test flashcard views."""
 
-import urllib.parse
 import pytest
-from flask import url_for
 from db_models import (
     Lemma,
     SentenceLemma,
@@ -13,7 +11,6 @@ from db_models import (
     Sentence,
 )
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
-from utils.url_registry import endpoint_for
 from views.flashcard_views import (
     flashcard_landing_vw,
     random_flashcard_vw,
@@ -233,7 +230,7 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     """Test the random flashcard redirect."""
     # Test basic redirect
     url = build_url_with_query(
-        client, random_flashcard_vw, language_code=TEST_LANGUAGE_CODE
+        client, random_flashcard_vw, target_language_code=TEST_LANGUAGE_CODE
     )
     response = client.get(url, follow_redirects=False)
     assert response.status_code == 302
@@ -242,7 +239,7 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     expected_url = build_url_with_query(
         client,
         flashcard_sentence_vw,
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_LANGUAGE_CODE,
         slug=test_sentence_with_sourcefile.slug,
     )
     assert expected_url in response.location
@@ -252,7 +249,7 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
         client,
         random_flashcard_vw,
         query_params={"sourcefile": test_sourcefile.slug},
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=False)
     assert response.status_code == 302
@@ -261,7 +258,7 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     # Test when no sentences exist
     test_sentence_with_sourcefile.delete_instance()
     url = build_url_with_query(
-        client, random_flashcard_vw, language_code=TEST_LANGUAGE_CODE
+        client, random_flashcard_vw, target_language_code=TEST_LANGUAGE_CODE
     )
     response = client.get(url)
     assert response.status_code == 404

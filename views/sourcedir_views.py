@@ -28,9 +28,7 @@ def sourcedirs_for_language_vw(target_language_code: str):
     supported_languages = get_all_languages()
 
     # Query sourcedirs from database - filtered by language
-    query = Sourcedir.select().where(
-        Sourcedir.target_language_code == target_language_code
-    )
+    query = Sourcedir.select().where(Sourcedir.language_code == target_language_code)
 
     if sort_by == "date":
         # Sort by modification time, newest first
@@ -85,7 +83,7 @@ def sourcedirs_for_language_vw(target_language_code: str):
         current_sort=sort_by,
         supported_languages=supported_languages,
         sourcedir_stats=sourcedir_stats,
-        languages_vw=languages_list_vw,
+        languages_list_vw=languages_list_vw,
         sourcefiles_for_sourcedir_vw=sourcefiles_for_sourcedir_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         wordforms_list_vw=wordforms_list_vw,
@@ -159,7 +157,10 @@ def sourcefiles_for_sourcedir_vw(target_language_code: str, sourcedir_slug: str)
             sourcefiles=sourcefiles,
             supported_languages=supported_languages,
             has_vocabulary=has_vocabulary,
+            sourcefiles_for_sourcedir_vw=sourcefiles_for_sourcedir_vw,
         )
     except DoesNotExist:
-        # Return empty JSON array for nonexistent directories
-        return "[]", 200, {"Content-Type": "application/json"}
+        # # Return empty JSON array for nonexistent directories
+        # return "[]", 200, {"Content-Type": "application/json"}
+        # Return 404 for nonexistent directories
+        return render_template("404.jinja", message="Source directory not found"), 404

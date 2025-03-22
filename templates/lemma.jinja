@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
     » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     » <a href="{{ url_for(endpoint_for(lemmas_list_vw), target_language_code=target_language_code) }}">Lemmas</a>
     » {{ lemma_metadata.lemma }}
@@ -58,7 +58,7 @@
                     {{ load_svelte_component('MiniSentence', {
                         'phrase': example.phrase,
                         'translation': example.translation,
-                        'href': url_for(endpoint_for(get_sentence_vw), language_code=target_language_code, slug=example.slug) if example.slug else '#'
+                        'href': url_for(endpoint_for(get_sentence_vw), target_language_code=target_language_code, slug=example.slug) if example.slug else '#'
                     }, component_id='minisentence-component-' ~ loop.index) }}
                 </div>
                 {% endfor %}

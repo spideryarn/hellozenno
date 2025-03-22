@@ -10,17 +10,14 @@ from flask import (
 
 from utils.db_connection import get_db
 
-# Create blueprint for system views
-system_views_bp = Blueprint("system_views", __name__, url_prefix="")
-
-# Create sys-specific blueprint
-sys_views_bp = Blueprint("sys_views", __name__, url_prefix="/sys")
+# Create blueprint for system views with the /sys prefix
+system_views_bp = Blueprint("system_views", __name__, url_prefix="/sys")
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 
-@sys_views_bp.route("/health-check")
+@system_views_bp.route("/health-check")
 def health_check_vw():
     """Health check endpoint that verifies app and database functionality."""
     try:

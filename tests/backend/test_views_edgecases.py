@@ -1,6 +1,4 @@
-import pytest
 from unittest.mock import patch
-from flask import url_for
 
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (

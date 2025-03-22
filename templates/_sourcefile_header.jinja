@@ -63,7 +63,7 @@
             {% endif %}
         </li>
         <li class="button-group">
-            <a href="{{ url_for(endpoint_for(flashcard_landing_vw), language_code=target_language_code, sourcefile=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for(endpoint_for(flashcard_landing_vw), target_language_code=target_language_code, sourcefile=sourcefile_slug) }}" class="button">
                 Practice Flashcards
             </a>
         </li>

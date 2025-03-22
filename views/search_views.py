@@ -43,7 +43,7 @@ def search_landing_vw(target_language_code: str):
         "search.jinja",
         target_language_code=target_language_code,
         target_language_name=get_language_name(target_language_code),
-        languages_vw=languages_list_vw,
+        languages_list_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         search_landing_vw=search_landing_vw,
     )

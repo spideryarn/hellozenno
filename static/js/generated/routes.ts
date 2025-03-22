@@ -1,7 +1,7 @@
 // Auto-generated from Flask app.url_map
 export enum RouteName {
+  SYSTEM_VIEWS_HEALTH_CHECK_VW = "SYSTEM_VIEWS_HEALTH_CHECK_VW",
   SYSTEM_VIEWS_ROUTE_TEST_VW = "SYSTEM_VIEWS_ROUTE_TEST_VW",
-  SYS_VIEWS_HEALTH_CHECK_VW = "SYS_VIEWS_HEALTH_CHECK_VW",
   AUTH_VIEWS_AUTH_PAGE_VW = "AUTH_VIEWS_AUTH_PAGE_VW",
   AUTH_VIEWS_PROTECTED_PAGE_VW = "AUTH_VIEWS_PROTECTED_PAGE_VW",
   AUTH_VIEWS_PROFILE_PAGE_VW = "AUTH_VIEWS_PROFILE_PAGE_VW",
@@ -68,8 +68,8 @@ export enum RouteName {
 
 
 export const ROUTES = {
-  SYSTEM_VIEWS_ROUTE_TEST_VW: "/route-test",
-  SYS_VIEWS_HEALTH_CHECK_VW: "/sys/health-check",
+  SYSTEM_VIEWS_HEALTH_CHECK_VW: "/sys/health-check",
+  SYSTEM_VIEWS_ROUTE_TEST_VW: "/sys/route-test",
   AUTH_VIEWS_AUTH_PAGE_VW: "/auth/",
   AUTH_VIEWS_PROTECTED_PAGE_VW: "/auth/protected",
   AUTH_VIEWS_PROFILE_PAGE_VW: "/auth/profile",
@@ -136,8 +136,8 @@ export const ROUTES = {
 
 
 export type RouteParams = {
+  [RouteName.SYSTEM_VIEWS_HEALTH_CHECK_VW]: {};
   [RouteName.SYSTEM_VIEWS_ROUTE_TEST_VW]: {};
-  [RouteName.SYS_VIEWS_HEALTH_CHECK_VW]: {};
   [RouteName.AUTH_VIEWS_AUTH_PAGE_VW]: {};
   [RouteName.AUTH_VIEWS_PROTECTED_PAGE_VW]: {};
   [RouteName.AUTH_VIEWS_PROFILE_PAGE_VW]: {};
