@@ -19,7 +19,7 @@ from tests.backend.utils_for_testing import (
 from utils.url_registry import endpoint_for
 
 # Import all view functions that we'll need
-from views.core_views import languages_vw
+from views.core_views import languages_list_vw
 from views.search_views import search_landing_vw
 from views.lemma_views import lemmas_list_vw, get_lemma_metadata_vw
 from views.wordform_views import wordforms_list_vw, get_wordform_metadata_vw

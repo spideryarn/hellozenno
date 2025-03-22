@@ -9,8 +9,9 @@ from utils.vocab_llm_utils import quick_search_for_wordform
 from utils.url_registry import endpoint_for
 
 # Import necessary view functions
-from views.core_views import languages_vw
+from views.core_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
+
 # Moving search_views and lemma_views imports inside functions to avoid circular imports
 
 wordform_views_bp = Blueprint("wordform_views", "/", url_prefix="/lang")
@@ -44,7 +45,7 @@ def wordforms_list_vw(target_language_code: str):
         lemma_metadata[lemma_entry.lemma] = lemma_entry.to_dict()
 
     # Import necessary view functions inside this function to avoid circular imports
-    from views.core_views import languages_vw
+    from views.core_views import languages_list_vw
     from views.sourcedir_views import sourcedirs_for_language_vw
 
     return render_template(
@@ -57,7 +58,7 @@ def wordforms_list_vw(target_language_code: str):
         current_sort=sort_by,
         show_commonality=True,  # We can show commonality by joining with Lemma
         # Add view functions for endpoint_for
-        languages_vw=languages_vw,
+        languages_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         wordforms_list_vw=wordforms_list_vw,
     )
@@ -89,7 +90,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
 
         # Import here to avoid circular dependencies
         from views.lemma_views import get_lemma_metadata_vw
-        
+
         return render_template(
             "wordform.jinja",
             wordform_metadata=wordform_metadata,
@@ -99,7 +100,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
             dict_html=dict_as_html(wordform_metadata),
             metadata=metadata,  # Add metadata to template context
             # Add view functions for endpoint_for
-            languages_vw=languages_vw,
+            languages_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             wordforms_list_vw=wordforms_list_vw,
             delete_wordform_vw=delete_wordform_vw,
@@ -125,7 +126,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
             # Import here to avoid circular dependencies
             from views.lemma_views import get_lemma_metadata_vw
             from views.search_views import search_landing_vw, search_word_vw
-            
+
             return render_template(
                 "translation_search_results.jinja",
                 target_language_code=target_language_code,
@@ -134,7 +135,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
                 target_language_results=search_result["target_language_results"],
                 english_results=search_result["english_results"],
                 # Add view functions for endpoint_for
-                languages_vw=languages_vw,
+                languages_vw=languages_list_vw,
                 sourcedirs_for_language_vw=sourcedirs_for_language_vw,
                 wordforms_list_vw=wordforms_list_vw,
                 get_wordform_metadata_vw=get_wordform_metadata_vw,
@@ -181,7 +182,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
         else:
             # Import here to avoid circular dependencies
             from views.search_views import search_landing_vw
-            
+
             return render_template(
                 "invalid_word.jinja",
                 target_language_code=target_language_code,
@@ -190,7 +191,7 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
                 possible_misspellings=target_misspellings,
                 metadata=None,
                 # Add view functions for endpoint_for
-                languages_vw=languages_vw,
+                languages_vw=languages_list_vw,
                 sourcedirs_for_language_vw=sourcedirs_for_language_vw,
                 wordforms_list_vw=wordforms_list_vw,
                 get_wordform_metadata_vw=get_wordform_metadata_vw,

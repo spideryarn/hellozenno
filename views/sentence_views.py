@@ -18,7 +18,7 @@ from utils.vocab_llm_utils import (
 from utils.url_registry import endpoint_for
 
 # Import necessary view functions for templates
-from views.core_views import languages_vw
+from views.core_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 
 
@@ -30,7 +30,7 @@ def sentences_list_vw(target_language_code: str):
     """Display all sentences for a language."""
     # Import here to avoid circular imports
     from views.flashcard_views import flashcard_landing_vw
-    
+
     target_language_name = get_language_name(target_language_code)
     sentences = get_all_sentences(target_language_code)
 
@@ -39,7 +39,7 @@ def sentences_list_vw(target_language_code: str):
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         sentences=sentences,
-        languages_vw=languages_vw,
+        languages_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         sentences_list_vw=sentences_list_vw,
         get_sentence_vw=get_sentence_vw,
@@ -50,7 +50,7 @@ def sentences_list_vw(target_language_code: str):
 @sentence_views_bp.route("/<target_language_code>/sentence/<slug>")
 def get_sentence_vw(target_language_code: str, slug: str):
     """Display a specific sentence."""
-    from views.core_views import languages_vw
+    from views.core_views import languages_list_vw
     from views.sourcedir_views import sourcedirs_for_language_vw
 
     target_language_name = get_language_name(target_language_code)
@@ -134,7 +134,7 @@ def get_sentence_vw(target_language_code: str, slug: str):
             sentence=sentence_data,
             metadata=metadata,
             enhanced_sentence_text=enhanced_sentence_text,
-            languages_vw=languages_vw,
+            languages_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             sentences_list_vw=sentences_list_vw,
         )

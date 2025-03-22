@@ -67,7 +67,7 @@ def sourcedirs_for_language_vw(target_language_code: str):
         }
 
     # Import here to avoid circular imports
-    from views.core_views import languages_vw
+    from views.core_views import languages_list_vw
     from views.wordform_views import wordforms_list_vw
     from views.lemma_views import lemmas_list_vw
     from views.phrase_views import phrases_list_vw
@@ -83,7 +83,6 @@ def sourcedirs_for_language_vw(target_language_code: str):
         current_sort=sort_by,
         supported_languages=supported_languages,
         sourcedir_stats=sourcedir_stats,
-        languages_vw=languages_vw,
         sourcefiles_for_sourcedir_vw=sourcefiles_for_sourcedir_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         wordforms_list_vw=wordforms_list_vw,

@@ -11,7 +11,7 @@ from tests.backend.utils_for_testing import build_url_with_query
 from views.lemma_views import get_lemma_metadata_vw
 from views.sourcedir_views import sourcefiles_for_sourcedir_vw
 from views.sourcedir_api import create_sourcedir_api
-from views.core_views import languages_vw
+from views.core_views import languages_list_vw
 from views.search_views import search_landing_vw
 
 
@@ -30,7 +30,7 @@ def test_endpoint_for():
     assert endpoint == "sourcedir_api.create_sourcedir_api"
 
     # Test with languages_vw (from core_views blueprint)
-    endpoint = endpoint_for(languages_vw)
+    endpoint = endpoint_for(languages_list_vw)
     assert endpoint == "core_views.languages_vw"
 
     # Test with search_landing_vw (from search_views blueprint)
@@ -68,33 +68,33 @@ def test_typescript_routes_match_flask_routes(client):
     """Test that generated TypeScript routes match the Flask routes."""
     # Get the app from the client fixture
     app = client.application
-    
+
     # Path to the TypeScript routes file
     ts_file_path = os.path.join(app.static_folder, "js", "generated", "routes.ts")
-    
+
     # Skip the test if the file doesn't exist (e.g., in CI environments)
     if not os.path.exists(ts_file_path):
         pytest.skip(f"TypeScript routes file not found at {ts_file_path}")
-    
+
     # Read the TypeScript routes file
     with open(ts_file_path, "r") as f:
         ts_content = f.read()
-    
+
     # Extract route constants from TypeScript file using regex
     route_pattern = r'(\w+):\s*"([^"]+)"'
     ts_routes = dict(re.findall(route_pattern, ts_content))
-    
+
     # Generate the current Flask route registry
     with app.app_context():
         flask_routes = generate_route_registry(app)
-    
+
     # For the main test, we'll focus on checking that common routes match
     # Find the intersection of route names (routes in both Flask and TypeScript)
     common_routes = set(flask_routes.keys()) & set(ts_routes.keys())
-    
+
     # Assert that we have at least some common routes to test
     assert common_routes, "No common routes found between Flask and TypeScript"
-    
+
     # Assert that the route paths match for common routes
     mismatched_routes = []
     for route_name in common_routes:
@@ -102,19 +102,27 @@ def test_typescript_routes_match_flask_routes(client):
             mismatched_routes.append(
                 f"{route_name}: Flask: {flask_routes[route_name]}, TS: {ts_routes[route_name]}"
             )
-    
+
     # Check for mismatches on common routes
     assert not mismatched_routes, f"Mismatched route paths: {mismatched_routes}"
-    
+
     # Print diagnostics for missing/extra routes (but don't fail the test)
     # This is useful for development but not critical for CI
-    missing_routes = [f"{route}: {flask_routes[route]}" for route in flask_routes if route not in ts_routes]
-    extra_routes = [f"{route}: {ts_routes[route]}" for route in ts_routes if route not in flask_routes]
-    
+    missing_routes = [
+        f"{route}: {flask_routes[route]}"
+        for route in flask_routes
+        if route not in ts_routes
+    ]
+    extra_routes = [
+        f"{route}: {ts_routes[route]}"
+        for route in ts_routes
+        if route not in flask_routes
+    ]
+
     if missing_routes:
         print(f"INFO: Routes in Flask but not in TypeScript: {len(missing_routes)}")
         # Uncomment to see details: print("\n".join(missing_routes))
-    
+
     if extra_routes:
         print(f"INFO: Routes in TypeScript but not in Flask: {len(extra_routes)}")
         # Uncomment to see details: print("\n".join(extra_routes))

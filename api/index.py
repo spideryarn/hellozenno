@@ -25,12 +25,12 @@ def inject_base_view_functions():
 
     This minimal context processor only includes functions needed by `base.jinja`.
     """
-    from views.core_views import languages_vw
+    from views.core_views import languages_list_vw
     from views.search_views import search_landing_vw
 
     return {
         # Only the functions required by base.jinja and navigation
-        "languages_vw": languages_vw,  # The actual function reference
+        "languages_vw": languages_list_vw,  # The actual function reference
         "search_landing_vw": search_landing_vw,
     }
 
@@ -199,7 +199,7 @@ def create_app():
     # Register error handlers
     @app.errorhandler(404)
     def page_not_found(e):
-        return render_template('404.jinja'), 404
+        return render_template("404.jinja"), 404
 
     # Added CLI command to generate routes
     @app.cli.command("generate-routes-ts")

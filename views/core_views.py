@@ -18,11 +18,11 @@ logger = logging.getLogger(__name__)
 
 @core_views_bp.route("/")
 def home_vw():
-    return redirect_to_view(core_views_bp, languages_vw)
+    return redirect_to_view(core_views_bp, languages_list_vw)
 
 
 @core_views_bp.route("/lang")
-def languages_vw(trailing_slash=""):
+def languages_list_vw(trailing_slash=""):
     """Display all supported languages."""
     # Import here to avoid circular imports
     from views.sourcedir_views import sourcedirs_for_language_vw
@@ -31,7 +31,7 @@ def languages_vw(trailing_slash=""):
     return render_template(
         "languages.jinja",
         languages=languages,
-        languages_vw=languages_vw,
+        languages_list_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
     )
 

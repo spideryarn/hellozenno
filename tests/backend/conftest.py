@@ -39,6 +39,7 @@ from views.sourcefile_views import sourcefile_views_bp
 from views.phrase_views import phrase_views_bp
 from views.sentence_views import sentence_views_bp
 from views.search_views import search_views_bp
+
 # Commented out missing API blueprint
 # from views.core_api import core_api_bp
 from views.wordform_api import wordform_api_bp
@@ -188,15 +189,15 @@ def client(fixture_for_testing_db):
         @app.context_processor
         def inject_base_view_functions():
             """Inject minimal view functions needed by the base template.
-            
+
             This matches the function in api/index.py without importing it directly.
             """
-            from views.core_views import languages_vw
+            from views.core_views import languages_list_vw
             from views.search_views import search_landing_vw
-            
+
             return {
                 # Only the functions required by base.jinja
-                "languages_vw": languages_vw,
+                "languages_vw": languages_list_vw,
                 "search_landing_vw": search_landing_vw,
             }
 

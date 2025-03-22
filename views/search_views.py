@@ -9,8 +9,9 @@ import urllib.parse
 from utils.flask_view_utils import redirect_to_view
 from utils.lang_utils import get_language_name
 from utils.url_registry import endpoint_for
+
 # Don't import wordform_views directly to avoid circular imports
-from views.core_views import languages_vw
+from views.core_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 
 
@@ -42,7 +43,7 @@ def search_landing_vw(target_language_code: str):
         "search.jinja",
         target_language_code=target_language_code,
         target_language_name=get_language_name(target_language_code),
-        languages_vw=languages_vw,
+        languages_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         search_landing_vw=search_landing_vw,
     )
@@ -57,7 +58,7 @@ def search_word_vw(target_language_code: str, wordform: str):
     """
     # Fix URL encoding issues with Vercel by explicitly unquoting the wordform parameter
     wordform = urllib.parse.unquote(wordform)
-    
+
     # Import here to avoid circular dependencies
     from views.wordform_views import get_wordform_metadata_vw, wordform_views_bp
 

@@ -10,10 +10,12 @@ from utils.store_utils import load_or_generate_lemma_metadata
 from utils.url_registry import endpoint_for
 
 # Import necessary view functions
-from views.core_views import languages_vw
+from views.core_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
+
 # Import search views
 from views.search_views import search_word_vw, search_landing_vw
+
 # Moving imports inside functions to avoid circular imports
 
 lemma_views_bp = Blueprint("lemma_views", __name__, url_prefix="/lang")
@@ -31,12 +33,13 @@ def lemmas_list_vw(target_language_code: str):
     # Get all lemmas for this language from the database using the enhanced model method
     # which now handles optimized queries and multiple sorting options
     lemmas = Lemma.get_all_lemmas_for(language_code=target_language_code, sort_by=sort)
+    # TODO: Update parameter name to 'target_language_code' to match rename
 
     # Convert query results to the format expected by the template
     lemma_metadata = {lemma.lemma: lemma.to_dict() for lemma in lemmas}
 
     from utils.url_registry import endpoint_for
-    from views.core_views import languages_vw
+    from views.core_views import languages_list_vw
     from views.sourcedir_views import sourcedirs_for_language_vw
 
     return render_template(
@@ -48,7 +51,7 @@ def lemmas_list_vw(target_language_code: str):
         view_name=endpoint_for(lemmas_list_vw),
         current_sort=sort,
         show_commonality=True,  # We have commonality data for lemmas
-        languages_vw=languages_vw,
+        languages_vw=languages_list_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         lemmas_list_vw=lemmas_list_vw,
     )
@@ -143,7 +146,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             dict_html="",  # TODO: Implement this
             metadata=metadata,  # Add metadata to template context
             # Add view functions for endpoint_for
-            languages_vw=languages_vw,
+            languages_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             lemmas_list_vw=lemmas_list_vw,
             delete_lemma_vw=delete_lemma_vw,
@@ -159,7 +162,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             lemma=lemma,
             metadata=None,  # Add metadata as None for non-existent lemmas
             # Add view functions for endpoint_for
-            languages_vw=languages_vw,
+            languages_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             lemmas_list_vw=lemmas_list_vw,
             search_landing_vw=search_landing_vw,

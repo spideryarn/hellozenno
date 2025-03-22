@@ -10,7 +10,7 @@ from tests.fixtures_for_tests import (
 )
 from tests.backend.utils_for_testing import build_url_with_query
 from views.wordform_views import get_wordform_metadata_vw
-from views.core_views import languages_vw
+from views.core_views import languages_list_vw
 from views.search_views import search_landing_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 
@@ -62,7 +62,7 @@ def test_sourcedir_view_smoke_test(client):
 
 def test_languages_view(client):
     """Test that languages view returns 200 OK."""
-    url = build_url_with_query(client, languages_vw)
+    url = build_url_with_query(client, languages_list_vw)
     response = client.get(url)
     assert response.status_code == 200
 
