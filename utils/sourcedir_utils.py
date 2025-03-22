@@ -126,9 +126,9 @@ def _get_sourcefile_entry(
     )
 
 
-def get_sourcedir_or_404(language_code: str, sourcedir_slug: str) -> Sourcedir:
+def get_sourcedir_or_404(target_language_code: str, sourcedir_slug: str) -> Sourcedir:
     """Get sourcedir by language code and slug, or return 404."""
     try:
-        return _get_sourcedir_entry(language_code, sourcedir_slug)
+        return _get_sourcedir_entry(target_language_code, sourcedir_slug)
     except DoesNotExist:
         abort(404, description="Source directory not found")

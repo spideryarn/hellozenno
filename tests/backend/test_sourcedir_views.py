@@ -28,6 +28,7 @@ from views.sourcedir_views import (
 from views.sourcedir_api import (
     create_sourcedir_api,
     delete_sourcedir_api,
+    upload_sourcedir_new_sourcefile_api,
     update_sourcedir_language_api,
     rename_sourcedir_api,
 )
@@ -109,7 +110,7 @@ def test_update_sourcedir_language(client, test_data):
         target_language_code=TEST_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
-    response = client.put(url, json={"language_code": "fr"})
+    response = client.put(url, json={"target_language_code": "fr"})
     assert response.status_code == 204
 
     # Verify language was updated
@@ -123,7 +124,7 @@ def test_update_sourcedir_language(client, test_data):
         target_language_code="fr",
         sourcedir_slug=sourcedir.slug,
     )
-    response = client.put(url, json={"language_code": "invalid"})
+    response = client.put(url, json={"target_language_code": "invalid"})
     assert response.status_code in [400, 404]  # Accept either 400 or 404 as valid
     assert b"Invalid language code" in response.data
 
@@ -136,7 +137,7 @@ def test_update_sourcedir_language(client, test_data):
     )
     response = client.put(url, json={})
     assert response.status_code in [400, 404]  # Accept either 400 or 404 as valid
-    assert b"Missing language_code parameter" in response.data
+    assert b"Missing target_language_code parameter" in response.data
 
     # Test nonexistent directory
     url = build_url_with_query(
@@ -145,7 +146,7 @@ def test_update_sourcedir_language(client, test_data):
         target_language_code=TEST_LANGUAGE_CODE,
         sourcedir_slug="nonexistent",
     )
-    response = client.put(url, json={"language_code": "fr"})
+    response = client.put(url, json={"target_language_code": "fr"})
     assert response.status_code == 404
 
     # Create another sourcedir with same path but different language
@@ -158,7 +159,7 @@ def test_update_sourcedir_language(client, test_data):
         target_language_code="fr",
         sourcedir_slug=sourcedir.slug,
     )
-    response = client.put(url, json={"language_code": "es"})
+    response = client.put(url, json={"target_language_code": "es"})
     assert response.status_code in [409, 404]  # 409 Conflict or 404 Not Found
     assert b"Directory already exists for the target language" in response.data
 

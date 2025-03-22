@@ -115,10 +115,10 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
     """Update the language of a source directory."""
     try:
         data = request.get_json()
-        if not data or "language_code" not in data:
-            return jsonify({"error": "Missing language_code parameter"}), 400
+        if not data or "target_language_code" not in data:
+            return jsonify({"error": "Missing target_language_code parameter"}), 400
 
-        new_language_code = data["language_code"]
+        new_language_code = data["target_language_code"]
 
         # Validate the new language code
         if not new_language_code in VALID_LANGUAGE_CODES:
