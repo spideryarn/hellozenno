@@ -1,10 +1,13 @@
 """Common utilities for backend tests."""
 
 import re
-from urllib.parse import quote
-from typing import Tuple, Optional, Callable, Dict, Any
+from urllib.parse import quote, urlencode
+from typing import Tuple, Optional, Callable, Dict, Any, Union
 from unittest.mock import patch
 from functools import wraps
+from flask import url_for
+
+from utils.url_registry import endpoint_for, generate_route_registry
 
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
@@ -223,3 +226,44 @@ def create_test_entity(db, entity_type: str, **kwargs) -> Any:
 
     else:
         raise ValueError(f"Unknown entity type: {entity_type}")
+
+
+def build_url_with_query(client, view_func, query_params=None, **url_params):
+    """Build a URL with query parameters for testing.
+    
+    This is a test-specific helper that safely builds URLs with both
+    route parameters and query parameters.
+    
+    Args:
+        client: The Flask test client
+        view_func: The view function to build the URL for
+        query_params: A dictionary of query parameters
+        **url_params: Parameters for url_for()
+        
+    Returns:
+        str: The full URL
+    """
+    with client.application.test_request_context():
+        endpoint = endpoint_for(view_func)
+        base_url = url_for(endpoint, **url_params)
+        
+    if query_params:
+        query_string = urlencode(query_params)
+        return f"{base_url}?{query_string}"
+    
+    return base_url
+
+
+def get_route_registry(client):
+    """Get the route registry for testing.
+    
+    This allows tests to use the route registry for URL resolution.
+    
+    Args:
+        client: The Flask test client
+        
+    Returns:
+        dict: The route registry
+    """
+    with client.application.app_context():
+        return generate_route_registry(client.application)

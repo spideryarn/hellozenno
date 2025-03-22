@@ -78,6 +78,36 @@ The TypeScript enum approach provides several benefits:
 
 Visit `/route-test` to see all available routes and test route resolution with parameters.
 
+### Using in Python Tests
+
+For tests, we've added utility functions in `tests/backend/utils_for_testing.py`:
+
+```python
+# Import testing utilities
+from tests.backend.utils_for_testing import build_url_with_query, get_route_registry
+from views.lemma_views import lemma_detail
+
+# Simpler endpoint resolution with query parameters
+def test_lemma_detail(client):
+    url = build_url_with_query(
+        client, 
+        lemma_detail,
+        query_params={'tab': 'sentences'},  # Query parameters
+        target_language_code='el',          # Route parameters
+        lemma='test'
+    )
+    response = client.get(url)
+    # Assert response...
+
+# Get the full route registry in tests
+def test_with_route_registry(client):
+    routes = get_route_registry(client)
+    assert 'LEMMA_VIEWS_LEMMA_DETAIL' in routes
+    # Use routes dictionary...
+```
+
+These utilities make testing with URLs more reliable, as they use the function objects directly rather than hardcoded strings.
+
 ## CLI Commands
 
 Generate TypeScript route definitions with the Flask CLI command:
