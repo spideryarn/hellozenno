@@ -26,9 +26,12 @@ def test_wordform_details(client, fixture_for_testing_db):
     lemma = create_test_lemma(fixture_for_testing_db)
     wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
-    url = build_url_with_query(client, get_wordform_metadata_vw, 
-                              target_language_code=TEST_LANGUAGE_CODE, 
-                              wordform=wordform.wordform)
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform=wordform.wordform,
+    )
     response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode()
@@ -42,9 +45,12 @@ def test_wordform_details(client, fixture_for_testing_db):
 )
 def test_nonexistent_wordform(mock_search, client):
     """Test viewing details of a nonexistent wordform."""
-    url = build_url_with_query(client, get_wordform_metadata_vw, 
-                             target_language_code=TEST_LANGUAGE_CODE, 
-                             wordform="nonexistent")
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="nonexistent",
+    )
     response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode()
@@ -55,7 +61,9 @@ def test_nonexistent_wordform(mock_search, client):
 
 def test_sourcedir_view_smoke_test(client):
     """Test that sourcedir views return 200 OK."""
-    url = build_url_with_query(client, sourcedirs_for_language_vw, target_language_code=TEST_LANGUAGE_CODE)
+    url = build_url_with_query(
+        client, sourcedirs_for_language_vw, target_language_code=TEST_LANGUAGE_CODE
+    )
     response = client.get(url)
     assert response.status_code == 200
 
@@ -70,14 +78,19 @@ def test_languages_view(client):
 def test_search_functionality(client):
     """Test search functionality."""
     # Test search landing page
-    url = build_url_with_query(client, search_landing_vw, target_language_code=TEST_LANGUAGE_CODE)
+    url = build_url_with_query(
+        client, search_landing_vw, target_language_code=TEST_LANGUAGE_CODE
+    )
     response = client.get(url)
     assert response.status_code == 200
 
     # Test search with query
-    url = build_url_with_query(client, search_landing_vw, 
-                             target_language_code=TEST_LANGUAGE_CODE,
-                             query_params={"q": "test"})
+    url = build_url_with_query(
+        client,
+        search_landing_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        query_params={"q": "test"},
+    )
     response = client.get(url)  # Using test data from fixture
     assert response.status_code == 302  # Should redirect to wordform view
 

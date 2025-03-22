@@ -28,7 +28,9 @@ def sourcedirs_for_language_vw(target_language_code: str):
     supported_languages = get_all_languages()
 
     # Query sourcedirs from database - filtered by language
-    query = Sourcedir.select().where(Sourcedir.language_code == target_language_code)
+    query = Sourcedir.select().where(
+        Sourcedir.target_language_code == target_language_code
+    )
 
     if sort_by == "date":
         # Sort by modification time, newest first
@@ -83,6 +85,7 @@ def sourcedirs_for_language_vw(target_language_code: str):
         current_sort=sort_by,
         supported_languages=supported_languages,
         sourcedir_stats=sourcedir_stats,
+        languages_vw=languages_list_vw,
         sourcefiles_for_sourcedir_vw=sourcefiles_for_sourcedir_vw,
         sourcedirs_for_language_vw=sourcedirs_for_language_vw,
         wordforms_list_vw=wordforms_list_vw,

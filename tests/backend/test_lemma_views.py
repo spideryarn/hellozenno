@@ -267,9 +267,17 @@ def test_delete_lemma(client, fixture_for_testing_db):
             target_language_code=TEST_LANGUAGE_CODE,
             lemma="test_delete"
         )
+        # Building the expected redirect URL for more robust testing
+        from views.lemma_views import lemmas_list_vw
+        expected_redirect_url = build_url_with_query(
+            client,
+            lemmas_list_vw,
+            target_language_code=TEST_LANGUAGE_CODE
+        )
+        
         response = client.post(delete_url)
         assert response.status_code == 302  # Redirect after deletion
-        assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
+        assert response.headers["Location"].endswith(expected_redirect_url)
 
         # Verify the lemma is deleted from the database
         with pytest.raises(DoesNotExist):
@@ -296,9 +304,17 @@ def test_delete_nonexistent_lemma(client):
         target_language_code=TEST_LANGUAGE_CODE,
         lemma="nonexistent"
     )
+    # Building the expected redirect URL for more robust testing
+    from views.lemma_views import lemmas_list_vw
+    expected_redirect_url = build_url_with_query(
+        client,
+        lemmas_list_vw,
+        target_language_code=TEST_LANGUAGE_CODE
+    )
+    
     response = client.post(delete_url)
     assert response.status_code == 302  # Should redirect even if lemma doesn't exist
-    assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/lemmas")
+    assert response.headers["Location"].endswith(expected_redirect_url)
 
 
 def test_wordforms_list_with_no_lemma(client, fixture_for_testing_db):

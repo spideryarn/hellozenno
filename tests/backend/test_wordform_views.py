@@ -10,11 +10,13 @@ from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,
     TEST_LANGUAGE_NAME,
-    SAMPLE_LEMMA_DATA,
     create_test_lemma,
     create_test_wordform,
 )
 from tests.backend.utils_for_testing import build_url_with_query
+from views.core_views import languages_list_vw
+from views.lemma_views import get_lemma_metadata_vw
+from views.sourcedir_views import sourcedirs_for_language_vw
 from views.wordform_views import (
     wordforms_list_vw,
     get_wordform_metadata_vw,
@@ -29,7 +31,9 @@ def test_wordforms_list(client, fixture_for_testing_db):
     wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     # Test accessing the wordforms list view
-    url = build_url_with_query(client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE)
+    url = build_url_with_query(
+        client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE
+    )
     response = client.get(url)
     assert response.status_code == 200
     assert str(wordform.wordform).encode() in response.data
@@ -42,9 +46,12 @@ def test_get_existing_wordform(client, fixture_for_testing_db):
     wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     # Test accessing the wordform
-    url = build_url_with_query(client, get_wordform_metadata_vw, 
-                              target_language_code=TEST_LANGUAGE_CODE, 
-                              wordform=wordform.wordform)
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform=wordform.wordform,
+    )
     response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode()
@@ -60,9 +67,12 @@ def test_get_existing_wordform(client, fixture_for_testing_db):
 )
 def test_get_nonexistent_wordform(mock_search, client):
     """Test getting metadata for a nonexistent wordform."""
-    url = build_url_with_query(client, get_wordform_metadata_vw, 
-                              target_language_code=TEST_LANGUAGE_CODE, 
-                              wordform="nonexistent")
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="nonexistent",
+    )
     response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode()
@@ -77,21 +87,23 @@ def test_get_nonexistent_wordform(mock_search, client):
 def test_get_new_wordform(mock_search, client):
     """Test getting metadata for a new wordform that will be created."""
     # With the new implementation, a single match should redirect to the wordform page
-    url = build_url_with_query(client, get_wordform_metadata_vw, 
-                              target_language_code=TEST_LANGUAGE_CODE, 
-                              wordform="newword")
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="newword",
+    )
     response = client.get(url)
     assert response.status_code == 302  # Redirect status code
     assert "newword" in response.headers["Location"]
-    
+
     # Follow the redirect and make sure we don't get into a loop
     response = client.get(response.headers["Location"])
     assert response.status_code == 200  # Should render the page now, not redirect again
-    
+
     # Verify the wordform was created in the database
     wordform = Wordform.get(
-        Wordform.wordform == "newword",
-        Wordform.language_code == TEST_LANGUAGE_CODE
+        Wordform.wordform == "newword", Wordform.language_code == TEST_LANGUAGE_CODE
     )
     assert wordform is not None
 
@@ -122,12 +134,31 @@ def test_wordform_template_rendering(client, fixture_for_testing_db):
         )
 
         # Check that all navigation links are present
-        assert 'href="/languages"' in html or 'href="/lang"' in html
-        assert f'href="/lang/{TEST_LANGUAGE_CODE}"' in html
-        assert f'href="/lang/{TEST_LANGUAGE_CODE}/wordforms"' in html
         assert (
-            url_for(
-                "lemma_views.get_lemma_metadata",
+            build_url_with_query(
+                client,
+                languages_list_vw,
+            )
+            in html
+        )
+        assert (
+            build_url_with_query(
+                client,
+                sourcedirs_for_language_vw,
+                target_language_code=TEST_LANGUAGE_CODE,
+            )
+            in html
+        )
+        url = build_url_with_query(
+            client,
+            wordforms_list_vw,
+            target_language_code=TEST_LANGUAGE_CODE,
+        )
+        assert f'href="{url}"' in html
+        assert (
+            build_url_with_query(
+                client,
+                get_lemma_metadata_vw,
                 target_language_code=TEST_LANGUAGE_CODE,
                 lemma=str(lemma.lemma),
             )
@@ -149,23 +180,30 @@ def test_delete_wordform(client, fixture_for_testing_db):
     wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
     # First verify the wordform exists
-    url = build_url_with_query(client, get_wordform_metadata_vw, 
-                              target_language_code=TEST_LANGUAGE_CODE, 
-                              wordform=wordform.wordform)
+    url = build_url_with_query(
+        client,
+        get_wordform_metadata_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform=wordform.wordform,
+    )
     response = client.get(url)
     assert response.status_code == 200
     assert str(wordform.wordform) in response.data.decode()
 
     # Delete the wordform
-    delete_url = build_url_with_query(client, delete_wordform_vw, 
-                                     target_language_code=TEST_LANGUAGE_CODE, 
-                                     wordform=wordform.wordform)
+    delete_url = build_url_with_query(
+        client,
+        delete_wordform_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform=wordform.wordform,
+    )
     response = client.post(delete_url)
     assert response.status_code == 302  # Redirect after deletion
-    
+
     # Check that it redirects to wordforms list
-    wordforms_url = build_url_with_query(client, wordforms_list_vw, 
-                                        target_language_code=TEST_LANGUAGE_CODE)
+    wordforms_url = build_url_with_query(
+        client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE
+    )
     assert response.headers["Location"].endswith(wordforms_url)
 
     # Verify the wordform is deleted from the database
@@ -178,15 +216,19 @@ def test_delete_wordform(client, fixture_for_testing_db):
 
 def test_delete_nonexistent_wordform(client):
     """Test deleting a wordform that doesn't exist."""
-    url = build_url_with_query(client, delete_wordform_vw, 
-                              target_language_code=TEST_LANGUAGE_CODE, 
-                              wordform="nonexistent")
+    url = build_url_with_query(
+        client,
+        delete_wordform_vw,
+        target_language_code=TEST_LANGUAGE_CODE,
+        wordform="nonexistent",
+    )
     response = client.post(url)
     assert response.status_code == 302  # Should redirect even if wordform doesn't exist
-    
+
     # Check that it redirects to wordforms list
-    wordforms_url = build_url_with_query(client, wordforms_list_vw, 
-                                        target_language_code=TEST_LANGUAGE_CODE)
+    wordforms_url = build_url_with_query(
+        client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE
+    )
     assert response.headers["Location"].endswith(wordforms_url)
 
 
@@ -219,7 +261,9 @@ def test_wordforms_list_sorting(client, fixture_for_testing_db):
     )
 
     # Test alphabetical sorting (default) - should be case-insensitive
-    url = build_url_with_query(client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE)
+    url = build_url_with_query(
+        client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE
+    )
     response = client.get(url)
     assert response.status_code == 200
 
