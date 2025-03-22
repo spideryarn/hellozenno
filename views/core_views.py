@@ -8,6 +8,7 @@ import os
 
 from utils.flask_view_utils import redirect_to_view
 from utils.lang_utils import get_all_languages
+from utils.url_registry import get_route_registry
 
 
 core_views_bp = Blueprint("core_views", __name__)
@@ -24,10 +25,15 @@ def home_vw():
 @core_views_bp.route("/lang")
 def languages_vw(trailing_slash=""):
     """Display all supported languages."""
-    supported_languages = get_all_languages()
+    # Import here to avoid circular imports
+    from views.sourcedir_views import sourcedirs_for_language_vw
+
+    languages = get_all_languages()
     return render_template(
         "languages.jinja",
-        supported_languages=supported_languages,
+        languages=languages,
+        languages_vw=languages_vw,
+        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
     )
 
 
