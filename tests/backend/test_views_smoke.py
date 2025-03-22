@@ -101,21 +101,23 @@ def test_wordforms_list(mock_search, client, fixture_for_testing_db):
     assert_html_response(response)
 
 
-@pytest.mark.skip("There appears to be an issue with the test data or mock")
 @with_wordform_search_mock
-def test_wordform_detail_existing(mock_search, client):
+def test_wordform_detail_existing(mock_search, client, fixture_for_testing_db):
     """Test the wordform detail view with an existing wordform."""
-    url = build_url_with_query(client, get_wordform_metadata_vw, target_language_code="el", wordform="test")
-    response = client.get(url)  # Using test wordform from test_data fixture
+    # Create test data including a wordform
+    test_data = create_complete_test_data(fixture_for_testing_db)
+    wordform = test_data["wordform"]
+    
+    url = build_url_with_query(client, get_wordform_metadata_vw, target_language_code="el", wordform=wordform.wordform)
+    response = client.get(url, follow_redirects=True)
     assert_html_response(response)
 
 
-@pytest.mark.skip("There appears to be an issue with the test data or mock")
 @with_wordform_search_mock
 def test_wordform_detail_nonexistent(mock_search, client):
     """Test the wordform detail view with a non-existent wordform."""
     url = build_url_with_query(client, get_wordform_metadata_vw, target_language_code="el", wordform="nonexistentword")
-    response = client.get(url)
+    response = client.get(url, follow_redirects=True)
     assert_html_response(response)
 
 
