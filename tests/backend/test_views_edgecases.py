@@ -8,6 +8,8 @@ from tests.fixtures_for_tests import (
     create_test_lemma,
     create_test_wordform,
 )
+from tests.backend.utils_for_testing import build_url_with_query
+from views.wordform_views import get_wordform_metadata_vw
 
 
 """
@@ -34,10 +36,14 @@ def test_wordform_details(client, fixture_for_testing_db):
 )
 def test_nonexistent_wordform(mock_search, client):
     """Test viewing details of a nonexistent wordform."""
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordform/nonexistent")
+    url = build_url_with_query(client, get_wordform_metadata_vw, 
+                             target_language_code=TEST_LANGUAGE_CODE, 
+                             wordform="nonexistent")
+    response = client.get(url)
     assert response.status_code == 200
     data = response.data.decode()
-    assert "Invalid Word" in data
+    # Now search for 'Search Results' which is in the template
+    assert "Search Results" in data
     assert "test" in data  # from mock possible_misspellings
 
 

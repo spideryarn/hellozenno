@@ -25,6 +25,8 @@ def phrases_list_vw(target_language_code):
         query = query.order_by(Phrase.canonical_form)
 
     from utils.url_registry import endpoint_for
+    from views.core_views import languages_vw
+    from views.sourcedir_views import sourcedirs_for_language_vw
 
     return render_template(
         "phrases.jinja",
@@ -32,7 +34,10 @@ def phrases_list_vw(target_language_code):
         target_language_name=target_language_name,
         phrases=query,
         current_sort=sort_by,
-        phrase_views_bp=phrase_views_bp,
+        languages_vw=languages_vw,
+        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+        phrases_list_vw=phrases_list_vw,
+        get_phrase_metadata_vw=get_phrase_metadata_vw,
     )
 
 

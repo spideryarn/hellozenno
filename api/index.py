@@ -30,8 +30,8 @@ def inject_base_view_functions():
 
     return {
         # Only the functions required by base.jinja and navigation
-        "languages": languages_vw,  # The actual function reference
-        "search_landing": search_landing_vw,
+        "languages_vw": languages_vw,  # The actual function reference
+        "search_landing_vw": search_landing_vw,
     }
 
 
@@ -148,7 +148,6 @@ def create_app():
     app.register_blueprint(flashcard_views_bp)
 
     # Register the new API blueprints
-    from views.core_api import core_api_bp
     from views.sourcedir_api import sourcedir_api_bp
     from views.wordform_api import wordform_api_bp
     from views.lemma_api import lemma_api_bp
@@ -156,7 +155,6 @@ def create_app():
     from views.sourcefile_api import sourcefile_api_bp
     from views.sentence_api import sentence_api_bp
 
-    app.register_blueprint(core_api_bp)
     app.register_blueprint(sourcedir_api_bp)
     app.register_blueprint(wordform_api_bp)
     app.register_blueprint(lemma_api_bp)

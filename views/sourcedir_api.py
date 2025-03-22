@@ -29,7 +29,7 @@ sourcedir_api_bp = Blueprint(
 
 
 @sourcedir_api_bp.route("/api/sourcedir/<target_language_code>", methods=["POST"])
-def create_sourcedir(target_language_code: str):
+def create_sourcedir_api(target_language_code: str):
     """Create a new source directory."""
     data = request.get_json()
     if not data or "path" not in data:
@@ -83,7 +83,7 @@ def create_sourcedir(target_language_code: str):
 @sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>", methods=["DELETE"]
 )
-def delete_sourcedir(target_language_code: str, sourcedir_slug: str):
+def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """Delete a source directory if it's empty."""
     try:
         sourcedir_entry = Sourcedir.get(
@@ -111,7 +111,7 @@ def delete_sourcedir(target_language_code: str, sourcedir_slug: str):
 @sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/language", methods=["PUT"]
 )
-def update_sourcedir_language(target_language_code: str, sourcedir_slug: str):
+def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str):
     """Update the language of a source directory."""
     try:
         data = request.get_json()
@@ -160,7 +160,7 @@ def update_sourcedir_language(target_language_code: str, sourcedir_slug: str):
 @sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/rename", methods=["PUT"]
 )
-def rename_sourcedir(target_language_code: str, sourcedir_slug: str):
+def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """Rename a source directory."""
     try:
         data = request.get_json()
@@ -205,7 +205,7 @@ def rename_sourcedir(target_language_code: str, sourcedir_slug: str):
 @sourcedir_api_bp.route(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/upload", methods=["POST"]
 )
-def upload_sourcedir_new_sourcefile(target_language_code: str, sourcedir_slug: str):
+def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slug: str):
     """Handle file upload to a source directory."""
     try:
         # Get the sourcedir entry by slug

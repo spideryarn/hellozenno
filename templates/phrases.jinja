@@ -3,8 +3,8 @@
 {% set vite_entries = ['miniphrase'] %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages)) }}">Languages</a>
-    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language), target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » <a href="{{ url_for(endpoint_for(languages_vw)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_code }}</a>
     » Phrases & Idioms
 {% endblock breadcrumbs %}
 
@@ -18,11 +18,11 @@
     
     <div class="sort-options">
         Sort by:
-        <a href="{{ url_for(endpoint_for(phrases_list), target_language_code=target_language_code, sort='alpha') }}" 
+        <a href="{{ url_for(endpoint_for(phrases_list_vw), target_language_code=target_language_code, sort='alpha') }}" 
            class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
             Alphabetical
         </a> |
-        <a href="{{ url_for(endpoint_for(phrases_list), target_language_code=target_language_code, sort='date') }}"
+        <a href="{{ url_for(endpoint_for(phrases_list_vw), target_language_code=target_language_code, sort='date') }}"
            class="sort-link {% if current_sort == 'date' %}active{% endif %}">
             Recently Modified
         </a>
@@ -35,7 +35,7 @@
                 {{ load_svelte_component('MiniPhrase', {
                     'phrase': phrase.canonical_form,
                     'translations': phrase.translations if phrase.translations else null,
-                    'href': url_for(endpoint_for(get_phrase_metadata), target_language_code=target_language_code, slug=phrase.slug),
+                    'href': url_for(endpoint_for(get_phrase_metadata_vw), target_language_code=target_language_code, slug=phrase.slug),
                     'part_of_speech': phrase.part_of_speech if phrase.part_of_speech else null,
                     'notes': phrase.usage_notes if phrase.usage_notes else null
                 }, component_id='phrases-list-component-' ~ loop.index) }}

@@ -187,7 +187,7 @@ def random_flashcard_vw(language_code: str):
 
     return redirect(
         url_for(
-            "flashcard_views.flashcard_sentence",
+            "flashcard_views.flashcard_sentence_vw",
             language_code=language_code,
             slug=sentence["slug"],
             **query_params,

@@ -16,6 +16,8 @@ from db_models import (
 )
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
 from utils.store_utils import load_or_generate_lemma_metadata
+from tests.backend.utils_for_testing import build_url_with_query
+from views.wordform_views import wordforms_list_vw
 
 
 def test_lemma_url_generation(client):
@@ -23,20 +25,20 @@ def test_lemma_url_generation(client):
     # Create a test context
     with client.application.test_request_context():
         # Test basic URL generation
-        assert url_for("lemma_views.lemmas_list", target_language_code="el")
+        assert url_for("lemma_views.lemmas_list_vw", target_language_code="el")
         assert url_for(
-            "lemma_views.get_lemma_metadata",
+            "lemma_views.get_lemma_metadata_vw",
             target_language_code="el",
             lemma="καλός",
         )
 
         # Test navigation URLs
-        assert url_for("views.languages")
+        assert url_for("core_views.languages_vw")
         assert url_for(
-            "sourcedir_views.sourcedirs_for_language", target_language_code="el"
+            "sourcedir_views.sourcedirs_for_language_vw", target_language_code="el"
         )
         assert url_for(
-            "wordform_views.get_wordform_metadata",
+            "wordform_views.get_wordform_metadata_vw",
             target_language_code="el",
             wordform="καλή",
         )
@@ -260,7 +262,8 @@ def test_wordforms_list_with_no_lemma(client, fixture_for_testing_db):
     )
 
     # Test accessing the wordforms list view
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordforms")
+    url = build_url_with_query(client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE)
+    response = client.get(url)
     assert response.status_code == 200
 
     # In the test environment with no real front-end,

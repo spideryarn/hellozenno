@@ -20,7 +20,6 @@ from utils.url_registry import endpoint_for
 # Import necessary view functions for templates
 from views.core_views import languages_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
-from views.flashcard_views import flashcard_landing_vw
 
 
 sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
@@ -29,6 +28,9 @@ sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
 @sentence_views_bp.route("/<language_code>/sentences")
 def sentences_list_vw(language_code: str):
     """Display all sentences for a language."""
+    # Import here to avoid circular imports
+    from views.flashcard_views import flashcard_landing_vw
+    
     target_language_name = get_language_name(language_code)
     sentences = get_all_sentences(language_code)
 

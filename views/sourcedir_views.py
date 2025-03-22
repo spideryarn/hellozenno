@@ -18,7 +18,7 @@ from utils.sourcedir_utils import (
 sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/lang")
 
 
-@sourcedir_views_bp.route("/<target_language_code>/")
+@sourcedir_views_bp.route("/<target_language_code>/", strict_slashes=False)
 def sourcedirs_for_language_vw(target_language_code: str):
     """Display all source directories."""
     sort_by = request.args.get("sort", "date")  # Default to recently modified
@@ -66,6 +66,14 @@ def sourcedirs_for_language_vw(target_language_code: str):
             "path": sourcedir.path,
         }
 
+    # Import here to avoid circular imports
+    from views.core_views import languages_vw
+    from views.wordform_views import wordforms_list_vw
+    from views.lemma_views import lemmas_list_vw
+    from views.phrase_views import phrases_list_vw
+    from views.sentence_views import sentences_list_vw
+    from views.flashcard_views import flashcard_landing_vw
+
     return render_template(
         "sourcedirs.jinja",
         target_language_code=target_language_code,
@@ -75,6 +83,13 @@ def sourcedirs_for_language_vw(target_language_code: str):
         current_sort=sort_by,
         supported_languages=supported_languages,
         sourcedir_stats=sourcedir_stats,
+        languages_vw=languages_vw,
+        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+        wordforms_list_vw=wordforms_list_vw,
+        lemmas_list_vw=lemmas_list_vw,
+        phrases_list_vw=phrases_list_vw,
+        sentences_list_vw=sentences_list_vw,
+        flashcard_landing_vw=flashcard_landing_vw,
     )
 
 

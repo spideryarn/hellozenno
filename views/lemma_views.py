@@ -12,10 +12,9 @@ from utils.url_registry import endpoint_for
 # Import necessary view functions
 from views.core_views import languages_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
-from views.sentence_views import get_sentence_vw
 # Import search views
 from views.search_views import search_word_vw, search_landing_vw
-# Moving wordform import inside functions to avoid circular imports
+# Moving imports inside functions to avoid circular imports
 
 lemma_views_bp = Blueprint("lemma_views", __name__, url_prefix="/lang")
 logger = logging.getLogger(__name__)
@@ -37,6 +36,8 @@ def lemmas_list_vw(target_language_code: str):
     lemma_metadata = {lemma.lemma: lemma.to_dict() for lemma in lemmas}
 
     from utils.url_registry import endpoint_for
+    from views.core_views import languages_vw
+    from views.sourcedir_views import sourcedirs_for_language_vw
 
     return render_template(
         "lemmas.jinja",
@@ -47,6 +48,9 @@ def lemmas_list_vw(target_language_code: str):
         view_name=endpoint_for(lemmas_list_vw),
         current_sort=sort,
         show_commonality=True,  # We have commonality data for lemmas
+        languages_vw=languages_vw,
+        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+        lemmas_list_vw=lemmas_list_vw,
     )
 
 
@@ -129,6 +133,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
 
         # Import here to avoid circular dependencies
         from views.wordform_views import get_wordform_metadata_vw
+        from views.sentence_views import get_sentence_vw
         
         return render_template(
             "lemma.jinja",
