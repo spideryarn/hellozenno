@@ -21,8 +21,10 @@ def home():
     return redirect_to_view(views_bp, languages)
 
 
-@views_bp.route("/lang")
-def languages():
+@views_bp.route("/lang", defaults={"trailing_slash": ""})
+@views_bp.route("/lang/", defaults={"trailing_slash": "/"})
+def languages(trailing_slash=""):
+    """Display all supported languages."""
     supported_languages = get_all_languages()
     return render_template(
         "languages.jinja",
