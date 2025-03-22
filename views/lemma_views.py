@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @lemma_views_bp.route("/<target_language_code>/lemmas")
-def lemmas_list(target_language_code: str):
+def lemmas_list_vw(target_language_code: str):
     """Display all lemmas for a language."""
     target_language_name = get_language_name(target_language_code)
 
@@ -28,21 +28,21 @@ def lemmas_list(target_language_code: str):
     lemma_metadata = {lemma.lemma: lemma.to_dict() for lemma in lemmas}
 
     from utils.url_registry import endpoint_for
-    
+
     return render_template(
         "lemmas.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         lemmas=[lemma.lemma for lemma in lemmas],  # Just pass the lemma strings
         lemma_metadata=lemma_metadata,  # Pass the metadata dictionary
-        view_name=endpoint_for(lemmas_list),
+        view_name=endpoint_for(lemmas_list_vw),
         current_sort=sort,
         show_commonality=True,  # We have commonality data for lemmas
     )
 
 
 @lemma_views_bp.route("/<target_language_code>/lemma/<lemma>")
-def get_lemma_metadata(target_language_code: str, lemma: str):
+def get_lemma_metadata_vw(target_language_code: str, lemma: str):
     """Display metadata for a lemma."""
     # URL decode the lemma parameter to handle non-Latin characters properly
     # Defense in depth: decode explicitly here, in addition to middleware
@@ -137,7 +137,7 @@ def get_lemma_metadata(target_language_code: str, lemma: str):
 
 
 @lemma_views_bp.route("/<target_language_code>/lemma/<lemma>/delete", methods=["POST"])
-def delete_lemma(target_language_code: str, lemma: str):
+def delete_lemma_vw(target_language_code: str, lemma: str):
     """Delete a lemma and its associated wordforms via cascade delete."""
     # URL decode the lemma parameter to handle non-Latin characters properly
     # Defense in depth: decode explicitly here, in addition to middleware

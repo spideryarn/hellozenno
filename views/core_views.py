@@ -17,23 +17,23 @@ logger = logging.getLogger(__name__)
 
 
 @core_views_bp.route("/")
-def home():
-    return redirect_to_view(core_views_bp, languages)
+def home_vw():
+    return redirect_to_view(core_views_bp, languages_vw)
 
 
 @core_views_bp.route("/lang", defaults={"trailing_slash": ""})
 @core_views_bp.route("/lang/", defaults={"trailing_slash": "/"})
-def languages(trailing_slash=""):
+def languages_vw(trailing_slash=""):
     """Display all supported languages."""
     supported_languages = get_all_languages()
     return render_template(
         "languages.jinja",
-        languages=supported_languages,
+        supported_languages=supported_languages,
     )
 
 
 @core_views_bp.route("/experim")
-def experim():
+def experim_vw():
     """A simple experimental page that returns hello world."""
     # Sample lemma data for testing the MiniLemma component
     sample_lemmas = [
@@ -65,7 +65,7 @@ def experim():
 
 @core_views_bp.route("/favicon.ico", defaults={"trailing_slash": ""})
 @core_views_bp.route("/favicon.ico/", defaults={"trailing_slash": "/"})
-def favicon(trailing_slash):
+def favicon_vw(trailing_slash):
     """Handle favicon.ico requests with or without trailing slash."""
     return send_from_directory(
         os.path.join(os.path.dirname(core_views_bp.root_path), "static", "img"),

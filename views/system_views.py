@@ -39,12 +39,12 @@ logger = logging.getLogger(__name__)
 
 
 @sys_views_bp.route("/health-check")
-def health_check():
+def health_check_vw():
     """Health check endpoint that verifies app and database functionality."""
     try:
         # Get database metrics
         db = get_db()
-        db_metrics = get_db_metrics(db)
+        db_metrics = get_db_metrics_vw(db)
 
         # Get application metrics
         app_metrics = {
@@ -79,7 +79,7 @@ def health_check():
         )
 
 
-def get_db_metrics(db):
+def get_db_metrics_vw(db):
     """Get database metrics.
 
     Args:
@@ -115,23 +115,21 @@ def get_db_metrics(db):
 
 # Route test page for URL registry
 @system_views_bp.route("/route-test")
-def route_test():
+def route_test_vw():
     """Test page for URL registry and route resolution."""
     return render_template("route_test.jinja")
 
 
 # Example page for TypeScript URL registry usage
 @system_views_bp.route("/route-registry-example")
-def route_registry_example():
+def route_registry_example_vw():
     """Example page showing TypeScript URL registry usage in Svelte."""
     return render_template("route_registry_example.jinja")
 
 
-
-
 @auth_views_bp.route("/", methods=["GET"])
 @auth_views_bp.route("/<target_language_code>", methods=["GET"])
-def auth_page(target_language_code=None):
+def auth_page_vw(target_language_code=None):
     """Render the auth page with login and signup forms."""
     # Catch empty string language code (from trailing slash) and redirect to /auth
     if target_language_code == "":
@@ -155,7 +153,7 @@ def auth_page(target_language_code=None):
 
 
 @system_views_bp.route("/api/auth/session", methods=["POST", "DELETE"])
-def manage_session():
+def manage_session_api():
     """
     Handle session management for auth.
 
@@ -183,7 +181,7 @@ def manage_session():
 
 @system_views_bp.route("/api/auth/user", methods=["GET"])
 @api_auth_required
-def get_user():
+def get_user_api():
     """Get the current authenticated user's info."""
     # g.user is set by the api_auth_required decorator
     return jsonify(g.user), 200
@@ -191,7 +189,7 @@ def get_user():
 
 @auth_views_bp.route("/protected")
 @page_auth_required
-def protected_page():
+def protected_page_vw():
     """A protected page that requires authentication."""
     # Get user profile
     try:
@@ -205,7 +203,7 @@ def protected_page():
 @auth_views_bp.route("/profile", methods=["GET", "POST"])
 @auth_views_bp.route("/profile/<target_language_code>", methods=["GET", "POST"])
 @page_auth_required
-def profile_page(target_language_code=None):
+def profile_page_vw(target_language_code=None):
     """User profile page for editing preferences."""
     # Catch empty string language code (from trailing slash) and redirect to /auth/profile
     if target_language_code == "":

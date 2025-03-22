@@ -11,6 +11,6 @@ core_api_bp = Blueprint("core_api", __name__, url_prefix="/api")
 
 
 @core_api_bp.route("/")
-def home():
+def home_api():
     """API home page."""
     return redirect(url_for("core_api.urls"))

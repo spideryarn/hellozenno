@@ -14,7 +14,7 @@ wordform_api_bp = Blueprint("wordform_api", __name__, url_prefix="/api/lang/word
 
 
 @wordform_api_bp.route("/<target_language_code>/<word>/preview")
-def word_preview(target_language_code: str, word: str):
+def word_preview_api(target_language_code: str, word: str):
     """Get preview data for word tooltips."""
     # Fix URL encoding issues with Vercel by explicitly unquoting the word parameter
     word = urllib.parse.unquote(word)
@@ -32,7 +32,7 @@ def word_preview(target_language_code: str, word: str):
 
 
 @wordform_api_bp.route("/<target_language_code>/<word>/mp3")
-def get_mp3(target_language_code: str, word: str):
+def get_mp3_api(target_language_code: str, word: str):
     """Return the MP3 file for the given word."""
     mp3_filen = f"{word}.mp3"
     try:

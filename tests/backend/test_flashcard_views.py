@@ -1,6 +1,8 @@
 """Test flashcard views."""
 
+import urllib.parse
 import pytest
+from flask import url_for
 from db_models import (
     Lemma,
     SentenceLemma,
@@ -11,6 +13,13 @@ from db_models import (
     Sentence,
 )
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
+from utils.url_registry import endpoint_for
+from views.flashcard_views import (
+    flashcard_landing_vw,
+    random_flashcard_vw,
+    flashcard_sentence_vw,
+)
+from tests.backend.utils_for_testing import build_url_with_query
 
 
 @pytest.fixture
@@ -123,14 +132,21 @@ def test_sourcedir_with_files(fixture_for_testing_db):
 def test_flashcard_landing(client, test_sentence_with_sourcefile, test_sourcefile):
     """Test the flashcard landing page."""
     # Test the landing page loads
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/flashcards")
+    url = build_url_with_query(
+        client, flashcard_landing_vw, language_code=TEST_LANGUAGE_CODE
+    )
+    response = client.get(url)
     assert response.status_code == 200
     assert b"Start Flashcards" in response.data
 
     # Test with sourcefile parameter
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards?sourcefile={test_sourcefile.slug}"
+    url = build_url_with_query(
+        client,
+        flashcard_landing_vw,
+        _query_parameters={"sourcefile": test_sourcefile.slug},
+        language_code=TEST_LANGUAGE_CODE,
     )
+    response = client.get(url)
     assert response.status_code == 200
     assert b"Start Flashcards" in response.data
     assert b"Practicing with 1 word" in response.data
@@ -140,22 +156,35 @@ def test_flashcard_landing(client, test_sentence_with_sourcefile, test_sourcefil
 def test_sourcedir_flashcards(client, test_sourcedir_with_files):
     """Test flashcard functionality with sourcedir parameter."""
     # Test landing page with sourcedir parameter
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards?sourcedir={test_sourcedir_with_files.slug}"
+    url = build_url_with_query(
+        client,
+        flashcard_landing_vw,
+        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        language_code=TEST_LANGUAGE_CODE,
     )
+    response = client.get(url)
     assert response.status_code == 200
     assert b"Start Flashcards" in response.data
     assert b"Practicing with 2 words" in response.data
 
     # Test with non-existent sourcedir
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/flashcards?sourcedir=nonexistent")
+    url = build_url_with_query(
+        client,
+        flashcard_landing_vw,
+        _query_parameters={"sourcedir": "nonexistent"},
+        language_code=TEST_LANGUAGE_CODE,
+    )
+    response = client.get(url)
     assert response.status_code == 404
 
     # Test random flashcard with sourcedir parameter
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random?sourcedir={test_sourcedir_with_files.slug}",
-        follow_redirects=True,
+    url = build_url_with_query(
+        client,
+        random_flashcard_vw,
+        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        language_code=TEST_LANGUAGE_CODE,
     )
+    response = client.get(url, follow_redirects=True)
     assert response.status_code == 200
     # Should preserve sourcedir parameter in JavaScript initialization
     assert (
@@ -168,50 +197,73 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
 def test_flashcard_sentence(client, test_sentence_with_sourcefile):
     """Test viewing a specific sentence as a flashcard."""
     # Test the main page loads
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
+    url = build_url_with_query(
+        client,
+        flashcard_sentence_vw,
+        language_code=TEST_LANGUAGE_CODE,
+        slug=test_sentence_with_sourcefile.slug,
     )
+    response = client.get(url)
     assert response.status_code == 200
     assert test_sentence_with_sourcefile.sentence.encode() in response.data
 
     # Test non-existent sentence
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/nonexistent-slug")
+    url = build_url_with_query(
+        client,
+        flashcard_sentence_vw,
+        language_code=TEST_LANGUAGE_CODE,
+        slug="nonexistent-slug",
+    )
+    response = client.get(url)
     assert response.status_code == 404
     assert b"Sentence not found" in response.data
 
     # Test wrong language code
-    response = client.get(
-        f"/lang/fr/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
+    url = build_url_with_query(
+        client,
+        flashcard_sentence_vw,
+        language_code="fr",
+        slug=test_sentence_with_sourcefile.slug,
     )
+    response = client.get(url)
     assert response.status_code == 404
 
 
 def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile):
     """Test the random flashcard redirect."""
     # Test basic redirect
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random", follow_redirects=False
+    url = build_url_with_query(
+        client, random_flashcard_vw, language_code=TEST_LANGUAGE_CODE
     )
+    response = client.get(url, follow_redirects=False)
     assert response.status_code == 302
-    assert (
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
-        in response.location
+
+    # Get the expected sentence URL
+    expected_url = build_url_with_query(
+        client,
+        flashcard_sentence_vw,
+        language_code=TEST_LANGUAGE_CODE,
+        slug=test_sentence_with_sourcefile.slug,
     )
+    assert expected_url in response.location
 
     # Test with sourcefile parameter
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random?sourcefile={test_sourcefile.slug}",
-        follow_redirects=False,
+    url = build_url_with_query(
+        client,
+        random_flashcard_vw,
+        _query_parameters={"sourcefile": test_sourcefile.slug},
+        language_code=TEST_LANGUAGE_CODE,
     )
+    response = client.get(url, follow_redirects=False)
     assert response.status_code == 302
-    assert (
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/sentence/{test_sentence_with_sourcefile.slug}"
-        in response.location
-    )
+    assert expected_url in response.location
 
     # Test when no sentences exist
     test_sentence_with_sourcefile.delete_instance()
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random")
+    url = build_url_with_query(
+        client, random_flashcard_vw, language_code=TEST_LANGUAGE_CODE
+    )
+    response = client.get(url)
     assert response.status_code == 404
     assert b"No matching sentences found" in response.data
 
@@ -255,17 +307,24 @@ def test_sourcedir_multiple_files(
     SentenceLemma.create(sentence=sentence, lemma=lemma3)
 
     # Test that lemma count is correct
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards?sourcedir={test_sourcedir_with_files.slug}"
+    url = build_url_with_query(
+        client,
+        flashcard_landing_vw,
+        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        language_code=TEST_LANGUAGE_CODE,
     )
+    response = client.get(url)
     assert response.status_code == 200
     assert b"Practicing with 3 words" in response.data
 
     # Test that random flashcard preserves sourcedir parameter
-    response = client.get(
-        f"/lang/{TEST_LANGUAGE_CODE}/flashcards/random?sourcedir={test_sourcedir_with_files.slug}",
-        follow_redirects=True,
+    url = build_url_with_query(
+        client,
+        random_flashcard_vw,
+        _query_parameters={"sourcedir": test_sourcedir_with_files.slug},
+        language_code=TEST_LANGUAGE_CODE,
     )
+    response = client.get(url, follow_redirects=True)
     assert response.status_code == 200
     # Should preserve sourcedir parameter
     assert (

@@ -18,7 +18,7 @@ def app(fixture_for_testing_db):
     init_db(app, fixture_for_testing_db)
 
     # Register blueprints
-    from views.views import views_bp
+    from views.core_views import core_views_bp
     from views.wordform_views import wordform_views_bp
     from views.lemma_views import lemma_views_bp
     from views.sourcedir_views import sourcedir_views_bp
@@ -26,10 +26,9 @@ def app(fixture_for_testing_db):
     from views.phrase_views import phrase_views_bp
     from views.sentence_views import sentence_views_bp
     from views.search_views import search_views_bp
-    from views.api import api_bp
     from views.flashcard_views import flashcard_views_bp
 
-    app.register_blueprint(views_bp)
+    app.register_blueprint(core_views_bp)
     app.register_blueprint(wordform_views_bp)
     app.register_blueprint(lemma_views_bp)
     app.register_blueprint(sourcedir_views_bp)
@@ -37,7 +36,6 @@ def app(fixture_for_testing_db):
     app.register_blueprint(phrase_views_bp)
     app.register_blueprint(sentence_views_bp)
     app.register_blueprint(search_views_bp)
-    app.register_blueprint(api_bp)
     app.register_blueprint(flashcard_views_bp)
 
     return app

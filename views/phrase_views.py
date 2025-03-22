@@ -9,7 +9,7 @@ phrase_views_bp = Blueprint("phrase_views", __name__, url_prefix="/lang")
 
 
 @phrase_views_bp.route("/<target_language_code>/phrases")
-def phrases_list(target_language_code):
+def phrases_list_vw(target_language_code):
     """Show list of phrases for a language."""
     sort_by = request.args.get("sort", "alpha")  # Default to alphabetical
     target_language_name = get_language_name(target_language_code)
@@ -25,19 +25,19 @@ def phrases_list(target_language_code):
         query = query.order_by(Phrase.canonical_form)
 
     from utils.url_registry import endpoint_for
-    
+
     return render_template(
         "phrases.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         phrases=query,
         current_sort=sort_by,
-        phrase_views_bp=phrase_views_bp
+        phrase_views_bp=phrase_views_bp,
     )
 
 
 @phrase_views_bp.route("/<target_language_code>/phrases/<slug>")
-def get_phrase_metadata(target_language_code, slug):
+def get_phrase_metadata_vw(target_language_code, slug):
     """Get metadata for a specific phrase using its slug."""
     target_language_name = get_language_name(target_language_code)
 

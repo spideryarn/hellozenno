@@ -65,7 +65,7 @@ sourcefile_views_bp = Blueprint("sourcefile_views", __name__, url_prefix="/lang"
 
 
 @sourcefile_views_bp.route("/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>")
-def inspect_sourcefile(
+def inspect_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Redirect to the text view of a source file."""
@@ -182,7 +182,7 @@ def _get_common_template_params(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/text"
 )
-def inspect_sourcefile_text(
+def inspect_sourcefile_text_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Display the text content of a source file."""
@@ -253,7 +253,7 @@ def inspect_sourcefile_text(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/words"
 )
-def inspect_sourcefile_words(
+def inspect_sourcefile_words_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Display the words and phrases of a source file."""
@@ -317,7 +317,7 @@ def inspect_sourcefile_words(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/phrases"
 )
-def inspect_sourcefile_phrases(
+def inspect_sourcefile_phrases_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Display the phrases of a source file."""
@@ -444,7 +444,7 @@ def access_sourcefile(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/view"
 )
-def view_sourcefile(
+def view_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """View the source file."""
@@ -456,7 +456,7 @@ def view_sourcefile(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/download"
 )
-def download_sourcefile(
+def download_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Download the source file."""
@@ -468,7 +468,7 @@ def download_sourcefile(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process"
 )
-def process_sourcefile(
+def process_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Process a source file to extract wordforms and phrases."""
@@ -577,7 +577,7 @@ def process_sourcefile(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/audio"
 )
-def play_sourcefile_audio(
+def play_sourcefile_audio_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Play the audio file associated with the source file."""
@@ -728,7 +728,7 @@ def _process_individual_lemma(lemma: str, target_language_code: str):
     "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process_individual",
     methods=["POST"],
 )
-def process_individual_words(
+def process_individual_words_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Process individual words in a sourcefile, generating full metadata and audio."""
@@ -767,7 +767,7 @@ def process_individual_words(
     "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/update_description",
     methods=["PUT"],
 )
-def update_sourcefile_description(
+def update_sourcefile_description_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Update the description of a sourcefile."""
@@ -801,7 +801,7 @@ def update_sourcefile_description(
     "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/move",
     methods=["PUT"],
 )
-def move_sourcefile(
+def move_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Move a sourcefile to a different sourcedir."""
@@ -876,7 +876,7 @@ def move_sourcefile(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/sentences"
 )
-def sourcefile_sentences(
+def sourcefile_sentences_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Show sentences for a sourcefile."""
@@ -926,7 +926,7 @@ def sourcefile_sentences(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>",
     methods=["DELETE"],
 )
-def delete_sourcefile(
+def delete_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Delete a source file."""
@@ -997,7 +997,7 @@ def delete_sourcefile(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/rename",
     methods=["PUT"],
 )
-def rename_sourcefile(
+def rename_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Rename a source file."""
@@ -1052,7 +1052,7 @@ def rename_sourcefile(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/next"
 )
-def next_sourcefile(
+def next_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Navigate to the next sourcefile alphabetically."""
@@ -1064,7 +1064,7 @@ def next_sourcefile(
 @sourcefile_views_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/prev"
 )
-def prev_sourcefile(
+def prev_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Navigate to the previous sourcefile alphabetically."""
@@ -1077,7 +1077,7 @@ def prev_sourcefile(
     "/api/sourcedir/<target_language_code>/<sourcedir_slug>/create_from_text",
     methods=["POST"],
 )
-def create_sourcefile_from_text(target_language_code: str, sourcedir_slug: str):
+def create_sourcefile_from_text_vw(target_language_code: str, sourcedir_slug: str):
     """Create a new sourcefile from pasted text."""
     try:
         # Get the sourcedir entry by slug
@@ -1139,7 +1139,7 @@ def create_sourcefile_from_text(target_language_code: str, sourcedir_slug: str):
 @sourcefile_views_bp.route(
     "/<language_code>/<sourcedir_slug>/add_from_youtube", methods=["POST"]
 )
-def add_sourcefile_from_youtube(language_code, sourcedir_slug):
+def add_sourcefile_from_youtube_vw(language_code, sourcedir_slug):
     """Add a new sourcefile from a YouTube video's audio."""
     sourcedir = get_sourcedir_or_404(language_code, sourcedir_slug)
 
@@ -1201,7 +1201,7 @@ def add_sourcefile_from_youtube(language_code, sourcedir_slug):
     "/api/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/generate_audio",
     methods=["POST"],
 )
-def generate_sourcefile_audio(
+def generate_sourcefile_audio_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Generate audio for a sourcefile using ElevenLabs."""

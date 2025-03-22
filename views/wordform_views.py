@@ -12,7 +12,7 @@ wordform_views_bp = Blueprint("wordform_views", "/", url_prefix="/lang")
 
 
 @wordform_views_bp.route("/<target_language_code>/wordforms")
-def wordforms_list(target_language_code: str):
+def wordforms_list_vw(target_language_code: str):
     """Display all known wordforms for a language."""
     target_language_name = get_language_name(target_language_code)
 
@@ -39,21 +39,21 @@ def wordforms_list(target_language_code: str):
         lemma_metadata[lemma_entry.lemma] = lemma_entry.to_dict()
 
     from utils.url_registry import endpoint_for
-    
+
     return render_template(
         "wordforms.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         wordforms_d=wordforms_d,
         lemma_metadata=lemma_metadata,
-        view_name=endpoint_for(wordforms_list),
+        view_name=endpoint_for(wordforms_list_vw),
         current_sort=sort_by,
         show_commonality=True,  # We can show commonality by joining with Lemma
     )
 
 
 @wordform_views_bp.route("/<target_language_code>/wordform/<wordform>")
-def get_wordform_metadata(target_language_code: str, wordform: str):
+def get_wordform_metadata_vw(target_language_code: str, wordform: str):
     """Display metadata for a wordform and link to its lemma."""
     # URL decode the wordform parameter to handle non-Latin characters properly
     # Defense in depth: decode explicitly here, in addition to middleware
@@ -128,14 +128,14 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
                     "inflection_type": match.get("inflection_type"),
                     "possible_misspellings": None,
                 }
-                
+
                 # Create the wordform in the database
                 Wordform.get_or_create_from_metadata(
                     wordform=match_wordform,
                     language_code=target_language_code,
                     metadata=metadata,
                 )
-                
+
                 # Now redirect to the wordform URL
                 return redirect(
                     url_for(
@@ -160,7 +160,7 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
 @wordform_views_bp.route(
     "/<target_language_code>/wordform/<wordform>/delete", methods=["POST"]
 )
-def delete_wordform(target_language_code: str, wordform: str):
+def delete_wordform_api(target_language_code: str, wordform: str):
     """Delete a wordform from the database."""
     # URL decode the wordform parameter to handle non-Latin characters properly
     # Defense in depth: decode explicitly here, in addition to middleware

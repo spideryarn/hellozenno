@@ -14,7 +14,7 @@ lemma_api_bp = Blueprint("lemma_api", __name__, url_prefix="/api/lang/lemma")
 
 
 @lemma_api_bp.route("/<target_language_code>/<lemma>/data")
-def get_lemma_data(target_language_code: str, lemma: str):
+def get_lemma_data_api(target_language_code: str, lemma: str):
     """Get detailed data for a specific lemma."""
     try:
         lemma_model = Lemma.get(

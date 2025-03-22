@@ -21,7 +21,7 @@ sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
 
 
 @sentence_views_bp.route("/<language_code>/sentences")
-def sentences_list(language_code: str):
+def sentences_list_vw(language_code: str):
     """Display all sentences for a language."""
     target_language_name = get_language_name(language_code)
     sentences = get_all_sentences(language_code)
@@ -35,7 +35,7 @@ def sentences_list(language_code: str):
 
 
 @sentence_views_bp.route("/<language_code>/sentence/<slug>")
-def get_sentence(language_code: str, slug: str):
+def get_sentence_vw(language_code: str, slug: str):
     """Display a specific sentence."""
     target_language_name = get_language_name(language_code)
 
@@ -84,17 +84,23 @@ def get_sentence(language_code: str, slug: str):
         }
 
         # Get lemmas both from the database relationships and from the matched wordforms
-        db_lemma_words = sentence.lemma_words if hasattr(sentence, "lemma_words") else []
-        
+        db_lemma_words = (
+            sentence.lemma_words if hasattr(sentence, "lemma_words") else []
+        )
+
         # Extract lemmas from the matched wordforms
         matched_lemmas = []
         for wf in wordforms_d:
-            if wf.get("lemma") and wf["lemma"] not in matched_lemmas and wf["lemma"] not in db_lemma_words:
+            if (
+                wf.get("lemma")
+                and wf["lemma"] not in matched_lemmas
+                and wf["lemma"] not in db_lemma_words
+            ):
                 matched_lemmas.append(wf["lemma"])
-        
+
         # Combine both sources of lemmas, removing duplicates
         all_lemmas = list(set(db_lemma_words + matched_lemmas))
-        
+
         sentence_data = {
             "id": sentence.id,
             "sentence": str(sentence.sentence),
@@ -115,5 +121,3 @@ def get_sentence(language_code: str, slug: str):
         )
     except DoesNotExist:
         abort(404, description="Sentence not found")
-
-
