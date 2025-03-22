@@ -8,6 +8,8 @@ from tests.backend.utils_for_testing import build_url_with_query, get_route_regi
 from views.lemma_views import get_lemma_metadata
 from views.sourcedir_views import sourcefiles_for_sourcedir
 from views.sourcedir_api import create_sourcedir_api
+from views.core_views import languages
+from views.search_views import search_landing
 
 
 def test_endpoint_for():
@@ -23,6 +25,14 @@ def test_endpoint_for():
     # Test with create_sourcedir_api (from sourcedir_api blueprint)
     endpoint = endpoint_for(create_sourcedir_api)
     assert endpoint == "sourcedir_api.create_sourcedir_api"
+    
+    # Test with languages (from core_views blueprint)
+    endpoint = endpoint_for(languages)
+    assert endpoint == "core_views.languages"
+    
+    # Test with search_landing (from search_views blueprint)
+    endpoint = endpoint_for(search_landing)
+    assert endpoint == "search.search_landing"
 
 
 def test_route_registry_generation(client):

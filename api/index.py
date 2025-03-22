@@ -19,53 +19,68 @@ from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
 from utils.url_registry import generate_route_registry, generate_typescript_routes
 
+
 def inject_base_view_functions():
     """Inject view functions needed by the base template.
-    
+
     This minimal context processor only includes functions needed by base.jinja.
     """
-    from views.views import languages, views_bp
+    from views.core_views import languages
     from views.search_views import search_landing
+    from views.sourcedir_views import sourcedirs_for_language, sourcefiles_for_sourcedir
+    from views.lemma_views import lemmas_list
+    from views.wordform_views import wordforms_list
+    from views.phrase_views import phrases_list
+    from views.sentence_views import sentences_list
+    from views.flashcard_views import flashcard_landing
     
     return {
-        # Only the functions required by base.jinja
-        'languages_view_func': languages,  # The actual function reference
-        'search_landing': search_landing,
+        # Only the functions required by base.jinja and navigation
+        "languages_view_func": languages,  # The actual function reference
+        "search_landing": search_landing,
+        "sourcedirs_for_language": sourcedirs_for_language,
+        "sourcefiles_for_sourcedir": sourcefiles_for_sourcedir,
+        "lemmas_list": lemmas_list,
+        "wordforms_list": wordforms_list,
+        "phrases_list": phrases_list,
+        "sentences_list": sentences_list,
+        "flashcard_landing": flashcard_landing,
     }
 
 
 def setup_route_registry(app, static_folder):
     """Set up route registry and generate TypeScript definitions.
-    
+
     Args:
         app: The Flask application
         static_folder: Path to the static files directory
     """
     from utils.url_registry import endpoint_for
-    
+
     with app.app_context():
         # Generate route registry
         route_registry = generate_route_registry(app)
-        
+
         # Make route registry available to templates
         @app.context_processor
         def inject_routes():
+            # even though this is marked as unused by the IDE, it is actually being injected into the template context processor
             """Make route registry available to all templates."""
             return {
-                'route_registry': route_registry,
-                'endpoint_for': endpoint_for  # Make endpoint_for available in all templates
+                "route_registry": route_registry,
+                "endpoint_for": endpoint_for,  # Make endpoint_for available in all templates
             }
-        
+
         # In development mode, generate TypeScript routes file
         if not app.config["IS_PRODUCTION"]:
             # Create a directory for generated files if it doesn't exist
             os.makedirs(os.path.join(static_folder, "js", "generated"), exist_ok=True)
-            
+
             # Generate TypeScript routes
             ts_output_path = os.path.join(static_folder, "js", "generated", "routes.ts")
             generate_typescript_routes(app, ts_output_path)
             logger.info(f"Generated TypeScript routes at {ts_output_path}")
-    
+
     return route_registry
 
 
@@ -117,7 +132,7 @@ def create_app():
 
     # Register blueprints
     from views.system_views import system_views_bp, auth_views_bp, sys_views_bp
-    from views.views import views_bp
+    from views.core_views import core_views_bp
     from views.wordform_views import wordform_views_bp
     from views.lemma_views import lemma_views_bp
     from views.sourcedir_views import sourcedir_views_bp
@@ -135,7 +150,7 @@ def create_app():
     app.register_blueprint(auth_views_bp)
 
     # Register remaining blueprints
-    app.register_blueprint(views_bp)
+    app.register_blueprint(core_views_bp)
     app.register_blueprint(wordform_views_bp)
     app.register_blueprint(lemma_views_bp)
     app.register_blueprint(sourcedir_views_bp)
@@ -189,10 +204,10 @@ def create_app():
 
     # Generate route registry and TypeScript definitions
     setup_route_registry(app, static_folder)
-    
+
     # Register minimal context processor for base template view functions
     app.context_processor(inject_base_view_functions)
-    
+
     # Added CLI command to generate routes
     @app.cli.command("generate-routes-ts")
     def generate_routes_ts_command():

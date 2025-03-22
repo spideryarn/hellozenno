@@ -1,7 +1,7 @@
 {% extends "base.jinja" %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages)) }}">Languages</a>
+    » <a href="{{ url_for(endpoint_for(languages_view_func)) }}">Languages</a>
     » {{ target_language_name }}
 {% endblock breadcrumbs %}
 

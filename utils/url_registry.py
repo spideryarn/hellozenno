@@ -20,9 +20,16 @@ def endpoint_for(view_func):
     # Extract the module part from module name
     parts = module_name.split('.')
     if len(parts) > 1:
-        # For views modules, use the module name directly as the blueprint name
-        # This matches how Flask registers blueprints in our application
-        blueprint_name = parts[-1]
+        # For views modules, extract the blueprint name from the module name
+        module_part = parts[-1]
+        
+        # Special case for search_views module which uses "search" as blueprint name
+        if module_part == 'search_views':
+            blueprint_name = 'search'
+        # Regular case: most blueprints follow the pattern module_name = blueprint_name 
+        # (e.g. core_views -> core_views, lemma_views -> lemma_views)
+        else:
+            blueprint_name = module_part
     else:
         # Fallback if the module structure is different
         blueprint_name = module_name

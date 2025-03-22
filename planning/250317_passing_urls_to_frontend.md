@@ -210,8 +210,10 @@ After considering the various approaches, we selected Option 4 (Generating Route
 ## Next Steps
 
 1. **Continue Jinja Template Updates**: 
+   - ✅ Fixed navigation menu in base.jinja
+   - ✅ Fixed languages.jinja to use endpoint_for
+   - ✅ Updated inject_base_view_functions to include all navigation functions
    - Identify remaining templates with hardcoded URLs
-   - Update additional key templates (lemmas, wordforms, etc.)
    - Update partial templates and includes
 
 2. **Test Refinement**: 
@@ -244,6 +246,17 @@ We encountered an error when trying to use Blueprint objects with the `endpoint_
 4. Organize view functions by category for better maintainability
 
 This approach has the benefit of being more direct and less error-prone, though it does require importing all necessary view functions in the context processor.
+
+**Update**: We further improved this approach by expanding the `inject_base_view_functions` to include all navigation-related functions and fixed the templates to use them properly.
+
+**Update 2**: We identified a blueprint naming inconsistency in the codebase causing the `endpoint_for` function to break. The issue was that most blueprints followed the pattern `xxx_views_bp = Blueprint("xxx_views", ...)` but some like `search_views_bp = Blueprint("search", ...)` used a different pattern.
+
+**Update 3**: We resolved the inconsistency by:
+1. Renaming `views.py` to `core_views.py`
+2. Changing the blueprint from `views_bp = Blueprint("views", ...)` to `core_views_bp = Blueprint("core_views", ...)`
+3. Updating all imports and references throughout the application
+
+This approach ensures consistent blueprint naming across the codebase, which makes the `endpoint_for` function work reliably for all views.
 
 ## Potential Questions/Concerns
 
