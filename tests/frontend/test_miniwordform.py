@@ -1,24 +1,22 @@
 import pytest
 from playwright.sync_api import Page, expect
-from tests.fixtures_for_tests import SAMPLE_LEMMA_DATA
+from tests.fixtures_for_tests import SAMPLE_LEMMA_DATA, create_test_lemma, create_test_wordform
 from db_models import Lemma, Wordform
-from tests.backend.utils_for_testing import create_test_entity
 
 
 @pytest.fixture
 def test_lemma_with_wordforms(app, fixture_for_testing_db):
     """Create a test lemma with example wordforms."""
     # Create lemma
-    lemma = create_test_entity(fixture_for_testing_db, "lemma", language_code="el")
+    lemma = create_test_lemma(fixture_for_testing_db, language_code="el")
 
     # Create sample wordforms
     wordforms = []
     for i, wordform_text in enumerate(["wordform1", "wordform2"]):
-        wordform = create_test_entity(
+        wordform = create_test_wordform(
             fixture_for_testing_db,
-            "wordform",
             wordform=wordform_text,
-            lemma_entry=lemma,
+            lemma=lemma,
             language_code="el",
             translations=["test translation"]
         )

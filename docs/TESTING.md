@@ -27,7 +27,6 @@ Common test utilities are available in `tests/backend/utils_for_testing.py`:
 - `extract_data_attribute(html, attribute_name)`: Extract a data attribute value from HTML
 - `get_sourcedir_and_file(client, language_code="el")`: Get a sourcedir and sourcefile for testing
 - `with_wordform_search_mock(func)`: Decorator to patch the quick_search_for_wordform function
-- `create_test_entity(db, entity_type, **kwargs)`: Create a test entity with the given parameters
 
 ## Test Fixtures
 
@@ -70,7 +69,7 @@ Test-specific mocks should remain in their respective test files.
 ## Best Practices
 
 1. Use the `assert_html_response` function to check response status codes and content types
-2. Use the `create_test_entity` function to create test entities with default values
+2. Use the specific `create_test_*` functions from `tests/fixtures_for_tests.py` to create test entities with default values
 3. Use the `with_wordform_search_mock` decorator to mock the wordform search function
 4. Keep tests focused on a single piece of functionality
 5. Use descriptive test names that indicate what is being tested

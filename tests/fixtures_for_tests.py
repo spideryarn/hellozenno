@@ -1,6 +1,6 @@
 """Test fixtures and constants."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Union
 from pathlib import Path
 from db_models import (
     Lemma,
@@ -101,64 +101,100 @@ SAMPLE_PHRASE_DATA = {
 
 
 # Test data fixtures
-def create_test_lemma(db) -> Lemma:
-    """Create a test lemma."""
-    return Lemma.create(
-        lemma="test",
-        language_code=TEST_LANGUAGE_CODE,
-        part_of_speech="noun",
-        translations=["test"],
-        register="neutral",
-        commonality=0.5,
-        guessability=0.5,
-    )
-
-
-def create_test_wordform(db, lemma: Lemma) -> Wordform:
-    """Create a test wordform."""
-    return Wordform.create(
-        wordform="test",
-        lemma_entry=lemma,
-        language_code=TEST_LANGUAGE_CODE,
-        part_of_speech="noun",
-        translations=["test translation"],
-        inflection_type="nominative",
-        is_lemma=True,
-    )
-
-
-def create_test_phrase(db) -> Phrase:
-    """Create a test phrase."""
-    return Phrase.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA)
-
-
-def create_test_sourcedir(db) -> Dict[str, Sourcedir]:
-    """Create test sourcedirs."""
-    return {
-        "empty": Sourcedir.create(
-            path="empty_dir",
-            language_code=TEST_LANGUAGE_CODE,
-        ),
-        "with_files": Sourcedir.create(
-            path=TEST_SOURCE_DIR,
-            language_code=TEST_LANGUAGE_CODE,
-        ),
-        "other_lang": Sourcedir.create(
-            path="test_dir_fr",
-            language_code="fr",
-        ),
+def create_test_lemma(db, **kwargs) -> Lemma:
+    """Create a test lemma with customizable properties."""
+    lemma_data = {
+        "lemma": "test",
+        "language_code": TEST_LANGUAGE_CODE,
+        "part_of_speech": "noun",
+        "translations": ["test"],
+        "register": "neutral",
+        "commonality": 0.5,
+        "guessability": 0.5,
     }
+    lemma_data.update(kwargs)
+    return Lemma.create(**lemma_data)
 
 
-def create_test_sourcefile(db, sourcedir: Sourcedir) -> Sourcefile:
-    """Create a test sourcefile."""
-    return Sourcefile.create(
-        sourcedir=sourcedir,
-        filename=TEST_SOURCE_FILE,
-        text_target="test text",
-        text_english="test translation",
-        description="Test file description",
-        metadata={
+def create_test_wordform(db, lemma: Lemma = None, **kwargs) -> Wordform:
+    """Create a test wordform with customizable properties."""
+    # Create a lemma if one wasn't provided
+    if not lemma:
+        lemma = create_test_lemma(db)
+        
+    wordform_data = {
+        "wordform": "test",
+        "lemma_entry": lemma,
+        "language_code": TEST_LANGUAGE_CODE,
+        "part_of_speech": "noun",
+        "translations": ["test translation"],
+        "inflection_type": "nominative",
+        "is_lemma": True,
+    }
+    wordform_data.update(kwargs)
+    return Wordform.create(**wordform_data)
+
+
+def create_test_phrase(db, **kwargs) -> Phrase:
+    """Create a test phrase with customizable properties."""
+    phrase_data = {"language_code": TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA}
+    phrase_data.update(kwargs)
+    return Phrase.create(**phrase_data)
+
+
+def create_test_sourcedir(db, return_dict=True, path=None, language_code=None, **kwargs) -> Union[Dict[str, Sourcedir], Sourcedir]:
+    """Create test sourcedirs.
+    
+    Args:
+        db: Database connection
+        return_dict: If True, returns dictionary with multiple sourcedirs, otherwise returns a single sourcedir
+        path: Optional path to use for a single sourcedir
+        language_code: Optional language code for a single sourcedir
+        **kwargs: Additional arguments to pass to Sourcedir.create
+        
+    Returns:
+        Dict[str, Sourcedir] or Sourcedir: Dictionary of sourcedirs or a single sourcedir
+    """
+    if return_dict:
+        return {
+            "empty": Sourcedir.create(
+                path="empty_dir",
+                language_code=TEST_LANGUAGE_CODE,
+                **kwargs
+            ),
+            "with_files": Sourcedir.create(
+                path=TEST_SOURCE_DIR,
+                language_code=TEST_LANGUAGE_CODE,
+                **kwargs
+            ),
+            "other_lang": Sourcedir.create(
+                path="test_dir_fr",
+                language_code="fr",
+                **kwargs
+            ),
+        }
+    else:
+        sourcedir_data = {
+            "path": path or TEST_SOURCE_DIR,
+            "language_code": language_code or TEST_LANGUAGE_CODE,
+        }
+        sourcedir_data.update(kwargs)
+        return Sourcedir.create(**sourcedir_data)
+
+
+def create_test_sourcefile(db, sourcedir: Sourcedir = None, **kwargs) -> Sourcefile:
+    """Create a test sourcefile with customizable properties."""
+    # Create a sourcedir if one wasn't provided
+    if not sourcedir:
+        sourcedir = create_test_sourcedir(db, return_dict=False)
+        
+    sourcefile_data = {
+        "sourcedir": sourcedir,
+        "filename": TEST_SOURCE_FILE,
+        "text_target": "test text",
+        "text_english": "test translation",
+        "description": "Test file description",
+        "metadata": {
             "words": [
                 {
                     "wordform": "test",
@@ -179,43 +215,66 @@ def create_test_sourcefile(db, sourcedir: Sourcedir) -> Sourcefile:
                 }
             ],
         },
-        image_data=b"test content",
-        audio_data=b"test audio content",
-        sourcefile_type="image",
-    )
+        "image_data": b"test content",
+        "audio_data": b"test audio content",
+        "sourcefile_type": "image",
+    }
+    sourcefile_data.update(kwargs)
+    return Sourcefile.create(**sourcefile_data)
 
 
 def create_test_sourcefile_links(
-    db, sourcefile: Sourcefile, wordform: Wordform, phrase: Phrase
+    db, sourcefile: Sourcefile = None, wordform: Wordform = None, phrase: Phrase = None, **kwargs
 ) -> Dict[str, Any]:
-    """Create test sourcefile links."""
+    """Create test sourcefile links with customizable properties."""
+    # Create entities if they weren't provided
+    if not sourcefile:
+        sourcefile = create_test_sourcefile(db)
+    if not wordform:
+        wordform = create_test_wordform(db)
+    if not phrase:
+        phrase = create_test_phrase(db)
+        
+    wordform_link_data = {
+        "sourcefile": sourcefile,
+        "wordform": wordform,
+        "centrality": 0.8,
+        "ordering": 1,
+    }
+    phrase_link_data = {
+        "sourcefile": sourcefile,
+        "phrase": phrase,
+        "centrality": 0.8,
+        "ordering": 1,
+    }
+    
+    # Apply any overrides from kwargs
+    if "wordform_kwargs" in kwargs:
+        wordform_link_data.update(kwargs.pop("wordform_kwargs"))
+    if "phrase_kwargs" in kwargs:
+        phrase_link_data.update(kwargs.pop("phrase_kwargs"))
+    
+    # Create the links
     return {
-        "wordform": SourcefileWordform.create(
-            sourcefile=sourcefile,
-            wordform=wordform,
-            centrality=0.8,
-            ordering=1,
-        ),
-        "phrase": SourcefilePhrase.create(
-            sourcefile=sourcefile,
-            phrase=phrase,
-            centrality=0.8,
-            ordering=1,
-        ),
+        "wordform": SourcefileWordform.create(**wordform_link_data),
+        "phrase": SourcefilePhrase.create(**phrase_link_data),
     }
 
 
-def create_test_sentence(db) -> Sentence:
-    """Create a test sentence with audio data."""
-    sentence = Sentence.create(
-        language_code=TEST_LANGUAGE_CODE,
-        sentence="Το σπίτι είναι μεγάλο",
-        translation="The house is big",
-        audio_data=b"test audio data",  # Dummy audio data for testing
-    )
+def create_test_sentence(db, lemma_words=None, **kwargs) -> Sentence:
+    """Create a test sentence with audio data and customizable properties."""
+    sentence_data = {
+        "language_code": TEST_LANGUAGE_CODE,
+        "sentence": "Το σπίτι είναι μεγάλο",
+        "translation": "The house is big",
+        "audio_data": b"test audio data",  # Dummy audio data for testing
+    }
+    sentence_data.update(kwargs)
+    sentence = Sentence.create(**sentence_data)
 
     # Create lemmas and relationships
-    for lemma_word in ["σπίτι", "μεγάλος"]:
+    lemma_words = lemma_words or ["σπίτι", "μεγάλος"]
+    for lemma_word in lemma_words:
         lemma = Lemma.create(
             lemma=lemma_word,
             language_code=TEST_LANGUAGE_CODE,

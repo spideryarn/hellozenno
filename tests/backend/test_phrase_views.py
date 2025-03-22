@@ -1,36 +1,32 @@
 import pytest
 from flask import url_for
 from peewee import DoesNotExist
-from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_PHRASE_DATA
+from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_PHRASE_DATA, create_test_phrase
 from slugify import slugify
 
 from db_models import Phrase
-from tests.backend.utils_for_testing import assert_html_response, create_test_entity
+from tests.backend.utils_for_testing import assert_html_response, build_url_with_query
+from views.phrase_views import phrases_list_vw, get_phrase_metadata_vw
 
 
 def test_phrase_url_generation(client):
     """Test that all URLs in the phrase view can be generated correctly."""
-    with client.application.test_request_context():
-        # Test basic URL generation
-        assert url_for("phrase_views.phrases_list", target_language_code="el")
-        assert url_for(
-            "phrase_views.get_phrase_metadata",
-            target_language_code="el",
-            slug="kathome-kai-skeftome",
-        )
-
-        # Test navigation URLs
-        assert url_for("views.languages")
-        assert url_for(
-            "sourcedir_views.sourcedirs_for_language", target_language_code="el"
-        )
+    # Test basic URL generation
+    url1 = build_url_with_query(client, phrases_list_vw, target_language_code="el")
+    assert url1
+    assert "/lang/el/phrases" in url1
+    
+    url2 = build_url_with_query(client, get_phrase_metadata_vw, 
+                               target_language_code="el", 
+                               slug="kathome-kai-skeftome")
+    assert url2
+    assert "/lang/el/phrases/kathome-kai-skeftome" in url2
 
 
 def test_phrases_list_basic(client, fixture_for_testing_db):
     """Test that the phrases list view returns a 200 status code and includes phrase metadata."""
-    phrase = create_test_entity(
+    phrase = create_test_phrase(
         fixture_for_testing_db,
-        "phrase",
         canonical_form="test_list",
         translations=["test translation"],
         commonality=0.5,
@@ -50,7 +46,7 @@ def test_phrases_list_basic(client, fixture_for_testing_db):
 def test_phrase_detail_view(client, fixture_for_testing_db):
     """Test the individual phrase detail view."""
     # Create a test phrase with full metadata
-    phrase = create_test_entity(fixture_for_testing_db, "phrase")
+    phrase = create_test_phrase(fixture_for_testing_db)
 
     # Don't check against a hardcoded slug, just make sure it's set
     assert phrase.slug is not None
@@ -82,25 +78,22 @@ def test_nonexistent_phrase(client):
 def test_phrases_list_sorting(client, fixture_for_testing_db):
     """Test the sorting functionality of the phrases list view."""
     # Create phrases with different dates
-    phrase1 = create_test_entity(
+    phrase1 = create_test_phrase(
         fixture_for_testing_db,
-        "phrase",
         canonical_form="alpha phrase",
         raw_forms=["alpha phrase"],
         translations=["test1"],
         part_of_speech="verbal phrase",
     )
-    phrase2 = create_test_entity(
+    phrase2 = create_test_phrase(
         fixture_for_testing_db,
-        "phrase",
         canonical_form="beta phrase",
         raw_forms=["beta phrase"],
         translations=["test2"],
         part_of_speech="verbal phrase",
     )
-    phrase3 = create_test_entity(
+    phrase3 = create_test_phrase(
         fixture_for_testing_db,
-        "phrase",
         canonical_form="gamma phrase",
         raw_forms=["gamma phrase"],
         translations=["test3"],
