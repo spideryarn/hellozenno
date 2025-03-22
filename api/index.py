@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from loguru import logger
-from flask import Flask
+from flask import Flask, render_template
 from flask_cors import CORS
 from whitenoise import WhiteNoise
 
@@ -118,7 +118,9 @@ def create_app():
     init_db(app)
 
     # Register blueprints
-    from views.system_views import system_views_bp, auth_views_bp, sys_views_bp
+    from views.system_views import system_views_bp, sys_views_bp
+    from views.auth_views import auth_views_bp
+    from views.auth_api import auth_api_bp
     from views.core_views import core_views_bp
     from views.wordform_views import wordform_views_bp
     from views.lemma_views import lemma_views_bp
@@ -135,6 +137,7 @@ def create_app():
     # Register system management blueprints
     app.register_blueprint(sys_views_bp)
     app.register_blueprint(auth_views_bp)
+    app.register_blueprint(auth_api_bp)
 
     # Register remaining blueprints
     app.register_blueprint(core_views_bp)
@@ -192,6 +195,11 @@ def create_app():
 
     # Register minimal context processor for base template view functions
     app.context_processor(inject_base_view_functions)
+
+    # Register error handlers
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.jinja'), 404
 
     # Added CLI command to generate routes
     @app.cli.command("generate-routes-ts")
