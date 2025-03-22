@@ -6,30 +6,12 @@ from flask import (
     jsonify,
     request,
     render_template,
-    redirect,
-    url_for,
-    g,
-    flash,
 )
-from peewee import DoesNotExist
 
 from utils.db_connection import get_db
-from utils.env_config import is_vercel
-from utils.auth_utils import (
-    page_auth_required,
-    api_auth_required,
-    get_current_user,
-    set_auth_cookie,
-    clear_auth_cookie,
-)
-from db_models import Profile
-from config import SUPPORTED_LANGUAGES
 
 # Create blueprint for system views
 system_views_bp = Blueprint("system_views", __name__, url_prefix="")
-
-# Create auth-specific blueprint
-auth_views_bp = Blueprint("auth_views", __name__, url_prefix="/auth")
 
 # Create sys-specific blueprint
 sys_views_bp = Blueprint("sys_views", __name__, url_prefix="/sys")
@@ -44,7 +26,7 @@ def health_check_vw():
     try:
         # Get database metrics
         db = get_db()
-        db_metrics = get_db_metrics_vw(db)
+        db_metrics = get_db_metrics(db)
 
         # Get application metrics
         app_metrics = {
@@ -79,7 +61,7 @@ def health_check_vw():
         )
 
 
-def get_db_metrics_vw(db):
+def get_db_metrics(db):
     """Get database metrics.
 
     Args:
@@ -118,115 +100,3 @@ def get_db_metrics_vw(db):
 def route_test_vw():
     """Test page for URL registry and route resolution."""
     return render_template("route_test.jinja")
-
-
-# Example page for TypeScript URL registry usage
-@system_views_bp.route("/route-registry-example")
-def route_registry_example_vw():
-    """Example page showing TypeScript URL registry usage in Svelte."""
-    return render_template("route_registry_example.jinja")
-
-
-@auth_views_bp.route("/", methods=["GET"])
-@auth_views_bp.route("/<target_language_code>", methods=["GET"])
-def auth_page_vw(target_language_code=None):
-    """Render the auth page with login and signup forms."""
-    # Catch empty string language code (from trailing slash) and redirect to /auth
-    if target_language_code == "":
-        return redirect("/auth/")
-
-    # Check if a redirect URL was provided
-    redirect_url = request.args.get("redirect", "/")
-    show_signup = request.args.get("signup", "false").lower() == "true"
-
-    # If the user is already authenticated, redirect to the home page
-    user = get_current_user()
-    if user:
-        return redirect(redirect_url)
-
-    return render_template(
-        "auth.jinja",
-        redirect_url=redirect_url,
-        show_signup=show_signup,
-        target_language_code=target_language_code,
-    )
-
-
-@system_views_bp.route("/api/auth/session", methods=["POST", "DELETE"])
-def manage_session_api():
-    """
-    Handle session management for auth.
-
-    POST: Set a session cookie with the JWT token
-    DELETE: Clear the session cookie
-    """
-    if request.method == "POST":
-        # Set the auth cookie with the token from the request
-        data = request.get_json()
-        if not data or "token" not in data:
-            return jsonify({"error": "Token is required"}), 400
-
-        # Create a response with the cookie
-        response = set_auth_cookie(data["token"])
-        return response, 200
-
-    elif request.method == "DELETE":
-        # Clear the auth cookie
-        response = clear_auth_cookie()
-        return response, 200
-
-    # Should never reach here
-    return jsonify({"error": "Method not allowed"}), 405
-
-
-@system_views_bp.route("/api/auth/user", methods=["GET"])
-@api_auth_required
-def get_user_api():
-    """Get the current authenticated user's info."""
-    # g.user is set by the api_auth_required decorator
-    return jsonify(g.user), 200
-
-
-@auth_views_bp.route("/protected")
-@page_auth_required
-def protected_page_vw():
-    """A protected page that requires authentication."""
-    # Get user profile
-    try:
-        profile = Profile.get(Profile.user_id == g.user["id"])
-    except DoesNotExist:
-        profile = None
-
-    return render_template("protected.jinja", user=g.user, profile=profile)
-
-
-@auth_views_bp.route("/profile", methods=["GET", "POST"])
-@auth_views_bp.route("/profile/<target_language_code>", methods=["GET", "POST"])
-@page_auth_required
-def profile_page_vw(target_language_code=None):
-    """User profile page for editing preferences."""
-    # Catch empty string language code (from trailing slash) and redirect to /auth/profile
-    if target_language_code == "":
-        return redirect("/auth/profile")
-
-    # Get or create profile
-    profile, created = Profile.get_or_create_for_user(g.user["id"], g.user["email"])
-
-    if request.method == "POST":
-        # Update profile with form data
-        profile.target_language_code = request.form.get("target_language_code") or None
-        profile.save()
-
-        flash("Profile updated successfully!")
-        return redirect(url_for("auth_views.profile_page"))
-
-    # GET request - show the profile form
-    # Explicitly set target_language_code to None to avoid language lookup errors in templates
-    return render_template(
-        "profile.jinja",
-        user=g.user,
-        profile=profile,
-        languages=SUPPORTED_LANGUAGES,
-        target_language_code=None,  # Pass None to avoid template errors
-        target_language_name=None,  # Explicitly pass None for target_language_name
-    )
