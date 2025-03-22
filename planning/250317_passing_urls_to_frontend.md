@@ -203,6 +203,7 @@ After considering the various approaches, we selected Option 4 (Generating Route
 8. **Quality Assurance**
    - ⏳ Review all URL patterns for consistency
    - ✅ Ensure JavaScript code uses the route registry
+   - ✅ Fix AttributeError with Blueprint objects in templates
    - ⏳ Ensure Jinja templates use endpoint_for
 
 ## Next Steps
@@ -227,6 +228,22 @@ After considering the various approaches, we selected Option 4 (Generating Route
    - Create examples showing before/after for reference
    - Document best practices for adding new routes
 
+## Implementation Challenges and Solutions
+
+### Blueprint Objects vs View Functions 
+
+We encountered an error when trying to use Blueprint objects with the `endpoint_for` function:
+
+**Issue**: When trying to use syntax like `endpoint_for(blueprint_name.view_function)`, we received an `AttributeError: __name__` because Blueprint objects don't have the necessary attributes that `endpoint_for` expects.
+
+**Solution**: 
+1. Remove Blueprint objects from the context processor
+2. Import and pass view functions directly
+3. Update templates to use direct function references
+4. Organize view functions by category for better maintainability
+
+This approach has the benefit of being more direct and less error-prone, though it does require importing all necessary view functions in the context processor.
+
 ## Potential Questions/Concerns
 
 - **Naming Conventions**: Should route constants use `API_` prefix for API routes, or organize differently?
@@ -234,6 +251,7 @@ After considering the various approaches, we selected Option 4 (Generating Route
 - **Documentation**: How will these routes be documented for developers?
 - **Performance**: Will the larger template size impact page load time?
 - **Error Handling**: How should resolveRoute handle missing routes or parameters?
+- **Function Naming Conflicts**: How to handle potential naming conflicts if multiple blueprints have functions with the same name?
 
 ## Appendix: Jinja Template URL Generation
 
