@@ -53,8 +53,11 @@ def get_sourcedir_and_file(
     Returns:
         A tuple of (sourcedir, sourcefile) or (None, None) if not found
     """
+    from views.sourcedir_views import sourcedirs_for_language_vw, sourcefiles_for_sourcedir_vw
+    
     # Get the list of sourcedirs
-    response = client.get(f"/{language_code}/")
+    url = build_url_with_query(client, sourcedirs_for_language_vw, target_language_code=language_code)
+    response = client.get(url)
     if response.status_code != 200:
         return None, None
 
@@ -64,7 +67,10 @@ def get_sourcedir_and_file(
         return None, None
 
     # Get sourcedir contents
-    response = client.get(f"/{language_code}/{quote(sourcedir)}")
+    url = build_url_with_query(client, sourcefiles_for_sourcedir_vw, 
+                              target_language_code=language_code, 
+                              sourcedir_slug=sourcedir)
+    response = client.get(url)
     if response.status_code != 200:
         return sourcedir, None
 

@@ -22,8 +22,8 @@ def test_wordforms_list(client, fixture_for_testing_db):
     lemma = create_test_lemma(fixture_for_testing_db)
     wordform = create_test_wordform(fixture_for_testing_db, lemma)
 
-    # Test accessing the wordforms list view
-    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordforms")
+    # Test accessing the wordforms list view with trailing slash
+    response = client.get(f"/lang/{TEST_LANGUAGE_CODE}/wordforms/")
     assert response.status_code == 200
     assert str(wordform.wordform).encode() in response.data
 
@@ -140,7 +140,7 @@ def test_delete_wordform(client, fixture_for_testing_db):
     # Delete the wordform
     response = client.post(f"/lang/{TEST_LANGUAGE_CODE}/wordform/{wordform.wordform}/delete")
     assert response.status_code == 302  # Redirect after deletion
-    assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/wordforms")
+    assert response.headers["Location"].endswith(f"/lang/{TEST_LANGUAGE_CODE}/wordforms/")
 
     # Verify the wordform is deleted from the database
     with pytest.raises(DoesNotExist):

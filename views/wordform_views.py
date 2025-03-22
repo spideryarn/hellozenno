@@ -16,7 +16,7 @@ from views.sourcedir_views import sourcedirs_for_language_vw
 wordform_views_bp = Blueprint("wordform_views", "/", url_prefix="/lang")
 
 
-@wordform_views_bp.route("/<target_language_code>/wordforms")
+@wordform_views_bp.route("/<target_language_code>/wordforms/")
 def wordforms_list_vw(target_language_code: str):
     """Display all known wordforms for a language."""
     target_language_name = get_language_name(target_language_code)
@@ -43,6 +43,10 @@ def wordforms_list_vw(target_language_code: str):
     for lemma_entry in lemma_entries:
         lemma_metadata[lemma_entry.lemma] = lemma_entry.to_dict()
 
+    # Import necessary view functions inside this function to avoid circular imports
+    from views.core_views import languages_vw
+    from views.sourcedir_views import sourcedirs_for_language_vw
+
     return render_template(
         "wordforms.jinja",
         target_language_code=target_language_code,
@@ -52,6 +56,10 @@ def wordforms_list_vw(target_language_code: str):
         view_name=endpoint_for(wordforms_list_vw),
         current_sort=sort_by,
         show_commonality=True,  # We can show commonality by joining with Lemma
+        # Add view functions for endpoint_for
+        languages_vw=languages_vw,
+        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
+        wordforms_list_vw=wordforms_list_vw,
     )
 
 
