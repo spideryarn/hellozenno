@@ -1,7 +1,7 @@
 // File deletion
 function deleteSourcefile(slug) {
     if (confirm('Are you sure you want to delete this sourcefile? This action cannot be undone.')) {
-        fetch(resolveRoute('SOURCEFILE_VIEWS_DELETE_SOURCEFILE', {
+        fetch(resolveRoute('SOURCEFILE_API_DELETE_SOURCEFILE_API', {
             target_language_code: window.target_language_code,
             sourcedir_slug: window.sourcedir_slug,
             sourcefile_slug: slug
@@ -196,7 +196,7 @@ function showCreateFromTextModal() {
 
         try {
             const response = await fetch(
-                resolveRoute('SOURCEFILE_VIEWS_CREATE_FROM_TEXT', {
+                resolveRoute('SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API', {
                     target_language_code: window.target_language_code,
                     sourcedir_slug: window.sourcedir_slug
                 }),
@@ -268,7 +268,7 @@ function showYouTubeModal() {
             progressDiv.style.display = 'block';
 
             const response = await fetch(
-                resolveRoute('SOURCEFILE_VIEWS_ADD_FROM_YOUTUBE', {
+                resolveRoute('SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API', {
                     target_language_code: window.target_language_code,
                     sourcedir_slug: window.sourcedir_slug
                 }),

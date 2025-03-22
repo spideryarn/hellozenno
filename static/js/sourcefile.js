@@ -71,7 +71,7 @@ function saveDescription() {
     saveButton.disabled = true;
     saveButton.innerHTML = `Saving... <div class="spinner"></div>`;
 
-    const url = resolveRoute('SOURCEFILE_API_UPDATE_DESCRIPTION', {
+    const url = resolveRoute('SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API', {
         target_language_code: window.target_language_code,
         sourcedir_slug: window.sourcedir_slug,
         sourcefile_slug: window.sourcefile_slug
@@ -127,7 +127,7 @@ function cancelEditDescription() {
 function generateAudio() {
     showAudioGenerationProgress();
 
-    const url = resolveRoute('SOURCEFILE_API_GENERATE_AUDIO', {
+    const url = resolveRoute('SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API', {
         target_language_code: window.target_language_code,
         sourcedir_slug: window.sourcedir_slug,
         sourcefile_slug: window.sourcefile_slug
@@ -162,7 +162,7 @@ async function renameSourcefile() {
             cancelText: "Cancel"
         });
 
-        const url = resolveRoute('SOURCEFILE_API_RENAME', {
+        const url = resolveRoute('SOURCEFILE_API_RENAME_SOURCEFILE_API', {
             target_language_code: window.target_language_code,
             sourcedir_slug: window.sourcedir_slug,
             sourcefile_slug: window.sourcefile_slug
@@ -197,7 +197,7 @@ async function renameSourcefile() {
 
 function deleteSourcefile() {
     if (confirm('Are you sure you want to delete this sourcefile? This action cannot be undone.')) {
-        const url = resolveRoute('SOURCEFILE_API_DELETE', {
+        const url = resolveRoute('SOURCEFILE_API_DELETE_SOURCEFILE_API', {
             target_language_code: window.target_language_code,
             sourcedir_slug: window.sourcedir_slug,
             sourcefile_slug: window.sourcefile_slug
@@ -226,7 +226,7 @@ function processIndividualWords() {
     button.disabled = true;
     button.innerHTML = `Processing... <div class="spinner"></div>`;
 
-    const url = resolveRoute('SOURCEFILE_API_PROCESS_INDIVIDUAL', {
+    const url = resolveRoute('SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API', {
         target_language_code: window.target_language_code,
         sourcedir_slug: window.sourcedir_slug,
         sourcefile_slug: window.sourcefile_slug
@@ -273,7 +273,7 @@ function initSourcedirSelector() {
                 const originalText = this.options[selectedIndex].text;
                 this.options[selectedIndex].text = 'Moving...';
                 
-                const url = resolveRoute('SOURCEFILE_API_MOVE', {
+                const url = resolveRoute('SOURCEFILE_API_MOVE_SOURCEFILE_API', {
                     target_language_code: window.target_language_code,
                     sourcedir_slug: window.sourcedir_slug,
                     sourcefile_slug: window.sourcefile_slug
