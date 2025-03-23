@@ -12,18 +12,12 @@ from flask import Flask, render_template
 from flask_cors import CORS
 from whitenoise import WhiteNoise
 
-# Import both sets of Vite helpers, but we'll use the new ones
-from utils.url_utils import load_vite_manifest
+# Import the consolidated Vite helpers from utils/vite_helpers.py
+from utils.vite_helpers import register_vite_helpers, load_vite_manifest
 from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
 from utils.url_registry import generate_route_registry, generate_typescript_routes
-from api.utils.vite_helpers import (
-    register_vite_helpers,
-    get_vite_manifest,
-    vite_asset_url,
-    dump_manifest,
-)
 
 
 def setup_route_registry(app, static_folder):
@@ -108,15 +102,6 @@ def create_app():
 
     # Register Vite helper functions
     register_vite_helpers(app)
-
-    # Manual registration of helpers to ensure they're available in templates
-    @app.context_processor
-    def inject_vite_helpers_direct():
-        return {
-            "vite_manifest": get_vite_manifest,
-            "vite_asset_url": vite_asset_url,
-            "dump_manifest": dump_manifest,
-        }
 
     # Initialize database
     from utils.db_connection import init_db

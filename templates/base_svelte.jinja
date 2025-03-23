@@ -7,11 +7,12 @@
     </div>
   </div>
   
-  {# Determine if we're in production mode - using either actual production or local check of production frontend #}
-  {% set in_production_mode = config.IS_PRODUCTION or config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) %}
+  {# Determine the environment mode - use a clear and explicit variable name #}
+  {% set is_production_mode = config.IS_PRODUCTION or config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) %}
   
-  {% if not in_production_mode %}
-    {# Development mode - use Vite dev server #}
+  {% if not is_production_mode %}
+    {# ===== DEVELOPMENT MODE ===== #}
+    {# Development mode uses Vite dev server for hot module reloading #}
     <script type="module">
       // Debug flags - disabled in normal operation, can be enabled for troubleshooting
       const SVELTE_DEBUG = true;
@@ -24,7 +25,7 @@
         component: "{{ component_name }}",
         mountPoint: "{{ component_id if component_id else component_name | lower + '-component' }}",
         props: {{ props | tojson | safe }},
-        viteDev: true
+        environment: "development"
       })}`);
       
       // Mount the component after DOM is fully loaded
@@ -76,23 +77,23 @@
       });
     </script>
   {% else %}
-    {# Production mode - use built files #}
+    {# ===== PRODUCTION MODE ===== #}
+    {# Production mode loads from bundled static files #}
     
+    {# Add debugging info if in local check mode #}
     {% if config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) %}
-      {# In local check of production frontend mode, add debugging info #}
       <script>
         console.log('[SVELTE PROD CHECK] Environment:', {
           IS_PRODUCTION: {{ config.IS_PRODUCTION | tojson }},
           LOCAL_CHECK_OF_PROD_FRONTEND: {{ config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) | tojson }},
-          component: '{{ component_name }}'
-          {# We've disabled the viteManifest output temporarily as it's causing errors #}
-          {# viteManifest: {{ vite_manifest() | tojson | safe }} #}
+          component: '{{ component_name }}',
+          viteManifest: {{ dump_manifest() | tojson | safe }}
         });
       </script>
     {% endif %}
     
-    {# Load the CSS file for Svelte components using hardcoded path for now #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='build/assets/style.css') }}" data-vite-asset="style.css">
+    {# Load the CSS file for Svelte components using vite_asset_url helper #}
+    <link rel="stylesheet" href="{{ vite_asset_url('style.css') }}" data-vite-asset="style.css">
     
     <script type="module">
       // Debug flags for troubleshooting production issues
@@ -116,27 +117,19 @@
           }
           
           // Load the unified component bundle
-          // Using hardcoded path instead of dynamic resolution for now
-          const bundleUrl = "{{ url_for('static', filename='build/js/hz-components.es.js') }}";
+          // Using the vite_asset_url helper for reliable path resolution
+          const bundleUrl = "{{ vite_asset_url('js/hz-components.es.js') }}";
           debugLog("Loading component bundle from:", bundleUrl);
           
-          // Check if we have a hardcoded fallback to use
-          const fallbackBundleUrl = "/static/build/js/hz-components.es.js";
-          const finalBundleUrl = bundleUrl || fallbackBundleUrl;
-          
-          if (finalBundleUrl !== bundleUrl) {
-            console.warn(`Using fallback bundle URL: ${finalBundleUrl} (vite_asset_url failed)`);
-          }
-          
           // Add error handling with fallback message
-          if (!finalBundleUrl) {
+          if (!bundleUrl) {
             console.error("Bundle URL is empty - cannot load component");
             targetElement.innerHTML = '<div class="error-message">Component loading error: Bundle not found</div>';
             return;
           }
           
           // Dynamic import bundle
-          import(finalBundleUrl).then(componentsModule => {
+          import(bundleUrl).then(componentsModule => {
             debugLog(`Component bundle imported in ${(performance.now() - startTime).toFixed(2)}ms:`, 
               Object.keys(componentsModule));
             
@@ -167,13 +160,13 @@
             const component = componentFactory(targetElement, props);
             debugLog(`Component ${componentName} mounted successfully in ${(performance.now() - startTime).toFixed(2)}ms`);
           }).catch(error => {
-            console.error(`Failed to import ${finalBundleUrl}:`, error);
+            console.error(`Failed to import ${bundleUrl}:`, error);
             
             // Show error message in component area
             targetElement.innerHTML = `<div class="error-message">
               <div class="error-title">Component loading error</div>
               <div class="error-details">${error.message}</div>
-              <div class="error-url">Failed to load: ${finalBundleUrl}</div>
+              <div class="error-url">Failed to load: ${bundleUrl}</div>
               <div class="error-stack">${error.stack || 'No stack trace available'}</div>
             </div>`;
           });

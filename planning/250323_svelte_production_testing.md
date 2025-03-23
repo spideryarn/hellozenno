@@ -31,34 +31,41 @@ We've identified several issues in our implementation:
 
 1. **Template Helper Functions Not Registered**: The `vite_manifest` and `vite_asset_url` functions weren't being properly registered with Flask's context processor, causing "undefined" errors in templates.
 
-2. **Duplicate Vite Helper Implementations**: We have two different implementations:
-   - `utils/url_utils.py` contains `load_vite_manifest()`
-   - `api/utils/vite_helpers.py` contains `get_vite_manifest()`, `vite_asset_url()`, and `dump_manifest()`
+2. **Duplicate Vite Helper Implementations**: We had two different implementations:
+   - `utils/url_utils.py` contained `load_vite_manifest()`
+   - `api/utils/vite_helpers.py` contained `get_vite_manifest()`, `vite_asset_url()`, and `dump_manifest()`
 
-3. **Module Import Structure**: The Flask app (`api/index.py`) is importing from both implementations, but only one set is being used effectively.
+3. **Module Import Structure**: The Flask app (`api/index.py`) was importing from both implementations, but only one set was being used effectively.
 
 4. **Environment Variable Transition**: We're transitioning from `LOCAL_PROD_TEST` to `LOCAL_CHECK_OF_PROD_FRONTEND` but need to ensure both work during the transition period.
 
 ### Recent Progress
 
-We've implemented a successful temporary fix by:
+We've made significant improvements to fix these issues:
 
-1. **Hardcoding asset paths**: Replaced dynamic asset URL resolution with hardcoded paths in `base_svelte.jinja`:
-   ```jinja
-   <!-- CSS -->
-   <link rel="stylesheet" href="{{ url_for('static', filename='build/assets/style.css') }}">
-   
-   <!-- JS -->
-   const bundleUrl = "{{ url_for('static', filename='build/js/hz-components.es.js') }}";
-   ```
+1. **Fixed Template Helper Registration**: Added proper context processor registration in Flask.
 
-2. **Commenting out problematic template code**: Disabled the `vite_manifest()` call in debug output which was causing template rendering errors.
+2. **Consolidated Vite Helpers**: Created a unified implementation in `utils/vite_helpers.py` that:
+   - Combines the best aspects of both previous implementations
+   - Provides backward compatibility with `load_vite_manifest()`
+   - Uses proper type hints and documentation
+   - Implements a caching layer for better performance
+   - Adds robust error handling and fallbacks
 
-3. **Testing the fix**: Successfully tested the flashcards page with our changes. The console logs confirm both components are mounting correctly:
-   ```
-   [SVELTE PROD] Component userstatus mounted successfully in 657.00ms
-   [SVELTE PROD] Component flashcardlanding mounted successfully in 657.00ms
-   ```
+3. **Improved Environment Detection**: 
+   - Updated template to use a clear variable name `is_production_mode`
+   - Fixed the conflict where it was trying to load from both development and production sources
+   - Added better debug logging in both environments
+
+4. **Enhanced Error Handling**: 
+   - Added loading indicators for all components
+   - Improved error display with detailed information
+   - Added timing metrics for performance analysis
+
+5. **Added Debugging Tools**:
+   - Created a `/dev/vite-manifest` endpoint that shows detailed information about the manifest and asset resolution
+   - Added more verbose console logging with environment information
+   - Improved error messages with more context
 
 ## Actions
 
@@ -84,7 +91,7 @@ We've implemented a successful temporary fix by:
 - [x] Add direct context processor registration in `api/index.py`
 - [x] Create a temporary workaround using hardcoded paths
 - [x] Test that components load correctly with the temporary fix
-- [ ] Plan a unified approach for both sets of Vite helpers
+- [x] Plan a unified approach for both sets of Vite helpers
 
 ### Stage 4: Implement Step-by-Step Verification for Component Loading
 
@@ -123,13 +130,21 @@ We've implemented a successful temporary fix by:
 
 ### Stage 8: Consolidate Vite Helpers
 
-- [ ] Merge the two implementations of Vite helpers
-  - [ ] Decide which implementation to keep (likely `api/utils/vite_helpers.py`)
-  - [ ] Ensure backward compatibility with existing code
-  - [ ] Add appropriate deprecation warnings for old functions
-  - [ ] Update imports in all files
+- [x] Merge the two implementations of Vite helpers
+  - [x] Decide which implementation to keep (created new unified version in `utils/vite_helpers.py`)
+  - [x] Ensure backward compatibility with existing code
+  - [x] Add appropriate deprecation warnings for old functions
+  - [x] Update imports in `api/index.py`
 
-### Stage 9: Update Deployment Process
+### Stage 9: Fix Environment Detection
+
+- [x] Update `base_svelte.jinja` to correctly determine when to use development vs. production loading
+  - [x] Clarify the variable name from `in_production_mode` to `is_production_mode`
+  - [x] Add clear comments about what each environment section does
+  - [x] Remove the redundant code trying to load from both environments
+  - [x] Add better debugging information in each environment mode
+
+### Stage 10: Update Deployment Process
 
 - [ ] Enhance build-frontend.sh to verify a successful build
   - [ ] Add explicit checks for required output files
@@ -137,7 +152,7 @@ We've implemented a successful temporary fix by:
   - [ ] Create a simple output status report
   - [ ] Test full deployment process locally
   
-### Stage 10: End-to-End Testing
+### Stage 11: End-to-End Testing
 
 - [ ] Create automated tests for the component loading process
   - [ ] Add tests for development mode loading
@@ -168,26 +183,22 @@ This gives more flexibility to:
 
 ## Next Steps
 
-Now that we have a working temporary solution, the next steps are:
+Our next priorities are:
 
-1. **Create a permanent solution for Vite helpers**:
-   - Consolidate the two implementations into a single, more robust module
-   - Update all templates to use the new helpers
-   - Add proper error handling for edge cases
+1. **Document the unified Vite helpers**:
+   - Add clear documentation on how the asset loading works
+   - Update existing documentation to reflect the new system
+   - Create examples for common usage patterns
 
-2. **Fix the environment detection**:
-   - Update `base_svelte.jinja` to correctly determine when to use development vs. production loading
-   - Fix the conflict where it's trying to load assets from both sources simultaneously
-
-3. **Document the architecture**:
-   - Create clear documentation on how component loading works in different environments
-   - Add comments to explain the key parts of the system
-   - Update existing documentation to reflect the new process
-
-4. **Improve build script**:
+2. **Improve build script**:
    - Add verification steps to the build process
    - Generate build reports to confirm which files were created
    - Add validation for the manifest structure
+
+3. **Add automated tests**:
+   - Create tests for the Vite helpers
+   - Add end-to-end tests for the component loading process
+   - Test edge cases like missing manifests or assets
 
 ## Appendix
 
@@ -207,10 +218,11 @@ Now that we have a working temporary solution, the next steps are:
 
 1. ✅ **Template Helper Registration**: Fixed by adding direct context processor registration
 2. ✅ **Component Loading Display**: Added loading indicators and error handling
-3. ✅ **Asset Path Resolution**: Temporarily fixed with hardcoded paths
+3. ✅ **Asset Path Resolution**: Implemented robust resolution with fallbacks
+4. ✅ **Duplicate Vite Helpers**: Consolidated into a single implementation
+5. ✅ **Environment Detection**: Fixed to properly handle dev vs prod mode
 
 ### Issues Still to Resolve
 
-1. **Duplicate Vite Helper Implementations**: Need to consolidate into a single solution
-2. **Mixed Development/Production Mode**: Fix conflict where it's trying to load from both environments
-3. **Build Verification**: Add checks to ensure production builds are complete and valid 
+1. **Build Verification**: Add checks to ensure production builds are complete and valid
+2. **Automated Testing**: Create comprehensive tests for the component loading system 
