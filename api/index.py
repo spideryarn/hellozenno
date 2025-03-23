@@ -20,21 +20,6 @@ from utils.url_utils import decode_url_params
 from utils.url_registry import generate_route_registry, generate_typescript_routes
 
 
-def inject_base_view_functions():
-    """Inject view functions needed by the base template.
-
-    This minimal context processor only includes functions needed by `base.jinja`.
-    """
-    from views.core_views import languages_list_vw
-    from views.search_views import search_landing_vw
-
-    return {
-        # Only the functions required by base.jinja and navigation
-        "languages_list_vw": languages_list_vw,  # The actual function reference
-        "search_landing_vw": search_landing_vw,
-    }
-
-
 def setup_route_registry(app, static_folder):
     """Set up route registry and generate TypeScript definitions.
 
@@ -42,8 +27,6 @@ def setup_route_registry(app, static_folder):
         app: The Flask application
         static_folder: Path to the static files directory
     """
-    from utils.url_registry import endpoint_for
-
     with app.app_context():
         # Generate route registry
         route_registry = generate_route_registry(app)
@@ -55,7 +38,6 @@ def setup_route_registry(app, static_folder):
             """Make route registry available to all templates."""
             return {
                 "route_registry": route_registry,
-                "endpoint_for": endpoint_for,  # Make endpoint_for available in all templates
             }
 
         # In development mode, generate TypeScript routes file
@@ -191,9 +173,6 @@ def create_app():
 
     # Generate route registry and TypeScript definitions
     setup_route_registry(app, static_folder)
-
-    # Register minimal context processor for base template view functions
-    app.context_processor(inject_base_view_functions)
 
     # Register error handlers
     @app.errorhandler(404)

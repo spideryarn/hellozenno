@@ -35,8 +35,8 @@ export enum RouteName {
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW = "PHRASE_VIEWS_GET_PHRASE_METADATA_VW",
   SENTENCE_VIEWS_SENTENCES_LIST_VW = "SENTENCE_VIEWS_SENTENCES_LIST_VW",
   SENTENCE_VIEWS_GET_SENTENCE_VW = "SENTENCE_VIEWS_GET_SENTENCE_VW",
-  SEARCH_SEARCH_LANDING_VW = "SEARCH_SEARCH_LANDING_VW",
-  SEARCH_SEARCH_WORD_VW = "SEARCH_SEARCH_WORD_VW",
+  SEARCH_VIEWS_SEARCH_LANDING_VW = "SEARCH_VIEWS_SEARCH_LANDING_VW",
+  SEARCH_VIEWS_SEARCH_WORD_VW = "SEARCH_VIEWS_SEARCH_WORD_VW",
   FLASHCARD_VIEWS_STATIC = "FLASHCARD_VIEWS_STATIC",
   FLASHCARD_VIEWS_FLASHCARD_LANDING_VW = "FLASHCARD_VIEWS_FLASHCARD_LANDING_VW",
   FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW = "FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW",
@@ -103,8 +103,8 @@ export const ROUTES = {
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW: "/lang/{target_language_code}/phrases/{slug}",
   SENTENCE_VIEWS_SENTENCES_LIST_VW: "/lang/{target_language_code}/sentences",
   SENTENCE_VIEWS_GET_SENTENCE_VW: "/lang/{target_language_code}/sentence/{slug}",
-  SEARCH_SEARCH_LANDING_VW: "/lang/{target_language_code}/search",
-  SEARCH_SEARCH_WORD_VW: "/lang/{target_language_code}/search/{wordform}",
+  SEARCH_VIEWS_SEARCH_LANDING_VW: "/lang/{target_language_code}/search",
+  SEARCH_VIEWS_SEARCH_WORD_VW: "/lang/{target_language_code}/search/{wordform}",
   FLASHCARD_VIEWS_STATIC: "/lang/build/{filename}",
   FLASHCARD_VIEWS_FLASHCARD_LANDING_VW: "/lang/{target_language_code}/flashcards",
   FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW: "/lang/{target_language_code}/flashcards/sentence/{slug}",
@@ -171,8 +171,8 @@ export type RouteParams = {
   [RouteName.PHRASE_VIEWS_GET_PHRASE_METADATA_VW]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_VIEWS_SENTENCES_LIST_VW]: { target_language_code: string };
   [RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW]: { target_language_code: string; slug: string };
-  [RouteName.SEARCH_SEARCH_LANDING_VW]: { target_language_code: string };
-  [RouteName.SEARCH_SEARCH_WORD_VW]: { target_language_code: string; wordform: string };
+  [RouteName.SEARCH_VIEWS_SEARCH_LANDING_VW]: { target_language_code: string };
+  [RouteName.SEARCH_VIEWS_SEARCH_WORD_VW]: { target_language_code: string; wordform: string };
   [RouteName.FLASHCARD_VIEWS_STATIC]: { filename: string };
   [RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW]: { target_language_code: string };
   [RouteName.FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW]: { target_language_code: string; slug: string };

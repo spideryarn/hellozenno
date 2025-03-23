@@ -45,9 +45,9 @@ Let's create a detailed list of the remaining tasks to fully implement the URL r
 2. **Update remaining JavaScript files**
    - [x] Identify JavaScript files with hardcoded URLs using grep
    - [x] Update `static/js/sourcefile.js` to use `resolveRoute`
-   - [ ] Update `static/js/sentence.js` to use `resolveRoute` 
-   - [ ] Update `static/js/sourcefiles.js` to use `resolveRoute`
-   - [ ] Update any other JavaScript files with hardcoded URLs
+   - [x] Update `static/js/sentence.js` to use `resolveRoute` 
+   - [x] Update `static/js/sourcefiles.js` to use `resolveRoute`
+   - [x] Update any other JavaScript files with hardcoded URLs
 
 3. **TypeScript/Svelte Integration**
    - [x] Generate the TypeScript definitions file using the CLI command
@@ -70,18 +70,67 @@ Let's create a detailed list of the remaining tasks to fully implement the URL r
      - [x] Updated `templates/_wordforms_list.jinja` partial
    - [ ] Continue updating remaining templates as needed
 
-5. **Documentation Updates**
+5. **Simplify URL handling by reverting to standard url_for approach**
+   - [x] Remove `inject_base_view_functions` from index.py
+   - [x] Remove `endpoint_for` from the template context in setup_route_registry
+   - [x] Update templates to use standard url_for() with explicit endpoint strings:
+     - [x] `templates/base.jinja`
+     - [x] `templates/languages.jinja`
+     - [x] `templates/sourcedirs.jinja`
+     - [x] `templates/sourcefiles.jinja`
+     - [x] `templates/lemmas.jinja`
+     - [x] `templates/wordforms.jinja`
+     - [x] `templates/phrases.jinja`
+     - [x] `templates/_sort_options.jinja`
+     - [x] `templates/_wordforms_list.jinja`
+     - [x] `templates/flashcard_landing.jinja`
+     - [x] `templates/flashcard_sentence.jinja`
+     - [x] `templates/sentences.jinja`
+     - [x] `templates/sentence_flashcards.jinja`
+     - [x] `templates/search.jinja`
+     - [ ] Other templates that still use endpoint_for:
+        - [ ] `templates/sentence.jinja`
+        - [ ] `templates/wordform.jinja`
+        - [ ] `templates/_dictionary_entry.jinja`
+        - [ ] `templates/translation_search_results.jinja`
+        - [ ] `templates/phrase.jinja`
+        - [ ] `templates/sourcefile_words.jinja`
+        - [ ] `templates/invalid_word.jinja`
+        - [ ] `templates/protected.jinja`
+        - [ ] `templates/profile.jinja`
+        - [ ] `templates/sourcefile_text.jinja`
+        - [ ] `templates/_lemmas_list.jinja`
+        - [ ] `templates/invalid_lemma.jinja`
+        - [ ] `templates/lemma.jinja`
+        - [ ] `templates/sourcefile_phrases.jinja`
+        - [ ] `templates/_sourcefile_header.jinja`
+   - [x] Update view functions to stop passing view functions to templates:
+     - [x] `views/core_views.py`
+     - [x] `views/search_views.py`
+     - [x] `views/sourcedir_views.py`
+     - [x] `views/lemma_views.py`
+     - [x] `views/wordform_views.py`
+     - [x] `views/phrase_views.py`
+     - [x] `views/sentence_views.py`
+     - [x] `views/flashcard_views.py`
+     - [ ] Other Python files that still use endpoint_for:
+        - [ ] `views/wordform_views.py` (in redirect functions)
+        - [ ] `views/lemma_views.py` (in redirect functions)
+        - [ ] `views/sourcefile_views.py`
+
+6. **Documentation Updates**
    - [x] Add comprehensive documentation in `docs/URL_REGISTRY.md`
    - [x] Add examples for Python, JavaScript, and TypeScript usage
    - [x] Add implementation status to documentation
    - [ ] Update onboarding documentation to include URL registry information
+   - [ ] Update documentation to reflect simplified approach (removing endpoint_for)
 
-6. **Quality Assurance**
+7. **Quality Assurance**
    - [ ] Review all URL patterns for consistency
    - [ ] Ensure all frontend code uses the route registry
    - [ ] Run a full test suite to verify everything works
 
-7. **Deployment**
+8. **Deployment**
    - [ ] Test the entire system in the development environment
    - [ ] Deploy to production when ready
 

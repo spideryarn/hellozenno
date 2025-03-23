@@ -33,7 +33,7 @@ def test_endpoint_for():
 
     # Test with search_landing_vw (from search_views blueprint)
     endpoint = endpoint_for(search_landing_vw)
-    assert endpoint == "search.search_landing_vw"
+    assert endpoint == "search_views.search_landing_vw"
 
 
 def test_build_url_with_query(client):
