@@ -1,4 +1,5 @@
 from flask import redirect, request, url_for
+from utils.url_registry import endpoint_for
 
 
 def full_url_for(*args, **kwargs):
@@ -7,8 +8,3 @@ def full_url_for(*args, **kwargs):
     url = request.host_url + endpoint
     print(f"url = {url}")
     return url
-
-
-def redirect_to_view(blueprint, view_func, **kwargs):
-    # e.g. redirect_to_view(views_bp, languages)
-    return redirect(url_for(blueprint.name + "." + view_func.__name__, **kwargs))

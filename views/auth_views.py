@@ -13,6 +13,7 @@ from utils.auth_utils import (
     page_auth_required,
     get_current_user,
 )
+from utils.url_registry import endpoint_for
 from db_models import Profile
 from config import SUPPORTED_LANGUAGES
 
@@ -21,6 +22,7 @@ auth_views_bp = Blueprint("auth_views", __name__, url_prefix="/auth")
 
 # Configure logging
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +82,7 @@ def profile_page_vw(target_language_code=None):
         profile.save()
 
         flash("Profile updated successfully!")
-        return redirect(url_for("auth_views.profile_page_vw"))
+        return redirect(url_for(endpoint_for(profile_page_vw)))
 
     # GET request - show the profile form
     # Explicitly set target_language_code to None to avoid language lookup errors in templates

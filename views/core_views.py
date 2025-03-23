@@ -2,11 +2,13 @@ from flask import (
     Blueprint,
     render_template,
     send_from_directory,
+    redirect,
+    url_for,
 )
 import logging
 import os
 
-from utils.flask_view_utils import redirect_to_view
+from utils.url_registry import endpoint_for
 from utils.lang_utils import get_all_languages
 
 
@@ -18,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @core_views_bp.route("/")
 def home_vw():
-    return redirect_to_view(core_views_bp, languages_list_vw)
+    return redirect(url_for(endpoint_for(languages_list_vw)))
 
 
 @core_views_bp.route("/lang")

@@ -2,11 +2,12 @@ from flask import (
     Blueprint,
     render_template,
     request,
+    redirect,
+    url_for,
 )
 import logging
 import urllib.parse
 
-from utils.flask_view_utils import redirect_to_view
 from utils.lang_utils import get_language_name
 from utils.url_registry import endpoint_for
 
@@ -32,11 +33,12 @@ def search_landing_vw(target_language_code: str):
         query = urllib.parse.unquote(query)
 
         # If there's a query, redirect to the search endpoint
-        return redirect_to_view(
-            search_views_bp,
-            search_word_vw,
-            target_language_code=target_language_code,
-            wordform=query,
+        return redirect(
+            url_for(
+                endpoint_for(search_word_vw),
+                target_language_code=target_language_code,
+                wordform=query,
+            )
         )
 
     return render_template(
@@ -59,9 +61,10 @@ def search_word_vw(target_language_code: str, wordform: str):
     # Import here to avoid circular dependencies
     from views.wordform_views import get_wordform_metadata_vw, wordform_views_bp
 
-    return redirect_to_view(
-        wordform_views_bp,
-        get_wordform_metadata_vw,
-        target_language_code=target_language_code,
-        wordform=wordform,
+    return redirect(
+        url_for(
+            endpoint_for(get_wordform_metadata_vw),
+            target_language_code=target_language_code,
+            wordform=wordform,
+        )
     )
