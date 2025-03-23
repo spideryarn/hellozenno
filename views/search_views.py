@@ -11,10 +11,6 @@ import urllib.parse
 from utils.lang_utils import get_language_name
 from utils.url_registry import endpoint_for
 
-# Don't import wordform_views directly to avoid circular imports
-from views.core_views import languages_list_vw
-from views.sourcedir_views import sourcedirs_for_language_vw
-
 
 search_views_bp = Blueprint("search_views", __name__, url_prefix="/lang")
 
@@ -59,7 +55,7 @@ def search_word_vw(target_language_code: str, wordform: str):
     wordform = urllib.parse.unquote(wordform)
 
     # Import here to avoid circular dependencies
-    from views.wordform_views import get_wordform_metadata_vw, wordform_views_bp
+    from views.wordform_views import get_wordform_metadata_vw
 
     return redirect(
         url_for(
