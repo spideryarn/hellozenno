@@ -9,7 +9,12 @@ function deleteSourcefile(slug) {
             method: 'DELETE',
         }).then(response => {
             if (response.ok) {
-                window.location.reload();
+                // Redirect to the sourcedir page instead of reloading
+                const redirectUrl = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {
+                    target_language_code: window.target_language_code,
+                    sourcedir_slug: window.sourcedir_slug
+                });
+                window.location.href = redirectUrl;
             } else {
                 alert('Failed to delete sourcefile');
             }
@@ -28,7 +33,7 @@ async function renameSourcedir() {
         });
 
         const response = await fetch(
-            resolveRoute('SOURCEDIR_VIEWS_RENAME_SOURCEDIR', {
+            resolveRoute('SOURCEDIR_API_RENAME_SOURCEDIR_API', {
                 target_language_code: window.target_language_code,
                 sourcedir_slug: window.sourcedir_slug
             }),
@@ -48,7 +53,7 @@ async function renameSourcedir() {
 
         const data = await response.json();
         // Redirect to the new URL with the new slug
-        window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILE_LIST', {
+        window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {
             target_language_code: window.target_language_code,
             sourcedir_slug: data.slug
         });
@@ -61,14 +66,14 @@ async function renameSourcedir() {
 
 function deleteSourcedir() {
     if (confirm('Are you sure you want to delete this directory? This action cannot be undone.')) {
-        fetch(resolveRoute('SOURCEDIR_VIEWS_DELETE_SOURCEDIR', {
+        fetch(resolveRoute('SOURCEDIR_API_DELETE_SOURCEDIR_API', {
             target_language_code: window.target_language_code,
             sourcedir_slug: window.sourcedir_slug
         }), {
             method: 'DELETE',
         }).then(async response => {
             if (response.ok) {
-                window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEDIRS_FOR_LANGUAGE', {
+                window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEDIRS_FOR_LANGUAGE_VW', {
                     target_language_code: window.target_language_code
                 });
             } else {
@@ -81,7 +86,7 @@ function deleteSourcedir() {
                     // If we can't parse the response as JSON
                     errorMsg = null;
                 }
-                
+
                 alert(errorMsg || 'Failed to delete directory. If the directory contains files, you must delete all files first.');
             }
         }).catch(error => {
@@ -114,7 +119,7 @@ async function uploadFiles(files) {
 
     try {
         const response = await fetch(
-            resolveRoute('SOURCEDIR_VIEWS_UPLOAD_FILES', {
+            resolveRoute('SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API', {
                 target_language_code: window.target_language_code,
                 sourcedir_slug: window.sourcedir_slug
             }),
@@ -125,7 +130,12 @@ async function uploadFiles(files) {
         );
 
         if (response.ok) {
-            window.location.reload();
+            // Redirect to the sourcedir page instead of reloading
+            const redirectUrl = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {
+                target_language_code: window.target_language_code,
+                sourcedir_slug: window.sourcedir_slug
+            });
+            window.location.href = redirectUrl;
         } else {
             const data = await response.json();
             alert('Upload failed: ' + (data.error || 'Unknown error'));
@@ -142,10 +152,10 @@ function initLanguageSelector() {
     document.querySelector('.language-selector').addEventListener('change', function (e) {
         const newLanguage = e.target.value;
 
-        fetch(resolveRoute('SOURCEDIR_VIEWS_UPDATE_SOURCEDIR_LANGUAGE', {
-                target_language_code: window.target_language_code,
-                sourcedir_slug: window.sourcedir_slug
-            }), {
+        fetch(resolveRoute('SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE_API', {
+            target_language_code: window.target_language_code,
+            sourcedir_slug: window.sourcedir_slug
+        }), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -153,7 +163,7 @@ function initLanguageSelector() {
             body: JSON.stringify({ language_code: newLanguage })
         }).then(response => {
             if (response.ok) {
-                window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILE_LIST', {
+                window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {
                     target_language_code: newLanguage,
                     sourcedir_slug: e.target.dataset.sourcedirSlug
                 });
@@ -218,7 +228,7 @@ function showCreateFromTextModal() {
             }
 
             const data = await response.json();
-            window.location.href = resolveRoute('SOURCEFILE_VIEWS_GET_SOURCEFILE', {
+            window.location.href = resolveRoute('SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW', {
                 target_language_code: window.target_language_code,
                 sourcedir_slug: window.sourcedir_slug,
                 sourcefile_slug: data.slug
@@ -286,7 +296,7 @@ function showYouTubeModal() {
                 throw new Error(data.error || 'Failed to download audio');
             }
 
-            window.location.href = resolveRoute('SOURCEFILE_VIEWS_GET_SOURCEFILE', {
+            window.location.href = resolveRoute('SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW', {
                 target_language_code: window.target_language_code,
                 sourcedir_slug: window.sourcedir_slug,
                 sourcefile_slug: data.slug
@@ -345,7 +355,7 @@ function init() {
 
     // Initialize language selector
     initLanguageSelector();
-    
+
     // Set up mobile/desktop specific UI elements
     setupDeviceSpecificUI();
 }
@@ -356,7 +366,7 @@ function setupDeviceSpecificUI() {
     if (typeof window.isMobileOrTablet === 'function') {
         const isMobile = window.isMobileOrTablet();
         const mobileOptions = document.querySelector('.mobile-upload-options');
-        
+
         if (mobileOptions) {
             if (isMobile) {
                 // Show mobile upload options on mobile/tablet devices
@@ -365,7 +375,7 @@ function setupDeviceSpecificUI() {
                 // Hide mobile options on desktop
                 mobileOptions.style.display = 'none';
             }
-            
+
             // Log the detection for debugging
             console.log(`Device detection: ${isMobile ? 'Mobile/Tablet' : 'Desktop'}`);
         }
@@ -379,41 +389,41 @@ function editSourcedirDescription() {
     const descriptionDisplay = document.getElementById('sourcedir-description-display');
     const currentDescription = descriptionDisplay.querySelector('p');
     const currentText = currentDescription.classList.contains('no-description') ? '' : currentDescription.textContent.trim();
-    
+
     // Create edit container
     const editContainer = document.createElement('div');
     editContainer.className = 'description-edit';
-    
+
     // Create textarea
     const textarea = document.createElement('textarea');
     textarea.id = 'sourcedir-description-editor';
     textarea.value = currentText;
     textarea.placeholder = 'Enter description for this directory...';
-    
+
     // Create buttons
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'description-edit-buttons';
-    
+
     const saveButton = document.createElement('button');
     saveButton.className = 'button small-button success-btn';
     saveButton.innerHTML = '<i class="fas fa-save"></i> Save';
     saveButton.onclick = saveSourcedirDescription;
-    
+
     const cancelButton = document.createElement('button');
     cancelButton.className = 'button small-button';
     cancelButton.innerHTML = '<i class="fas fa-times"></i> Cancel';
     cancelButton.onclick = cancelEditSourcedirDescription;
-    
+
     // Add elements to the DOM
     buttonsContainer.appendChild(saveButton);
     buttonsContainer.appendChild(cancelButton);
     editContainer.appendChild(textarea);
     editContainer.appendChild(buttonsContainer);
-    
+
     // Replace display with edit view
     descriptionDisplay.innerHTML = '';
     descriptionDisplay.appendChild(editContainer);
-    
+
     // Focus the textarea
     textarea.focus();
 }
@@ -421,44 +431,44 @@ function editSourcedirDescription() {
 function saveSourcedirDescription() {
     const textarea = document.getElementById('sourcedir-description-editor');
     const description = textarea.value.trim();
-    
+
     // Show loading state
     textarea.disabled = true;
-    
+
     // Save the description
-    fetch(resolveRoute('SOURCEDIR_VIEWS_UPDATE_SOURCEDIR_DESCRIPTION', {
-            target_language_code: window.target_language_code,
-            sourcedir_slug: window.sourcedir_slug
-        }), {
+    fetch(resolveRoute('SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API', {
+        target_language_code: window.target_language_code,
+        sourcedir_slug: window.sourcedir_slug
+    }), {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ description: description })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to update description');
-        }
-        
-        // Update the display
-        const descriptionDisplay = document.getElementById('sourcedir-description-display');
-        if (description) {
-            descriptionDisplay.innerHTML = `<p>${description}</p>`;
-        } else {
-            descriptionDisplay.innerHTML = `<p class="no-description"><em>No description available</em></p>`;
-        }
-    })
-    .catch(error => {
-        alert(`Error: ${error.message}`);
-        // Re-enable the textarea
-        textarea.disabled = false;
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update description');
+            }
+
+            // Update the display
+            const descriptionDisplay = document.getElementById('sourcedir-description-display');
+            if (description) {
+                descriptionDisplay.innerHTML = `<p>${description}</p>`;
+            } else {
+                descriptionDisplay.innerHTML = `<p class="no-description"><em>No description available</em></p>`;
+            }
+        })
+        .catch(error => {
+            alert(`Error: ${error.message}`);
+            // Re-enable the textarea
+            textarea.disabled = false;
+        });
 }
 
 function cancelEditSourcedirDescription() {
     // Get the current description from the server state
-    fetch(resolveRoute('SOURCEDIR_VIEWS_SOURCEFILE_LIST', {
+    fetch(resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {
         target_language_code: window.target_language_code,
         sourcedir_slug: window.sourcedir_slug
     }))
@@ -468,7 +478,7 @@ function cancelEditSourcedirDescription() {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             const descriptionElement = doc.getElementById('sourcedir-description-display');
-            
+
             // Restore the display
             if (descriptionElement) {
                 document.getElementById('sourcedir-description-display').innerHTML = descriptionElement.innerHTML;

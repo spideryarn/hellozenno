@@ -76,7 +76,7 @@ function saveDescription() {
         sourcedir_slug: window.sourcedir_slug,
         sourcefile_slug: window.sourcefile_slug
     });
-    
+
     fetch(url, {
         method: 'PUT',
         headers: {
@@ -132,12 +132,18 @@ function generateAudio() {
         sourcedir_slug: window.sourcedir_slug,
         sourcefile_slug: window.sourcefile_slug
     });
-    
+
     fetch(url, {
         method: 'POST'
     }).then(async response => {
         if (response.status === 204) {
-            window.location.reload();
+            // Redirect to the current sourcefile page instead of reloading
+            const redirectUrl = resolveRoute('SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW', {
+                target_language_code: window.target_language_code,
+                sourcedir_slug: window.sourcedir_slug,
+                sourcefile_slug: window.sourcefile_slug
+            });
+            window.location.href = redirectUrl;
             return;
         }
 
@@ -145,7 +151,13 @@ function generateAudio() {
         if (!response.ok) {
             throw new Error(data.error || 'Failed to generate audio');
         }
-        window.location.reload();
+        // Redirect to the current sourcefile page instead of reloading
+        const redirectUrl = resolveRoute('SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW', {
+            target_language_code: window.target_language_code,
+            sourcedir_slug: window.sourcedir_slug,
+            sourcefile_slug: window.sourcefile_slug
+        });
+        window.location.href = redirectUrl;
     }).catch(error => {
         alert('Error generating audio: ' + error.message);
         hideAudioGenerationProgress();
@@ -167,7 +179,7 @@ async function renameSourcefile() {
             sourcedir_slug: window.sourcedir_slug,
             sourcefile_slug: window.sourcefile_slug
         });
-        
+
         const response = await fetch(url, {
             method: 'PUT',
             headers: {
@@ -182,7 +194,7 @@ async function renameSourcefile() {
         }
 
         const { new_name, new_slug } = await response.json();
-        const redirectUrl = resolveRoute('SOURCEFILE_VIEWS_SOURCEFILE', {
+        const redirectUrl = resolveRoute('SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW', {
             target_language_code: window.target_language_code,
             sourcedir_slug: window.sourcedir_slug,
             sourcefile_slug: new_slug
@@ -202,12 +214,12 @@ function deleteSourcefile() {
             sourcedir_slug: window.sourcedir_slug,
             sourcefile_slug: window.sourcefile_slug
         });
-        
+
         fetch(url, {
             method: 'DELETE',
         }).then(response => {
             if (response.ok) {
-                const redirectUrl = resolveRoute('SOURCEFILE_VIEWS_SOURCEFILES_LIST', {
+                const redirectUrl = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {
                     target_language_code: window.target_language_code,
                     sourcedir_slug: window.sourcedir_slug
                 });
@@ -231,7 +243,7 @@ function processIndividualWords() {
         sourcedir_slug: window.sourcedir_slug,
         sourcefile_slug: window.sourcefile_slug
     });
-    
+
     fetch(url, {
         method: 'POST'
     }).then(async response => {
@@ -253,32 +265,32 @@ function processIndividualWords() {
 // Sourcedir selector functionality
 function initSourcedirSelector() {
     const selector = document.querySelector('.sourcedir-selector');
-    
+
     if (selector) {
-        selector.addEventListener('change', function() {
+        selector.addEventListener('change', function () {
             const newSourcedirSlug = this.value;
-            
+
             // Don't do anything if nothing is selected
             if (!newSourcedirSlug) {
                 return;
             }
-            
+
             // Show confirmation dialog
             if (confirm('Are you sure you want to move this file to a different directory?')) {
                 // Show loading indicator
                 this.disabled = true;
-                
+
                 // Store the original option text
                 const selectedIndex = this.selectedIndex;
                 const originalText = this.options[selectedIndex].text;
                 this.options[selectedIndex].text = 'Moving...';
-                
+
                 const url = resolveRoute('SOURCEFILE_API_MOVE_SOURCEFILE_API', {
                     target_language_code: window.target_language_code,
                     sourcedir_slug: window.sourcedir_slug,
                     sourcefile_slug: window.sourcefile_slug
                 });
-                
+
                 fetch(url, {
                     method: 'PUT',
                     headers: {
@@ -287,11 +299,11 @@ function initSourcedirSelector() {
                     body: JSON.stringify({ new_sourcedir_slug: newSourcedirSlug })
                 }).then(async response => {
                     const data = await response.json();
-                    
+
                     if (!response.ok) {
                         throw new Error(data.error || 'Failed to move file');
                     }
-                    
+
                     // Redirect to the file in its new location
                     const redirectUrl = resolveRoute('SOURCEFILE_VIEWS_SOURCEFILE', {
                         target_language_code: window.target_language_code,
@@ -315,6 +327,6 @@ function initSourcedirSelector() {
 }
 
 // Initialize everything when the page loads
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initSourcedirSelector();
 }); 

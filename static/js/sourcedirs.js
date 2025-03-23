@@ -9,7 +9,7 @@ btn.onclick = async () => {
             cancelText: "Cancel"
         });
 
-        const url = resolveRoute('SOURCEDIR_API_CREATE_SOURCEDIR_API', {target_language_code: window.target_language_code});
+        const url = resolveRoute('SOURCEDIR_API_CREATE_SOURCEDIR_API', { target_language_code: window.target_language_code });
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -32,7 +32,7 @@ btn.onclick = async () => {
 
         const { slug } = await response.json();
         // Navigate to the new sourcedir's page using slug
-        const sourcefileListUrl = resolveRoute('SOURCEFILE_VIEWS_SOURCEFILES_LIST', {
+        const sourcefileListUrl = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {
             target_language_code: window.target_language_code,
             sourcedir_slug: slug
         });

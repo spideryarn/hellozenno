@@ -17,9 +17,9 @@ function setPlaybackRate(rate) {
 function generateAudio() {
     showAudioGenerationProgress();
 
-    fetch(resolveRoute('SENTENCE_VIEWS_GENERATE_AUDIO', {
+    fetch(resolveRoute('SENTENCE_API_GENERATE_SENTENCE_AUDIO_API', {
         target_language_code: window.target_language_code,
-        sentence_slug: window.sentence_slug
+        slug: window.sentence_slug
     }), {
         method: 'POST'
     }).then(async response => {
@@ -50,9 +50,9 @@ async function renameSentence() {
         });
 
         const response = await fetch(
-            resolveRoute('SENTENCE_VIEWS_RENAME_SENTENCE', {
+            resolveRoute('SENTENCE_API_RENAME_SENTENCE_API', {
                 target_language_code: window.target_language_code,
-                sentence_slug: window.sentence_slug
+                slug: window.sentence_slug
             }),
             {
                 method: 'PUT',
@@ -69,9 +69,9 @@ async function renameSentence() {
         }
 
         const { new_text, new_slug } = await response.json();
-        window.location.href = resolveRoute('SENTENCE_VIEWS_GET_SENTENCE', {
+        window.location.href = resolveRoute('SENTENCE_VIEWS_GET_SENTENCE_VW', {
             target_language_code: window.target_language_code,
-            sentence_slug: new_slug
+            slug: new_slug
         });
     } catch (error) {
         if (error.message !== 'User cancelled') {
@@ -82,14 +82,14 @@ async function renameSentence() {
 
 function deleteSentence() {
     if (confirm('Are you sure you want to delete this sentence? This action cannot be undone.')) {
-        fetch(resolveRoute('SENTENCE_VIEWS_DELETE_SENTENCE', {
+        fetch(resolveRoute('SENTENCE_API_DELETE_SENTENCE_API', {
             target_language_code: window.target_language_code,
-            sentence_slug: window.sentence_slug
+            slug: window.sentence_slug
         }), {
             method: 'DELETE',
         }).then(response => {
             if (response.ok) {
-                window.location.href = resolveRoute('SENTENCE_VIEWS_LIST_SENTENCES', {
+                window.location.href = resolveRoute('SENTENCE_VIEWS_SENTENCES_LIST_VW', {
                     target_language_code: window.target_language_code
                 });
             } else {
