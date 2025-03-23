@@ -4,6 +4,7 @@
   import '../styles/global.css';
   import MiniLemma from './MiniLemma.svelte';
   import { onMount } from 'svelte';
+  import { RouteName, resolveRoute } from '../../../static/js/generated/routes';
 
   export let sentence: SentenceProps['sentence'];
   export let metadata: SentenceProps['metadata'];
@@ -46,7 +47,12 @@
   // Fetch lemma data for each lemma
   async function fetchLemmaData(lemma: string) {
     try {
-      const response = await fetch(`/api/${sentence.language_code}/lemma/${lemma}/data`);
+      const url = resolveRoute(RouteName.LEMMA_API_GET_LEMMA_DATA_API, {
+        target_language_code: sentence.language_code,
+        lemma: lemma
+      });
+      
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch lemma data for ${lemma}`);
       }
@@ -80,11 +86,12 @@
     
     isGeneratingAudio = true;
     try {
-      // Use the updated URL route
-      const response = await fetch(
-        `/api/lang/sentence/${sentence.language_code}/${sentence.slug}/generate_audio`,
-        { method: 'POST' }
-      );
+      const url = resolveRoute(RouteName.SENTENCE_API_GENERATE_SENTENCE_AUDIO_API, {
+        target_language_code: sentence.language_code,
+        slug: sentence.slug
+      });
+      
+      const response = await fetch(url, { method: 'POST' });
       
       if (!response.ok) throw new Error('Failed to generate audio');
       
@@ -103,6 +110,12 @@
       audioPlayer.playbackRate = rate;
     }
   }
+  
+  // Generate the audio URL using route registry
+  const audioUrl = resolveRoute(RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API, {
+    target_language_code: sentence.language_code,
+    sentence_id: String(sentence.id)
+  });
 </script>
 
 <div class="sentence-page">
@@ -133,7 +146,7 @@
           <audio
             bind:this={audioPlayer}
             controls
-            src="/lang/api/{sentence.language_code}/sentences/{sentence.id}/audio"
+            src={audioUrl}
             class="audio-player"
           >
             Your browser does not support the audio element.
