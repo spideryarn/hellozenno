@@ -62,10 +62,10 @@ mkdir -p ../logs
 # Limit log file size before starting
 limit_log_file
 
-# Start Vite in the background with error handling and log capturing
-echo "Starting Vite development server (logs in $LOG_FILE)..."
+# Start Vite in the background with error handling and log capturing to both file and stdout
+echo "Starting Vite development server (logs in $LOG_FILE and stdout)..."
 cd frontend
-npm run dev >> "$LOG_FILE" 2>&1 &
+npm run dev 2>&1 | tee -a "$LOG_FILE" &
 VITE_PID=$!
 
 # Monitor the Vite process
