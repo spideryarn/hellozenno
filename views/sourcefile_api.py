@@ -42,6 +42,7 @@ from utils.sourcedir_utils import (
 )
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.youtube_utils import YouTubeDownloadError, download_audio
+from slugify import slugify
 
 
 # Create a blueprint with standardized prefix
@@ -380,8 +381,8 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         if not text_target:
             return jsonify({"error": "Text content is required"}), 400
 
-        # Use the original title as filename (with .txt extension)
-        filename = f"{title}.txt"
+        # Use the slugified title as filename (with .txt extension)
+        filename = f"{slugify(title)}.txt"
 
         # Check if file already exists
         if (
