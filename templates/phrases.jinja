@@ -4,7 +4,7 @@
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_code }}</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     » Phrases & Idioms
 {% endblock breadcrumbs %}
 
@@ -16,17 +16,10 @@
 <div class="container">
     <h1>{{ target_language_name }} phrases and idioms <span class="count">({{ phrases|length }})</span></h1>
     
-    <div class="sort-options">
-        Sort by:
-        <a href="{{ url_for('phrase_views.phrases_list_vw', target_language_code=target_language_code, sort='alpha') }}" 
-           class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
-            Alphabetical
-        </a> |
-        <a href="{{ url_for('phrase_views.phrases_list_vw', target_language_code=target_language_code, sort='date') }}"
-           class="sort-link {% if current_sort == 'date' %}active{% endif %}">
-            Recently Modified
-        </a>
-    </div>
+    {# Pass the list_endpoint variable for the sort options #}
+    {% set list_endpoint = 'phrase_views.phrases_list_vw' %}
+    {% set show_commonality = false %}
+    {% include '_sort_options.jinja' with context %}
 
     <ul class="phrases-list">
         {% for phrase in phrases %}

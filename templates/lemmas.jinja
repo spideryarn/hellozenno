@@ -18,6 +18,8 @@
 <div class="container">
     <h1>{{ target_language_name }} dictionary entries (lemmas) <span class="count">({{ lemmas|length }})</span></h1>
     
+    {# Pass the list_endpoint variable for the sort options #}
+    {% set list_endpoint = 'lemma_views.lemmas_list_vw' %}
     {% include '_sort_options.jinja' with context %}
 
     <div class="lemmas-list">
