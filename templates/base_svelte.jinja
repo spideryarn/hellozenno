@@ -1,9 +1,16 @@
 {% macro load_svelte_component(component_name, props={}, component_id='') %}
   {# Create div with a unique ID for the component to mount to #}
   <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}">
-    {# Empty target div for component to mount to #}
+    {# Initial loading state to provide immediate feedback #}
+    <div class="component-loading">
+      <div class="loading-text">Loading {{ component_name }} component...</div>
+    </div>
   </div>
-  {% if not config.IS_PRODUCTION %}
+  
+  {# Determine if we're in production mode - using either actual production or local check of production frontend #}
+  {% set in_production_mode = config.IS_PRODUCTION or config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) %}
+  
+  {% if not in_production_mode %}
     {# Development mode - use Vite dev server #}
     <script type="module">
       // Debug flags - disabled in normal operation, can be enabled for troubleshooting
@@ -33,12 +40,16 @@
         // In development mode, directly import from the Vite server
         debugLog("Using direct import from Vite dev server");
         
+        // Record start time to measure loading performance
+        const startTime = performance.now();
+        
         // We need to import the index.ts file first to ensure all components are registered
         import(`http://localhost:5173/src/entries/index.ts`).then(() => {
+          debugLog(`Index module loaded in ${(performance.now() - startTime).toFixed(2)}ms`);
           // Then import the specific component module
           return import(`http://localhost:5173/src/entries/{{ component_name | lower }}.ts`);
         }).then(module => {
-          debugLog("Component module loaded:", module);
+          debugLog(`Component module loaded in ${(performance.now() - startTime).toFixed(2)}ms:`, module);
           
           if (!module.default) {
             throw new Error("Module does not have a default export");
@@ -53,16 +64,35 @@
           
           // Mount the component using the default export (which is a function that creates the component)
           const component = module.default(targetElement, props);
-          debugLog("Component mounted successfully");
+          debugLog(`Component mounted successfully in ${(performance.now() - startTime).toFixed(2)}ms`);
         }).catch(error => {
           console.error("Error loading component:", error);
+          targetElement.innerHTML = `<div class="error-message">
+            <div class="error-title">Error loading component</div>
+            <div class="error-details">${error.message}</div>
+            <div class="error-stack">${error.stack}</div>
+          </div>`;
         });
       });
     </script>
   {% else %}
     {# Production mode - use built files #}
-    {# Load the CSS file for Svelte components using a consistent path that our custom route will handle #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='build/assets/style.css') }}">
+    
+    {% if config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) %}
+      {# In local check of production frontend mode, add debugging info #}
+      <script>
+        console.log('[SVELTE PROD CHECK] Environment:', {
+          IS_PRODUCTION: {{ config.IS_PRODUCTION | tojson }},
+          LOCAL_CHECK_OF_PROD_FRONTEND: {{ config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) | tojson }},
+          component: '{{ component_name }}'
+          {# We've disabled the viteManifest output temporarily as it's causing errors #}
+          {# viteManifest: {{ vite_manifest() | tojson | safe }} #}
+        });
+      </script>
+    {% endif %}
+    
+    {# Load the CSS file for Svelte components using hardcoded path for now #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='build/assets/style.css') }}" data-vite-asset="style.css">
     
     <script type="module">
       // Debug flags for troubleshooting production issues
@@ -72,9 +102,13 @@
       // Wait for DOM to be fully loaded
       document.addEventListener('DOMContentLoaded', () => {
         try {
+          // Record start time to measure loading performance
+          const startTime = performance.now();
+          
           // Find target element
           const targetElementId = '{{ component_id if component_id else component_name | lower + "-component" }}';
           const targetElement = document.getElementById(targetElementId);
+          debugLog(`Found target element in ${(performance.now() - startTime).toFixed(2)}ms:`, targetElementId);
           
           if (!targetElement) {
             console.error(`Target element #${targetElementId} not found`);
@@ -82,12 +116,29 @@
           }
           
           // Load the unified component bundle
+          // Using hardcoded path instead of dynamic resolution for now
           const bundleUrl = "{{ url_for('static', filename='build/js/hz-components.es.js') }}";
           debugLog("Loading component bundle from:", bundleUrl);
           
+          // Check if we have a hardcoded fallback to use
+          const fallbackBundleUrl = "/static/build/js/hz-components.es.js";
+          const finalBundleUrl = bundleUrl || fallbackBundleUrl;
+          
+          if (finalBundleUrl !== bundleUrl) {
+            console.warn(`Using fallback bundle URL: ${finalBundleUrl} (vite_asset_url failed)`);
+          }
+          
+          // Add error handling with fallback message
+          if (!finalBundleUrl) {
+            console.error("Bundle URL is empty - cannot load component");
+            targetElement.innerHTML = '<div class="error-message">Component loading error: Bundle not found</div>';
+            return;
+          }
+          
           // Dynamic import bundle
-          import(bundleUrl).then(componentsModule => {
-            debugLog("Component bundle imported:", Object.keys(componentsModule));
+          import(finalBundleUrl).then(componentsModule => {
+            debugLog(`Component bundle imported in ${(performance.now() - startTime).toFixed(2)}ms:`, 
+              Object.keys(componentsModule));
             
             // Get component factory from registry
             const componentName = '{{ component_name | lower }}';
@@ -96,6 +147,15 @@
             if (typeof componentFactory !== 'function') {
               console.error(`Component factory '${componentName}' not found in bundle:`, 
                 componentsModule.default ? Object.keys(componentsModule.default) : 'No components available');
+              
+              // Show error message in component area
+              targetElement.innerHTML = `<div class="error-message">
+                <div class="error-title">Component not found in bundle</div>
+                <div class="error-details">The component "${componentName}" was not found in the loaded bundle.</div>
+                <div class="error-available-components">Available components: ${
+                  componentsModule.default ? Object.keys(componentsModule.default).join(', ') : 'None'
+                }</div>
+              </div>`;
               return;
             }
             
@@ -105,16 +165,100 @@
             // Mount component
             const props = {{ props | tojson | safe }};
             const component = componentFactory(targetElement, props);
-            debugLog(`Component ${componentName} mounted successfully`);
+            debugLog(`Component ${componentName} mounted successfully in ${(performance.now() - startTime).toFixed(2)}ms`);
           }).catch(error => {
-            console.error(`Failed to import ${bundleUrl}:`, error);
+            console.error(`Failed to import ${finalBundleUrl}:`, error);
+            
+            // Show error message in component area
+            targetElement.innerHTML = `<div class="error-message">
+              <div class="error-title">Component loading error</div>
+              <div class="error-details">${error.message}</div>
+              <div class="error-url">Failed to load: ${finalBundleUrl}</div>
+              <div class="error-stack">${error.stack || 'No stack trace available'}</div>
+            </div>`;
           });
         } catch (error) {
           console.error(`Error loading Svelte component {{ component_name }}:`, error);
+          
+          // Find target element again (in case the error happened before we got it)
+          const targetElementId = '{{ component_id if component_id else component_name | lower + "-component" }}';
+          const targetElement = document.getElementById(targetElementId);
+          
+          if (targetElement) {
+            targetElement.innerHTML = `<div class="error-message">
+              <div class="error-title">Component initialization error</div>
+              <div class="error-details">${error.message}</div>
+              <div class="error-stack">${error.stack || 'No stack trace available'}</div>
+            </div>`;
+          }
         }
       });
     </script>
     
-    {# No loading style needed anymore #}
+    {# Add styling for loading and error messages #}
+    <style>
+      .component-loading {
+        padding: 1rem;
+        text-align: center;
+        color: #718096;
+        background-color: #f7fafc;
+        border: 1px dashed #e2e8f0;
+        border-radius: 0.25rem;
+      }
+      
+      .loading-text {
+        display: inline-block;
+        padding-left: 1.5rem;
+        position: relative;
+      }
+      
+      .loading-text:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 1rem;
+        height: 1rem;
+        margin-top: -0.5rem;
+        border: 2px solid #cbd5e0;
+        border-top-color: #4299e1;
+        border-radius: 50%;
+        animation: loading-spinner 0.8s linear infinite;
+      }
+      
+      @keyframes loading-spinner {
+        to { transform: rotate(360deg); }
+      }
+      
+      .error-message {
+        color: #e53e3e;
+        padding: 1rem;
+        border: 1px solid #fed7d7;
+        background-color: #fff5f5;
+        border-radius: 0.25rem;
+        margin: 0.5rem 0;
+      }
+      
+      .error-title {
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-bottom: 0.5rem;
+      }
+      
+      .error-details {
+        margin-bottom: 0.5rem;
+      }
+      
+      .error-stack, .error-url, .error-available-components {
+        font-family: monospace;
+        font-size: 0.9em;
+        white-space: pre-wrap;
+        overflow-x: auto;
+        background-color: #fefcbf;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        color: #744210;
+      }
+    </style>
   {% endif %}
 {% endmacro %} 

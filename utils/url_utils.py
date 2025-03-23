@@ -57,45 +57,53 @@ def decode_url_params():
 
 def url_with_query(endpoint, _query_parameters=None, **kwargs):
     """Generate a URL with both path parameters and query parameters.
-    
+
     This function extends Flask's url_for to handle query parameters separately.
-    
+
     Args:
         endpoint: The endpoint to generate a URL for (can be a string or function)
         _query_parameters: A dictionary of query parameters to append
         **kwargs: Path parameters to pass to url_for
-        
+
     Returns:
         str: The URL with both path and query parameters
-        
+
     Example:
         url_with_query(wordforms_list, {'sort': 'frequency'}, target_language_code='el')
         # Returns "/lang/el/wordforms?sort=frequency"
     """
     base_url = url_for(endpoint, **kwargs)
-    
+
     if not _query_parameters:
         return base_url
-        
+
     query_string = urllib.parse.urlencode(_query_parameters)
     return f"{base_url}?{query_string}"
 
 
 def load_vite_manifest():
     """Load the Vite manifest file for asset versioning."""
-    manifest_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "static/build/.vite/manifest.json",
-    )
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Check both possible manifest locations
+    manifest_paths = [
+        os.path.join(root_dir, "static/build/.vite/manifest.json"),  # Original location
+        os.path.join(root_dir, "static/build/manifest.json"),  # Copied location
+    ]
+
     try:
         import json
 
-        if os.path.exists(manifest_path):
-            with open(manifest_path, "r") as f:
-                return json.load(f)
-        else:
-            logger.warning(f"Vite manifest not found at {manifest_path}")
-            return {}
+        # Try each path in order
+        for manifest_path in manifest_paths:
+            if os.path.exists(manifest_path):
+                with open(manifest_path, "r") as f:
+                    logger.info(f"Loaded Vite manifest from {manifest_path}")
+                    return json.load(f)
+
+        # If we get here, neither file was found
+        logger.warning(f"Vite manifest not found in any of: {manifest_paths}")
+        return {}
     except Exception as e:
         logger.error(f"Error loading Vite manifest: {e}")
         return {}

@@ -12,12 +12,18 @@ from flask import Flask, render_template
 from flask_cors import CORS
 from whitenoise import WhiteNoise
 
+# Import both sets of Vite helpers, but we'll use the new ones
 from utils.url_utils import load_vite_manifest
-
 from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
 from utils.url_registry import generate_route_registry, generate_typescript_routes
+from api.utils.vite_helpers import (
+    register_vite_helpers,
+    get_vite_manifest,
+    vite_asset_url,
+    dump_manifest,
+)
 
 
 def setup_route_registry(app, static_folder):
@@ -91,8 +97,26 @@ def create_app():
     # Set production flag based on environment
     app.config["IS_PRODUCTION"] = is_vercel()
 
+    # Check if we're in local check of production frontend mode
+    # Use the new, more explicit environment variable name
+    if os.environ.get("LOCAL_CHECK_OF_PROD_FRONTEND") == "true":
+        app.config["LOCAL_CHECK_OF_PROD_FRONTEND"] = True
+        logger.info("Running in LOCAL_CHECK_OF_PROD_FRONTEND mode")
+
     # Load Vite manifest for asset versioning
     app.config["VITE_MANIFEST"] = load_vite_manifest()
+
+    # Register Vite helper functions
+    register_vite_helpers(app)
+
+    # Manual registration of helpers to ensure they're available in templates
+    @app.context_processor
+    def inject_vite_helpers_direct():
+        return {
+            "vite_manifest": get_vite_manifest,
+            "vite_asset_url": vite_asset_url,
+            "dump_manifest": dump_manifest,
+        }
 
     # Initialize database
     from utils.db_connection import init_db
@@ -164,12 +188,12 @@ def create_app():
     app.wsgi_app.add_files(static_folder, prefix="static/")
 
     # Enable compression and caching for better performance
-    app.wsgi_app.enable_compression = True
-    app.wsgi_app.caching = True
+    app.wsgi_app.enable_compression = True  # type: ignore
+    app.wsgi_app.caching = True  # type: ignore
 
     # Log WhiteNoise configuration
     logger.info(f"WhiteNoise configured with static folder: {static_folder}")
-    logger.info(f"WhiteNoise compression enabled: {app.wsgi_app.enable_compression}")
+    logger.info(f"WhiteNoise compression enabled: {app.wsgi_app.enable_compression}")  # type: ignore
 
     # Generate route registry and TypeScript definitions
     setup_route_registry(app, static_folder)

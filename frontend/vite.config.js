@@ -35,8 +35,8 @@ function correctMimeTypes() {
             server.middlewares.use((req, res, next) => {
                 // Modify response headers after processing but before sending
                 const originalWriteHead = res.writeHead;
-                
-                res.writeHead = function(statusCode, statusMessage, headers) {
+
+                res.writeHead = function (statusCode, statusMessage, headers) {
                     // Set correct MIME types for Svelte and TypeScript files
                     if (req.url.endsWith('.svelte') || req.url.endsWith('.ts')) {
                         if (headers) {
@@ -47,9 +47,58 @@ function correctMimeTypes() {
                     }
                     return originalWriteHead.apply(this, arguments);
                 };
-                
+
                 next();
             });
+        }
+    };
+}
+
+// Helper to create a manifest JS file with info about built files
+function createManifestHelperPlugin() {
+    return {
+        name: 'create-manifest-helper',
+        writeBundle: {
+            sequential: true,
+            handler(options, bundle) {
+                // Copy manifest to a place where Flask can easily access it
+                const manifestPath = resolve(__dirname, '../static/build/.vite/manifest.json');
+                const manifestOutPath = resolve(__dirname, '../static/build/manifest.json');
+
+                if (fs.existsSync(manifestPath)) {
+                    fs.copyFileSync(manifestPath, manifestOutPath);
+                    console.log('✓ Copied manifest.json to static/build/ for better accessibility');
+                }
+
+                // Create a helper JS file with mappings from non-hashed to hashed filenames
+                const manifestData = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+                // Extract CSS files
+                const cssFiles = {};
+                for (const key in manifestData) {
+                    if (key.endsWith('.css')) {
+                        const fileInfo = manifestData[key];
+                        const originalName = key.split('/').pop();
+                        cssFiles[originalName] = fileInfo.file;
+                    }
+                }
+
+                // Create a JS file that provides helper functions
+                const helperJs = `
+// Auto-generated helper for loading hashed assets
+window.loadHashedAsset = function(originalName) {
+    const assetMap = ${JSON.stringify(cssFiles, null, 2)};
+    return assetMap[originalName] || originalName;
+};
+`.trim();
+
+                fs.writeFileSync(
+                    resolve(__dirname, '../static/build/asset-helper.js'),
+                    helperJs
+                );
+
+                console.log('✓ Created asset-helper.js for resolving hashed filenames');
+            }
         }
     };
 }
@@ -89,9 +138,10 @@ export default defineConfig({
                 // In production, handle warnings normally
                 handler(warning);
             }
-        })
+        }),
+        createManifestHelperPlugin()
     ],
-    
+
     // Define environment variables
     define: {
         'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
@@ -122,8 +172,13 @@ export default defineConfig({
             output: {
                 // Global variables to use in UMD build for externalized deps
                 globals: {},
-                // Preserve directory structure for component CSS
-                assetFileNames: 'assets/[name]-[hash][extname]',
+                // Fixed asset naming without hashes to make them easier to reference
+                assetFileNames: (assetInfo) => {
+                    if (assetInfo.name === 'style.css') {
+                        return 'assets/style.css';
+                    }
+                    return 'assets/[name]-[hash][extname]';
+                },
                 // Make sure the manifest includes CSS files
                 manualChunks: undefined
             }
