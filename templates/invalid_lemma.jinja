@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
-    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for(endpoint_for(lemmas_list_vw), target_language_code=target_language_code) }}">Lemmas</a>
+    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('lemma_views.lemmas_list_vw', target_language_code=target_language_code) }}">Lemmas</a>
     » {{ lemma }} (not found)
 {% endblock breadcrumbs %}
 
@@ -19,7 +19,7 @@
     </div>
 
     <div class="mt-4">
-        <a href="{{ url_for(endpoint_for(search_landing_vw), target_language_code=target_language_code) }}" class="btn btn-primary">
+        <a href="{{ url_for('search_views.search_landing_vw', target_language_code=target_language_code) }}" class="btn btn-primary">
             Search For Words
         </a>
     </div>

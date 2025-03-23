@@ -6,9 +6,9 @@
 {% set vite_entries = ['miniwordform', 'miniwordformlist'] %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
-    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for(endpoint_for(sourcefiles_for_sourcedir_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
+    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}">{{ sourcedir }}</a>
     » {{ sourcefile }}
 {% endblock breadcrumbs %}
 

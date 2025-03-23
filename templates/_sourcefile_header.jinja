@@ -37,24 +37,24 @@
     <ul>
         <li class="button-group">
             {% if sourcefile_type == "image" %}
-            <a href="{{ url_for(endpoint_for(view_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('sourcefile_views.view_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                 View image
             </a>
-            <a href="{{ url_for(endpoint_for(download_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('sourcefile_views.download_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                 Download image
             </a>
             {% elif sourcefile_type in ["audio", "youtube_audio"] %}
-            <a href="{{ url_for(endpoint_for(download_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('sourcefile_views.download_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                 Download audio
             </a>
             {% endif %}
         </li>
         <li class="button-group">
-            <a href="{{ url_for(endpoint_for(process_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('sourcefile_views.process_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                 Process sourcefile
             </a>
             {% if already_processed %}
-            <a href="{{ url_for(endpoint_for(update_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('sourcefile_views.update_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                 Get more words
             </a>
             <button onclick="processIndividualWords()" class="button">
@@ -63,7 +63,7 @@
             {% endif %}
         </li>
         <li class="button-group">
-            <a href="{{ url_for(endpoint_for(flashcard_landing_vw), target_language_code=target_language_code, sourcefile=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('flashcard_views.flashcard_landing_vw', target_language_code=target_language_code, sourcefile=sourcefile_slug) }}" class="button">
                 Practice Flashcards
             </a>
         </li>
@@ -71,12 +71,12 @@
             {% if nav_info.is_first %}
             <span class="button disabled">Prev</span>
             {% else %}
-            <a href="{{ url_for(endpoint_for(prev_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('sourcefile_views.prev_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                 Prev
             </a>
             {% endif %}
             
-            <a href="{{ url_for(endpoint_for(sourcefiles_for_sourcedir_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" 
+            <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" 
                class="button">
                 Up
             </a>
@@ -84,7 +84,7 @@
             {% if nav_info.is_last %}
             <span class="button disabled">Next</span>
             {% else %}
-            <a href="{{ url_for(endpoint_for(next_sourcefile_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
+            <a href="{{ url_for('sourcefile_views.next_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
                 Next
             </a>
             {% endif %}
@@ -108,10 +108,10 @@
 </div>
 
 <div class="tabs">
-    <a href="{{ url_for(endpoint_for(inspect_sourcefile_text_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
+    <a href="{{ url_for('sourcefile_views.inspect_sourcefile_text_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
        class="tab {% if active_tab == 'text' %}active{% endif %}">Text</a>
-    <a href="{{ url_for(endpoint_for(inspect_sourcefile_words_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
+    <a href="{{ url_for('sourcefile_views.inspect_sourcefile_words_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
        class="tab {% if active_tab == 'words' %}active{% endif %}">Words<small>({{ wordforms_d|length }})</small></a>
-    <a href="{{ url_for(endpoint_for(inspect_sourcefile_phrases_vw), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
+    <a href="{{ url_for('sourcefile_views.inspect_sourcefile_phrases_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" 
        class="tab {% if active_tab == 'phrases' %}active{% endif %}">Phrases<small>({{ phrases_d|length }})</small></a>
 </div> 

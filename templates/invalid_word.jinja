@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
-    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for(endpoint_for(wordforms_list_vw), target_language_code=target_language_code) }}">Wordforms</a>
+    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('wordform_views.wordforms_list_vw', target_language_code=target_language_code) }}">Wordforms</a>
     » {{ wordform }} (not found)
 {% endblock breadcrumbs %}
 
@@ -23,7 +23,7 @@
             <ul>
                 {% for suggestion in possible_misspellings %}
                     <li>
-                        <a href="{{ url_for(endpoint_for(get_wordform_metadata_vw), target_language_code=target_language_code, wordform=suggestion) }}">
+                        <a href="{{ url_for('wordform_views.get_wordform_metadata_vw', target_language_code=target_language_code, wordform=suggestion) }}">
                             {{ suggestion }}
                         </a>
                     </li>
@@ -33,7 +33,7 @@
     </div>
 
     <div class="mt-4">
-        <a href="{{ url_for(endpoint_for(search_landing_vw), target_language_code=target_language_code) }}" class="btn btn-primary">
+        <a href="{{ url_for('search_views.search_landing_vw', target_language_code=target_language_code) }}" class="btn btn-primary">
             Search For Words
         </a>
     </div>

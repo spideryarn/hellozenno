@@ -4,9 +4,9 @@
 {% set vite_entries = ['sentence'] %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
-    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for(endpoint_for(sentences_list_vw), target_language_code=target_language_code) }}">Sentences</a>
+    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('sentence_views.sentences_list_vw', target_language_code=target_language_code) }}">Sentences</a>
     » {{ sentence.sentence }}
 {% endblock breadcrumbs %}
 
