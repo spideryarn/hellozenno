@@ -26,11 +26,11 @@
             <li class="phrase-item">
                 <div id="phrases-list-component-{{ loop.index }}"></div>
                 {{ load_svelte_component('MiniPhrase', {
-                    'phrase': phrase.canonical_form,
-                    'translations': phrase.translations if phrase.translations else null,
+                    'phrase': phrase.canonical_form if phrase.canonical_form is defined else null,
+                    'translations': phrase.translations if phrase.translations is defined else null,
                     'href': url_for('phrase_views.get_phrase_metadata_vw', target_language_code=target_language_code, slug=phrase.slug),
-                    'part_of_speech': phrase.part_of_speech if phrase.part_of_speech else null,
-                    'notes': phrase.usage_notes if phrase.usage_notes else null
+                    'part_of_speech': phrase.part_of_speech if phrase.part_of_speech is defined else null,
+                    'notes': phrase.usage_notes if phrase.usage_notes is defined else null
                 }, component_id='phrases-list-component-' ~ loop.index) }}
             </li>
         {% else %}
