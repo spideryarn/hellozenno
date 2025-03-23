@@ -17,6 +17,7 @@
 <!-- Define the props -->
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { RouteName, resolveRoute } from '../../../static/js/generated/routes';
 
   // Declare types for Tippy
   declare global {
@@ -72,8 +73,13 @@
 
         console.log(`Fetching preview for word: "${wordform}" in language: ${langCode}`);
 
-        // Fetch preview data from API using updated URL format
-        fetch(`/api/lang/word/${langCode}/${encodeURIComponent(wordform)}/preview`)
+        // Fetch preview data from API using URL registry
+        const previewUrl = resolveRoute(RouteName.WORDFORM_API_WORD_PREVIEW_API, {
+          target_language_code: langCode,
+          word: wordform
+        });
+        
+        fetch(previewUrl)
           .then(r => {
             if (!r.ok) {
               throw new Error(`API request failed: ${r.status}`);

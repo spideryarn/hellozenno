@@ -1,14 +1,19 @@
 <script lang="ts">
+  import { RouteName, resolveRoute } from '../../../static/js/generated/routes';
+  
   export let targetLanguageCode: string;
   export let targetLanguageName: string;
   export let sourcefile: string | null = null;
   export let sourcedir: string | null = null;
   export let lemmaCount: number | null = null;
 
-  // Build the URL for starting the flashcards
-  let startUrl = `/lang/${targetLanguageCode}/flashcards/random`;
+  // Build the URL for starting the flashcards using route registry
+  const baseUrl = resolveRoute(RouteName.FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW, {
+    target_language_code: targetLanguageCode
+  });
   
   // Add query parameters if we have source filtering
+  let startUrl = baseUrl;
   if (sourcefile) {
     startUrl += `?sourcefile=${sourcefile}`;
   } else if (sourcedir) {
@@ -33,7 +38,9 @@
       {#if lemmaCount !== null}
         <span class="lemma-count">({lemmaCount} words)</span>
       {/if}
-      <a href="/lang/{targetLanguageCode}/flashcards" class="clear-filter">
+      <a href={resolveRoute(RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW, {
+        target_language_code: targetLanguageCode
+      })} class="clear-filter">
         <i class="ph-fill ph-x"></i>
       </a>
     </div>

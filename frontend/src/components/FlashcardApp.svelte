@@ -51,12 +51,19 @@
     });
   }
   
+  import { RouteName, resolveRoute } from '../../../static/js/generated/routes';
+  
   // Fetch lemma data for each lemma
   async function fetchLemmaData(lemma: string) {
     try {
       // Add debug logs to trace the API call
       console.log(`Fetching lemma data for ${lemma} with language code ${targetLanguageCode}`);
-      const apiUrl = `/api/${targetLanguageCode}/lemma/${lemma}/data`;
+      
+      const apiUrl = resolveRoute(RouteName.LEMMA_API_GET_LEMMA_DATA_API, {
+        target_language_code: targetLanguageCode,
+        lemma: lemma
+      });
+      
       console.log(`API URL: ${apiUrl}`);
       
       const response = await fetch(apiUrl);
@@ -127,7 +134,10 @@
     }
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    window.location.href = `/lang/${targetLanguageCode}/flashcards/random${queryString}`;
+    const url = resolveRoute(RouteName.FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW, {
+      target_language_code: targetLanguageCode
+    });
+    window.location.href = `${url}${queryString}`;
   }
 
   // Play audio function
@@ -193,7 +203,9 @@
       <i class="ph-fill ph-filter"></i>
       Filtered by {state.sourceFilter.type === 'sourcedir' ? 'directory' : 'file'}: 
       <strong>{state.sourceFilter.slug}</strong>
-      <a href="/lang/{targetLanguageCode}/flashcards" class="clear-filter">
+      <a href={resolveRoute(RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW, {
+        target_language_code: targetLanguageCode
+      })} class="clear-filter">
         <i class="ph-fill ph-x"></i>
       </a>
     </div>
@@ -226,7 +238,10 @@
                 lemma={lemma}
                 partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
                 translations={lemmasData[lemma]?.translations || []}
-                href="/lang/{targetLanguageCode}/lemma/{lemma}"
+                href={resolveRoute(RouteName.LEMMA_VIEWS_GET_LEMMA_METADATA_VW, {
+                  target_language_code: targetLanguageCode,
+                  lemma: lemma
+                })}
               />
               {#if lemmasData[lemma]?.isLoading}
                 <div class="loading-indicator">Loading lemma data...</div>
