@@ -11,7 +11,6 @@ from loguru import logger
 from flask import request, redirect, url_for, g, jsonify, make_response
 
 from utils.url_registry import endpoint_for
-from views.auth_views import auth_page_vw
 
 # Cache for Supabase public key
 _supabase_public_key = None
@@ -204,13 +203,17 @@ def page_auth_required(f: Callable) -> Callable:
             # For non-API routes, redirect to login page
             target_language_code = kwargs.get("target_language_code")
             # Only include target_language_code if it's a valid non-empty value
+
+            # We can't use endpoint_for because of circular imports
+            auth_page_endpoint = "auth_views.auth_page_vw"
+
             if target_language_code and target_language_code != "":
                 login_url = url_for(
-                    endpoint_for(auth_page_vw),
+                    auth_page_endpoint,
                     target_language_code=target_language_code,
                 )
             else:
-                login_url = url_for(endpoint_for(auth_page_vw))
+                login_url = url_for(auth_page_endpoint)
 
             # Add the current path as a redirect parameter
             current_path = request.path
@@ -226,12 +229,15 @@ def page_auth_required(f: Callable) -> Callable:
     return decorated
 
 
-def set_auth_cookie(token: str, max_age: int = 3600) -> None:
+def set_auth_cookie(token: str, max_age: int = 3600):
     """Set an HTTP-only cookie with the auth token.
 
     Args:
         token: JWT token string
         max_age: Cookie max age in seconds, defaults to 1 hour
+
+    Returns:
+        Response: Flask response object with cookie set
     """
     response = make_response()
     response.set_cookie(
@@ -245,8 +251,12 @@ def set_auth_cookie(token: str, max_age: int = 3600) -> None:
     return response
 
 
-def clear_auth_cookie() -> None:
-    """Clear the auth token cookie."""
+def clear_auth_cookie():
+    """Clear the auth token cookie.
+
+    Returns:
+        Response: Flask response object with cookie cleared
+    """
     response = make_response()
     response.delete_cookie("sb-auth-token")
     return response

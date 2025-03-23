@@ -5,8 +5,6 @@ from config import (
 )
 from db_models import Sourcedir, Sourcefile
 from utils.url_registry import endpoint_for
-from views.sourcedir_views import sourcefiles_for_sourcedir_vw
-from views.sourcefile_views import inspect_sourcefile_vw
 
 
 def allowed_file(filename):
@@ -28,6 +26,9 @@ def _navigate_sourcefile(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str, increment: int
 ):
     """Core navigation function that handles both next (+1) and previous (-1) navigation."""
+    from views.sourcedir_views import sourcefiles_for_sourcedir_vw
+    from views.sourcefile_views import inspect_sourcefile_vw
+
     try:
         # Get the sourcedir entry
         sourcedir_entry = _get_sourcedir_entry(target_language_code, sourcedir_slug)
