@@ -31,8 +31,6 @@ def languages_list_vw(trailing_slash=""):
     return render_template(
         "languages.jinja",
         languages=languages,
-        languages_list_vw=languages_list_vw,
-        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
     )
 
 

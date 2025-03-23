@@ -2,8 +2,8 @@
 {% from "_sourcefile_icon.jinja" import sourcefile_icon %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
-    » <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code) }}">{{ target_language_name }}</a>
+    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
+    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     » {{ sourcedir_path }}
 {% endblock breadcrumbs %}
 
@@ -40,7 +40,7 @@
     </div>
 
     <div class="actions">
-        <a href="{{ url_for(endpoint_for(flashcard_landing), language_code=target_language_code, sourcedir=sourcedir_slug) }}"
+        <a href="{{ url_for('flashcard_views.flashcard_landing_vw', target_language_code=target_language_code, sourcedir=sourcedir_slug) }}"
         class="button {% if not has_vocabulary %}disabled{% endif %}"
         {% if not has_vocabulary %}disabled title="No vocabulary found"{% endif %}>
         Practice with Flashcards
@@ -55,7 +55,7 @@
 
 <div class="upload-section">
     <div class="button-group">
-        <form action="{{ url_for(endpoint_for(upload_sourcedir_new_sourcefile), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" method="post" enctype="multipart/form-data" id="uploadForm">
+        <form action="{{ url_for('sourcedir_api.upload_sourcedir_new_sourcefile_api', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug) }}" method="post" enctype="multipart/form-data" id="uploadForm">
             <label for="fileInput" class="button">Upload image files</label>
             <input type="file" name="files[]" multiple accept="image/*" capture="environment" id="fileInput">
             
@@ -81,7 +81,7 @@
             </div>
         </form>
         <button onclick="showCreateFromTextModal()" class="button">Create from Text</button>
-        <button onclick="showYouTubeModal()" class="button">Pull YouTube audio</button>
+        <button onclick="toggleVideoUploadForm()" class="button">Upload YouTube video</button>
     </div>
     
     <div id="uploadProgress" style="display: none;">
@@ -143,7 +143,7 @@
     {% for sourcefile in sourcefiles %}
         <li class="source-file-item">
             {{ sourcefile_icon(sourcefile.sourcefile_type, sourcefile.metadata) }}
-            <a href="{{ url_for(endpoint_for(inspect_sourcefile), target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile.slug) }}">
+            <a href="{{ url_for('sourcefile_views.inspect_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile.slug) }}">
                 {{ sourcefile.filename }}
             </a>
             <div class="stats">

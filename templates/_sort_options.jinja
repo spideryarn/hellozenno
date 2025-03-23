@@ -1,17 +1,43 @@
 <div class="sort-options">
     Sort by:
-    <a href="{{ url_for(view_name, target_language_code=target_language_code, sort='alpha') }}" 
+    {% if 'lemma_views' in request.url_rule.endpoint %}
+    <a href="{{ url_for('lemma_views.lemmas_list_vw', target_language_code=target_language_code, sort='alpha') }}" 
        class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
         Alphabetical
     </a> |
-    <a href="{{ url_for(view_name, target_language_code=target_language_code, sort='date') }}"
+    <a href="{{ url_for('lemma_views.lemmas_list_vw', target_language_code=target_language_code, sort='date') }}"
        class="sort-link {% if current_sort == 'date' %}active{% endif %}">
         Recently Modified
     </a>
     {% if show_commonality %}|
-    <a href="{{ url_for(view_name, target_language_code=target_language_code, sort='commonality') }}"
+    <a href="{{ url_for('lemma_views.lemmas_list_vw', target_language_code=target_language_code, sort='commonality') }}"
        class="sort-link {% if current_sort == 'commonality' %}active{% endif %}">
         Most Common
+    </a>
+    {% endif %}
+    {% elif 'wordform_views' in request.url_rule.endpoint %}
+    <a href="{{ url_for('wordform_views.wordforms_list_vw', target_language_code=target_language_code, sort='alpha') }}" 
+       class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
+        Alphabetical
+    </a> |
+    <a href="{{ url_for('wordform_views.wordforms_list_vw', target_language_code=target_language_code, sort='date') }}"
+       class="sort-link {% if current_sort == 'date' %}active{% endif %}">
+        Recently Modified
+    </a>
+    {% if show_commonality %}|
+    <a href="{{ url_for('wordform_views.wordforms_list_vw', target_language_code=target_language_code, sort='commonality') }}"
+       class="sort-link {% if current_sort == 'commonality' %}active{% endif %}">
+        Most Common
+    </a>
+    {% endif %}
+    {% elif 'phrase_views' in request.url_rule.endpoint %}
+    <a href="{{ url_for('phrase_views.phrases_list_vw', target_language_code=target_language_code, sort='alpha') }}" 
+       class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
+        Alphabetical
+    </a> |
+    <a href="{{ url_for('phrase_views.phrases_list_vw', target_language_code=target_language_code, sort='date') }}"
+       class="sort-link {% if current_sort == 'date' %}active{% endif %}">
+        Recently Modified
     </a>
     {% endif %}
 </div> 

@@ -44,28 +44,14 @@ def wordforms_list_vw(target_language_code: str):
     for lemma_entry in lemma_entries:
         lemma_metadata[lemma_entry.lemma] = lemma_entry.to_dict()
 
-    # Import necessary view functions inside this function to avoid circular imports
-    from views.core_views import languages_list_vw
-    from views.sourcedir_views import sourcedirs_for_language_vw
-    
-    # We need this one for the _wordforms_list.jinja template
-    # The circular import is handled by importing inside the function
-    from views.wordform_views import get_wordform_metadata_vw
-
     return render_template(
         "wordforms.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         wordforms_d=wordforms_d,
         lemma_metadata=lemma_metadata,
-        view_name=endpoint_for(wordforms_list_vw),
         current_sort=sort_by,
         show_commonality=True,  # We can show commonality by joining with Lemma
-        # Add view functions for endpoint_for
-        languages_list_vw=languages_list_vw,
-        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
-        wordforms_list_vw=wordforms_list_vw,
-        get_wordform_metadata_vw=get_wordform_metadata_vw,  # Add this view function that's used in _wordforms_list.jinja
     )
 
 
@@ -93,23 +79,13 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
             "updated_at": wordform_model.updated_at,
         }
 
-        # Import here to avoid circular dependencies
-        from views.lemma_views import get_lemma_metadata_vw
-
         return render_template(
             "wordform.jinja",
             wordform_metadata=wordform_metadata,
-            lemma_metadata=lemma_metadata,
             target_language_code=target_language_code,
             target_language_name=get_language_name(target_language_code),
             dict_html=dict_as_html(wordform_metadata),
             metadata=metadata,  # Add metadata to template context
-            # Add view functions for endpoint_for
-            languages_list_vw=languages_list_vw,
-            sourcedirs_for_language_vw=sourcedirs_for_language_vw,
-            wordforms_list_vw=wordforms_list_vw,
-            delete_wordform_vw=delete_wordform_vw,
-            get_lemma_metadata_vw=get_lemma_metadata_vw,
         )
     except DoesNotExist:
         # If not found, use quick search to get metadata
@@ -128,10 +104,6 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
 
         # If there are multiple matches or misspellings, show search results
         if total_matches > 1 or target_misspellings or english_misspellings:
-            # Import here to avoid circular dependencies
-            from views.lemma_views import get_lemma_metadata_vw
-            from views.search_views import search_landing_vw, search_word_vw
-
             return render_template(
                 "translation_search_results.jinja",
                 target_language_code=target_language_code,
@@ -139,14 +111,6 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
                 search_term=wordform,
                 target_language_results=search_result["target_language_results"],
                 english_results=search_result["english_results"],
-                # Add view functions for endpoint_for
-                languages_list_vw=languages_list_vw,
-                sourcedirs_for_language_vw=sourcedirs_for_language_vw,
-                wordforms_list_vw=wordforms_list_vw,
-                get_wordform_metadata_vw=get_wordform_metadata_vw,
-                get_lemma_metadata_vw=get_lemma_metadata_vw,
-                search_landing_vw=search_landing_vw,
-                search_word_vw=search_word_vw,
             )
 
         # If there's exactly one match, redirect to that wordform
@@ -185,9 +149,6 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
 
         # If no matches or misspellings, show invalid word template
         else:
-            # Import here to avoid circular dependencies
-            from views.search_views import search_landing_vw
-
             return render_template(
                 "invalid_word.jinja",
                 target_language_code=target_language_code,
@@ -195,12 +156,6 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
                 wordform=wordform,
                 possible_misspellings=target_misspellings,
                 metadata=None,
-                # Add view functions for endpoint_for
-                languages_list_vw=languages_list_vw,
-                sourcedirs_for_language_vw=sourcedirs_for_language_vw,
-                wordforms_list_vw=wordforms_list_vw,
-                get_wordform_metadata_vw=get_wordform_metadata_vw,
-                search_landing_vw=search_landing_vw,
             )
 
 

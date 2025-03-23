@@ -129,19 +129,17 @@ def with_wordform_search_mock(func: Callable) -> Callable:
 
 
 def build_url_with_query(client, view_func, query_params=None, **url_params):
-    """Build a URL with query parameters for testing.
+    """
+    Build a complete URL with route and query parameters for testing.
 
-    This is a test-specific helper that safely builds URLs with both
+    This helper makes it easier to build URLs for testing views by handling both
     route parameters and query parameters.
 
     Args:
         client: The Flask test client
-        view_func: The view function to build the URL for
-        query_params: A dictionary of query parameters
-        **url_params: Parameters for url_for()
-
-    Returns:
-        str: The full URL
+        view_func: The view function
+        query_params: Optional dict of query parameters
+        **url_params: Route parameters as keyword arguments
     """
     # Using client.application.test_request_context for Flask context
     with client.application.test_request_context():

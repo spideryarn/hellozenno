@@ -19,7 +19,7 @@ Learn vocabulary and phrases in any language.
     <ul class="languages-list">
         {% for language in languages %}
             <li>
-                <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=language.code) }}">
+                <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=language.code) }}">
                     {{ language.name }}
                     <span class="language-code">({{ language.code }})</span>
                 </a>

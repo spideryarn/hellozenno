@@ -28,9 +28,6 @@ sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
 @sentence_views_bp.route("/<target_language_code>/sentences")
 def sentences_list_vw(target_language_code: str):
     """Display all sentences for a language."""
-    # Import here to avoid circular imports
-    from views.flashcard_views import flashcard_landing_vw
-
     target_language_name = get_language_name(target_language_code)
     sentences = get_all_sentences(target_language_code)
 
@@ -39,20 +36,12 @@ def sentences_list_vw(target_language_code: str):
         target_language_code=target_language_code,
         target_language_name=target_language_name,
         sentences=sentences,
-        languages_list_vw=languages_list_vw,
-        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
-        sentences_list_vw=sentences_list_vw,
-        get_sentence_vw=get_sentence_vw,
-        flashcard_landing_vw=flashcard_landing_vw,
     )
 
 
 @sentence_views_bp.route("/<target_language_code>/sentence/<slug>")
 def get_sentence_vw(target_language_code: str, slug: str):
     """Display a specific sentence."""
-    from views.core_views import languages_list_vw
-    from views.sourcedir_views import sourcedirs_for_language_vw
-
     target_language_name = get_language_name(target_language_code)
 
     try:

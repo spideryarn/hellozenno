@@ -1,7 +1,7 @@
 {% extends "base.jinja" %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for(endpoint_for(languages_list_vw)) }}">Languages</a>
+    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
     » {{ target_language_name }}
 {% endblock breadcrumbs %}
 
@@ -10,28 +10,28 @@
 {% endblock %}
 
 <div class="nav-menu">
-    <a href="{{ url_for(endpoint_for(wordforms_list_vw), target_language_code=target_language_code) }}">Wordforms</a>
-    <a href="{{ url_for(endpoint_for(lemmas_list_vw), target_language_code=target_language_code) }}">Lemmas</a>
-    <a href="{{ url_for(endpoint_for(phrases_list_vw), target_language_code=target_language_code) }}">Phrases</a>
+    <a href="{{ url_for('wordform_views.wordforms_list_vw', target_language_code=target_language_code) }}">Wordforms</a>
+    <a href="{{ url_for('lemma_views.lemmas_list_vw', target_language_code=target_language_code) }}">Lemmas</a>
+    <a href="{{ url_for('phrase_views.phrases_list_vw', target_language_code=target_language_code) }}">Phrases</a>
 </div>
 
 {% block content %}
 <h1>Source Directories for {{ target_language_name }}</h1>
 
 <div class="dictionary-links">
-    <a href="{{ url_for(endpoint_for(wordforms_list_vw), target_language_code=target_language_code) }}">
+    <a href="{{ url_for('wordform_views.wordforms_list_vw', target_language_code=target_language_code) }}">
         Wordforms
     </a>
-    <a href="{{ url_for(endpoint_for(lemmas_list_vw), target_language_code=target_language_code) }}">
+    <a href="{{ url_for('lemma_views.lemmas_list_vw', target_language_code=target_language_code) }}">
         Dictionary entries (lemmas)
     </a>
-    <a href="{{ url_for(endpoint_for(phrases_list_vw), target_language_code=target_language_code) }}">
+    <a href="{{ url_for('phrase_views.phrases_list_vw', target_language_code=target_language_code) }}">
         Phrases & idioms
     </a>
-    <a href="{{ url_for(endpoint_for(sentences_list_vw), target_language_code=target_language_code) }}">
+    <a href="{{ url_for('sentence_views.sentences_list_vw', target_language_code=target_language_code) }}">
         Sentences
     </a>
-    <a href="{{ url_for(endpoint_for(flashcard_landing_vw), target_language_code=target_language_code) }}">
+    <a href="{{ url_for('flashcard_views.flashcard_landing_vw', target_language_code=target_language_code) }}">
         Practice with Flashcards
     </a>
 </div>
@@ -46,11 +46,11 @@
 
 <div class="sort-options">
     Sort by:
-    <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code, sort='alpha') }}" 
+    <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code, sort='alpha') }}" 
        class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
         Alphabetical
     </a> |
-    <a href="{{ url_for(endpoint_for(sourcedirs_for_language_vw), target_language_code=target_language_code, sort='date') }}"
+    <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code, sort='date') }}"
        class="sort-link {% if current_sort == 'date' %}active{% endif %}">
         Recently Modified
     </a>
@@ -59,7 +59,7 @@
 <ul class="source-dirs-list">
     {% for dir in sourcedirs %}
         <li>
-            <a href="{{ url_for(endpoint_for(sourcefiles_for_sourcedir_vw), target_language_code=target_language_code, sourcedir_slug=dir.slug) }}">
+            <a href="{{ url_for('sourcedir_views.sourcefiles_for_sourcedir_vw', target_language_code=target_language_code, sourcedir_slug=dir.slug) }}">
                 {{ dir.path }}
             </a>
             {% if dir.slug in empty_sourcedirs %}

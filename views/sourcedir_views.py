@@ -66,14 +66,6 @@ def sourcedirs_for_language_vw(target_language_code: str):
             "path": sourcedir.path,
         }
 
-    # Import here to avoid circular imports
-    from views.core_views import languages_list_vw
-    from views.wordform_views import wordforms_list_vw
-    from views.lemma_views import lemmas_list_vw
-    from views.phrase_views import phrases_list_vw
-    from views.sentence_views import sentences_list_vw
-    from views.flashcard_views import flashcard_landing_vw
-
     return render_template(
         "sourcedirs.jinja",
         target_language_code=target_language_code,
@@ -83,14 +75,6 @@ def sourcedirs_for_language_vw(target_language_code: str):
         current_sort=sort_by,
         supported_languages=supported_languages,
         sourcedir_stats=sourcedir_stats,
-        languages_list_vw=languages_list_vw,
-        sourcefiles_for_sourcedir_vw=sourcefiles_for_sourcedir_vw,
-        sourcedirs_for_language_vw=sourcedirs_for_language_vw,
-        wordforms_list_vw=wordforms_list_vw,
-        lemmas_list_vw=lemmas_list_vw,
-        phrases_list_vw=phrases_list_vw,
-        sentences_list_vw=sentences_list_vw,
-        flashcard_landing_vw=flashcard_landing_vw,
     )
 
 
@@ -157,7 +141,6 @@ def sourcefiles_for_sourcedir_vw(target_language_code: str, sourcedir_slug: str)
             sourcefiles=sourcefiles,
             supported_languages=supported_languages,
             has_vocabulary=has_vocabulary,
-            sourcefiles_for_sourcedir_vw=sourcefiles_for_sourcedir_vw,
         )
     except DoesNotExist:
         # # Return empty JSON array for nonexistent directories

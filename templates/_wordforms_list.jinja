@@ -4,7 +4,7 @@
     {% set wordform_obj = {
         'wordform': wordform.wordform,
         'translation': wordform.translations[0] if wordform.translations else None,
-        'href': url_for(endpoint_for(get_wordform_metadata_vw), target_language_code=target_language_code, wordform=wordform.wordform),
+        'href': url_for('wordform_views.get_wordform_metadata_vw', target_language_code=target_language_code, wordform=wordform.wordform),
         'ordering': wordform.ordering if wordform is defined and 'ordering' in wordform else loop.index
     } %}
     {% set _ = wordforms_list.append(wordform_obj) %}
