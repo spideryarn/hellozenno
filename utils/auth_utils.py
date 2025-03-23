@@ -10,6 +10,9 @@ import jwt
 from loguru import logger
 from flask import request, redirect, url_for, g, jsonify, make_response
 
+from utils.url_registry import endpoint_for
+from views.auth_views import auth_page_vw
+
 # Cache for Supabase public key
 _supabase_public_key = None
 _supabase_public_key_last_fetched = 0
@@ -203,10 +206,11 @@ def page_auth_required(f: Callable) -> Callable:
             # Only include target_language_code if it's a valid non-empty value
             if target_language_code and target_language_code != "":
                 login_url = url_for(
-                    "auth_views.auth_page_vw", target_language_code=target_language_code
+                    endpoint_for(auth_page_vw),
+                    target_language_code=target_language_code,
                 )
             else:
-                login_url = url_for("auth_views.auth_page_vw")
+                login_url = url_for(endpoint_for(auth_page_vw))
 
             # Add the current path as a redirect parameter
             current_path = request.path

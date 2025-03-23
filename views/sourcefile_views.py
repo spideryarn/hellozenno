@@ -546,7 +546,7 @@ def process_sourcefile_vw(
 
         return redirect(
             url_for(
-                "sourcefile_views.inspect_sourcefile",
+                endpoint_for(inspect_sourcefile_vw),
                 target_language_code=target_language_code,
                 sourcedir_slug=sourcedir_slug,
                 sourcefile_slug=sourcefile_slug,
@@ -673,7 +673,7 @@ def update_sourcefile(
 
     return redirect(
         url_for(
-            "sourcefile_views.inspect_sourcefile",
+            endpoint_for(inspect_sourcefile_vw),
             target_language_code=target_language_code,
             sourcedir_slug=sourcedir_slug,
             sourcefile_slug=sourcefile_slug,

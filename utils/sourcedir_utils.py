@@ -4,6 +4,9 @@ from config import (
     SOURCE_EXTENSIONS,
 )
 from db_models import Sourcedir, Sourcefile
+from utils.url_registry import endpoint_for
+from views.sourcedir_views import sourcefiles_for_sourcedir_vw
+from views.sourcefile_views import inspect_sourcefile_vw
 
 
 def allowed_file(filename):
@@ -52,7 +55,7 @@ def _navigate_sourcefile(
 
             return redirect(
                 url_for(
-                    "sourcefile_views.inspect_sourcefile",
+                    endpoint_for(inspect_sourcefile_vw),
                     target_language_code=target_language_code,
                     sourcedir_slug=sourcedir_slug,
                     sourcefile_slug=target_slug,
@@ -62,7 +65,7 @@ def _navigate_sourcefile(
             # File not found, go back to directory
             return redirect(
                 url_for(
-                    "sourcedir_views.sourcefiles_for_sourcedir",
+                    endpoint_for(sourcefiles_for_sourcedir_vw),
                     target_language_code=target_language_code,
                     sourcedir_slug=sourcedir_slug,
                 )
