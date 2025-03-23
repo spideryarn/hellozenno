@@ -17,27 +17,27 @@ def endpoint_for(view_func):
     # Add diagnostic checks
     if view_func is None:
         raise ValueError("endpoint_for received None instead of a view function")
-        
+
     if not callable(view_func):
         raise TypeError(
             f"endpoint_for expected a callable function but got {type(view_func).__name__}. "
             f"Make sure the view function is correctly imported at module level and passed to the template. "
             f"Value: {repr(view_func)}"
         )
-    
-    if not hasattr(view_func, '__name__'):
+
+    if not hasattr(view_func, "__name__"):
         raise AttributeError(
             f"View function {view_func} has no __name__ attribute. "
             f"This can happen with lambda functions or partials. "
             f"Make sure to pass an actual function."
         )
-    
-    if not hasattr(view_func, '__module__'):
+
+    if not hasattr(view_func, "__module__"):
         raise AttributeError(
             f"View function {view_func} has no __module__ attribute. "
             f"Make sure it's a proper function imported at module level."
         )
-    
+
     # Get the module name where the function is defined
     module_name = view_func.__module__
 
@@ -46,14 +46,7 @@ def endpoint_for(view_func):
     if len(parts) > 1:
         # For views modules, extract the blueprint name from the module name
         module_part = parts[-1]
-
-        # Special case for search_views module which uses "search" as blueprint name
-        if module_part == "search_views":
-            blueprint_name = "search"
-        # Regular case: most blueprints follow the pattern module_name = blueprint_name
-        # (e.g. core_views -> core_views, lemma_views -> lemma_views)
-        else:
-            blueprint_name = module_part
+        blueprint_name = module_part
     else:
         # Fallback if the module structure is different
         blueprint_name = module_name
