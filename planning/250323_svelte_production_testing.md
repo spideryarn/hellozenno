@@ -225,4 +225,62 @@ Our next priorities are:
 ### Issues Still to Resolve
 
 1. **Build Verification**: Add checks to ensure production builds are complete and valid
-2. **Automated Testing**: Create comprehensive tests for the component loading system 
+2. **Automated Testing**: Create comprehensive tests for the component loading system
+
+## Troubleshooting and Lessons Learned
+
+During implementation, we encountered some interesting challenges with the Svelte component loading process. Here are the key issues we discovered and fixed:
+
+### 1. Duplicate Vite Helper Implementations
+
+As anticipated in our planning, we had two separate implementations of the Vite helpers:
+- `utils/vite_helpers.py` (root level)
+- `api/utils/vite_helpers.py` (API-specific)
+
+This caused confusion for imports and led to inconsistent behavior. Our solution was to:
+- Consolidate everything into the root `utils/vite_helpers.py`
+- Remove the duplicate implementation
+- Update imports in `api/index.py` to use the consolidated version
+
+### 2. Import Path Issues
+
+The Flask app was trying to import `load_vite_manifest` from `utils.vite_helpers`, but this function only existed in `utils.url_utils`. We resolved this by:
+- Updating the import to use `get_vite_manifest` instead of `load_vite_manifest`
+- Adding a backward compatibility function in `utils/vite_helpers.py` that maps the old function name to the new one
+
+### 3. Jinja Macro Scoping Challenges
+
+We discovered a significant issue with how Jinja2 handles context variables within macros. Variables added via Flask's context processors (like our Vite helper functions) are not automatically available inside macros defined in the templates.
+
+According to the Flask documentation, this is by design:
+> "These variables are added to the context of variables, they are not global variables. The difference is that by default these will not show up in the context of imported templates."
+
+We addressed this in two ways:
+1. Adding conditional fallbacks in the template:
+   ```jinja
+   <link rel="stylesheet" href="{% if vite_asset_url is defined %}{{ vite_asset_url('style.css') }}{% else %}/static/build/assets/style.css{% endif %}">
+   ```
+
+2. Making the context processor more robust by ensuring it properly registers all required helper functions
+
+### 4. Flask Application Context
+
+We learned that context processors need to be registered within the proper Flask application context. Trying to use Flask context-dependent functions during app initialization (outside an application context) can cause errors.
+
+### 5. Importance of Error Handling and Fallbacks
+
+The most resilient solution included:
+- Robust error handling in the helper functions
+- Fallback paths when the manifest isn't available
+- Clear debugging information in both development and production modes
+- Conditional rendering in templates to handle missing functions
+
+### Final Solution
+
+Our solution now follows these principles:
+1. Single source of truth for Vite helper functions
+2. Proper context processor registration within the Flask app
+3. Robust template fallbacks to handle edge cases
+4. Clear debugging information
+
+This approach ensures Svelte components load correctly in both development and production environments, making our deployment process more reliable and easier to debug. 

@@ -87,13 +87,17 @@
           IS_PRODUCTION: {{ config.IS_PRODUCTION | tojson }},
           LOCAL_CHECK_OF_PROD_FRONTEND: {{ config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) | tojson }},
           component: '{{ component_name }}',
+          {% if dump_manifest is defined %}
           viteManifest: {{ dump_manifest() | tojson | safe }}
+          {% else %}
+          viteManifest: "Function not available"
+          {% endif %}
         });
       </script>
     {% endif %}
     
-    {# Load the CSS file for Svelte components using vite_asset_url helper #}
-    <link rel="stylesheet" href="{{ vite_asset_url('style.css') }}" data-vite-asset="style.css">
+    {# Load the CSS file for Svelte components using proper fallbacks #}
+    <link rel="stylesheet" href="{% if vite_asset_url is defined %}{{ vite_asset_url('style.css') }}{% else %}/static/build/assets/style.css{% endif %}" data-vite-asset="style.css">
     
     <script type="module">
       // Debug flags for troubleshooting production issues
@@ -116,9 +120,8 @@
             return;
           }
           
-          // Load the unified component bundle
-          // Using the vite_asset_url helper for reliable path resolution
-          const bundleUrl = "{{ vite_asset_url('js/hz-components.es.js') }}";
+          // Load the unified component bundle with robust fallback
+          const bundleUrl = "{% if vite_asset_url is defined %}{{ vite_asset_url('js/hz-components.es.js') }}{% else %}/static/build/js/hz-components.es.js{% endif %}";
           debugLog("Loading component bundle from:", bundleUrl);
           
           // Add error handling with fallback message

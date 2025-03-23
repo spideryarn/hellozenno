@@ -13,7 +13,12 @@ from flask_cors import CORS
 from whitenoise import WhiteNoise
 
 # Import the consolidated Vite helpers from utils/vite_helpers.py
-from utils.vite_helpers import register_vite_helpers, load_vite_manifest
+from utils.vite_helpers import (
+    register_vite_helpers,
+    get_vite_manifest,
+    vite_asset_url,
+    dump_manifest,
+)
 from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
@@ -97,10 +102,19 @@ def create_app():
         app.config["LOCAL_CHECK_OF_PROD_FRONTEND"] = True
         logger.info("Running in LOCAL_CHECK_OF_PROD_FRONTEND mode")
 
-    # Load Vite manifest for asset versioning
-    app.config["VITE_MANIFEST"] = load_vite_manifest()
+    # First import the functions directly
+    from utils.vite_helpers import get_vite_manifest, vite_asset_url, dump_manifest
 
-    # Register Vite helper functions
+    # Now register a simple context processor with direct function references
+    @app.context_processor
+    def inject_vite_helpers():
+        return {
+            "vite_manifest": get_vite_manifest,
+            "vite_asset_url": vite_asset_url,
+            "dump_manifest": dump_manifest,
+        }
+
+    # Only after this, register the full vite helpers which adds a route too
     register_vite_helpers(app)
 
     # Initialize database
@@ -187,6 +201,33 @@ def create_app():
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template("404.jinja"), 404
+
+    # Test route to verify vite_helpers are properly registered
+    @app.route("/dev/test-vite-helpers")
+    def test_vite_helpers():
+        from flask import current_app
+
+        try:
+            # Test if context processor functions are accessible
+            ctx = {}
+            for processor in current_app.template_context_processors[None]:
+                ctx.update(processor())
+
+            # Return results
+            return {
+                "vite_asset_url_available": "vite_asset_url" in ctx,
+                "vite_manifest_available": "vite_manifest" in ctx,
+                "dump_manifest_available": "dump_manifest" in ctx,
+                "available_context_functions": list(ctx.keys()),
+                "app_config": {
+                    "IS_PRODUCTION": current_app.config.get("IS_PRODUCTION", False),
+                    "LOCAL_CHECK_OF_PROD_FRONTEND": current_app.config.get(
+                        "LOCAL_CHECK_OF_PROD_FRONTEND", False
+                    ),
+                },
+            }
+        except Exception as e:
+            return {"error": str(e)}, 500
 
     # Added CLI command to generate routes
     @app.cli.command("generate-routes-ts")
