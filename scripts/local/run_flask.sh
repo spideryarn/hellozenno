@@ -21,6 +21,18 @@ function show_usage {
     echo "  $0 --prod-frontend      # Run with production frontend for testing"
 }
 
+# Function to kill existing Flask servers
+function kill_flask_servers {
+    echo "Killing any existing Flask servers on port $FLASK_PORT..."
+    lsof -ti:$FLASK_PORT | xargs kill -9 2>/dev/null || true
+}
+
+# Function to kill Vite dev server
+function kill_vite_server {
+    echo "Killing any running Vite development server..."
+    lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+}
+
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -50,14 +62,38 @@ if [ -z "$FLASK_PORT" ]; then
     exit 1
 fi
 
+# Always kill existing Flask servers
+kill_flask_servers
+
 # Setup environment variables based on mode
 if [ "$PROD_FRONTEND" = true ]; then
     echo "Starting Flask in production frontend mode (for local testing)"
+    
+    # Kill Vite dev server if running
+    kill_vite_server
+    
     # The new, more explicit environment variable name
     export LOCAL_CHECK_OF_PROD_FRONTEND=true
+    
+    # Ensure NODE_ENV is set to production
+    export NODE_ENV=production
+    
+    echo "Building frontend assets..."
+    # Run the build-frontend script
+    ./scripts/prod/build-frontend.sh
+    
+    # Verify the build succeeded by checking for key files
+    if [ ! -f "static/build/js/hz-components.es.js" ]; then
+        echo "Error: Built assets not found. Frontend build may have failed."
+        echo "Check static/build/ directory for missing files."
+        exit 1
+    fi
+    
+    echo "Frontend build successful. Running Flask with production assets..."
 else
     echo "Starting Flask in development mode"
     unset LOCAL_CHECK_OF_PROD_FRONTEND
+    export NODE_ENV=development
 fi
 
 # Run Flask with the appropriate settings

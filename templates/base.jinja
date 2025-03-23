@@ -34,7 +34,7 @@
       };
     </script>
     <script src="{{ url_for('static', filename='js/route-client.js') }}"></script>
-    {% if not config.IS_PRODUCTION and vite_entries is defined %}
+    {% if not config.IS_PRODUCTION and not config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) and vite_entries is defined %}
         {% for entry in vite_entries %}
         <script type="module" src="http://localhost:5173/src/entries/{{ entry }}.ts"></script>
         {% endfor %}

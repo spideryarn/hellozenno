@@ -1,6 +1,5 @@
 {% extends "base.jinja" %}
 {% from "base_svelte.jinja" import load_svelte_component %}
-{% set vite_entries = ['flashcardlanding'] %}
 
 {% block title %}{{ target_language_name }} Flashcards - Hello Zenno{% endblock %}
 
@@ -30,7 +29,6 @@
                     
                     <p class="lead">Practice with sentence flashcards to improve your {{ target_language_name }} skills.</p>
                     
-                    <div id="flashcard-landing-component"></div>
                     {{ load_svelte_component('FlashcardLanding', {
                       'targetLanguageCode': target_language_code,
                       'targetLanguageName': target_language_name,

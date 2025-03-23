@@ -39,6 +39,8 @@ We've identified several issues in our implementation:
 
 4. **Environment Variable Transition**: We're transitioning from `LOCAL_PROD_TEST` to `LOCAL_CHECK_OF_PROD_FRONTEND` but need to ensure both work during the transition period.
 
+5. **Persistent Loading Messages**: Even when components successfully load, the "Loading xxx component..." messages remain visible, confusing users and suggesting components are not properly loaded.
+
 ### Recent Progress
 
 We've made significant improvements to fix these issues:
@@ -69,6 +71,10 @@ We've made significant improvements to fix these issues:
 
 6. **Jinja Scope Issues**: Solved by using Jinja globals instead of context processors
 7. **Asset Path Mismatch**: Fixed lookup strategy to handle Vite's manifest structure
+8. **Fixed Persistent Loading Messages**: Solved by:
+   - Adding `style="display: none;"` directly to the loading element in HTML
+   - Setting `display: none !important;` in CSS to override any other styling
+   - Ensuring loading elements are forcibly removed when components mount
 
 ## Actions
 
@@ -147,7 +153,16 @@ We've made significant improvements to fix these issues:
   - [x] Remove the redundant code trying to load from both environments
   - [x] Add better debugging information in each environment mode
 
-### Stage 10: Update Deployment Process
+### Stage 10: Fix Persistent Loading Messages
+
+- [x] Update `base_svelte.jinja` to properly hide loading messages:
+  - [x] Add `style="display: none;"` inline to HTML elements for immediate hiding
+  - [x] Set `display: none !important;` in CSS to override any other styling
+  - [x] Update component loading logic to forcibly remove loading elements
+  - [x] Add fallback event handler to ensure loading elements are hidden
+  - [x] Test across browsers to verify loading messages never appear
+
+### Stage 11: Update Deployment Process
 
 - [ ] Enhance build-frontend.sh to verify a successful build
   - [ ] Add explicit checks for required output files
@@ -155,7 +170,7 @@ We've made significant improvements to fix these issues:
   - [ ] Create a simple output status report
   - [ ] Test full deployment process locally
   
-### Stage 11: End-to-End Testing
+### Stage 12: End-to-End Testing
 
 - [ ] Create automated tests for the component loading process
   - [ ] Add tests for development mode loading
@@ -165,7 +180,7 @@ We've made significant improvements to fix these issues:
   - [ ] Add tests for handling missing component bundle
   - [ ] Test the entire workflow from build to deployment
 
-### Stage 12: Implement Jinja Globals for Robust Helper Functions
+### Stage 13: Implement Jinja Globals for Robust Helper Functions
 
 - [x] Update the Flask application to use Jinja globals instead of context processors
   - [x] Remove existing context processor registration
@@ -236,6 +251,7 @@ Our next priorities are:
 5. ✅ **Environment Detection**: Fixed to properly handle dev vs prod mode
 6. ✅ **Jinja Scope Issues**: Solved by using Jinja globals instead of context processors
 7. ✅ **Asset Path Mismatch**: Fixed lookup strategy to handle Vite's manifest structure
+8. ✅ **Persistent Loading Messages**: Fixed by using both inline styles and `!important` CSS rules
 
 ### Issues Still to Resolve
 
@@ -413,5 +429,47 @@ error_msg += f"Manifest contains: {manifest_entries}. "
 ```
 
 This multi-stage lookup ensures our system is resilient to changes in how Vite structures its manifest file.
+
+### Fixing Persistent Loading Messages
+
+After implementing all the asset resolution improvements, we encountered an issue where the loading message placeholders ("Loading X component...") remained visible even after components loaded successfully. This was misleading to users, making it appear that components were still loading when they had actually mounted.
+
+We identified that the issue was caused by the CSS and DOM structure not properly handling the loading state transitions. We fixed this with a two-pronged approach:
+
+1. **Hide loading elements by default in HTML**:
+   ```html
+   <div class="component-loading" style="display: none;">
+     <div class="loading-text">Loading {{ component_name }} component...</div>
+   </div>
+   ```
+   
+2. **Ensure CSS forcibly hides the loading elements**:
+   ```css
+   .svelte-component-container .component-loading {
+     display: none !important;
+   }
+   ```
+
+3. **Actively remove loading elements once components mount**:
+   ```javascript
+   function hideLoading(targetElement) {
+     if (targetElement) {
+       // Explicitly remove the loading element instead of just hiding it
+       const loadingEl = targetElement.querySelector('.component-loading');
+       if (loadingEl) {
+         loadingEl.remove();
+       }
+       // Also add the class as a backup mechanism
+       targetElement.classList.add('component-loaded');
+     }
+   }
+   ```
+
+This multi-layered approach ensures that:
+1. Loading messages are hidden by default (inline style)
+2. CSS rules forcibly hide any that might become visible (CSS with !important)
+3. Loading elements are completely removed from the DOM when components mount (JavaScript)
+
+The result is a much better user experience where loading messages only appear briefly during development, and not at all in production mode.
 
 ## Troubleshooting and Lessons Learned

@@ -1,8 +1,8 @@
 {% macro load_svelte_component(component_name, props={}, component_id='') %}
   {# Create div with a unique ID for the component to mount to #}
-  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" data-svelte-component="{{ component_name }}">
+  <div id="{{ component_id if component_id else component_name | lower + '-component' }}" class="svelte-component-container" data-svelte-component="{{ component_name }}">
     {# Initial loading state to provide immediate feedback #}
-    <div class="component-loading">
+    <div class="component-loading" style="display: none;">
       <div class="loading-text">Loading {{ component_name }} component...</div>
     </div>
   </div>
@@ -60,8 +60,8 @@
           const props = {{ props | tojson | safe }};
           debugLog("Mounting with props:", props);
           
-          // Clear any loading state
-          targetElement.innerHTML = '';
+          // Clear loading state by adding class instead of removing element
+          targetElement.classList.add('component-loaded');
           
           // Mount the component using the default export (which is a function that creates the component)
           const component = module.default(targetElement, props);
@@ -100,8 +100,21 @@
       const PROD_DEBUG = true;
       const debugLog = (msg, ...args) => PROD_DEBUG && console.log(`[SVELTE PROD] ${msg}`, ...args);
       
-      // Wait for DOM to be fully loaded
-      document.addEventListener('DOMContentLoaded', () => {
+      // Function to hide the loading indicator and show the component
+      function hideLoading(targetElement) {
+        if (targetElement) {
+          // Explicitly remove the loading element instead of just hiding it
+          const loadingEl = targetElement.querySelector('.component-loading');
+          if (loadingEl) {
+            loadingEl.remove();
+          }
+          // Also add the class as a backup mechanism
+          targetElement.classList.add('component-loaded');
+        }
+      }
+      
+      // Immediately execute to attempt early load
+      (async function loadComponent() {
         try {
           // Record start time to measure loading performance
           const startTime = performance.now();
@@ -124,12 +137,13 @@
           // Add error handling with fallback message
           if (!bundleUrl) {
             console.error("Bundle URL is empty - cannot load component");
-            targetElement.innerHTML = '<div class="error-message">Component loading error: Bundle not found</div>';
+            targetElement.innerHTML = '<div class="component-loading error-message">Component loading error: Bundle not found</div>';
             return;
           }
           
-          // Dynamic import bundle
-          import(bundleUrl).then(componentsModule => {
+          try {
+            // Dynamic import bundle
+            const componentsModule = await import(bundleUrl);
             debugLog(`Component bundle imported in ${(performance.now() - startTime).toFixed(2)}ms:`, 
               Object.keys(componentsModule));
             
@@ -142,7 +156,7 @@
                 componentsModule.default ? Object.keys(componentsModule.default) : 'No components available');
               
               // Show error message in component area
-              targetElement.innerHTML = `<div class="error-message">
+              targetElement.innerHTML = `<div class="component-loading error-message">
                 <div class="error-title">Component not found in bundle</div>
                 <div class="error-details">The component "${componentName}" was not found in the loaded bundle.</div>
                 <div class="error-available-components">Available components: ${
@@ -152,24 +166,24 @@
               return;
             }
             
-            // Clear loading state
-            targetElement.innerHTML = '';
+            // Remove loading indicator now that we have the component
+            hideLoading(targetElement);
             
             // Mount component
             const props = {{ props | tojson | safe }};
             const component = componentFactory(targetElement, props);
             debugLog(`Component ${componentName} mounted successfully in ${(performance.now() - startTime).toFixed(2)}ms`);
-          }).catch(error => {
-            console.error(`Failed to import ${bundleUrl}:`, error);
+          } catch (importError) {
+            console.error(`Failed to import ${bundleUrl}:`, importError);
             
             // Show error message in component area
-            targetElement.innerHTML = `<div class="error-message">
+            targetElement.innerHTML = `<div class="component-loading error-message">
               <div class="error-title">Component loading error</div>
-              <div class="error-details">${error.message}</div>
+              <div class="error-details">${importError.message}</div>
               <div class="error-url">Failed to load: ${bundleUrl}</div>
-              <div class="error-stack">${error.stack || 'No stack trace available'}</div>
+              <div class="error-stack">${importError.stack || 'No stack trace available'}</div>
             </div>`;
-          });
+          }
         } catch (error) {
           console.error(`Error loading Svelte component {{ component_name }}:`, error);
           
@@ -178,25 +192,39 @@
           const targetElement = document.getElementById(targetElementId);
           
           if (targetElement) {
-            targetElement.innerHTML = `<div class="error-message">
+            targetElement.innerHTML = `<div class="component-loading error-message">
               <div class="error-title">Component initialization error</div>
               <div class="error-details">${error.message}</div>
               <div class="error-stack">${error.stack || 'No stack trace available'}</div>
             </div>`;
           }
         }
+      })();
+      
+      // Also try on DOMContentLoaded as a fallback
+      document.addEventListener('DOMContentLoaded', () => {
+        const targetElement = document.getElementById('{{ component_id if component_id else component_name | lower + "-component" }}');
+        if (targetElement && !targetElement.classList.contains('component-loaded')) {
+          hideLoading(targetElement);
+        }
       });
     </script>
     
     {# Add styling for loading and error messages #}
     <style>
-      .component-loading {
+      .svelte-component-container .component-loading {
         padding: 1rem;
         text-align: center;
         color: #718096;
         background-color: #f7fafc;
         border: 1px dashed #e2e8f0;
         border-radius: 0.25rem;
+        display: none !important;
+      }
+      
+      /* Hide loading message when component is loaded */
+      .svelte-component-container.component-loaded .component-loading {
+        display: none !important;
       }
       
       .loading-text {

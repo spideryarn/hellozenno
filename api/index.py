@@ -207,17 +207,33 @@ def create_app():
         from flask import current_app
 
         try:
-            # Test if context processor functions are accessible
+            # Check context processors
             ctx = {}
             for processor in current_app.template_context_processors[None]:
                 ctx.update(processor())
 
-            # Return results
+            # Check Jinja globals
+            jinja_globals = {k: True for k in current_app.jinja_env.globals.keys()}
+
+            # Return combined results
             return {
-                "vite_asset_url_available": "vite_asset_url" in ctx,
-                "vite_manifest_available": "vite_manifest" in ctx,
-                "dump_manifest_available": "dump_manifest" in ctx,
-                "available_context_functions": list(ctx.keys()),
+                "context_processor_functions": {
+                    "vite_asset_url_available": "vite_asset_url" in ctx,
+                    "vite_manifest_available": "vite_manifest" in ctx,
+                    "dump_manifest_available": "dump_manifest" in ctx,
+                    "available_context_functions": list(ctx.keys()),
+                },
+                "jinja_globals": {
+                    "vite_asset_url_available": "vite_asset_url" in jinja_globals,
+                    "vite_manifest_available": "vite_manifest" in jinja_globals,
+                    "dump_manifest_available": "dump_manifest" in jinja_globals,
+                    "available_global_functions": list(
+                        k
+                        for k in jinja_globals.keys()
+                        if not k.startswith("_")
+                        and callable(current_app.jinja_env.globals[k])
+                    ),
+                },
                 "app_config": {
                     "IS_PRODUCTION": current_app.config.get("IS_PRODUCTION", False),
                     "LOCAL_CHECK_OF_PROD_FRONTEND": current_app.config.get(
