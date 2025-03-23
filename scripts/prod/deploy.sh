@@ -18,6 +18,14 @@ else
     echo_success "Starting Vercel production deployment process..."
 fi
 
+# Generate TypeScript route definitions before building frontend
+echo "Generating TypeScript route definitions..."
+FLASK_APP=api.index flask generate-routes-ts
+
+# Build frontend assets for production (only for production deployment)
+echo "Building frontend assets..."
+./scripts/prod/build-frontend.sh
+
 # Skip Git checks for preview deployments
 if [[ "$PREVIEW" == "false" ]]; then
     # Check Git repository status
@@ -45,16 +53,8 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# Generate TypeScript route definitions before building frontend
-echo "Generating TypeScript route definitions..."
-FLASK_APP=api.index flask generate-routes-ts
-
-# Build frontend assets for production (only for production deployment)
-echo "Building frontend assets..."
-./scripts/prod/build-frontend.sh
-
 # Set environment variables from .env.prod
-echo "Setting Vercel environment variables..."
+# echo "Setting Vercel environment variables..."
 # ./scripts/prod/set_secrets.sh
 
 # Build the environment variables command line arguments
