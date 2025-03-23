@@ -12,7 +12,6 @@ from google_auth_oauthlib.flow import Flow
 
 # from google.oauth2.credentials import Credentials
 
-from utils.flask_view_utils import full_url_for
 from config import GOOGLE_CLIENT_CREDENTIALS
 
 
