@@ -17,7 +17,7 @@ from db_models import (
     LemmaExampleSentence,
     SentenceLemma,
 )
-from utils.word_utils import normalize_text, ensure_nfc
+
 
 IMG_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "bmp", "tiff", "gif"]
 

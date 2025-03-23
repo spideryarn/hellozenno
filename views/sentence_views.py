@@ -12,12 +12,12 @@ from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_all_sentences
 from utils.vocab_llm_utils import (
     create_interactive_word_links,
-    normalize_text,
     extract_tokens,
 )
 from utils.url_registry import endpoint_for
 
 # Import necessary view functions for templates
+from utils.word_utils import normalize_text
 from views.core_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 
