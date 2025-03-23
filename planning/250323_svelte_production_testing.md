@@ -67,6 +67,9 @@ We've made significant improvements to fix these issues:
    - Added more verbose console logging with environment information
    - Improved error messages with more context
 
+6. **Jinja Scope Issues**: Solved by using Jinja globals instead of context processors
+7. **Asset Path Mismatch**: Fixed lookup strategy to handle Vite's manifest structure
+
 ## Actions
 
 ### Stage 1: Update Flask Script to Support Production Testing Mode
@@ -162,6 +165,16 @@ We've made significant improvements to fix these issues:
   - [ ] Add tests for handling missing component bundle
   - [ ] Test the entire workflow from build to deployment
 
+### Stage 12: Implement Jinja Globals for Robust Helper Functions
+
+- [x] Update the Flask application to use Jinja globals instead of context processors
+  - [x] Remove existing context processor registration
+  - [x] Add Jinja globals registration during app initialization
+  - [x] Update helper functions to fail with clear error messages
+  - [x] Remove conditional fallbacks in templates
+  - [x] Create documentation describing the changes
+  - [x] Test with both development and production modes
+
 ## Process for Testing Production Builds Locally
 
 The process for testing production builds locally is now simpler:
@@ -221,66 +234,184 @@ Our next priorities are:
 3. ✅ **Asset Path Resolution**: Implemented robust resolution with fallbacks
 4. ✅ **Duplicate Vite Helpers**: Consolidated into a single implementation
 5. ✅ **Environment Detection**: Fixed to properly handle dev vs prod mode
+6. ✅ **Jinja Scope Issues**: Solved by using Jinja globals instead of context processors
+7. ✅ **Asset Path Mismatch**: Fixed lookup strategy to handle Vite's manifest structure
 
 ### Issues Still to Resolve
 
 1. **Build Verification**: Add checks to ensure production builds are complete and valid
 2. **Automated Testing**: Create comprehensive tests for the component loading system
 
+### Advanced Jinja Template Solutions
+
+During our debugging process, we encountered a fundamental limitation in how Jinja2 macros handle context variables. After researching best practices, we identified two robust solutions:
+
+#### Option 1: Using Jinja Globals (Recommended)
+
+Jinja's Environment has a `globals` property that makes variables available in all templates, including macros, regardless of scope. This is simpler and more reliable than context processors for ensuring helper functions are available everywhere.
+
+```python
+# In app.py or create_app()
+app.jinja_env.globals.update(
+    vite_asset_url=vite_asset_url,
+    vite_manifest=get_vite_manifest,
+    dump_manifest=dump_manifest
+)
+```
+
+**Advantages:**
+- Functions are truly globally available in all templates and macros
+- Minimal changes to existing code - keep using macros as before
+- No additional template files needed
+- Clean, function-like syntax at usage points
+- Consistent with Flask's internal approach for built-in helpers
+
+**Implementation plan:**
+1. Remove our context processor registration
+2. Add the Jinja globals registration during app initialization
+3. Remove conditional fallbacks in templates (they'll no longer be needed)
+4. Implement clear error handling in helper functions for better debugging
+
+#### Option 2: Converting to Template Includes (Alternative)
+
+Instead of using macros, we could use Jinja includes which have more predictable context behavior.
+
+**Approach:**
+1. Create a dedicated `_svelte_component.jinja` template file
+2. Move the macro content to this template
+3. Use includes to embed components:
+
+```jinja
+{% include '_svelte_component.jinja' with {
+  'component_name': 'UserStatus',
+  'props': {'userId': 123},
+  'component_id': 'user-status'
+} only %}
+```
+
+**Comparison with Macros:**
+
+| Feature | Macros (Current) | Includes (Alternative) |
+|---------|-----------------|------------------------|
+| Call syntax | `{{ load_svelte_component('Name', props) }}` | `{% include '_component.jinja' with {'component_name': 'Name', 'props': props} %}` |
+| Template organization | Multiple macros per file | One template per component pattern |
+| Context access | Limited - requires special handling | Full parent context available by default |
+| Parameter passing | Function-like named parameters | Dictionary with `with` keyword |
+| Default values | Easy to define in macro signature | Requires handling in included template |
+
+**Implementation complexity:**
+- Higher: requires new template files and updating all call sites
+- More verbose at each call site
+- But guarantees context access without special handling
+
+#### Hybrid Approach
+
+If verbosity at call sites is a concern with includes, a hybrid approach could be used:
+
+1. Create a thin macro wrapper around the include:
+```jinja
+{% macro component(name, props={}, id='') %}
+  {% include '_svelte_component.jinja' with {
+    'component_name': name,
+    'props': props,
+    'component_id': id
+  } only %}
+{% endmacro %}
+```
+
+2. Keep the familiar macro syntax at call sites:
+```jinja
+{{ component('UserStatus', {'userId': 123}) }}
+```
+
+This provides concise call syntax with reliable context behavior.
+
+#### Recommendation
+
+We recommend implementing the Jinja globals approach (Option 1) as it's:
+1. Simpler to implement - fewer changes to existing code
+2. More aligned with how Flask's built-in helpers work
+3. Maintains the clean, concise macro syntax we currently use
+
+This approach should make our component loading more robust and deterministic without sacrificing readability or maintainability.
+
+### Production Testing Workflow
+
+After implementing the Jinja globals approach, we observed clearer error handling in action. When testing in production mode without first building the frontend assets, we now get explicit error messages rather than silent fallbacks:
+
+```
+utils.vite_helpers.ViteAssetError: Critical asset 'js/hz-components.es.js' not found in Vite manifest. Expected at: build/js/hz-components.es.js. Check that frontend assets are built correctly.
+```
+
+This improved error handling helps us quickly identify issues:
+
+1. The error clearly indicates what asset is missing (`js/hz-components.es.js`)
+2. It specifies where it expected to find the asset (`build/js/hz-components.es.js`)
+3. It provides actionable guidance ("Check that frontend assets are built correctly")
+
+To properly test in production mode, the complete workflow is:
+
+```bash
+# First, build the frontend assets
+./scripts/prod/build-frontend.sh
+
+# Then, run Flask with the production frontend flag
+./scripts/local/run_flask.sh --prod-frontend
+```
+
+The system now fails early and clearly if assets are missing, rather than attempting to use fallbacks which might mask underlying issues. This approach ensures that:
+
+1. Developers are immediately alerted to missing or misnamed assets
+2. There's a clearer connection between the build process and the runtime requirements
+3. Issues are easier to diagnose with specific error messages pointing to the exact problem
+
+Our improved testing workflow provides strong validation of the entire deployment pipeline, from asset building to runtime use, with clear error messages at each stage.
+
+### Asset Path Resolution in the Manifest
+
+During our testing, we discovered an important detail about how Vite manages asset paths in the manifest:
+
+1. **Manifest Key Mismatch**: The key used to register the bundle in the manifest is `src/entries/index.ts`, but our code was looking for `js/hz-components.es.js`.
+
+The issue arises because:
+- In our templates, we reference the bundle path as `js/hz-components.es.js`
+- But Vite records the entry point source file (e.g., `src/entries/index.ts`) as the key in the manifest
+- The output file path (`js/hz-components.es.js`) is stored as a property of that entry, not as a top-level key
+
+We resolved this by enhancing the `vite_asset_url` function to use multiple lookup strategies:
+
+```python
+# Special case for the bundle - look for the entry point that outputs this file
+if asset_name == "js/hz-components.es.js":
+    # First, check direct entry
+    if asset_name in manifest and "file" in manifest[asset_name]:
+        return url_for("static", filename=f"build/{manifest[asset_name]['file']}")
+        
+    # Next, look for entries that output to this file 
+    for key, value in manifest.items():
+        if "file" in value and value["file"] == asset_name:
+            return url_for("static", filename=f"build/{value['file']}")
+            
+    # Finally, check if any entry has "src/entries/index.ts" as key
+    if "src/entries/index.ts" in manifest and "file" in manifest["src/entries/index.ts"]:
+        bundle_file = manifest["src/entries/index.ts"]["file"]
+        return url_for("static", filename=f"build/{bundle_file}")
+```
+
+This approach:
+1. First, checks if the requested asset name exists directly as a key
+2. Then checks if any manifest entry outputs to a file matching the requested asset name
+3. Finally, looks for the known entry point that should generate our bundle
+
+We also improved error messages to show the actual contents of the manifest when the lookup fails, making debugging much easier:
+
+```python
+manifest_entries = ', '.join(manifest.keys())
+error_msg = f"Critical asset '{asset_name}' not found in Vite manifest. "
+error_msg += f"Expected at: {critical_assets[asset_name]}. "
+error_msg += f"Manifest contains: {manifest_entries}. "
+```
+
+This multi-stage lookup ensures our system is resilient to changes in how Vite structures its manifest file.
+
 ## Troubleshooting and Lessons Learned
-
-During implementation, we encountered some interesting challenges with the Svelte component loading process. Here are the key issues we discovered and fixed:
-
-### 1. Duplicate Vite Helper Implementations
-
-As anticipated in our planning, we had two separate implementations of the Vite helpers:
-- `utils/vite_helpers.py` (root level)
-- `api/utils/vite_helpers.py` (API-specific)
-
-This caused confusion for imports and led to inconsistent behavior. Our solution was to:
-- Consolidate everything into the root `utils/vite_helpers.py`
-- Remove the duplicate implementation
-- Update imports in `api/index.py` to use the consolidated version
-
-### 2. Import Path Issues
-
-The Flask app was trying to import `load_vite_manifest` from `utils.vite_helpers`, but this function only existed in `utils.url_utils`. We resolved this by:
-- Updating the import to use `get_vite_manifest` instead of `load_vite_manifest`
-- Adding a backward compatibility function in `utils/vite_helpers.py` that maps the old function name to the new one
-
-### 3. Jinja Macro Scoping Challenges
-
-We discovered a significant issue with how Jinja2 handles context variables within macros. Variables added via Flask's context processors (like our Vite helper functions) are not automatically available inside macros defined in the templates.
-
-According to the Flask documentation, this is by design:
-> "These variables are added to the context of variables, they are not global variables. The difference is that by default these will not show up in the context of imported templates."
-
-We addressed this in two ways:
-1. Adding conditional fallbacks in the template:
-   ```jinja
-   <link rel="stylesheet" href="{% if vite_asset_url is defined %}{{ vite_asset_url('style.css') }}{% else %}/static/build/assets/style.css{% endif %}">
-   ```
-
-2. Making the context processor more robust by ensuring it properly registers all required helper functions
-
-### 4. Flask Application Context
-
-We learned that context processors need to be registered within the proper Flask application context. Trying to use Flask context-dependent functions during app initialization (outside an application context) can cause errors.
-
-### 5. Importance of Error Handling and Fallbacks
-
-The most resilient solution included:
-- Robust error handling in the helper functions
-- Fallback paths when the manifest isn't available
-- Clear debugging information in both development and production modes
-- Conditional rendering in templates to handle missing functions
-
-### Final Solution
-
-Our solution now follows these principles:
-1. Single source of truth for Vite helper functions
-2. Proper context processor registration within the Flask app
-3. Robust template fallbacks to handle edge cases
-4. Clear debugging information
-
-This approach ensures Svelte components load correctly in both development and production environments, making our deployment process more reliable and easier to debug. 

@@ -20,15 +20,29 @@ _manifest_cache = {
 }
 
 
+# Custom exceptions for clearer error messages
+class ViteManifestError(Exception):
+    """Raised when the Vite manifest cannot be found or is invalid."""
+
+    pass
+
+
+class ViteAssetError(Exception):
+    """Raised when a requested asset cannot be found in the Vite manifest."""
+
+    pass
+
+
 def get_vite_manifest() -> Dict[str, Any]:
     """
     Load the Vite manifest file from the static directory.
-    Returns the manifest as a dictionary or an empty dict if not found.
+    Returns the manifest as a dictionary.
 
-    Uses caching to avoid repeated file system access with a short TTL.
+    Raises:
+        ViteManifestError: If manifest cannot be found or is invalid
 
     Returns:
-        Dict[str, Any]: The manifest data or an empty dict if not found
+        Dict[str, Any]: The manifest data
     """
     try:
         # Check if we're in development mode - shorter cache TTL if so
@@ -46,8 +60,7 @@ def get_vite_manifest() -> Dict[str, Any]:
         # Get the root directory
         static_folder = current_app.static_folder
         if static_folder is None:
-            logger.warning("Flask app has no static_folder configured")
-            return {}
+            raise ViteManifestError("Flask app has no static_folder configured")
 
         # Try multiple manifest locations
         manifest_locations = [
@@ -82,34 +95,62 @@ def get_vite_manifest() -> Dict[str, Any]:
                 return manifest_data
 
         # If we get here, no valid manifest was found
-        logger.warning(f"No valid Vite manifest found in any location")
-        return {}
+        raise ViteManifestError(
+            f"No valid Vite manifest found in: {', '.join(manifest_locations)}"
+        )
+    except ViteManifestError:
+        # Re-raise specific exceptions
+        raise
     except Exception as e:
-        logger.error(f"Error loading Vite manifest: {e}")
-        return {}
+        # Wrap generic exceptions
+        raise ViteManifestError(f"Error loading Vite manifest: {e}")
 
 
 def vite_asset_url(asset_name: str) -> str:
     """
     Get the URL for a Vite asset using the manifest.
-    Falls back to a simple path if manifest isn't available.
 
     Args:
         asset_name: The name of the asset (e.g., 'style.css', 'js/hz-components.es.js')
 
     Returns:
         str: The URL for the asset
+
+    Raises:
+        ViteManifestError: If the manifest cannot be loaded
+        ViteAssetError: If the asset cannot be found in the manifest
     """
+    # Get manifest - this will raise ViteManifestError if there's a problem
     manifest = get_vite_manifest()
-    fallback_path = None
 
-    # Define common fallbacks for critical assets
-    common_fallbacks = {
-        "style.css": "build/assets/style.css",
-        "js/hz-components.es.js": "build/js/hz-components.es.js",
-    }
+    # Special case for the bundle - look for the entry point that outputs this file
+    if asset_name == "js/hz-components.es.js":
+        # First, check direct entry
+        if asset_name in manifest and "file" in manifest[asset_name]:
+            hashed_file = manifest[asset_name]["file"]
+            logger.debug(
+                f"Asset {asset_name} resolved to {hashed_file} via direct manifest entry"
+            )
+            return url_for("static", filename=f"build/{hashed_file}")
 
-    # Check if the asset is in the manifest
+        # Next, look for entries that output to this file
+        for key, value in manifest.items():
+            if "file" in value and value["file"] == asset_name:
+                logger.debug(f"Asset {asset_name} found via manifest entry {key}")
+                return url_for("static", filename=f"build/{value['file']}")
+
+        # Finally, check if any entry has "src/entries/index.ts" as key
+        if (
+            "src/entries/index.ts" in manifest
+            and "file" in manifest["src/entries/index.ts"]
+        ):
+            bundle_file = manifest["src/entries/index.ts"]["file"]
+            logger.debug(
+                f"Found bundle at src/entries/index.ts which outputs to {bundle_file}"
+            )
+            return url_for("static", filename=f"build/{bundle_file}")
+
+    # Check if the asset is directly in the manifest
     if asset_name in manifest and "file" in manifest[asset_name]:
         hashed_file = manifest[asset_name]["file"]
         logger.debug(f"Asset {asset_name} resolved to {hashed_file} via manifest")
@@ -127,17 +168,27 @@ def vite_asset_url(asset_name: str) -> str:
                 logger.debug(f"Style sheet {asset_name} matched to {key} in manifest")
                 return url_for("static", filename=f'build/{value["file"]}')
 
-    # Use common fallbacks if defined
-    if asset_name in common_fallbacks:
-        fallback_path = common_fallbacks[asset_name]
-        logger.warning(f"Using fallback path for {asset_name}: {fallback_path}")
-        return url_for("static", filename=fallback_path)
+    # Define common critical assets for clearer error messages
+    critical_assets = {
+        "style.css": "build/assets/style.css",
+        "js/hz-components.es.js": "build/js/hz-components.es.js",
+    }
 
-    # Last resort fallback - direct path
-    logger.warning(
-        f"No manifest entry or fallback defined for {asset_name}, using direct path"
+    # No entry in manifest - for critical assets, provide a clearer error message
+    if asset_name in critical_assets:
+        # For debugging, show what's actually in the manifest
+        manifest_entries = ", ".join(manifest.keys())
+        error_msg = f"Critical asset '{asset_name}' not found in Vite manifest. "
+        error_msg += f"Expected at: {critical_assets[asset_name]}. "
+        error_msg += f"Manifest contains: {manifest_entries}. "
+        error_msg += "Check that frontend assets are built correctly."
+        raise ViteAssetError(error_msg)
+
+    # For other assets, provide a general error
+    raise ViteAssetError(
+        f"Asset '{asset_name}' not found in Vite manifest. "
+        "Check asset name and ensure the frontend is built correctly."
     )
-    return url_for("static", filename=f"build/{asset_name}")
 
 
 def dump_manifest() -> str:
@@ -178,19 +229,14 @@ def load_vite_manifest() -> Dict[str, Any]:
 def register_vite_helpers(app) -> None:
     """
     Register Vite helper functions with the Flask app.
-    Makes them available in templates.
+    Adds a test route for examining the manifest.
+
+    Note: This no longer registers a context processor as the
+    functions are registered directly as Jinja globals in app initialization.
 
     Args:
         app: Flask application instance
     """
-
-    @app.context_processor
-    def inject_vite_helpers():
-        return {
-            "vite_manifest": get_vite_manifest,
-            "vite_asset_url": vite_asset_url,
-            "dump_manifest": dump_manifest,
-        }
 
     # Add a test route for examining the manifest when in development
     @app.route("/dev/vite-manifest")
@@ -200,11 +246,22 @@ def register_vite_helpers(app) -> None:
         ):
             return "This endpoint is only available in development mode", 403
 
-        manifest = get_vite_manifest()
-        common_assets = {
-            "style.css": vite_asset_url("style.css"),
-            "js/hz-components.es.js": vite_asset_url("js/hz-components.es.js"),
-        }
+        # Try to load the manifest, but handle exceptions gracefully for this endpoint
+        try:
+            manifest = get_vite_manifest()
+            manifest_error = None
+        except (ViteManifestError, ViteAssetError) as e:
+            manifest = {}
+            manifest_error = str(e)
+
+        # Try to get common assets, but handle exceptions
+        common_assets = {}
+        asset_errors = {}
+        for asset_name in ["style.css", "js/hz-components.es.js"]:
+            try:
+                common_assets[asset_name] = vite_asset_url(asset_name)
+            except Exception as e:
+                asset_errors[asset_name] = str(e)
 
         html = f"""
         <html>
@@ -219,6 +276,7 @@ def register_vite_helpers(app) -> None:
                 .error {{ color: red; }}
                 .warning {{ color: orange; }}
                 .manifest-info {{ margin-bottom: 1.5rem; background: #f0f0f0; padding: 1rem; border-radius: 4px; }}
+                .error-box {{ background: #fff5f5; border: 1px solid #fed7d7; color: #e53e3e; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }}
             </style>
         </head>
         <body>
@@ -238,11 +296,23 @@ def register_vite_helpers(app) -> None:
                 }</p>
             </div>
             
+            {f'<div class="error-box"><strong>Manifest Error:</strong> {manifest_error}</div>' if manifest_error else ''}
+            
             <h2>Common Assets</h2>
             <div class="asset-list">
         """
 
-        for name, url in common_assets.items():
+        for name in ["style.css", "js/hz-components.es.js"]:
+            if name in asset_errors:
+                html += f"""
+                    <div class="asset-item">
+                        <strong>{name}</strong>: 
+                        <span class="error">Error: {asset_errors[name]}</span>
+                    </div>
+                """
+                continue
+
+            url = common_assets.get(name, "")
             file_exists = False
             try:
                 if url.startswith("/static/"):
@@ -267,7 +337,7 @@ def register_vite_helpers(app) -> None:
         html += f"""
             </div>
             
-            <h2>Full Manifest ({len(manifest)} entries)</h2>
+            <h2>Full Manifest</h2>
             <pre>{json.dumps(manifest, indent=2)}</pre>
         </body>
         </html>

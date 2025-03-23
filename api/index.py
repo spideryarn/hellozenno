@@ -105,16 +105,15 @@ def create_app():
     # First import the functions directly
     from utils.vite_helpers import get_vite_manifest, vite_asset_url, dump_manifest
 
-    # Now register a simple context processor with direct function references
-    @app.context_processor
-    def inject_vite_helpers():
-        return {
-            "vite_manifest": get_vite_manifest,
-            "vite_asset_url": vite_asset_url,
-            "dump_manifest": dump_manifest,
-        }
+    # Register Vite helper functions directly as Jinja globals
+    # This makes them available in all templates, including macros
+    app.jinja_env.globals.update(
+        vite_manifest=get_vite_manifest,
+        vite_asset_url=vite_asset_url,
+        dump_manifest=dump_manifest,
+    )
 
-    # Only after this, register the full vite helpers which adds a route too
+    # Register the full vite helpers which adds a route for manifest viewing
     register_vite_helpers(app)
 
     # Initialize database
