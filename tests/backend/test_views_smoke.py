@@ -1,4 +1,4 @@
-from pytest import skip
+import pytest
 from tests.fixtures_for_tests import (
     SAMPLE_PHRASE_DATA,
     TEST_LANGUAGE_CODE,
@@ -420,7 +420,7 @@ def test_flashcard_sentence_vw(client, fixture_for_testing_db):
     assert_html_response(response)
 
 
-@skip(
+@pytest.mark.skip(
     reason="I cannot figure out why this is returning a 404, even though it seems to work in the browser"
 )
 def test_random_flashcard_vw(client):

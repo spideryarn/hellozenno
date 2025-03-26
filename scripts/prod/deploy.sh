@@ -18,6 +18,9 @@ else
     echo_success "Starting Vercel production deployment process..."
 fi
 
+# check once early to give immediate feedback
+./scripts/git/check_git_status.sh
+
 # Generate TypeScript route definitions before building frontend
 echo "Generating TypeScript route definitions..."
 FLASK_APP=api.index flask generate-routes-ts
@@ -28,7 +31,7 @@ echo "Building frontend assets..."
 
 # Skip Git checks for preview deployments
 if [[ "$PREVIEW" == "false" ]]; then
-    # Check Git repository status
+    # Check Git repository status (this has to come later than the build to make sure the build is being ignored by Git)
     ./scripts/git/check_git_status.sh
 
     # 1. Run pre-deployment checks

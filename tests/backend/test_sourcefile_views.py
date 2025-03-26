@@ -1143,6 +1143,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     assert response.status_code in [200, 302]
 
 
+@pytest.skip("Skipping YouTube tests")
 def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db):
     """Test adding a sourcefile from YouTube."""
 

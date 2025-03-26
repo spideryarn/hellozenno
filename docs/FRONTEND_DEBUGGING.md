@@ -1,5 +1,7 @@
 # Frontend Debugging
 
+see `DEBUGGING.md`
+
 ## Browser Automation with cursor-tools
 
 For frontend debugging, we use cursor-tools browser automation features. These provide powerful AI-assisted debugging capabilities.
