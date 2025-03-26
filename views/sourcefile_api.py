@@ -37,9 +37,9 @@ from db_models import (
 from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from utils.sourcedir_utils import (
     _get_sourcedir_entry,
-    _get_sourcefile_entry,
     get_sourcedir_or_404,
 )
+from utils.sourcefile_utils import _get_sourcefile_entry
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.youtube_utils import YouTubeDownloadError, download_audio
 from slugify import slugify

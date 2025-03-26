@@ -113,7 +113,7 @@ def translate_from_english(inp: str, target_language: str, verbose: int = 1):
     return out, extra
 
 
-def extract_tricky_words_or_phrases(
+def extract_tricky_words(
     txt: str,
     target_language_name: str,
     language_level: Optional[str] = None,

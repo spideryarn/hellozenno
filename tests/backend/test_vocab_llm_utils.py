@@ -4,7 +4,7 @@ import unicodedata
 from utils.vocab_llm_utils import (
     extract_text_from_image,
     translate_to_english,
-    extract_tricky_words_or_phrases,
+    extract_tricky_words,
     extract_phrases_from_text,
     create_interactive_word_links,
 )
@@ -99,7 +99,7 @@ def test_translate_to_english(mock_gpt_from_template):
 
 def test_extract_tricky_words_or_phrases(mock_gpt_from_template):
     """Test extracting tricky words from text."""
-    result, extra = extract_tricky_words_or_phrases(
+    result, extra = extract_tricky_words(
         txt="Test text in Greek",
         target_language_name="Greek",
     )

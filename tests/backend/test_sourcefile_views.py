@@ -22,6 +22,7 @@ from tests.fixtures_for_tests import (
 from tests.backend.utils_for_testing import build_url_with_query
 from tests.mocks import mock_download_audio
 from utils.sourcedir_utils import _get_navigation_info
+import utils.sourcefile_utils
 from utils.vocab_llm_utils import extract_tokens
 from utils.youtube_utils import YouTubeDownloadError
 from views import sourcefile_views
@@ -109,7 +110,7 @@ def test_inspect_sourcefile(client, test_data, monkeypatch):
     monkeypatch.setattr(sourcefile_views, "render_template", mock_render_template)
 
     # Get the sourcefile entry directly using the helper
-    sourcefile_entry = sourcefile_views._get_sourcefile_entry(
+    sourcefile_entry = utils.sourcefile_utils._get_sourcefile_entry(
         TEST_LANGUAGE_CODE, sourcedir.slug, sourcefile.slug
     )
     assert sourcefile_entry is not None
@@ -120,7 +121,7 @@ def test_inspect_sourcefile(client, test_data, monkeypatch):
     import pytest
 
     with pytest.raises(DoesNotExist):
-        sourcefile_views._get_sourcefile_entry(
+        utils.sourcefile_utils._get_sourcefile_entry(
             TEST_LANGUAGE_CODE, sourcedir.slug, "nonexistent-file"
         )
 

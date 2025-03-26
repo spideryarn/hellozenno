@@ -19,7 +19,7 @@ from db_models import Sourcedir, Sourcefile
 from utils.lang_utils import VALID_LANGUAGE_CODES
 from utils.sourcedir_utils import _get_sourcedir_entry, allowed_file
 from loguru import logger
-from utils.sourcefile_processing import process_uploaded_file
+from utils.sourcefile_utils import process_uploaded_file
 from views.sourcedir_views import sourcedir_views_bp
 from slugify import slugify
 
@@ -81,9 +81,7 @@ def create_sourcedir_api(target_language_code: str):
         return jsonify({"error": str(e)}), 500
 
 
-@sourcedir_api_bp.route(
-    "/<target_language_code>/<sourcedir_slug>", methods=["DELETE"]
-)
+@sourcedir_api_bp.route("/<target_language_code>/<sourcedir_slug>", methods=["DELETE"])
 def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """Delete a source directory if it's empty."""
     try:

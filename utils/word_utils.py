@@ -5,7 +5,7 @@ import unicodedata
 from werkzeug.exceptions import NotFound
 
 from db_models import Sourcedir, Sourcefile, SourcefileWordform, Wordform, Lemma
-from utils.sourcedir_utils import _get_sourcefile_entry
+from utils.sourcefile_utils import _get_sourcefile_entry
 
 
 class WordPreview(TypedDict):
@@ -100,20 +100,19 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
         .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
         .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
         .where(
-            (Lemma.language_code == language_code)
-            & (Sourcefile.sourcedir == sourcedir)
+            (Lemma.language_code == language_code) & (Sourcefile.sourcedir == sourcedir)
         )
         .order_by(Lemma.lemma)  # Simple ordering by column, not expression
     )
-    
+
     # Execute the query and get the results
     results = list(simple_query)
     lemmas = [row.lemma for row in results if row.lemma]
-    
+
     # If no lemmas found, abort with 404
     if not lemmas:
         abort(404, description="Directory contains no practice vocabulary")
-            
+
     return lemmas
 
 
@@ -142,11 +141,11 @@ def get_sourcefile_lemmas(
         )
         .order_by(Lemma.lemma)  # Simple ordering by column, not expression
     )
-    
+
     # Execute the query and get the results
     results = list(simple_query)
     lemmas = [row.lemma for row in results if row.lemma]
-    
+
     # If no lemmas found, raise NotFound
     if not lemmas:
         raise NotFound("Sourcefile contains no practice vocabulary.")

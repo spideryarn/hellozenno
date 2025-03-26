@@ -119,17 +119,6 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
         }
 
 
-def _get_sourcefile_entry(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
-) -> Sourcefile:
-    """Helper function to get sourcefile entry by slug with language code."""
-    sourcedir = _get_sourcedir_entry(target_language_code, sourcedir_slug)
-    return Sourcefile.get(
-        Sourcefile.sourcedir == sourcedir,
-        Sourcefile.slug == sourcefile_slug,
-    )
-
-
 def get_sourcedir_or_404(target_language_code: str, sourcedir_slug: str) -> Sourcedir:
     """Get sourcedir by language code and slug, or return 404."""
     try:

@@ -11,15 +11,16 @@ from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
     SOURCE_IMAGE_EXTENSIONS,
 )
-from db_models import Lemma, Wordform, SourcefileWordform
+from db_models import Lemma, Sourcefile, Wordform, SourcefileWordform
 from utils.audio_utils import transcribe_audio
 from gjdutils.dt import dt_str
 from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
+from utils.sourcedir_utils import _get_sourcedir_entry
 from utils.vocab_llm_utils import (
     extract_text_from_image,
     translate_to_english,
-    extract_tricky_words_or_phrases,
+    extract_tricky_words,
     process_phrases_from_text,
 )
 
@@ -74,17 +75,17 @@ def process_sourcefile_content(
     txt_en, _ = translate_to_english(txt_tgt, target_language_name, verbose=1)
 
     # 3. Extract vocabulary and phrases
-    tricky_d_orig, extra = extract_tricky_words_or_phrases(
+    tricky_d_orig, extra = extract_tricky_words(
         txt_tgt, target_language_name, verbose=1
     )
-    
+
     # Make extra metadata JSON-serializable using gjdutils jsonify
     # Convert it back to Python dict after serialization
     if extra:
         serializable_extra = json.loads(jsonify(extra))
         # Update the existing extra_metadata with the serializable extra
         extra_metadata.update(serializable_extra)
-    
+
     tricky_ad = Addict(tricky_d_orig)
     tricky_words_d = tricky_ad.wordforms
 
@@ -196,11 +197,15 @@ def get_text_from_sourcefile(
             txt_tgt, extra = extract_text_from_image(
                 temp_file.name, target_language_name, verbose=1
             )
-            
+
             # Make extra metadata JSON-serializable
             if extra:
+                if "llm_extra" in extra:
+                    extra["llm_extra"].pop("extra")
+                    extra["llm_extra"].pop("client")
+                    extra["llm_extra"].pop("contents")
                 extra = json.loads(jsonify(extra))
-                
+
             return txt_tgt, extra
 
     elif sourcefile_entry.sourcefile_type in ["audio", "youtube_audio"]:
@@ -258,11 +263,11 @@ def get_text_from_sourcefile(
 
             # Add text source to metadata
             extra["text_source"] = "whisper_transcription"
-            
+
             # Make extra metadata JSON-serializable
             if extra:
                 extra = json.loads(jsonify(extra))
-                
+
             return txt_tgt, extra
 
     else:
@@ -329,3 +334,14 @@ def process_uploaded_file(
             )
 
     return file_content, filename, metadata
+
+
+def _get_sourcefile_entry(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+) -> Sourcefile:
+    """Helper function to get sourcefile entry by slug with language code."""
+    sourcedir = _get_sourcedir_entry(target_language_code, sourcedir_slug)
+    return Sourcefile.get(
+        Sourcefile.sourcedir == sourcedir,
+        Sourcefile.slug == sourcefile_slug,
+    )

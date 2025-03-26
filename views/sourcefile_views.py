@@ -35,14 +35,16 @@ from utils.sentence_utils import get_all_sentences
 from utils.sourcedir_utils import (
     _get_navigation_info,
     _get_sourcedir_entry,
-    _get_sourcefile_entry,
     _navigate_sourcefile,
 )
-from utils.sourcefile_processing import process_sourcefile_content
+from utils.sourcefile_utils import (
+    _get_sourcefile_entry,
+    process_sourcefile_content,
+)
 from utils.url_registry import endpoint_for
 from utils.vocab_llm_utils import (
     create_interactive_word_links,
-    extract_tricky_words_or_phrases,
+    extract_tricky_words,
 )
 from utils.word_utils import get_sourcefile_lemmas
 
@@ -459,105 +461,105 @@ def process_sourcefile_vw(
 ):
     """Process a source file to extract wordforms and phrases."""
     try:
-        # Get the sourcedir entry using helper
-        sourcedir_entry = _get_sourcedir_entry(target_language_code, sourcedir_slug)
-
-        # Get the sourcefile entry by slug
-        sourcefile_entry = Sourcefile.get(
-            Sourcefile.sourcedir == sourcedir_entry,
-            Sourcefile.slug == sourcefile_slug,
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
         )
 
-        target_language_name = get_language_name(target_language_code)
+        # Process the content and update sourcefile
+        _process_and_update_sourcefile(sourcefile_entry, target_language_code)
 
-        try:
-            # Process the sourcefile content
-            source, tricky_words_d, extra_metadata = process_sourcefile_content(
-                sourcefile_entry,
-                target_language_name,
-            )
-
-            # Update sourcefile with processed data
-            sourcefile_entry.text_target = source["txt_tgt"]
-            sourcefile_entry.text_english = source["txt_en"]
-            # Make sure metadata is JSON-serializable
-            # Use gjdutils jsonify to handle any potential non-serializable objects
-            safe_metadata = json.loads(
-                jsonify(
-                    {
-                        **extra_metadata,  # Include duration, language, etc.
-                        "words": tricky_words_d,  # Keep word data for debugging
-                    }
-                )
-            )
-
-            # Store the safe serializable metadata
-            sourcefile_entry.metadata = safe_metadata
-            sourcefile_entry.save()
-
-            # Create database entries for words
-            for word_counter, word_d in enumerate(tricky_words_d):
-                # Try to get existing lemma or create new one
-                lemma, lemma_created = Lemma.update_or_create(
-                    lookup={
-                        "lemma": word_d["lemma"],
-                        "language_code": target_language_code,
-                    },
-                    updates={
-                        "part_of_speech": word_d["part_of_speech"],
-                        "translations": word_d["translations"],
-                        "is_complete": False,  # Mark as incomplete until full metadata is added
-                    },
-                )
-
-                # Try to get existing wordform or create new one
-                wordform, wordform_created = Wordform.update_or_create(
-                    lookup={
-                        "wordform": word_d["wordform"],
-                        "language_code": target_language_code,
-                    },
-                    updates={
-                        "lemma_entry": lemma,
-                        "part_of_speech": word_d["part_of_speech"],
-                        "translations": word_d["translations"],
-                        "inflection_type": word_d["inflection_type"],
-                        "is_lemma": word_d["wordform"] == word_d["lemma"],
-                    },
-                )
-
-                # Create SourcefileWordform entry
-                SourcefileWordform.update_or_create(
-                    lookup={
-                        "sourcefile": sourcefile_entry,
-                        "wordform": wordform,
-                    },
-                    updates={
-                        "centrality": word_d["centrality"],
-                        "ordering": word_counter + 1,
-                    },
-                )
-
-            flash("File processed successfully")
-        except Exception as e:
-            # If processing fails, mark it as failed
-            sourcefile_entry.metadata = {"processing_failed": True, "error": str(e)}
-            sourcefile_entry.save()
-            flash("Processing failed: " + str(e))
-
-        return redirect(
-            url_for(
-                endpoint_for(inspect_sourcefile_vw),
-                target_language_code=target_language_code,
-                sourcedir_slug=sourcedir_slug,
-                sourcefile_slug=sourcefile_slug,
-            )
-        )
-
+        flash("File processed successfully")
     except DoesNotExist:
-        return "Source file not found", 404
+        return "Sourcefile not found", 404
     except Exception as e:
+        raise
         flash(f"Processing failed: {str(e)}")
-        return redirect(request.referrer)
+
+    # Always redirect back to the sourcefile view
+    return redirect(
+        url_for(
+            endpoint_for(inspect_sourcefile_vw),
+            target_language_code=target_language_code,
+            sourcedir_slug=sourcedir_slug,
+            sourcefile_slug=sourcefile_slug,
+        )
+    )
+
+
+def _process_and_update_sourcefile(
+    sourcefile_entry: Sourcefile, target_language_code: str
+) -> None:
+    """Process sourcefile content and update database with extracted wordforms."""
+    target_language_name = get_language_name(target_language_code)
+    source, tricky_words_d, extra_metadata = process_sourcefile_content(
+        sourcefile_entry,
+        target_language_name,
+    )
+    sourcefile_entry.text_target = source["txt_tgt"]
+    sourcefile_entry.text_english = source["txt_en"]
+    safe_metadata = json.loads(
+        jsonify(
+            {
+                **extra_metadata,  # Include duration, language, etc.
+                "words": tricky_words_d,  # Keep word data for debugging
+            }
+        )
+    )
+    sourcefile_entry.metadata = safe_metadata
+    sourcefile_entry.save()
+    _store_wordforms_in_database(sourcefile_entry, tricky_words_d, target_language_code)
+
+
+def _store_wordforms_in_database(
+    sourcefile_entry: Sourcefile, tricky_words_d: list, target_language_code: str
+) -> None:
+    """Store extracted wordforms in database.
+
+    Args:
+        sourcefile_entry: The sourcefile being processed
+        tricky_words_d: List of extracted tricky words
+        target_language_code: The language code
+    """
+    for word_counter, word_d in enumerate(tricky_words_d):
+        # Try to get existing lemma or create new one
+        lemma, lemma_created = Lemma.update_or_create(
+            lookup={
+                "lemma": word_d["lemma"],
+                "language_code": target_language_code,
+            },
+            updates={
+                "part_of_speech": word_d["part_of_speech"],
+                "translations": word_d["translations"],
+                "is_complete": False,  # Mark as incomplete until full metadata is added
+            },
+        )
+
+        # Try to get existing wordform or create new one
+        wordform, wordform_created = Wordform.update_or_create(
+            lookup={
+                "wordform": word_d["wordform"],
+                "language_code": target_language_code,
+            },
+            updates={
+                "lemma_entry": lemma,
+                "part_of_speech": word_d["part_of_speech"],
+                "translations": word_d["translations"],
+                "inflection_type": word_d["inflection_type"],
+                "is_lemma": word_d["wordform"] == word_d["lemma"],
+            },
+        )
+
+        # Create SourcefileWordform entry
+        SourcefileWordform.update_or_create(
+            lookup={
+                "sourcefile": sourcefile_entry,
+                "wordform": wordform,
+            },
+            updates={
+                "centrality": word_d["centrality"],
+                "ordering": word_counter + 1,
+            },
+        )
 
 
 @sourcefile_views_bp.route(
@@ -618,7 +620,7 @@ def update_sourcefile(
 
     # Get more tricky words, ignoring existing ones
     target_language_name = get_language_name(target_language_code)
-    tricky_d, extra = extract_tricky_words_or_phrases(
+    tricky_d, extra = extract_tricky_words(
         txt_tgt,
         target_language_name=target_language_name,
         language_level=LANGUAGE_LEVEL,
