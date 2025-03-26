@@ -19,23 +19,53 @@ METADATA_DIRN = (
 LANGUAGE_LEVEL = "B1"  # CEFR level for language learning
 
 # see lang_utils.py
-# SUPPORTED_LANGUAGES = None  # None for all languages
+# SUPPORTED_LANGUAGES = None  # None for all languages. gets re-sorted by language name
+# ordered by total speakers: https://en.wikipedia.org/wiki/List_of_languages_by_total_number_of_speakers
 SUPPORTED_LANGUAGES = set(
     [
-        "ar",
-        "de",
-        "fr",
-        "el",
-        "es",
-        "fi",
-        "it",
-        "zh",
+        # English
+        "zh",  # Chinese
+        "hi",  # Hindi
+        "es",  # Spanish
+        "ar",  # Arabic
+        "fr",  # French
+        "bn",  # Bengali
+        "pt",  # Portuguese
+        # Russian
+        "id",  # Indonesian
+        "ur",  # Urdu
+        "de",  # German
+        "ja",  # Japanese
+        # pcm for Nigerian Pidgin - doesn't have 2-digit code
+        "mr",  # Marathi
+        "vi",  # Vietnamese
+        "te",  # Telugu
+        "ha",  # Hausa
+        "tr",  # Turkish
+        "pa",  # Punjabi
+        "sw",  # Swahili
+        "tl",  # Tagalog
+        "ta",  # Tamil
+        "ko",  # Korean
+        "th",  # Thai
+        "it",  # Italian
+        # ...
+        "el",  # Greek
+        "fi",  # Finnish
+        "sv",  # Swedish
+        "no",  # Norwegian
+        "da",  # Danish
+        "nl",  # Dutch
+        "pl",  # Polish
+        "hu",  # Hungarian
     ]
 )
 
 LANGUAGE_NAME_OVERRIDES = {
     # because Pycountry cumbersomely calls it "Modern Greek (1453-)"
     "el": "Greek (modern)",
+    "pa": "Punjabi",
+    "sw": "Swahili",
 }
 
 # Supported file extensions for source files
