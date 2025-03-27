@@ -51,22 +51,19 @@
         </li>
         <li class="button-group">
             <a href="{{ url_for('sourcefile_views.process_sourcefile_vw', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
-                Process sourcefile
+                Process this text
             </a>
-            {% if already_processed %}
-            <a href="{{ url_for('sourcefile_views.update_sourcefile', target_language_code=target_language_code, sourcedir_slug=sourcedir_slug, sourcefile_slug=sourcefile_slug) }}" class="button">
-                Get more words
-            </a>
-            <button onclick="processIndividualWords()" class="button">
+            {# <button onclick="processIndividualWords()" class="button">
                 Process individual words
-            </button>
-            {% endif %}
+            </button> #}
         </li>
+        {% if sourcefile_entry.text_target %}
         <li class="button-group">
             <a href="{{ url_for('flashcard_views.flashcard_landing_vw', target_language_code=target_language_code, sourcefile=sourcefile_slug) }}" class="button">
                 Practice Flashcards
             </a>
         </li>
+        {% endif %}
         <li class="navigation-buttons">
             {% if nav_info.is_first %}
             <span class="button disabled">Prev</span>
