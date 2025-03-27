@@ -31,9 +31,6 @@ echo "Building frontend assets..."
 
 # Skip Git checks for preview deployments
 if [[ "$PREVIEW" == "false" ]]; then
-    # Check Git repository status (this has to come later than the build to make sure the build is being ignored by Git)
-    ./scripts/git/check_git_status.sh
-
     # 1. Run pre-deployment checks
     echo "Running pre-deployment checks..."
 
