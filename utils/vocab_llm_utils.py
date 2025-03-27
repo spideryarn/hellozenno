@@ -117,6 +117,7 @@ def extract_tricky_words(
     txt: str,
     target_language_name: str,
     language_level: Optional[str] = None,
+    max_new_words: Optional[int] = None,
     ignore_words: list[str] | None = None,
     verbose: int = 1,
 ):
@@ -139,11 +140,13 @@ def extract_tricky_words(
             "txt_tgt": txt,
             "target_language_name": target_language_name,
             "language_level": language_level,
+            "max_new_words": max_new_words,
             "ignore_words": ignore_words or [],
         },
         response_json=True,
         verbose=verbose,
     )
+    assert isinstance(out, dict), f"Expected dict, got {type(out)}"
 
     if verbose >= 1:
         print(f"Found {len(out.get('wordforms', []))} new tricky words/phrases")  # type: ignore
@@ -359,6 +362,7 @@ def extract_phrases_from_text(
     txt: str,
     target_language_name: str,
     language_level: Optional[str] = None,
+    max_new_phrases: Optional[int] = None,
     verbose: int = 1,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Extract idiomatic phrases and expressions from text."""
@@ -369,6 +373,7 @@ def extract_phrases_from_text(
             "txt_tgt": txt,
             "target_language_name": target_language_name,
             "language_level": language_level,
+            "max_new_phrases": max_new_phrases,
         },
         response_json=True,
         verbose=verbose,
@@ -740,9 +745,9 @@ def process_phrases_from_text(
     txt: str,
     target_language_name: str,
     target_language_code: str,
+    language_level: Optional[str],
+    max_new_phrases: Optional[int],
     sourcefile_entry=None,
-    language_level: Optional[str] = None,
-    verbose: int = 1,
 ) -> list[dict]:
     """Extract and store phrases from text.
 
@@ -759,7 +764,7 @@ def process_phrases_from_text(
     """
     # Extract phrases
     phrases_d_orig, _ = extract_phrases_from_text(
-        txt, target_language_name, language_level, verbose
+        txt, target_language_name, language_level, max_new_phrases
     )
     phrases_d = phrases_d_orig.get("phrases", [])
 

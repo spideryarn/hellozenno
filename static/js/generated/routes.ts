@@ -27,7 +27,6 @@ export enum RouteName {
   SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW = "SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW",
   SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW = "SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW",
   SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW = "SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW",
-  SOURCEFILE_VIEWS_UPDATE_SOURCEFILE = "SOURCEFILE_VIEWS_UPDATE_SOURCEFILE",
   SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW = "SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW",
   SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW = "SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW",
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW = "SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW",
@@ -95,7 +94,6 @@ export const ROUTES = {
   SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/download",
   SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process",
   SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/audio",
-  SOURCEFILE_VIEWS_UPDATE_SOURCEFILE: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/update",
   SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/sentences",
   SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/next",
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/prev",
@@ -163,7 +161,6 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_PROCESS_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_PLAY_SOURCEFILE_AUDIO_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
-  [RouteName.SOURCEFILE_VIEWS_UPDATE_SOURCEFILE]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_SOURCEFILE_SENTENCES_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_NEXT_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };

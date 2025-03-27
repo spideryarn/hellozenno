@@ -1,13 +1,9 @@
-import os
-import json
 import tempfile
-from datetime import datetime
+from typing import get_args
 from flask import (
     Blueprint,
     abort,
-    current_app,
     flash,
-    jsonify,
     redirect,
     render_template,
     request,
@@ -18,10 +14,9 @@ from pathlib import Path
 from peewee import DoesNotExist
 
 from config import (
-    LANGUAGE_LEVEL,
+    DEFAULT_LANGUAGE_LEVEL,
 )
 from db_models import (
-    Lemma,
     Phrase,
     Sourcedir,
     Sourcefile,
@@ -29,22 +24,20 @@ from db_models import (
     SourcefileWordform,
     Wordform,
 )
-from gjdutils.jsons import jsonify
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_all_sentences
 from utils.sourcedir_utils import (
     _get_navigation_info,
-    _get_sourcedir_entry,
     _navigate_sourcefile,
 )
 from utils.sourcefile_utils import (
     _get_sourcefile_entry,
-    process_sourcefile_content,
+    process_sourcefile,
 )
+from utils.types import LanguageLevel
 from utils.url_registry import endpoint_for
 from utils.vocab_llm_utils import (
     create_interactive_word_links,
-    extract_tricky_words,
 )
 from utils.word_utils import get_sourcefile_lemmas
 
@@ -459,21 +452,56 @@ def download_sourcefile_vw(
 def process_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
-    """Process a source file to extract wordforms and phrases."""
-    try:
-        sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
-        )
+    """Process a source file to transcribe, translate, andextract wordforms and phrases.
 
-        # Process the content and update sourcefile
-        _process_and_update_sourcefile(sourcefile_entry, target_language_code)
+    You can run this multiple times to extract more words and phrases.
 
-        flash("File processed successfully")
-    except DoesNotExist:
-        return "Sourcefile not found", 404
-    except Exception as e:
-        raise
-        flash(f"Processing failed: {str(e)}")
+    GET parameters:
+    - max_new_words: Maximum number of words to extract (default=3, 0 to skip, None for no limit)
+    - max_new_phrases: Maximum number of phrases to extract (default=1, 0 to skip, None for no limit)
+    - language_level: Language level for word/phrase selection (default=config.DEFAULT_LANGUAGE_LEVEL)
+    """
+
+    def already_processed(sourcefile_entry: Sourcefile):
+        return bool(sourcefile_entry.text_target)
+
+    # try:
+    sourcefile_entry = _get_sourcefile_entry(
+        target_language_code, sourcedir_slug, sourcefile_slug
+    )
+    DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE = 3
+    DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE = 1
+    if "max_new_words" in request.args:
+        max_new_words = int(request.args["max_new_words"])
+    else:
+        if already_processed(sourcefile_entry):
+            max_new_words = None
+        else:
+            max_new_words = DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE
+    if "max_new_phrases" in request.args:
+        max_new_phrases = int(request.args["max_new_phrases"])
+    else:
+        if already_processed(sourcefile_entry):
+            max_new_phrases = None
+        else:
+            max_new_phrases = DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE
+    language_level = request.args.get("language_level", DEFAULT_LANGUAGE_LEVEL)
+    assert language_level in get_args(
+        LanguageLevel
+    ), f"Invalid language level: {language_level}"
+    # Use the new combined process_sourcefile function with default parameters
+    process_sourcefile(
+        sourcefile_entry,
+        language_level=language_level,  # type: ignore
+        max_new_words=max_new_words,
+        max_new_phrases=max_new_phrases,
+    )
+
+    flash("Sourcefile processed successfully")
+    # except DoesNotExist:
+    #     return "Sourcefile not found", 404
+    # except Exception as e:
+    #     flash(f"Sourcefile processing failed: {str(e)}")
 
     # Always redirect back to the sourcefile view
     return redirect(
@@ -484,82 +512,6 @@ def process_sourcefile_vw(
             sourcefile_slug=sourcefile_slug,
         )
     )
-
-
-def _process_and_update_sourcefile(
-    sourcefile_entry: Sourcefile, target_language_code: str
-) -> None:
-    """Process sourcefile content and update database with extracted wordforms."""
-    target_language_name = get_language_name(target_language_code)
-    source, tricky_words_d, extra_metadata = process_sourcefile_content(
-        sourcefile_entry,
-        target_language_name,
-    )
-    sourcefile_entry.text_target = source["txt_tgt"]
-    sourcefile_entry.text_english = source["txt_en"]
-    safe_metadata = json.loads(
-        jsonify(
-            {
-                **extra_metadata,  # Include duration, language, etc.
-                "words": tricky_words_d,  # Keep word data for debugging
-            }
-        )
-    )
-    sourcefile_entry.metadata = safe_metadata
-    sourcefile_entry.save()
-    _store_wordforms_in_database(sourcefile_entry, tricky_words_d, target_language_code)
-
-
-def _store_wordforms_in_database(
-    sourcefile_entry: Sourcefile, tricky_words_d: list, target_language_code: str
-) -> None:
-    """Store extracted wordforms in database.
-
-    Args:
-        sourcefile_entry: The sourcefile being processed
-        tricky_words_d: List of extracted tricky words
-        target_language_code: The language code
-    """
-    for word_counter, word_d in enumerate(tricky_words_d):
-        # Try to get existing lemma or create new one
-        lemma, lemma_created = Lemma.update_or_create(
-            lookup={
-                "lemma": word_d["lemma"],
-                "language_code": target_language_code,
-            },
-            updates={
-                "part_of_speech": word_d["part_of_speech"],
-                "translations": word_d["translations"],
-                "is_complete": False,  # Mark as incomplete until full metadata is added
-            },
-        )
-
-        # Try to get existing wordform or create new one
-        wordform, wordform_created = Wordform.update_or_create(
-            lookup={
-                "wordform": word_d["wordform"],
-                "language_code": target_language_code,
-            },
-            updates={
-                "lemma_entry": lemma,
-                "part_of_speech": word_d["part_of_speech"],
-                "translations": word_d["translations"],
-                "inflection_type": word_d["inflection_type"],
-                "is_lemma": word_d["wordform"] == word_d["lemma"],
-            },
-        )
-
-        # Create SourcefileWordform entry
-        SourcefileWordform.update_or_create(
-            lookup={
-                "sourcefile": sourcefile_entry,
-                "wordform": wordform,
-            },
-            updates={
-                "centrality": word_d["centrality"],
-                "ordering": word_counter + 1,
-            },
-        )
 
 
 @sourcefile_views_bp.route(
@@ -589,98 +541,6 @@ def play_sourcefile_audio_vw(
             )
     except DoesNotExist:
         abort(404, description="Audio file not found")
-
-
-@sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/update"
-)
-def update_sourcefile(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
-):
-    """Get more tricky words from an already processed source file."""
-    # Get the sourcedir entry
-    sourcedir_entry = _get_sourcedir_entry(target_language_code, sourcedir_slug)
-
-    # Get the sourcefile entry
-    sourcefile_entry = Sourcefile.get(
-        Sourcefile.sourcedir == sourcedir_entry,
-        Sourcefile.slug == sourcefile_slug,
-    )
-
-    # Get existing wordforms to ignore
-    existing_wordforms = [
-        wf.wordform.wordform  # Access through the junction table
-        for wf in sourcefile_entry.wordform_entries.select()
-    ]
-
-    # Get original text
-    txt_tgt = sourcefile_entry.text_target
-    if not txt_tgt:
-        abort(400, description="No target language text found in source file")
-
-    # Get more tricky words, ignoring existing ones
-    target_language_name = get_language_name(target_language_code)
-    tricky_d, extra = extract_tricky_words(
-        txt_tgt,
-        target_language_name=target_language_name,
-        language_level=LANGUAGE_LEVEL,
-        ignore_words=existing_wordforms,
-        verbose=1,
-    )
-
-    # Process new words and create database entries
-    if isinstance(tricky_d, dict) and "wordforms" in tricky_d:
-        for word_d in tricky_d["wordforms"]:
-            # Try to get existing lemma or create new one
-            lemma, lemma_created = Lemma.get_or_create(
-                lemma=word_d["lemma"],
-                language_code=target_language_code,
-                defaults={
-                    "part_of_speech": word_d["part_of_speech"],
-                    "translations": word_d["translations"],
-                    "is_complete": False,  # Mark as incomplete until full metadata is added
-                },
-            )
-
-            # Try to get existing wordform or create new one
-            wordform, wordform_created = Wordform.get_or_create(
-                wordform=word_d["wordform"],
-                language_code=target_language_code,
-                defaults={
-                    "lemma_entry": lemma,
-                    "part_of_speech": word_d["part_of_speech"],
-                    "translations": word_d["translations"],
-                    "inflection_type": word_d["inflection_type"],
-                    "is_lemma": word_d["wordform"] == word_d["lemma"],
-                },
-            )
-
-            # Create SourcefileWordform entry
-            SourcefileWordform.get_or_create(
-                sourcefile=sourcefile_entry,
-                wordform=wordform,
-                defaults={
-                    "centrality": word_d["centrality"],
-                    "ordering": len(existing_wordforms) + 1,
-                },
-            )
-
-        # Update metadata for debugging/comparison
-        if sourcefile_entry.metadata is None:
-            sourcefile_entry.metadata = {}
-        if "words" not in sourcefile_entry.metadata:
-            sourcefile_entry.metadata["words"] = []
-        sourcefile_entry.metadata["words"].extend(tricky_d["wordforms"])
-        sourcefile_entry.save()
-
-    return redirect(
-        url_for(
-            endpoint_for(inspect_sourcefile_vw),
-            target_language_code=target_language_code,
-            sourcedir_slug=sourcedir_slug,
-            sourcefile_slug=sourcefile_slug,
-        )
-    )
 
 
 @sourcefile_views_bp.route(

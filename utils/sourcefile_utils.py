@@ -2,7 +2,7 @@
 import os
 import tempfile
 import json
-from addict import Addict
+from typing import Optional
 from pathlib import Path
 
 # Internal imports
@@ -11,12 +11,20 @@ from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
     SOURCE_IMAGE_EXTENSIONS,
 )
-from db_models import Lemma, Sourcefile, Wordform, SourcefileWordform
+from db_models import (
+    Lemma,
+    Sourcefile,
+    Wordform,
+    SourcefileWordform,
+)
 from utils.audio_utils import transcribe_audio
 from gjdutils.dt import dt_str
 from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
+from utils.misc_utils import pop_multi
 from utils.sourcedir_utils import _get_sourcedir_entry
+from utils.lang_utils import get_language_name
+from utils.types import LanguageLevel
 from utils.vocab_llm_utils import (
     extract_text_from_image,
     translate_to_english,
@@ -42,139 +50,10 @@ The processing pipeline is the same for all types:
 """
 
 
-def process_sourcefile_content(
-    sourcefile_entry,
-    target_language_name: str,
-) -> tuple[dict, list, dict]:
-    """Process a sourcefile's content into text, translation, and word data.
-
-    The pipeline is:
-    1. Get text (from image/text/audio/etc based on sourcefile_type)
-    2. Translate to English
-    3. Extract vocabulary and phrases
-    4. Create database entries for words and phrases
-
-    Args:
-        sourcefile_entry: The Sourcefile model instance to process
-        target_language_name: The target language name (not code)
-
-    Returns:
-        tuple of (source_dict, tricky_words_list, extra_metadata)
-        where source_dict contains txt_tgt, txt_en, etc.
-        tricky_words_list contains extracted words data
-        and extra_metadata contains any additional metadata
-    """
-    # 1. Get text based on sourcefile type
-    txt_tgt, extra_metadata = get_text_from_sourcefile(
-        sourcefile_entry, target_language_name
-    )
-    if not txt_tgt:
-        raise ValueError(f"No text content found in {sourcefile_entry.filename}")
-
-    # 2. Translate to English
-    txt_en, _ = translate_to_english(txt_tgt, target_language_name, verbose=1)
-
-    # 3. Extract vocabulary and phrases
-    tricky_d_orig, extra = extract_tricky_words(
-        txt_tgt, target_language_name, verbose=1
-    )
-
-    # Make extra metadata JSON-serializable using gjdutils jsonify
-    # Convert it back to Python dict after serialization
-    if extra:
-        serializable_extra = json.loads(jsonify(extra))
-        # Update the existing extra_metadata with the serializable extra
-        extra_metadata.update(serializable_extra)
-
-    tricky_ad = Addict(tricky_d_orig)
-    tricky_words_d = tricky_ad.wordforms
-
-    # Process words
-    target_language_code = sourcefile_entry.sourcedir.language_code
-    for word_counter, word_d in enumerate(tricky_words_d):
-        # Try to get existing lemma or create new one
-        lemma, lemma_created = Lemma.get_or_create(
-            lemma=word_d["lemma"],
-            language_code=target_language_code,
-            defaults={
-                "part_of_speech": word_d["part_of_speech"],
-                "translations": word_d["translations"],
-                "is_complete": False,  # Mark as incomplete until full metadata is added
-            },
-        )
-
-        # Try to get existing wordform or create new one
-        wordform, wordform_created = Wordform.get_or_create(
-            wordform=word_d["wordform"],
-            language_code=target_language_code,
-            defaults={
-                "lemma_entry": lemma,
-                "part_of_speech": word_d["part_of_speech"],
-                "translations": word_d["translations"],
-                "inflection_type": word_d["inflection_type"],
-                "is_lemma": word_d["wordform"] == word_d["lemma"],
-            },
-        )
-
-        # Create SourcefileWordform entry
-        SourcefileWordform.get_or_create(
-            sourcefile=sourcefile_entry,
-            wordform=wordform,
-            defaults={
-                "centrality": word_d["centrality"],
-                "ordering": word_counter + 1,
-            },
-        )
-
-        # Add ordering to word data for display
-        word_d.ordering = word_counter + 1
-
-    # Process phrases
-    process_phrases_from_text(
-        txt_tgt,
-        target_language_name,
-        target_language_code,
-        sourcefile_entry,
-        verbose=1,
-    )
-
-    # Format word display
-    sorted_tricky_words_d = sorted(
-        tricky_words_d,
-        key=lambda w: w.wordform,
-        reverse=True,
-    )
-    sorted_tricky_words_output = "\n".join(
-        [
-            f"{word_d.ordering}. {word_d.wordform}-> {', '.join(word_d.translations)}"
-            for word_d in sorted_tricky_words_d
-        ]
-    )
-
-    source = {
-        "txt_tgt": txt_tgt,
-        "txt_en": txt_en,
-        "sorted_words_display": sorted_tricky_words_output,
-    }
-
-    return source, tricky_words_d, extra_metadata
-
-
 def get_text_from_sourcefile(
     sourcefile_entry, target_language_name: str
 ) -> tuple[str, dict]:
-    """Extract text from sourcefile based on its type.
-
-    Args:
-        sourcefile_entry: The Sourcefile model instance
-        target_language_name: The target language name (not code)
-
-    Returns:
-        Tuple of (extracted_text, extra_metadata)
-
-    Raises:
-        ValueError: If the sourcefile type is unsupported or content is missing
-    """
+    """Extract text from sourcefile based on its type, e.g. transcribe image/audio."""
     if sourcefile_entry.sourcefile_type == "text":
         if not sourcefile_entry.text_target:
             raise ValueError("No text content found")
@@ -197,15 +76,11 @@ def get_text_from_sourcefile(
             txt_tgt, extra = extract_text_from_image(
                 temp_file.name, target_language_name, verbose=1
             )
-
-            # Make extra metadata JSON-serializable
-            if extra:
-                if "llm_extra" in extra:
-                    extra["llm_extra"].pop("extra")
-                    extra["llm_extra"].pop("client")
-                    extra["llm_extra"].pop("contents")
-                extra = json.loads(jsonify(extra))
-
+            if "llm_extra" in extra:
+                pop_multi(
+                    extra["llm_extra"],
+                    ["extra", "client", "contents", "extract_json_from_markdown"],
+                )
             return txt_tgt, extra
 
     elif sourcefile_entry.sourcefile_type in ["audio", "youtube_audio"]:
@@ -345,3 +220,177 @@ def _get_sourcefile_entry(
         Sourcefile.sourcedir == sourcedir,
         Sourcefile.slug == sourcefile_slug,
     )
+
+
+def ensure_text_extracted(sourcefile_entry):
+    """Extract text if not already present based on sourcefile type."""
+    if sourcefile_entry.text_target:
+        return sourcefile_entry
+    target_language_name = get_language_name(sourcefile_entry.sourcedir.language_code)
+    extracted_text, extra_metadata = get_text_from_sourcefile(
+        sourcefile_entry, target_language_name
+    )
+    pop_multi(extra_metadata, ["extract_json_from_markdown"])
+    if sourcefile_entry.metadata is None:
+        sourcefile_entry.metadata = {}
+    sourcefile_entry.metadata.update(extra_metadata)
+    sourcefile_entry.text_target = extracted_text
+    sourcefile_entry.save()
+    return sourcefile_entry
+
+
+def ensure_translation(sourcefile_entry):
+    """Translate text if not already present"""
+    if sourcefile_entry.text_english:
+        return sourcefile_entry
+    if not sourcefile_entry.text_target:
+        sourcefile_entry = ensure_text_extracted(sourcefile_entry)
+    target_language_name = get_language_name(sourcefile_entry.sourcedir.language_code)
+    translated_text, translation_metadata = translate_to_english(
+        sourcefile_entry.text_target, target_language_name, verbose=1
+    )
+    pop_multi(
+        translation_metadata,
+        ["response", "extract_json_from_markdown", "client", "extra"],
+    )
+    sourcefile_entry.text_english = translated_text
+    if sourcefile_entry.metadata is None:
+        sourcefile_entry.metadata = {}
+    sourcefile_entry.metadata["translation"] = translation_metadata
+    sourcefile_entry.save()
+    return sourcefile_entry
+
+
+def _store_word_in_database(
+    sourcefile_entry: Sourcefile, word_d: dict, ordering: int, target_language_code: str
+) -> None:
+    """Store a single wordform and its lemma in the database."""
+    lemma, _ = Lemma.update_or_create(
+        lookup={
+            "lemma": word_d["lemma"],
+            "language_code": target_language_code,
+        },
+        updates={
+            "part_of_speech": word_d["part_of_speech"],
+            "translations": word_d["translations"],
+            "is_complete": False,
+        },
+    )
+    wordform, _ = Wordform.update_or_create(
+        lookup={
+            "wordform": word_d["wordform"],
+            "language_code": target_language_code,
+        },
+        updates={
+            "lemma_entry": lemma,
+            "part_of_speech": word_d["part_of_speech"],
+            "translations": word_d["translations"],
+            "inflection_type": word_d["inflection_type"],
+            "is_lemma": word_d["wordform"] == word_d["lemma"],
+        },
+    )
+    SourcefileWordform.update_or_create(
+        lookup={
+            "sourcefile": sourcefile_entry,
+            "wordform": wordform,
+        },
+        updates={
+            "centrality": word_d["centrality"],
+            "ordering": ordering,
+        },
+    )
+
+
+def ensure_vocabulary(
+    sourcefile_entry: Sourcefile,
+    language_level: LanguageLevel,
+    max_new_words: Optional[int],
+):
+    """Extract vocabulary to reach specified count.
+
+    Args:
+        max_new_words: Maximum number of words to extract (0 to skip, None for no limit)
+    """
+    extra = locals()
+    extra.pop("sourcefile_entry")
+    if max_new_words == 0:
+        return sourcefile_entry, {}
+    assert sourcefile_entry.text_target, "Text must have been extracted first"
+    # Get existing wordforms - Note: wordform_entries is a backref from SourcefileWordform
+    existing_wordforms = []
+    for wf_entry in SourcefileWordform.select().where(
+        SourcefileWordform.sourcefile == sourcefile_entry
+    ):
+        if wf_entry.wordform and wf_entry.wordform.wordform:
+            existing_wordforms.append(wf_entry.wordform.wordform)
+    target_language_code = sourcefile_entry.sourcedir.language_code
+    target_language_name = get_language_name(target_language_code)
+    # Extract more vocabulary - ensure text_target is a string
+    tricky_d, tricky_extra = extract_tricky_words(
+        str(sourcefile_entry.text_target),
+        target_language_name=target_language_name,
+        language_level=language_level,
+        max_new_words=max_new_words,
+        ignore_words=existing_wordforms,
+    )
+    # Process new words and update database
+    new_wordforms = tricky_d["wordforms"][:max_new_words]
+    for word_counter, word_d in enumerate(new_wordforms):
+        _store_word_in_database(
+            sourcefile_entry,
+            word_d,
+            len(existing_wordforms) + word_counter + 1,
+            target_language_code,
+        )
+    extra.update({"tricky_d": tricky_d, "tricky_extra": tricky_extra})
+    return sourcefile_entry, extra
+
+
+def ensure_phrases(
+    sourcefile_entry: Sourcefile,
+    language_level: LanguageLevel,
+    max_new_phrases: Optional[int],
+):
+    """Extract tricky phrases from text."""
+    extra = locals()
+    extra.pop("sourcefile_entry")
+    if max_new_phrases is None or max_new_phrases == 0:
+        return sourcefile_entry, {}
+    assert sourcefile_entry.text_target, "Text must have been extracted first"
+    target_language_code = sourcefile_entry.sourcedir.language_code
+    target_language_name = get_language_name(target_language_code)
+    phrases_extra = process_phrases_from_text(
+        str(sourcefile_entry.text_target),
+        target_language_name,
+        target_language_code,
+        language_level=language_level,
+        max_new_phrases=max_new_phrases,
+        sourcefile_entry=sourcefile_entry,
+    )
+    extra.update({"phrases_extra": phrases_extra})
+    return sourcefile_entry, extra
+
+
+def process_sourcefile(
+    sourcefile_entry: Sourcefile,
+    language_level: LanguageLevel,
+    max_new_words: Optional[int],
+    max_new_phrases: Optional[int],
+):
+    """
+    If MAX_NEW_WORDS or MAX_NEW_PHRASES is 0, skip. If None, then there is no max.
+    """
+    sourcefile_entry = ensure_text_extracted(sourcefile_entry)
+    sourcefile_entry = ensure_translation(sourcefile_entry)
+    # TODO in parallel and/or fire-and-forget
+    sourcefile_entry, vocabulary_extra = ensure_vocabulary(
+        sourcefile_entry,
+        language_level=language_level,
+        max_new_words=max_new_words,
+    )
+    sourcefile_entry, phrases_extra = ensure_phrases(
+        sourcefile_entry,
+        language_level=language_level,
+        max_new_phrases=max_new_phrases,
+    )
+    return sourcefile_entry
