@@ -20,8 +20,11 @@ from utils.lang_utils import VALID_LANGUAGE_CODES
 from utils.sourcedir_utils import _get_sourcedir_entry, allowed_file
 from loguru import logger
 from utils.sourcefile_utils import process_uploaded_file
-from views.sourcedir_views import sourcedir_views_bp
+from utils.url_registry import endpoint_for
+from views.sourcedir_views import sourcedir_views_bp, sourcefiles_for_sourcedir_vw
 from slugify import slugify
+
+from views.sourcefile_views import inspect_sourcefile_vw
 
 # Create a blueprint with standardized prefix
 sourcedir_api_bp = Blueprint(
@@ -301,7 +304,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
         # Show appropriate messages for uploaded and skipped files
         if uploaded_count > 0:
             if uploaded_count == 1:
-                flash(f"Successfully uploaded {uploaded_count} file")
+                flash(f"Successfully uploaded {uploaded_count} file: {sourcefile.slug}")
             else:
                 flash(f"Successfully uploaded {uploaded_count} files")
         if skipped_count > 0:
@@ -314,7 +317,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
 
         return redirect(
             url_for(
-                "sourcedir_views.sourcefiles_for_sourcedir",
+                endpoint_for(sourcefiles_for_sourcedir_vw),
                 target_language_code=target_language_code,
                 sourcedir_slug=sourcedir_slug,
             )
@@ -324,6 +327,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
         flash("Source directory not found")
         return redirect(request.referrer)
     except Exception as e:
+        print(f"DEBUG: Upload failed: {str(e)}")
         flash(f"Upload failed: {str(e)}")
         return redirect(request.referrer)
 

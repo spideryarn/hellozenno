@@ -471,18 +471,21 @@ def process_sourcefile_vw(
     )
     DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE = 3
     DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE = 1
+    # more than 10 seems to timeout or run out of tokens
+    DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE = 10
+    DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE = 10
     if "max_new_words" in request.args:
         max_new_words = int(request.args["max_new_words"])
     else:
         if already_processed(sourcefile_entry):
-            max_new_words = None
+            max_new_words = DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE
         else:
             max_new_words = DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE
     if "max_new_phrases" in request.args:
         max_new_phrases = int(request.args["max_new_phrases"])
     else:
         if already_processed(sourcefile_entry):
-            max_new_phrases = None
+            max_new_phrases = DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE
         else:
             max_new_phrases = DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE
     language_level = request.args.get("language_level", DEFAULT_LANGUAGE_LEVEL)

@@ -1,4 +1,7 @@
-def endpoint_for(view_func):
+from typing import Callable
+
+
+def endpoint_for(view_func: Callable) -> str:
     """Get the endpoint string for url_for from a view function.
 
     This helps avoid hardcoding endpoint strings in url_for() calls,
