@@ -26,7 +26,7 @@ Translate the following English text to {{ target_language_name }}. Only output 
 """
 
 extract_tricky_wordforms = """
-I'm learning {{ target_language_name }}{% if language_level %}, at about {{ language_level }} level{% endif %}. Please identify a comprehensive list of difficult/uncommon wordforms (but not phrases) from this text that will help me to understand it.
+I'm learning {{ target_language_name }}{% if language_level %}, at about {{ language_level }} student level{% endif %}. Please identify {% if max_new_words %}{{ max_new_words }}{% else %}a comprehensive list of{% endif %} difficult/uncommon wordforms (i.e. single words rather than multi-word phrases) from this text that will help me to understand it.
 
 IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause URL routing issues.
 
@@ -333,9 +333,9 @@ Input: {{ wordform }}
 """
 
 extract_phrases_from_text = """
-You are a {{ target_language_name }} language expert. Given a text, identify and analyze tricky, idiomatic phrases and expressions that are likely to be difficult for a {% if language_level %}{{ language_level }} level{% endif %} learner of {{ target_language_name }} to understand, and will need to understand the text.
+You are a {{ target_language_name }} language expert. For the following text, identify and analyze {% if max_new_phrases %}{{ max_new_phrases }}{% else %}a comprehensive list of{% endif %} tricky, idiomatic phrases and expressions that are likely to be difficult for a {% if language_level %}{{ language_level }} student level{% endif %} learner of {{ target_language_name }} to understand.
 
-Only include *multiple*-word expressions that are idiomatic, common, and where the meaning isn't at all obvious from the individual words. In other words, don't include simple word combinations or literal phrases.
+Only include *multiple*-word expressions that are idiomatic, common, and where the meaning isn't at all obvious from the individual words. In other words, don't include single words, simple word combinations, or literal phrases.
 
 Input text:
 {{ txt_tgt }}
