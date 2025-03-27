@@ -9,6 +9,8 @@ Ignore page numbers, headers, footers, etc.
 If you see a word spanning the end of one line to the beginning of another with a hyphen, just join it together as a single word.
 
 If the text spans multiple pages in the image, return the text from all pages.
+
+If there is no text in the image, return "-".
 """
 
 translate_to_english = """
@@ -16,13 +18,23 @@ Translate the following {{ target_language_name }} text to English. Only output 
 
 Provide a complete, unsummarised, and faithful translation that will be helpful for someone learning {{ target_language_name }} to understand it.
 
+If there is no text, return "-".
+
+<text>
 {{ txt_tgt }}
+</text>
 """
 
 translate_from_english = """
 Translate the following English text to {{ target_language_name }}. Only output the translated text, nothing else.
 
+Provide a complete, unsummarised, and faithful translation that will be helpful for someone learning English to understand it.
+
+If there is no text, return "-".
+
+<text>
 {{ txt_en }}
+</text>
 """
 
 extract_tricky_wordforms = """
@@ -32,6 +44,7 @@ IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause UR
 
 Return as JSON in the following schema:
 
+<json_schema>
 {
     "wordforms": [
         {
@@ -44,7 +57,7 @@ Return as JSON in the following schema:
         },
     ]
 }
-
+</json_schema>
 {% if ignore_words %}
 Be thorough and try to find words that might have been missed in previous analysis. Consider:
 - Less common words that might still be important
@@ -63,7 +76,9 @@ Only output the valid JSON, with no other commentary.
 
 ----
 
+<text>
 {{ txt_tgt }}
+</text>
 """
 
 metadata_for_lemma = """
@@ -71,8 +86,12 @@ We're building a rich, machine-readable dictionary of {{ target_language_name }}
 
 IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause URL routing issues.
 
-{{ target_language_name }} lemma = {{ lemma }}
+{{ target_language_name }} lemma:
+<lemma>
+{{ lemma }}
+</lemma>
 
+<json_schema>
 {
     "lemma": str,  # the dictionary form (i.e. canonical, headform) of the word
     "part_of_speech": str,  # e.g. "verb", "adjective", "noun", "idiom", "phrase", "pronoun", "preposition", "adverb", "conjunction", etc...
@@ -121,6 +140,7 @@ IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause UR
         }
     ]
 }
+</json_schema>
 """
 
 quick_search_for_wordform = """
@@ -195,6 +215,7 @@ Notes:
 Example valid JSON responses using Greek (modern) as the target language:
 
 1. For a {{ target_language_name }} lemma (with missing accent) "επειτα":
+<json_example>
 {
     "target_language_results": {
         "matches": [
@@ -213,8 +234,10 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     }
 }
+</json_example>
 
 2. For a {{ target_language_name }} inflected noun wordform "άνθρωποι":
+<json_example>
 {
     "target_language_results": {
         "matches": [
@@ -233,8 +256,10 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     }
 }
+</json_example>
 
 2b. For a {{ target_language_name }} inflected verb form (with missing accent) "προσγειωθηκαν":
+<json_example>
 {
     "target_language_results": {
         "matches": [
@@ -253,8 +278,10 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     }
 }
+</json_example>
 
 3. For an English word (e.g. "examples"):
+<json_example>
 {
     "target_language_results": {
         "matches": [],
@@ -273,8 +300,10 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     }
 }
+</json_example>
 
 4. For a {{ target_language_name }} typo "μηλώ":
+<json_example>
 {
     "target_language_results": {
         "matches": [],
@@ -282,11 +311,13 @@ Example valid JSON responses using Greek (modern) as the target language:
     },
     "english_results": {
         "matches": [],
-        "possible_misspellings": null
+        "possible_misspellings": ["μιλώ"]
     }
 }
+</json_example>
 
 5. For an invalid word, e.g. "asdf" or "bonjour":
+<json_example>
 {
     "target_language_results": {
         "matches": [],
@@ -297,9 +328,11 @@ Example valid JSON responses using Greek (modern) as the target language:
         "possible_misspellings": null
     }
 }
+</json_example>
 
 Provide only the JSON output with no commentary:
 
+<json_schema>
 {
     "target_language_results": {
         "matches": [
@@ -326,10 +359,14 @@ Provide only the JSON output with no commentary:
         "possible_misspellings": ["..."] or null
     }
 }
+</json_schema>
 
 ----
 
-Input: {{ wordform }}
+{{ target_language_name }} input:
+<wordform>
+{{ wordform }}
+</wordform>
 """
 
 extract_phrases_from_text = """
@@ -337,10 +374,12 @@ You are a {{ target_language_name }} language expert. For the following text, id
 
 Only include *multiple*-word expressions that are idiomatic, common, and where the meaning isn't at all obvious from the individual words. In other words, don't include single words, simple word combinations, or literal phrases.
 
-Input text:
+<text>
 {{ txt_tgt }}
+</text>
 
 Return a JSON object with this structure:
+<json_schema>
 {
     "phrases": [
         {
@@ -381,7 +420,7 @@ Return a JSON object with this structure:
         }
     ]
 }
-
+</json_schema>
 Return only the JSON output, with no commentary or other text.
 """
 
@@ -391,6 +430,7 @@ Generate simple, idiomatic sentences {{ target_language_name }} that use at leas
 
 Respond with pure JSON, with no commentary or other text, in the following schema:
 
+<json_schema>
 {
     "sentences": [
         {
@@ -400,8 +440,9 @@ Respond with pure JSON, with no commentary or other text, in the following schem
         }
     ]
 }
+</json_schema>
 
+<words>
 {{ already_words }}
-
-----
+</words>
 """
