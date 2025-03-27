@@ -22,6 +22,7 @@ from gjdutils.dt import dt_str
 from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
 from utils.misc_utils import pop_multi
+from utils.parallelisation_utils import fire_and_forget
 from utils.sourcedir_utils import _get_sourcedir_entry
 from utils.lang_utils import get_language_name
 from utils.types import LanguageLevel
@@ -239,6 +240,7 @@ def ensure_text_extracted(sourcefile_entry):
     return sourcefile_entry
 
 
+@fire_and_forget
 def ensure_translation(sourcefile_entry):
     """Translate text if not already present"""
     if sourcefile_entry.text_english:
@@ -301,6 +303,7 @@ def _store_word_in_database(
     )
 
 
+@fire_and_forget
 def ensure_vocabulary(
     sourcefile_entry: Sourcefile,
     language_level: LanguageLevel,
@@ -346,6 +349,7 @@ def ensure_vocabulary(
     return sourcefile_entry, extra
 
 
+@fire_and_forget
 def ensure_phrases(
     sourcefile_entry: Sourcefile,
     language_level: LanguageLevel,
@@ -381,16 +385,21 @@ def process_sourcefile(
     If MAX_NEW_WORDS or MAX_NEW_PHRASES is 0, skip. If None, then there is no max.
     """
     sourcefile_entry = ensure_text_extracted(sourcefile_entry)
-    sourcefile_entry = ensure_translation(sourcefile_entry)
-    # TODO in parallel and/or fire-and-forget
-    sourcefile_entry, vocabulary_extra = ensure_vocabulary(
-        sourcefile_entry,
-        language_level=language_level,
-        max_new_words=max_new_words,
-    )
-    sourcefile_entry, phrases_extra = ensure_phrases(
-        sourcefile_entry,
-        language_level=language_level,
-        max_new_phrases=max_new_phrases,
-    )
+    ensure_translation(sourcefile_entry)
+
+    # Call fire-and-forget functions without attempting to unpack their return values
+    if max_new_words != 0:
+        ensure_vocabulary(
+            sourcefile_entry,
+            language_level=language_level,
+            max_new_words=max_new_words,
+        )
+
+    if max_new_phrases != 0:
+        ensure_phrases(
+            sourcefile_entry,
+            language_level=language_level,
+            max_new_phrases=max_new_phrases,
+        )
+
     return sourcefile_entry
