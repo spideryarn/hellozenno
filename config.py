@@ -3,6 +3,8 @@ from utils.env_config import (
     is_vercel,
 )
 
+from utils.types import LanguageLevel
+
 
 SOURCEFILES_DIRN = Path("sourcefiles")
 
@@ -16,7 +18,7 @@ METADATA_DIRN = (
 )
 
 # Language configuration
-LANGUAGE_LEVEL = "B1"  # CEFR level for language learning
+DEFAULT_LANGUAGE_LEVEL: LanguageLevel = "B1"  # CEFR level for language learning
 
 # see lang_utils.py
 # SUPPORTED_LANGUAGES = None  # None for all languages. gets re-sorted by language name
