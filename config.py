@@ -109,6 +109,11 @@ MAX_NUMBER_UPLOAD_FILES = 20  # Maximum number of files that can be uploaded at 
 SOURCEDIR_SLUG_MAX_LENGTH = 100  # Characters allowed in URL slugs
 SOURCEFILE_SLUG_MAX_LENGTH = 100  # Characters allowed in URL slugs
 
+DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE = 3
+DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE = 1
+# more than 10 seems to timeout or run out of tokens
+DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE = 10
+DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE = 10
 
 # Database pool configuration
 # These settings are used across all environments

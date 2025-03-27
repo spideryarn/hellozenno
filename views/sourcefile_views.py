@@ -15,6 +15,10 @@ from peewee import DoesNotExist
 
 from config import (
     DEFAULT_LANGUAGE_LEVEL,
+    DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE,
 )
 from db_models import (
     Phrase,
@@ -469,11 +473,7 @@ def process_sourcefile_vw(
     sourcefile_entry = _get_sourcefile_entry(
         target_language_code, sourcedir_slug, sourcefile_slug
     )
-    DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE = 3
-    DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE = 1
-    # more than 10 seems to timeout or run out of tokens
-    DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE = 10
-    DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE = 10
+
     if "max_new_words" in request.args:
         max_new_words = int(request.args["max_new_words"])
     else:
