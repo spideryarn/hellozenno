@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort, request, redirect, url_for
+from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
 from db_models import Phrase
 from peewee import DoesNotExist, fn
 from utils.lang_utils import get_language_name
@@ -58,4 +58,26 @@ def get_phrase_metadata_vw(target_language_code, slug):
         target_language_name=target_language_name,
         phrase=phrase,
         metadata=metadata,  # Add metadata to template context
+    )
+
+
+@phrase_views_bp.route(
+    "/<target_language_code>/phrases/<slug>/delete", methods=["POST"]
+)
+def delete_phrase_vw(target_language_code, slug):
+    """Delete a specific phrase using its slug."""
+    try:
+        phrase = Phrase.get(
+            (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
+        )
+        phrase_text = phrase.canonical_form
+        phrase.delete_instance()
+        flash(f"Phrase '{phrase_text}' has been deleted.", "success")
+    except DoesNotExist:
+        abort(404, description=f"Phrase with slug '{slug}' not found")
+
+    return redirect(
+        url_for(
+            "phrase_views.phrases_list_vw", target_language_code=target_language_code
+        )
     )

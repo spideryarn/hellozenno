@@ -32,6 +32,7 @@ export enum RouteName {
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW = "SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW",
   PHRASE_VIEWS_PHRASES_LIST_VW = "PHRASE_VIEWS_PHRASES_LIST_VW",
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW = "PHRASE_VIEWS_GET_PHRASE_METADATA_VW",
+  PHRASE_VIEWS_DELETE_PHRASE_VW = "PHRASE_VIEWS_DELETE_PHRASE_VW",
   SENTENCE_VIEWS_SENTENCES_LIST_VW = "SENTENCE_VIEWS_SENTENCES_LIST_VW",
   SENTENCE_VIEWS_GET_SENTENCE_VW = "SENTENCE_VIEWS_GET_SENTENCE_VW",
   SEARCH_VIEWS_SEARCH_LANDING_VW = "SEARCH_VIEWS_SEARCH_LANDING_VW",
@@ -99,6 +100,7 @@ export const ROUTES = {
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW: "/lang/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/prev",
   PHRASE_VIEWS_PHRASES_LIST_VW: "/lang/{target_language_code}/phrases",
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW: "/lang/{target_language_code}/phrases/{slug}",
+  PHRASE_VIEWS_DELETE_PHRASE_VW: "/lang/{target_language_code}/phrases/{slug}/delete",
   SENTENCE_VIEWS_SENTENCES_LIST_VW: "/lang/{target_language_code}/sentences",
   SENTENCE_VIEWS_GET_SENTENCE_VW: "/lang/{target_language_code}/sentence/{slug}",
   SEARCH_VIEWS_SEARCH_LANDING_VW: "/lang/{target_language_code}/search",
@@ -166,6 +168,7 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.PHRASE_VIEWS_PHRASES_LIST_VW]: { target_language_code: string };
   [RouteName.PHRASE_VIEWS_GET_PHRASE_METADATA_VW]: { target_language_code: string; slug: string };
+  [RouteName.PHRASE_VIEWS_DELETE_PHRASE_VW]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_VIEWS_SENTENCES_LIST_VW]: { target_language_code: string };
   [RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW]: { target_language_code: string; slug: string };
   [RouteName.SEARCH_VIEWS_SEARCH_LANDING_VW]: { target_language_code: string };

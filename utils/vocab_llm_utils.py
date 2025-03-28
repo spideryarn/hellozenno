@@ -133,6 +133,9 @@ def extract_tricky_words(
     Returns:
         Tuple of (tricky_words_dict, extra_info)
     """
+    if not txt.strip() or txt.strip() == "-":
+        return {}, {}
+
     out, extra = generate_gpt_from_template(
         client=anthropic_client,
         prompt_template_var="extract_tricky_wordforms",
@@ -366,6 +369,9 @@ def extract_phrases_from_text(
     verbose: int = 1,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Extract idiomatic phrases and expressions from text."""
+    if not txt.strip() or txt.strip() == "-":
+        return {}, {}
+
     out, extra = generate_gpt_from_template(
         client=anthropic_client,
         prompt_template_var="extract_phrases_from_text",
