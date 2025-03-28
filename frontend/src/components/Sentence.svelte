@@ -2,6 +2,7 @@
 <script lang="ts">
   import type { SentenceProps } from '../lib/types';
   import '../styles/global.css';
+  import '../styles/bulma-imports.css'; // Import Bulma
   import MiniLemma from './MiniLemma.svelte';
   import { onMount } from 'svelte';
   import { RouteName, resolveRoute } from '../../../static/js/generated/routes';
@@ -118,112 +119,107 @@
   });
 </script>
 
-<div class="sentence-page">
-  <div class="card sentence-container">
-    <!-- Metadata -->
-    {#if metadata}
-      <div class="metadata-section">
-        <p>Created: <span class="metadata">{metadata.created_at ? new Date(metadata.created_at).toLocaleString() : 'N/A'}</span></p>
-        <p>Updated: <span class="metadata">{metadata.updated_at ? new Date(metadata.updated_at).toLocaleString() : 'N/A'}</span></p>
-      </div>
-    {/if}
-
-    <div class="main-content">
-      <div class="target-lang-text">
-        <!-- Render the enhanced text with fallback -->
-        {@html enhanced_sentence_text || '<p>No sentence text available</p>'}
-      </div>
-      
-      {#if sentence.translation}
-        <div class="english-translation">
-          {sentence.translation}
+<div class="section sentence-page">
+  <div class="card">
+    <div class="card-content">
+      <!-- Metadata -->
+      {#if metadata}
+        <div class="is-pulled-right has-text-right metadata-box">
+          <p class="is-size-7 has-family-monospace">
+            Created: <span class="metadata">{metadata.created_at ? new Date(metadata.created_at).toLocaleString() : 'N/A'}</span>
+          </p>
+          <p class="is-size-7 has-family-monospace">
+            Updated: <span class="metadata">{metadata.updated_at ? new Date(metadata.updated_at).toLocaleString() : 'N/A'}</span>
+          </p>
         </div>
       {/if}
 
-      <!-- Audio Section -->
-      {#if sentence.has_audio}
-        <div class="audio-section">
-          <audio
-            bind:this={audioPlayer}
-            controls
-            src={audioUrl}
-            class="audio-player"
-          >
-            Your browser does not support the audio element.
-          </audio>
-          
-          <div class="playback-controls">
-            <button class="speed-button" on:click={() => setPlaybackRate(0.8)}>0.8x</button>
-            <button class="speed-button" on:click={() => setPlaybackRate(0.9)}>0.9x</button>
-            <button class="speed-button" on:click={() => setPlaybackRate(1.0)}>1.0x</button>
-            <button class="speed-button" on:click={() => setPlaybackRate(1.5)}>1.5x</button>
+      <div class="content main-content">
+        <div class="target-lang-text mb-4">
+          <!-- Render the enhanced text with fallback -->
+          {@html enhanced_sentence_text || '<p>No sentence text available</p>'}
+        </div>
+        
+        {#if sentence.translation}
+          <div class="english-translation has-text-grey is-italic mb-5">
+            {sentence.translation}
           </div>
-        </div>
-      {:else}
-        <button
-          class="button"
-          on:click={generateAudio}
-          disabled={isGeneratingAudio}
-        >
-          {isGeneratingAudio ? 'Generating...' : 'Generate audio'}
-        </button>
-      {/if}
+        {/if}
 
-      {#if sentence.lemma_words}
-        <div class="words-section">
-          <h3>Words</h3>
-          <div class="words-list">
-            {#each sentence.lemma_words as lemma}
-              <MiniLemma 
-                lemma={lemma}
-                partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
-                translations={lemmasData[lemma]?.translations || []}
-                href="/lang/{sentence.language_code}/lemma/{lemma}"
-              />
-              {#if lemmasData[lemma]?.isLoading}
-                <div class="loading-indicator">Loading lemma data...</div>
-              {/if}
-            {/each}
-          </div>
+        <!-- Audio Section -->
+        <div class="mb-5">
+          {#if sentence.has_audio}
+            <div class="audio-section">
+              <audio
+                bind:this={audioPlayer}
+                controls
+                src={audioUrl}
+                class="audio-player is-fullwidth"
+              >
+                Your browser does not support the audio element.
+              </audio>
+              
+              <div class="buttons has-addons is-centered mt-2">
+                <button class="button is-small has-family-monospace" on:click={() => setPlaybackRate(0.8)}>0.8x</button>
+                <button class="button is-small has-family-monospace" on:click={() => setPlaybackRate(0.9)}>0.9x</button>
+                <button class="button is-small has-family-monospace" on:click={() => setPlaybackRate(1.0)}>1.0x</button>
+                <button class="button is-small has-family-monospace" on:click={() => setPlaybackRate(1.5)}>1.5x</button>
+              </div>
+            </div>
+          {:else}
+            <button
+              class="button is-primary"
+              on:click={generateAudio}
+              disabled={isGeneratingAudio}
+            >
+              <span class="icon">
+                <i class="fas fa-volume-up"></i>
+              </span>
+              <span>{isGeneratingAudio ? 'Generating...' : 'Generate audio'}</span>
+            </button>
+          {/if}
         </div>
-      {/if}
+
+        {#if sentence.lemma_words}
+          <div class="words-section mt-6 pt-4 border-top">
+            <h3 class="title is-5">Words</h3>
+            <div class="words-list">
+              {#each sentence.lemma_words as lemma}
+                <div class="mb-2">
+                  <MiniLemma 
+                    lemma={lemma}
+                    partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
+                    translations={lemmasData[lemma]?.translations || []}
+                    href="/lang/{sentence.language_code}/lemma/{lemma}"
+                  />
+                  {#if lemmasData[lemma]?.isLoading}
+                    <div class="has-text-grey is-size-7 is-italic ml-3 has-family-monospace">Loading lemma data...</div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+      </div>
     </div>
   </div>
 </div>
 
 <style>
   .sentence-page {
-    padding: var(--spacing-4);
     max-width: 800px;
     margin: 0 auto;
   }
 
-  .sentence-container {
-    position: relative;
-  }
-
-  .metadata-section {
-    position: absolute;
-    top: var(--spacing-4);
-    right: var(--spacing-4);
-    text-align: right;
-    background: var(--color-background);
-    padding: var(--spacing-2);
+  .metadata-box {
+    background: #f5f5f5;
+    padding: 0.5rem;
     border-radius: 4px;
-  }
-
-  .metadata-section p {
-    margin: var(--spacing-1) 0;
-  }
-
-  .main-content {
-    margin-top: var(--spacing-8);
   }
 
   .target-lang-text {
     font-size: 1.5rem;
     line-height: 1.6;
-    margin-bottom: var(--spacing-4);
   }
 
   /* Import global styles at the top level instead of using :global scope */
@@ -247,63 +243,20 @@
   
   .english-translation {
     font-size: 1.125rem;
-    color: var(--color-text-muted);
-    font-style: italic;
-    margin-bottom: var(--spacing-6);
-  }
-
-  .audio-section {
-    margin: var(--spacing-4) 0;
   }
 
   .audio-player {
     width: 100%;
-    margin-bottom: var(--spacing-2);
   }
 
-  .playback-controls {
-    display: flex;
-    gap: var(--spacing-2);
-  }
-
-  .speed-button {
-    padding: var(--spacing-1) var(--spacing-3);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    background: var(--color-surface);
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-family: var(--font-mono);
-  }
-
-  .speed-button:hover {
-    background: var(--color-background);
-  }
-
-  .words-section {
-    margin-top: var(--spacing-8);
-    border-top: 1px solid var(--color-border);
-    padding-top: var(--spacing-4);
-  }
-
-  .words-section h3 {
-    font-size: 1.125rem;
-    color: var(--color-text);
-    margin-bottom: var(--spacing-3);
-  }
-
-  .words-list {
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-2);
+  .border-top {
+    border-top: 1px solid #dbdbdb;
   }
   
-  .loading-indicator {
-    font-size: 0.75rem;
+  /* Keep our font variable usage */
+  .metadata {
+    font-family: var(--font-mono);
     color: var(--color-text-muted);
-    font-style: italic;
-    margin-top: -0.5rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
   }
 </style> 

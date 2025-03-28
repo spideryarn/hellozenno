@@ -20,6 +20,8 @@
         "vite": "^5.0.0"
     },
     "dependencies": {
-        "@supabase/supabase-js": "^2.38.4"
+        "@supabase/supabase-js": "^2.38.4",
+        "bulma": "^1.0.3",
+        "sass": "^1.86.0"
     }
 }

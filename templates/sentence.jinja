@@ -4,10 +4,14 @@
 {% set vite_entries = ['sentence'] %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
-    » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
-    » <a href="{{ url_for('sentence_views.sentences_list_vw', target_language_code=target_language_code) }}">Sentences</a>
-    » {{ sentence.sentence }}
+<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a></li>
+    <li><a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a></li>
+    <li><a href="{{ url_for('sentence_views.sentences_list_vw', target_language_code=target_language_code) }}">Sentences</a></li>
+    <li class="is-active"><a href="#" aria-current="page">{{ sentence.sentence }}</a></li>
+  </ul>
+</nav>
 {% endblock breadcrumbs %}
 
 {% block title %}
@@ -15,27 +19,31 @@
 {% endblock title %}
 
 {% block content %}
-<!-- Mount point for Svelte component -->
-<div id="sentence-component-container"></div>
+<section class="section">
+  <div class="container">
+    <!-- Mount point for Svelte component -->
+    <div id="sentence-component-container"></div>
 
-<!-- Cleanup script to prevent duplicate components -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Make sure we don't have duplicate sentence components
-    setTimeout(() => {
-      const sentenceComponents = document.querySelectorAll('.sentence-page');
-      if (sentenceComponents.length > 1) {
-        for (let i = 1; i < sentenceComponents.length; i++) {
-          sentenceComponents[i].remove();
-        }
-      }
-    }, 500);
-  });
-</script>
+    <!-- Cleanup script to prevent duplicate components -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Make sure we don't have duplicate sentence components
+        setTimeout(() => {
+          const sentenceComponents = document.querySelectorAll('.sentence-page');
+          if (sentenceComponents.length > 1) {
+            for (let i = 1; i < sentenceComponents.length; i++) {
+              sentenceComponents[i].remove();
+            }
+          }
+        }, 500);
+      });
+    </script>
 
-{{ load_svelte_component('Sentence', {
-    'sentence': sentence,
-    'metadata': metadata,
-    'enhanced_sentence_text': enhanced_sentence_text
-}, component_id='sentence-component-mount') }}
+    {{ load_svelte_component('Sentence', {
+        'sentence': sentence,
+        'metadata': metadata,
+        'enhanced_sentence_text': enhanced_sentence_text
+    }, component_id='sentence-component-mount') }}
+  </div>
+</section>
 {% endblock content %} 

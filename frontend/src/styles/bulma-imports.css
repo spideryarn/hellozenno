@@ -1,0 +1,49 @@
+/* Import Bulma CSS */
+@import 'bulma/css/bulma.min.css';
+
+/* Font overrides for Bulma */
+:root {
+    --font-serif: Georgia, 'Times New Roman', Times, serif;
+    --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Typography overrides */
+body,
+.content,
+p,
+.title,
+.subtitle,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-serif) !important;
+}
+
+.button,
+.input,
+.select,
+.textarea {
+    font-family: var(--font-sans) !important;
+}
+
+code,
+pre,
+.has-family-monospace,
+.metadata {
+    font-family: var(--font-mono) !important;
+}
+
+/* Color overrides */
+.is-primary {
+    background-color: #2563eb !important;
+}
+
+.has-text-primary {
+    color: #2563eb !important;
+}
+
+/* Additional overrides or customizations can be placed here */

@@ -1,0 +1,42 @@
+@charset "utf-8";
+
+// Import font variable customizations first
+
+// Set Bulma custom variables
+// Typography
+$family-serif: Georgia, 'Times New Roman', Times, serif;
+$family-monospace: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+$family-sans-serif: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+// Use our serif font as the primary font
+$family-primary: $family-serif;
+$family-secondary: $family-sans-serif;
+$family-code: $family-monospace;
+
+// Use our color scheme
+$primary: #2563eb;
+$link: $primary;
+$info: #1d4ed8;
+
+// Import Bulma - use the correct path
+@import "../../node_modules/bulma/bulma.sass";
+
+// Additional custom overrides after Bulma import
+.content {
+  font-family: $family-serif;
+}
+
+// Ensure text remains serif
+.title, .subtitle, p, .card-content {
+  font-family: $family-serif;
+}
+
+// Keep buttons sans-serif
+.button {
+  font-family: $family-sans-serif;
+}
+
+// Make monospace text correct
+.is-family-monospace, .metadata, code, pre {
+  font-family: $family-monospace;
+} 
