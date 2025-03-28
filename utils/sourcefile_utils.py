@@ -27,6 +27,7 @@ from utils.misc_utils import pop_multi
 from utils.parallelisation_utils import run_async
 from utils.sourcedir_utils import _get_sourcedir_entry
 from utils.lang_utils import get_language_name
+from utils.store_utils import load_or_generate_lemma_metadata
 from utils.types import LanguageLevel
 from utils.vocab_llm_utils import (
     extract_text_from_image,
@@ -266,7 +267,7 @@ def ensure_translation(sourcefile_entry):
 
 def _store_word_in_database(
     sourcefile_entry: Sourcefile, word_d: dict, ordering: int, target_language_code: str
-) -> None:
+):
     """Store a single wordform and its lemma in the database."""
     lemma, _ = Lemma.update_or_create(
         lookup={
@@ -292,7 +293,7 @@ def _store_word_in_database(
             "is_lemma": word_d["wordform"] == word_d["lemma"],
         },
     )
-    SourcefileWordform.update_or_create(
+    sourcefilewordform, _ = SourcefileWordform.update_or_create(
         lookup={
             "sourcefile": sourcefile_entry,
             "wordform": wordform,
@@ -302,6 +303,7 @@ def _store_word_in_database(
             "ordering": ordering,
         },
     )
+    return wordform, lemma, sourcefilewordform
 
 
 def ensure_tricky_wordforms(
@@ -339,13 +341,24 @@ def ensure_tricky_wordforms(
     )
     # Process new words and update database
     new_wordforms = tricky_d["wordforms"][:max_new_words]
+    lemmas = []
     for word_counter, word_d in enumerate(new_wordforms):
-        _store_word_in_database(
+        wordform, lemma, sourcefilewordform = _store_word_in_database(
             sourcefile_entry,
             word_d,
             len(existing_wordforms) + word_counter + 1,
             target_language_code,
         )
+        lemmas.append(lemma)
+    # for counter, lemma in enumerate(lemmas):
+    #     delay = counter * 10
+    #     run_async(
+    #         load_or_generate_lemma_metadata,
+    #         lemma.lemma,
+    #         target_language_code,
+    #         generate_if_incomplete=True,
+    #         delay=delay,
+    #     )
     extra.update({"tricky_d": tricky_d, "tricky_extra": tricky_extra})
     if run_again_after:
         run_async(
