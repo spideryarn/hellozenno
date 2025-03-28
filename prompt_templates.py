@@ -198,7 +198,7 @@ Your task is to analyze the input and return appropriate metadata based on these
        - Wrong letter order (e.g. "καλσς" -> "καλός")
        - Double initial consonants (e.g. "κκαι" -> "και")
 
-5. If the input is definitely invalid (wrong language, nonsense, etc.):
+ If the input is definitely invalid (wrong language, nonsense, etc.):
    - Set all fields to None
 
 Notes:
