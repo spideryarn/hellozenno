@@ -12,7 +12,7 @@ We combine Svelte & TypeScript with our existing Python Flask application for in
 - **Vite** | Development server and build tool with HMR
 - **Svelte** | Reactive component framework
 - **TypeScript** | Type-safe JavaScript
-- **Base CSS** | Custom styling framework
+- **Bulma CSS** | CSS framework with customizations
 - **Supabase JS** | Client for database interactions
 
 
@@ -26,6 +26,8 @@ We combine Svelte & TypeScript with our existing Python Flask application for in
 │   │   ├── entries/           # Entry points for different pages
 │   │   ├── lib/               # Shared TypeScript utilities
 │   │   └── styles/            # CSS styles
+│   │       ├── global.css     # Global custom styles
+│   │       └── bulma-imports.css # Bulma CSS import with overrides
 │   ├── vite.config.js         # Vite configuration
 │   ├── tsconfig.json          # TypeScript configuration
 │   └── package.json           # Frontend dependencies
@@ -49,7 +51,86 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
 - Vite compiles, processes, and outputs to `static/build`
 - `deploy.sh` runs the build script before deployment
 
-## Integration & CSS
+## CSS Framework: Bulma
+
+We use Bulma CSS as our styling framework with custom overrides to maintain our typography and color scheme.
+
+### Installation and Setup
+
+Bulma is installed via NPM and bundled with our application:
+
+```bash
+# Install Bulma
+npm install bulma
+```
+
+### Integration
+
+We integrate Bulma through the following approach:
+
+1. **Import in CSS**: `bulma-imports.css` imports Bulma and adds our custom overrides
+2. **Global Import**: The main entry file (`index.ts`) imports the Bulma styles globally
+3. **Font Overrides**: We preserve our original font styling using CSS overrides
+4. **Bulma Classes**: Components use Bulma's utility classes for layout and styling
+
+### Custom Overrides
+
+We maintain our project's visual identity by:
+
+1. **Preserving Fonts**:
+   ```css
+   /* Typography overrides */
+   body, .content, p, .title, .subtitle, h1, h2, h3, h4, h5, h6 {
+     font-family: var(--font-serif) !important;
+   }
+   
+   .button, .input, .select, .textarea {
+     font-family: var(--font-sans) !important;
+   }
+   
+   code, pre, .has-family-monospace, .metadata {
+     font-family: var(--font-mono) !important;
+   }
+   ```
+
+2. **Matching Colors**:
+   ```css
+   /* Color overrides */
+   .is-primary {
+     background-color: #2563eb !important;
+   }
+   
+   .has-text-primary {
+     color: #2563eb !important;
+   }
+   ```
+
+### Usage in Components
+
+When creating new components, use Bulma's classes for styling:
+
+```svelte
+<div class="section">
+  <div class="container">
+    <div class="card">
+      <div class="card-content">
+        <h2 class="title is-4">Component Title</h2>
+        <p class="subtitle">Subtitle text</p>
+        <div class="content">
+          <p>Main content goes here</p>
+        </div>
+        <button class="button is-primary">Action Button</button>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### Further Documentation
+
+For detailed implementation, see `planning/250328_Bulma_css.md`.
+
+## Integration & Component Usage
 
 - Components mount to specific DOM elements
 - Extend from `base.jinja` for templates
@@ -59,7 +140,7 @@ Flask serves templates/API endpoints while Vite handles assets with HMR.
 
 - **Missing Assets**: Check Vite output directory (`static/build`)
 - **TypeScript Errors**: Run `npm run check` in frontend directory
-- **Styling Conflicts**: Check `base.css` before adding new styles
+- **Styling Conflicts**: Check CSS overrides in `bulma-imports.css` for conflicts
 - **Environment Variables**: Set `FLASK_PORT` before running dev scripts (see `.env.local`)
 - **Fix the root cause** - if there is a problem, we should fix it, rather than applying a bandaid or just replacing with a fallback (e.g. to hard-coded HTML)
 - **Avoid CDN dependencies** - All JavaScript libraries should be bundled or stored locally in `/static/js/extern/` to prevent reliance on external services
