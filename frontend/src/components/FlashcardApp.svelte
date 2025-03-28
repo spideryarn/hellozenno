@@ -191,41 +191,33 @@
   });
 </script>
 
-<section class="section">
+<div class="section py-4">
   <div class="container">
     {#if state.error}
-      <div class="notification is-danger">
+      <div class="notification is-danger is-light">
+        <button class="delete" aria-label="delete"></button>
         {state.error}
       </div>
     {/if}
     
     <!-- Source filter info banner -->
     {#if state.sourceFilter.type && state.sourceFilter.slug}
-      <div class="notification is-primary is-light">
-        <div class="level">
-          <div class="level-left">
-            <div class="level-item">
-              <span class="icon">
-                <i class="ph-fill ph-filter"></i>
-              </span>
-              Filtered by {state.sourceFilter.type === 'sourcedir' ? 'directory' : 'file'}: 
-              <strong class="ml-1">{state.sourceFilter.slug}</strong>
-            </div>
-          </div>
-          <div class="level-right">
-            <div class="level-item">
-              <a href={resolveRoute(RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW, {
-                target_language_code: targetLanguageCode
-              })} class="delete">
-              </a>
-            </div>
-          </div>
-        </div>
+      <div class="notification is-info is-light mb-4">
+        <button class="delete" on:click={() => window.location.href = resolveRoute(RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW, {
+          target_language_code: targetLanguageCode
+        })} aria-label="delete"></button>
+        <span class="icon-text">
+          <span class="icon">
+            <i class="ph-fill ph-filter"></i>
+          </span>
+          <span>Filtered by {state.sourceFilter.type === 'sourcedir' ? 'directory' : 'file'}: 
+          <strong>{state.sourceFilter.slug}</strong></span>
+        </span>
       </div>
     {/if}
     
     <div class="card">
-      <div class="card-content has-text-centered">
+      <div class="card-content has-text-centered py-5">
         <!-- Audio element (hidden) with autoplay attribute -->
         <audio 
           src={sentence.audioUrl} 
@@ -234,19 +226,29 @@
           autoplay
         ></audio>
         
+        <!-- Stage 1: Initial audio stage -->
+        {#if state.stage === 1}
+          <div class="block my-6 py-4">
+            <span class="icon is-large">
+              <i class="fas fa-volume-up fa-2x has-text-primary"></i>
+            </span>
+            <p class="is-size-5 mt-3 has-text-grey">Listen to the audio</p>
+          </div>
+        {/if}
+        
         <!-- Stage 2 & 3: Sentence -->
         {#if state.stage >= 2}
-          <h3 class="title is-4 mt-4">{sentence.text}</h3>
+          <h3 class="title is-3 mt-5 mb-5">{sentence.text}</h3>
         {/if}
         
         <!-- Stage 3: Translation -->
         {#if state.stage >= 3}
-          <p class="subtitle is-5 has-text-grey-dark mb-5">{sentence.translation}</p>
+          <p class="subtitle is-4 has-text-grey mb-6">{sentence.translation}</p>
           
           {#if sentence.lemmaWords && sentence.lemmaWords.length > 0}
-            <div class="mt-6 pt-4" style="border-top: 1px solid #dbdbdb;">
+            <div class="mt-6 pt-4 has-background-white-ter">
               <h3 class="title is-5 mb-4">Vocabulary</h3>
-              <div class="box">
+              <div class="box mx-auto" style="max-width: 600px;">
                 {#each sentence.lemmaWords as lemma}
                   <div class="mb-3">
                     <MiniLemma 
@@ -259,7 +261,7 @@
                       })}
                     />
                     {#if lemmasData[lemma]?.isLoading}
-                      <div class="has-text-grey is-size-7 is-italic ml-3 has-family-monospace">Loading lemma data...</div>
+                      <div class="has-text-grey is-size-7 is-italic ml-3 has-family-monospace mt-1">Loading lemma data...</div>
                     {/if}
                   </div>
                 {/each}
@@ -269,50 +271,66 @@
         {/if}
       </div>
       
-      <div class="card-footer p-4">
-        <div class="buttons is-centered are-medium">
-          <button 
-            class="button {state.stage === 1 ? 'is-primary' : 'is-outlined'}"
-            class:is-active={state.stage === 1}
-            disabled={buttonLabels.leftDisabled} 
-            on:click={handleLeftClick}
-          >
-            <span class="icon">
-              <i class="fas fa-{state.stage === 1 ? 'play' : 'arrow-left'}"></i>
-            </span>
-            <span>{buttonLabels.left}</span>
-            <span class="is-size-7 ml-1">(←)</span>
-          </button>
+      <div class="card-footer p-4 is-justify-content-center">
+        <div class="field is-grouped">
+          <p class="control">
+            <button 
+              class="button {state.stage === 1 ? 'is-info' : 'is-light'} is-medium"
+              disabled={buttonLabels.leftDisabled} 
+              on:click={handleLeftClick}
+            >
+              <span class="icon">
+                <i class="fas fa-{state.stage === 1 ? 'play' : 'arrow-left'}"></i>
+              </span>
+              <span>{buttonLabels.left}</span>
+              <span class="tag is-small ml-1 has-family-monospace">←</span>
+            </button>
+          </p>
           
-          <button 
-            class="button {state.stage === 3 ? 'is-primary' : 'is-outlined'}"
-            class:is-active={state.stage === 3}
-            disabled={buttonLabels.rightDisabled} 
-            on:click={handleRightClick}
-          >
-            <span class="icon">
-              <i class="fas fa-{state.stage < 3 ? 'arrow-right' : 'eye'}"></i>
-            </span>
-            <span>{buttonLabels.right}</span>
-            <span class="is-size-7 ml-1">(→)</span>
-          </button>
+          <p class="control">
+            <button 
+              class="button {state.stage === 3 ? 'is-info' : 'is-light'} is-medium"
+              disabled={buttonLabels.rightDisabled} 
+              on:click={handleRightClick}
+            >
+              <span class="icon">
+                <i class="fas fa-{state.stage < 3 ? 'arrow-right' : 'eye'}"></i>
+              </span>
+              <span>{buttonLabels.right}</span>
+              <span class="tag is-small ml-1 has-family-monospace">→</span>
+            </button>
+          </p>
           
-          <button 
-            class="button is-success" 
-            on:click={handleNextClick}
-          >
-            <span class="icon">
-              <i class="fas fa-forward"></i>
-            </span>
-            <span>New Sentence</span>
-            <span class="is-size-7 ml-1">(Enter)</span>
-          </button>
+          <p class="control">
+            <button 
+              class="button is-primary is-medium" 
+              on:click={handleNextClick}
+            >
+              <span class="icon">
+                <i class="fas fa-forward"></i>
+              </span>
+              <span>New Sentence</span>
+              <span class="tag is-small ml-1 has-family-monospace">Enter</span>
+            </button>
+          </p>
         </div>
       </div>
     </div>
   </div>
-</section>
+</div>
 
 <style>
-  /* We're using Bulma classes, custom styles aren't needed */
+  /* Some minor custom styles to enhance Bulma */
+  :global(.notification .delete) {
+    top: 0.85rem;
+  }
+  
+  :global(.card) {
+    box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.05);
+    border-radius: 8px;
+  }
+  
+  :global(.card-footer) {
+    border-top: 1px solid #f0f0f0;
+  }
 </style>
