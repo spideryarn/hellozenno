@@ -13,46 +13,24 @@ Learn vocabulary and phrases in any language.
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Available Languages ({{ languages|length }})</h1>
-    
-    <ul class="languages-list">
-        {% for language in languages %}
-            <li>
-                <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=language.code) }}">
-                    {{ language.name }}
-                    <span class="language-code">({{ language.code }})</span>
-                </a>
-            </li>
-        {% else %}
-            <li>No languages available</li>
-        {% endfor %}
-    </ul>
-</div>
-
-<style>
-.languages-list {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-}
-
-.languages-list li {
-    margin: 0;
-}
-
-.languages-list a {
-    padding: 1.5rem;
-    font-size: 1.25rem;
-    font-weight: 500;
-    text-align: center;
-}
-
-.language-code {
-    display: block;
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 0.25rem;
-}
-</style>
+<section class="section">
+    <div class="container">
+        <h1 class="title is-1">Available Languages ({{ languages|length }})</h1>
+        
+        <div class="columns is-multiline">
+            {% for language in languages %}
+                <div class="column is-one-quarter">
+                    <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=language.code) }}" class="box has-text-centered">
+                        <p class="is-size-4">{{ language.name }}</p>
+                        <p class="is-size-6 has-text-grey">{{ language.code }}</p>
+                    </a>
+                </div>
+            {% else %}
+                <div class="column">
+                    <div class="notification is-warning">No languages available</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
 {% endblock %} 
