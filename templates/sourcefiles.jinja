@@ -1,5 +1,6 @@
 {% extends "base.jinja" %}
 {% from "_sourcefile_icon.jinja" import sourcefile_icon %}
+{% from "_delete_button.jinja" import delete_button %}
 
 {% block breadcrumbs %}
     » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
@@ -163,7 +164,9 @@
                     </span>
                 {% endif %}
             </div>
-            <button onclick="deleteSourcefile('{{ sourcefile.slug }}')" class="button delete-btn">Delete</button>
+            <div class="icon-delete-wrapper" onclick="deleteSourcefile('{{ sourcefile.slug }}')" style="cursor: pointer;">
+                {{ delete_button('#', 'sourcefile', spacing='0.5rem', additional_classes='js-delete-button', icon_size='0.9rem') }}
+            </div>
         </li>
     {% else %}
         <li>No source files available</li>
@@ -369,6 +372,9 @@
     }
     .fa-volume-up {
         color: #4CAF50;
+    }
+    .js-delete-button {
+        pointer-events: none;
     }
 </style>
 

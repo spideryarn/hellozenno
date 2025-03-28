@@ -1,3 +1,5 @@
+{% from "_delete_button.jinja" import delete_button %}
+
 {% if metadata %}
 <div class="metadata-display">
     <p>Created: <span class="metadata-timestamp">{{ metadata.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></p>
@@ -14,10 +16,19 @@
     <button onclick="renameSourcefile()" class="button small-button">
         <i class="fas fa-edit"></i> Rename
     </button>
-    <button onclick="deleteSourcefile()" class="button small-button delete-btn">
-        <i class="fas fa-trash"></i> Delete
-    </button>
+    <div class="icon-delete-wrapper" onclick="deleteSourcefile()" style="display: inline-block; cursor: pointer;">
+        {{ delete_button('#', 'sourcefile', spacing='0.5rem', additional_classes='js-delete-button') }}
+    </div>
 </h1>
+
+<style>
+    .js-delete-button {
+        pointer-events: none;
+    }
+    .icon-delete-wrapper .delete-form {
+        display: inline-block;
+    }
+</style>
 
 <div class="description-container">
     <div class="description-content" id="description-display">
