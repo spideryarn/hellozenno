@@ -8,9 +8,9 @@ export enum RouteName {
   AUTH_API_MANAGE_SESSION_API = "AUTH_API_MANAGE_SESSION_API",
   AUTH_API_GET_USER_API = "AUTH_API_GET_USER_API",
   CORE_VIEWS_HOME_VW = "CORE_VIEWS_HOME_VW",
-  CORE_VIEWS_LANGUAGES_LIST_VW = "CORE_VIEWS_LANGUAGES_LIST_VW",
   CORE_VIEWS_EXPERIM_VW = "CORE_VIEWS_EXPERIM_VW",
   CORE_VIEWS_FAVICON_VW = "CORE_VIEWS_FAVICON_VW",
+  LANGUAGES_VIEWS_LANGUAGES_LIST_VW = "LANGUAGES_VIEWS_LANGUAGES_LIST_VW",
   WORDFORM_VIEWS_WORDFORMS_LIST_VW = "WORDFORM_VIEWS_WORDFORMS_LIST_VW",
   WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW = "WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW",
   WORDFORM_VIEWS_DELETE_WORDFORM_VW = "WORDFORM_VIEWS_DELETE_WORDFORM_VW",
@@ -60,10 +60,12 @@ export enum RouteName {
   SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API = "SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API",
   SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API = "SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API",
   SENTENCE_API_GET_RANDOM_SENTENCE_API = "SENTENCE_API_GET_RANDOM_SENTENCE_API",
+  SENTENCE_API_GET_SENTENCE_BY_SLUG_API = "SENTENCE_API_GET_SENTENCE_BY_SLUG_API",
   SENTENCE_API_GET_SENTENCE_AUDIO_API = "SENTENCE_API_GET_SENTENCE_AUDIO_API",
   SENTENCE_API_DELETE_SENTENCE_API = "SENTENCE_API_DELETE_SENTENCE_API",
   SENTENCE_API_RENAME_SENTENCE_API = "SENTENCE_API_RENAME_SENTENCE_API",
   SENTENCE_API_GENERATE_SENTENCE_AUDIO_API = "SENTENCE_API_GENERATE_SENTENCE_AUDIO_API",
+  LANGUAGES_API_GET_LANGUAGES_API = "LANGUAGES_API_GET_LANGUAGES_API",
 }
 
 
@@ -76,9 +78,9 @@ export const ROUTES = {
   AUTH_API_MANAGE_SESSION_API: "/api/auth/session",
   AUTH_API_GET_USER_API: "/api/auth/user",
   CORE_VIEWS_HOME_VW: "/",
-  CORE_VIEWS_LANGUAGES_LIST_VW: "/lang",
   CORE_VIEWS_EXPERIM_VW: "/experim",
   CORE_VIEWS_FAVICON_VW: "/favicon.ico",
+  LANGUAGES_VIEWS_LANGUAGES_LIST_VW: "/lang",
   WORDFORM_VIEWS_WORDFORMS_LIST_VW: "/lang/{target_language_code}/wordforms/",
   WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW: "/lang/{target_language_code}/wordform/{wordform}",
   WORDFORM_VIEWS_DELETE_WORDFORM_VW: "/lang/{target_language_code}/wordform/{wordform}/delete",
@@ -128,10 +130,12 @@ export const ROUTES = {
   SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/youtube",
   SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/generate_audio",
   SENTENCE_API_GET_RANDOM_SENTENCE_API: "/api/lang/sentence/{target_language_code}/random",
+  SENTENCE_API_GET_SENTENCE_BY_SLUG_API: "/api/lang/sentence/{target_language_code}/{slug}",
   SENTENCE_API_GET_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{sentence_id}/audio",
   SENTENCE_API_DELETE_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}",
   SENTENCE_API_RENAME_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}/rename",
   SENTENCE_API_GENERATE_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{slug}/generate_audio",
+  LANGUAGES_API_GET_LANGUAGES_API: "/api/lang/languages",
 } as const;
 
 
@@ -144,9 +148,9 @@ export type RouteParams = {
   [RouteName.AUTH_API_MANAGE_SESSION_API]: {};
   [RouteName.AUTH_API_GET_USER_API]: {};
   [RouteName.CORE_VIEWS_HOME_VW]: {};
-  [RouteName.CORE_VIEWS_LANGUAGES_LIST_VW]: {};
   [RouteName.CORE_VIEWS_EXPERIM_VW]: {};
   [RouteName.CORE_VIEWS_FAVICON_VW]: {};
+  [RouteName.LANGUAGES_VIEWS_LANGUAGES_LIST_VW]: {};
   [RouteName.WORDFORM_VIEWS_WORDFORMS_LIST_VW]: { target_language_code: string };
   [RouteName.WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW]: { target_language_code: string; wordform: string };
   [RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW]: { target_language_code: string; wordform: string };
@@ -196,10 +200,12 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SENTENCE_API_GET_RANDOM_SENTENCE_API]: { target_language_code: string };
+  [RouteName.SENTENCE_API_GET_SENTENCE_BY_SLUG_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API]: { target_language_code: string; sentence_id: string };
   [RouteName.SENTENCE_API_DELETE_SENTENCE_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_RENAME_SENTENCE_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_GENERATE_SENTENCE_AUDIO_API]: { target_language_code: string; slug: string };
+  [RouteName.LANGUAGES_API_GET_LANGUAGES_API]: {};
 };
 
 
