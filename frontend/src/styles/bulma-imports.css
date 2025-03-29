@@ -1,49 +1,174 @@
 /* Import Bulma CSS */
 @import 'bulma/css/bulma.min.css';
 
-/* Font overrides for Bulma */
+/* Set dark theme variables */
 :root {
+    /* Typography - keeping the fonts as requested */
     --font-serif: Georgia, 'Times New Roman', Times, serif;
     --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
     --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Typography overrides */
-body,
-.content,
-p,
+/* Dark theme base styles using Bulma's built-in variables and classes */
+html {
+    background-color: #121212;
+}
+
+body {
+    background-color: #121212;
+    color: #e4e4e4;
+    min-height: 100vh;
+}
+
+/* Typography overrides - keeping font families */
 .title,
 .subtitle,
+.content p,
 h1,
 h2,
 h3,
 h4,
 h5,
-h6 {
+h6,
+.card-content p {
     font-family: var(--font-serif) !important;
+    color: #e4e4e4;
 }
 
 .button,
 .input,
 .select,
-.textarea {
+.textarea,
+select,
+.select select,
+.navbar-item {
     font-family: var(--font-sans) !important;
 }
 
 code,
 pre,
 .has-family-monospace,
-.metadata {
+.metadata-timestamp {
     font-family: var(--font-mono) !important;
 }
 
-/* Color overrides */
-.is-primary {
-    background-color: #2563eb !important;
+/* Dark theme using Bulma's classes */
+.section {
+    background-color: #121212;
+}
+
+.navbar {
+    background-color: #1e1e1e;
+}
+
+.navbar-item,
+.navbar-link {
+    color: #e4e4e4;
+    background-color: #1e1e1e;
+}
+
+.navbar-item:hover {
+    background-color: #2d2d2d !important;
+    color: #3273dc;
+}
+
+.card {
+    background-color: #1e1e1e;
+    color: #e4e4e4;
+    border: 1px solid #333;
+}
+
+.box {
+    background-color: #1e1e1e;
+    color: #e4e4e4;
+}
+
+.notification.is-primary.is-light {
+    background-color: rgba(50, 115, 220, 0.2);
+    color: #e4e4e4;
+}
+
+.notification .delete {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-card-head,
+.modal-card-foot {
+    background-color: #2d2d2d;
+    border-color: #333;
+}
+
+.modal-card-body {
+    background-color: #1e1e1e;
+    color: #e4e4e4;
+}
+
+/* Form elements */
+.input,
+.textarea,
+.select select {
+    background-color: #2d2d2d;
+    color: #e4e4e4;
+    border-color: #333;
+}
+
+.input:focus,
+.textarea:focus,
+.select select:focus {
+    border-color: #3273dc;
+    box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+}
+
+/* Links and buttons */
+a {
+    color: #3273dc;
+}
+
+a:hover {
+    color: #4a89dc;
+}
+
+.button {
+    background-color: #2d2d2d;
+    border-color: #333;
+    color: #e4e4e4;
+}
+
+.button:hover {
+    border-color: #3273dc;
+}
+
+.button.is-primary {
+    background-color: #3273dc;
+    color: white;
+}
+
+.button.is-primary:hover {
+    background-color: #4a89dc;
+}
+
+/* Using more Bulma's utility classes */
+.has-background-dark {
+    background-color: #1e1e1e !important;
+}
+
+.has-background-black {
+    background-color: #121212 !important;
 }
 
 .has-text-primary {
-    color: #2563eb !important;
+    color: #3273dc !important;
 }
 
-/* Additional overrides or customizations can be placed here */
+.has-text-grey,
+.has-text-grey-dark {
+    color: #a0a0a0 !important;
+}
+
+.breadcrumb li a {
+    color: #3273dc;
+}
+
+.breadcrumb li.is-active a {
+    color: #a0a0a0;
+}

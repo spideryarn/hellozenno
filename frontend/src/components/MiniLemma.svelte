@@ -1,68 +1,39 @@
 <!-- Define the props -->
 <script lang="ts">
+  import '../styles/bulma-imports.css';
+  
   export let lemma: string;
   export let partOfSpeech: string = "";
   export let translations: string[] = [];
   export let href: string;
 </script>
 
-<!-- Component template -->
-<div class="mini-lemma">
-  <a {href} class="lemma-link">
-    <div class="lemma-content">
-      <div class="lemma-text">{lemma}</div>
+<!-- Component template with Bulma classes -->
+<div class="box p-3 mb-2 has-background-dark">
+  <a {href} class="has-text-white">
+    <div class="content">
+      <p class="is-size-5 has-text-weight-bold mb-1">{lemma}</p>
       {#if partOfSpeech}
-        <div class="part-of-speech">{partOfSpeech}</div>
+        <p class="is-size-7 has-text-grey-light is-italic mb-1">{partOfSpeech}</p>
       {/if}
       {#if translations && translations.length > 0}
-        <div class="translations">{translations.join(', ')}</div>
+        <p class="is-size-7 has-text-grey-light">{translations.join(', ')}</p>
       {/if}
     </div>
   </a>
 </div>
 
-<!-- Component styles -->
 <style>
-  .mini-lemma {
-    margin: 0.25rem 0;
-  }
-
-  .lemma-link {
+  /* Minimal styles that aren't covered by Bulma */
+  a {
     text-decoration: none;
-    color: inherit;
-    display: block;
   }
-
-  .lemma-content {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.375rem;
-    transition: all 0.2s;
+  
+  .box {
+    transition: transform 0.2s ease;
   }
-
-  .lemma-content:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
-  }
-
-  .lemma-text {
-    font-size: 1.1rem;
-    font-weight: bold;
-    line-height: 1.4;
-    margin-bottom: 0.125rem;
-  }
-
-  .part-of-speech {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-style: italic;
-    line-height: 1.4;
-    margin-bottom: 0.125rem;
-  }
-
-  .translations {
-    font-size: 0.875rem;
-    color: #64748b;
-    line-height: 1.4;
+  
+  .box:hover {
+    transform: translateY(-2px);
   }
 </style>

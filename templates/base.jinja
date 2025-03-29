@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" translate="no">
+<html lang="en" translate="no" class="has-navbar-fixed-top">
 
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,15 @@
         {% endblock title %}
     </title>
     {% block head_imports %}
+    <!-- Load Bulma CSS early to prevent FOUC -->
+    {% if config.IS_PRODUCTION or config.get('LOCAL_CHECK_OF_PROD_FRONTEND', False) %}
+    <!-- Production CSS from built Vite bundle -->
+    <link rel="stylesheet" href="{{ vite_asset_url('style.css') }}">
+    {% else %}
+    <!-- Development CSS directly from Vite server -->
+    <link rel="stylesheet" href="http://localhost:5173/src/styles/bulma-imports.css">
+    {% endif %}
+
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
@@ -42,31 +51,67 @@
     {% endblock head_imports %}
     <style>
         {% block head_css %}
+        /* Minimal critical CSS for initial render */
+        :root {
+            --font-serif: Georgia, 'Times New Roman', Times, serif;
+            --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
         {% endblock head_css %}
     </style>
 </head>
 
 <body>
     {% block top_nav %}
-    <nav>
-        <div class="nav-content">
-            <div class="breadcrumbs">
-                <a href="{{ url_for('core_views.languages_list_vw') }}">Home</a>
-                {% block breadcrumbs %}{% endblock breadcrumbs %}
+    <nav class="navbar is-fixed-top has-shadow" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="{{ url_for('core_views.languages_list_vw') }}">
+                    <span class="is-size-4 has-text-weight-bold has-text-primary">Hello Zenno</span>
+                </a>
+                
+                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="mainNavbar">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
             </div>
-            {% if target_language_code is defined and target_language_code %}
-            <div class="search-box">
-                <form method="GET" action="{{ url_for('search_views.search_landing_vw', target_language_code=target_language_code) }}">
-                    <input type="text" name="q" placeholder="Search {{ target_language_name }} words..." required>
-                    <button type="submit" class="button">Search</button>
-                </form>
-            </div>
-            {% endif %}
             
-            <div class="user-status-container">
-                <div id="user-status"></div>
-                {% from "base_svelte.jinja" import load_svelte_component %}
-                {{ load_svelte_component('userstatus', {}, component_id='user-status') }}
+            <div id="mainNavbar" class="navbar-menu">
+                <div class="navbar-start">
+                    {% block breadcrumbs %}
+                    <div class="navbar-item">
+                        <nav class="breadcrumb" aria-label="breadcrumbs">
+                            <ul>
+                                <li><a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endblock breadcrumbs %}
+                </div>
+                
+                <div class="navbar-end">
+                    {% if target_language_code is defined and target_language_code %}
+                    <div class="navbar-item">
+                        <form method="GET" action="{{ url_for('search_views.search_landing_vw', target_language_code=target_language_code) }}">
+                            <div class="field has-addons">
+                                <div class="control">
+                                    <input class="input" type="text" name="q" placeholder="Search {{ target_language_name }} words..." required>
+                                </div>
+                                <div class="control">
+                                    <button class="button is-primary" type="submit">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="navbar-item">
+                        <div id="user-status"></div>
+                        {% from "base_svelte.jinja" import load_svelte_component %}
+                        {{ load_svelte_component('userstatus', {}, component_id='user-status') }}
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -76,14 +121,23 @@
         {% if messages %}
             <div class="flash-messages">
                 {% for message in messages %}
-                    <div class="flash-message">{{ message }}</div>
+                    <div class="notification is-primary is-light">
+                        <button class="delete"></button>
+                        {{ message }}
+                    </div>
                 {% endfor %}
             </div>
         {% endif %}
     {% endwith %}
 
-    {% block content %}
-    {% endblock content %}
+    <main>
+        <section class="section">
+            <div class="container">
+                {% block content %}
+                {% endblock content %}
+            </div>
+        </section>
+    </main>
 
     {% block late_script_imports %}
         <!-- In production, all Svelte components are bundled into hz-components.es.js -->
@@ -91,16 +145,57 @@
         
         <!-- Load base.js at the end to ensure all other scripts are loaded first -->
         <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
+        
+        <!-- Activate navbar burger menu -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Get all "navbar-burger" elements
+                const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+                
+                // Add a click event on each of them
+                $navbarBurgers.forEach(el => {
+                    el.addEventListener('click', () => {
+                        // Get the target from the "data-target" attribute
+                        const target = el.dataset.target;
+                        const $target = document.getElementById(target);
+                        
+                        // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+                        el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+                    });
+                });
+                
+                // Close notifications when the delete button is clicked
+                const deleteButtons = document.querySelectorAll('.notification .delete');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const notification = button.parentNode;
+                        notification.parentNode.removeChild(notification);
+                    });
+                });
+            });
+        </script>
     {% endblock late_script_imports %}
 
     <!-- Reusable Modal Dialog -->
     <div id="reusableModal" class="modal">
-        <div class="modal-content">
-            <input type="text" id="modalInput" placeholder="">
-            <div class="modal-buttons">
-                <button id="modalConfirm" class="confirm-btn">Confirm</button>
-                <button id="modalCancel" class="cancel-btn">Cancel</button>
-            </div>
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" id="modalTitle">Modal Title</p>
+                <button class="delete" aria-label="close" id="modalClose"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <div class="control">
+                        <input class="input" type="text" id="modalInput" placeholder="">
+                    </div>
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-primary" id="modalConfirm">Confirm</button>
+                <button class="button" id="modalCancel">Cancel</button>
+            </footer>
         </div>
     </div>
 </body>
