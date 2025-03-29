@@ -19,6 +19,7 @@ We're going to keep Flask for an API (e.g., `views/*_api.py`), but port all user
 - Don't worry about backend compatibility
 - Keep the code concise
 - Discuss uncertainties rather than guessing
+- Don't number or add headings to the Actions stages, so it's easy to reorder them
 
 ## Decisions from User
 
@@ -32,65 +33,86 @@ We're going to keep Flask for an API (e.g., `views/*_api.py`), but port all user
 
 ## Plan: Small Stages
 
-### Stage 1: Project Setup & Configuration
+Project Setup & Configuration
 - [x] Create SvelteKit project (done: renamed to `sveltekit_hz`)
-- [ ] Configure SvelteKit routes and basic layout structure
-- [ ] Setup basic API connection to Flask backend
-- [ ] Test a simple API call from SvelteKit to Flask
+- [x] Configure SvelteKit routes and basic layout structure
+- [x] Setup basic API connection to Flask backend
+- [x] Test a simple API call from SvelteKit to Flask
 
-### Stage 2: Languages Page - Basic
-- [ ] Create minimal Languages route
-- [ ] Fetch languages data from API
-- [ ] Display basic languages list without styling
-- [ ] Test route works and displays data correctly
+Languages Page - Basic
+- [x] Create minimal Languages route
+- [x] Fetch languages data from API
+- [x] Display basic languages list without styling
+- [x] Test route works and displays data correctly
 
-### Stage 3: Languages Page - Styling
-- [ ] Add CSS similar to original languages.jinja
-- [ ] Implement responsive grid layout
-- [ ] Ensure links work correctly 
+Languages Page - Styling
+- [x] Add CSS similar to original languages.jinja
+- [x] Implement responsive grid layout
+- [x] Ensure links work correctly 
 
-### Stage 4: Sentence Component - Basic Structure
-- [ ] Create Sentence component with minimal functionality
-- [ ] Define TypeScript interfaces for sentence data
-- [ ] Set up basic layout without complex features
+API Integration
+- [x] Refine SvelteKit-to-Flask API interactions
+- [x] Create language name lookup API endpoint
+- [x] Use backend API for translations and language information
 
-### Stage 5: Sentence Component - Enhanced Features
-- [ ] Implement word highlighting
-- [ ] Add translations display
-- [ ] Set up metadata section
+Docs
+- [ ] Write up `sveltekit_hz/README.md` in detail
 
-### Stage 6: Sentence Component - Audio Integration
-- [ ] Add audio player functionality
-- [ ] Implement playback controls
+Create any missing Flask APIs
+- [ ] Write a list of all the current Flask Jinja views in an Appendix at the bottom, with checkboxes next to each
+- [ ] For each Jinja view, we'll need to create a corresponding API that we can call from SvelteKit, e.g. if we have `views/blah_views.py blah_vw()`, we'll need to create/update `views/blah_api.py` and add `blah_api()`, we might need to update the Blueprints with the new `blah_api`. We want to reuse code, so we'll probably need to abstract out what's common to the Jinja-view and API functions into a `blah_utils.py blah_core()` that they can both call. see `views/languages_views.py get_languages_api()` as an example.
+- [ ] Create all the new API views, stopping to discuss after each one.
+
+Sentence Component - Basic Structure
+- [x] Create Sentence component with minimal functionality
+- [x] Define TypeScript interfaces for sentence data
+- [x] Set up basic layout without complex features
+
+Sentence Component - Enhanced Features
+- [x] Implement word highlighting
+- [x] Add translations display
+- [x] Set up metadata section
+
+Sentence Component - Audio Integration
+- [x] Add audio player functionality
+- [x] Implement playback controls
 - [ ] Add audio generation capability
 
-### Stage 7: Authentication Integration
+Authentication Integration
 - [ ] Discuss Supabase auth approach
 - [ ] Plan auth integration in SvelteKit
 - [ ] Implement basic authentication flow
 
-### Later Stages (To Discuss)
-- [ ] Form handling approach in SvelteKit
-- [ ] CSS framework decision (Bootstrap vs alternatives)
+Later Stages (To Discuss)
+- [ ] Enhance styling and user experience - discuss CSS framework decision (Bootstrap vs alternatives)
+- [ ] Set up deployment configuration
+- [ ] Discuss form handling approach in SvelteKit
 - [ ] Supabase realtime updates integration
 - [ ] Deployment strategy for Vercel
+- [ ] Implement authentication
+
+## Actions & Progress
+
+### Completed
+- [x] Create SvelteKit project
+- [x] Set up basic layout and routing structure
+- [x] Implement the languages page with server-side data fetching
+- [x] Create placeholder for language/[language_code]/sources route
+- [x] Connect Flask API with SvelteKit frontend
+- [x] Create sentence component skeleton
+- [x] Successfully implement and test Sentence component
+- [x] Fixed API routes for better coordination between Flask and SvelteKit
+- [x] Enhanced backend APIs by adding language name lookup endpoint
+- [x] Improved SvelteKit server-side rendering with proper fetch handling
+
+### In Progress
+- [ ] Enhance sentence component with more features
+- [ ] Implement remaining language-specific routes
 
 ## Questions
 
 - Best practice for API route structure between SvelteKit and Flask?
 - How to handle environment configuration across both services?
 - Deployment strategy details for Vercel?
-
-
-## Actions
-
-- [ ] Ask the user lots of questions to better understand the goals, constraints, and desiderata
-
-- [ ] Update this doc with a more detailed, hierarchical, unnumbered list of actions
-
-- [ ] Rewrite the `languages.jinja` as a new Svelte component in `HelloZenno`
-
-- [ ] Review and create missing Flask API endpoints in `views/*_api.py` to support all SvelteKit frontend functionality
-
 
 
