@@ -1,11 +1,30 @@
 <script lang="ts">
   export let title: string = '';
   export let subtitle: string = '';
-  export let href: string = '';
+  /**
+   * When provided, the entire card becomes a link to this URL.
+   * IMPORTANT: Do not place <a> elements inside the card content when using this prop,
+   * as nested anchor tags are invalid HTML and will cause errors.
+   */
+  export let linkUrl: string = '';
   export let className: string = '';
 </script>
 
-<a {href} class="text-decoration-none">
+{#if linkUrl}
+  <a href={linkUrl} class="text-decoration-none">
+    <div class="card hz-language-item {className}">
+      <div class="card-body">
+        {#if title}
+          <h2 class="card-title">{title}</h2>
+        {/if}
+        {#if subtitle}
+          <p class="hz-language-code">{subtitle}</p>
+        {/if}
+        <slot />
+      </div>
+    </div>
+  </a>
+{:else}
   <div class="card hz-language-item {className}">
     <div class="card-body">
       {#if title}
@@ -17,7 +36,7 @@
       <slot />
     </div>
   </div>
-</a>
+{/if}
 
 <style>
   .card {

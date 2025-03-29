@@ -28,7 +28,7 @@
         <div class="row">
             {#each sentences as sentence (sentence.id)}
                 <div class="col-12 mb-3">
-                    <Card href={`/language/${language_code}/sentence/${sentence.slug}`}>
+                    <Card linkUrl={`/language/${language_code}/sentence/${sentence.slug}`}>
                         <div class="sentence-item">
                             <h3 class="mb-2">
                                 <span class="text-foreign">{sentence.text}</span>

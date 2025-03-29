@@ -141,7 +141,7 @@
             <Card 
               title={language.name}
               subtitle={language.code}
-              href="/language/{language.code}/sources"
+              linkUrl="/language/{language.code}/sources"
               className="language-card"
             >
               <div class="card-background-letter" style="color: {getColorForLanguage(language.code)};">
