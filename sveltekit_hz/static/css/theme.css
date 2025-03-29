@@ -48,30 +48,6 @@ h6 {
     box-shadow: 0 0 0 0.25rem rgba(76, 173, 83, 0.25);
 }
 
-:root {
-    --bs-body-bg: #121212;
-    --bs-body-color: #e9e9e9;
-    --bs-primary: #4CAD53;
-    --bs-primary-rgb: 76, 173, 83;
-    --bs-secondary: #D97A27;
-    --bs-secondary-rgb: 217, 122, 39;
-
-    /* Link colors */
-    --bs-link-color: var(--bs-primary);
-    --bs-link-hover-color: #3d8c42;
-
-    /* Card colors */
-    --bs-card-bg: #1e1e1e;
-    --bs-card-border-color: #333;
-
-    /* Font families */
-    --bs-font-sans-serif: Georgia, serif;
-    --bs-font-monospace: Menlo, Monaco, 'Courier New', monospace;
-
-    /* Custom variables */
-    --hz-foreign-font: 'Times New Roman', serif;
-}
-
 /* Foreign text styling */
 .hz-foreign-text {
     font-family: var(--hz-foreign-font);

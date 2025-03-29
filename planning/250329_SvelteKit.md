@@ -25,7 +25,7 @@ We're going to keep Flask for an API (e.g., `views/*_api.py`), but port all user
 
 - Development: Run Flask (port 3000) and Vite (port 5173) servers separately
 - State management: Not too complex yet, but will integrate Supabase frontend library later
-- Styling: Start with minimal CSS, discuss Bootstrap integration later
+- Styling: Using Bootstrap 5.3.2 with a custom dark theme for consistent styling
 - Auth: Supabase will handle auth
 - Migration priority: Start with languages.jinja, then Sentence.svelte
 - TypeScript: Use typing fairly strictly for IDE benefits, not purist
@@ -57,6 +57,22 @@ API Integration
 
 Docs
 - [x] Write up `sveltekit_hz/README.md` in detail
+
+Bootstrap Styling Implementation
+- [x] Setup Bootstrap 5.3.2 with local files (not CDN)
+- [x] Create custom dark theme with variables in theme-variables.css
+- [x] Implement reusable component styles in components.css  
+- [x] Update layouts and pages to use Bootstrap classes
+- [x] Create Card and SourceItem reusable components
+- [x] Refactor Sentence component to use Bootstrap
+
+Component Library
+- [x] Create reusable UI components
+  - [x] Card.svelte for language cards
+  - [x] SourceItem.svelte for source listings
+  - [x] Update Sentence.svelte to use Bootstrap
+- [x] Set up consistent component exports in $lib/index.ts
+- [x] Document component usage in README
 
 Create any missing Flask APIs
 - [ ] Write a list of all the current Flask Jinja views in an Appendix at the bottom, with checkboxes next to each
@@ -91,6 +107,50 @@ Later Stages (To Discuss)
 - [ ] Deployment strategy for Vercel
 - [ ] Implement authentication
 
+## Design System Guidelines
+
+### CSS Structure
+
+Our CSS is organized into modular files for better maintainability:
+
+```
+static/css/
+├── base.css               # Main CSS file that imports others
+├── theme-variables.css    # Theme variables (colors, fonts, etc.)
+├── theme.css              # Theme-specific styling
+├── components.css         # Component-specific styles
+└── extern/
+    └── bootstrap/
+        └── bootstrap.min.css  # Bootstrap core CSS
+```
+
+### Color Palette
+
+- **Background**: Near-black (`#121212`)
+- **Text**: Near-white (`#e9e9e9`)
+- **Primary**: Bright green (`#4CAD53`) - for highlights, buttons, active elements
+- **Secondary**: Complementary orange (`#D97A27`) - for accents, secondary actions
+
+### Typography
+
+- **Primary Font**: Georgia
+- **Foreign Language Text**: Times New Roman, italic
+- **Monospace**: Menlo, Monaco, Courier New (for code and metadata)
+
+### Component Naming
+
+We use the prefix `hz-` for all custom component classes:
+- `.hz-language-item`: For language cards
+- `.hz-foreign-text`: For foreign language text
+- `.hz-source-item`: For source items
+
+### How to Create New Pages
+
+1. Use Bootstrap utility classes for layout
+2. Import our reusable components from `$lib`
+3. Apply custom classes from components.css as needed
+4. Maintain the dark theme aesthetics
+
 ## Actions & Progress
 
 ### Completed
@@ -104,6 +164,9 @@ Later Stages (To Discuss)
 - [x] Fixed API routes for better coordination between Flask and SvelteKit
 - [x] Enhanced backend APIs by adding language name lookup endpoint
 - [x] Improved SvelteKit server-side rendering with proper fetch handling
+- [x] Implemented Bootstrap with custom dark theme
+- [x] Created reusable component library
+- [x] Updated existing pages to use new styling
 
 ### In Progress
 - [ ] Enhance sentence component with more features
