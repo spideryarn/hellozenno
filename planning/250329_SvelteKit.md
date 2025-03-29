@@ -56,7 +56,7 @@ API Integration
 - [x] Use backend API for translations and language information
 
 Docs
-- [ ] Write up `sveltekit_hz/README.md` in detail
+- [x] Write up `sveltekit_hz/README.md` in detail
 
 Create any missing Flask APIs
 - [ ] Write a list of all the current Flask Jinja views in an Appendix at the bottom, with checkboxes next to each
@@ -116,3 +116,4 @@ Later Stages (To Discuss)
 - Deployment strategy details for Vercel?
 
 
+    
