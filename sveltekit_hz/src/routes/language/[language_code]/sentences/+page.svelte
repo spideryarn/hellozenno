@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import Card from '$lib/components/Card.svelte';
+    import SentenceCard from '$lib/components/SentenceCard.svelte';
     
     export let data: PageData;
     
@@ -28,21 +28,13 @@
         <div class="row">
             {#each sentences as sentence (sentence.id)}
                 <div class="col-12 mb-3">
-                    <Card linkUrl={`/language/${language_code}/sentence/${sentence.slug}`}>
-                        <div class="sentence-item">
-                            <h3 class="mb-2">
-                                <span class="text-foreign">{sentence.text}</span>
-                            </h3>
-                            <p class="text-secondary">{sentence.translation}</p>
-                            {#if sentence.lemma_words && sentence.lemma_words.length > 0}
-                                <div class="mt-2">
-                                    <small class="text-muted">
-                                        Vocabulary: {sentence.lemma_words.join(', ')}
-                                    </small>
-                                </div>
-                            {/if}
-                        </div>
-                    </Card>
+                    <SentenceCard 
+                        text={sentence.text}
+                        translation={sentence.translation}
+                        slug={sentence.slug}
+                        lemma_words={sentence.lemma_words || []}
+                        language_code={language_code}
+                    />
                 </div>
             {/each}
         </div>
@@ -51,10 +43,4 @@
             No sentences found for {language_name}. Start by adding sources!
         </div>
     {/if}
-</div>
-
-<style>
-    .text-foreign {
-        font-style: italic;
-    }
-</style> 
+</div> 
