@@ -59,3 +59,12 @@ export async function getSentence(languageCode: string, slug: string) {
         `/api/language/${languageCode}/sentence/${slug}`,
     );
 }
+
+/**
+ * Fetch all sentences for a language
+ */
+export async function getSentencesForLanguage(languageCode: string) {
+    return fetchFromApi<Sentence[]>(
+        `/api/lang/sentence/${languageCode}/sentences`,
+    );
+}

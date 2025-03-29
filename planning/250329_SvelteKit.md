@@ -75,9 +75,55 @@ Component Library
 - [x] Document component usage in README
 
 Create any missing Flask APIs
-- [ ] Write a list of all the current Flask Jinja views in an Appendix at the bottom, with checkboxes next to each
-- [ ] For each Jinja view, we'll need to create a corresponding API that we can call from SvelteKit, e.g. if we have `views/blah_views.py blah_vw()`, we'll need to create/update `views/blah_api.py` and add `blah_api()`, we might need to update the Blueprints with the new `blah_api`. We want to reuse code, so we'll probably need to abstract out what's common to the Jinja-view and API functions into a `blah_utils.py blah_core()` that they can both call. see `views/languages_views.py get_languages_api()` as an example.
+For each Jinja view, we'll need to create a corresponding API that we can call from SvelteKit, e.g. if we have `views/blah_views.py blah_vw()`, we'll need to create/update `views/blah_api.py` and add `blah_api()`, we might need to update the Blueprints with the new `blah_api`. We want to reuse code, so we'll probably need to abstract out what's common to the Jinja-view and API functions into a `blah_utils.py blah_core()` that they can both call. see `views/languages_views.py get_languages_api()` as an example.
+Tail the files in `logs/` to see the output of the Sveltekit and Flask development servers
+- [x] Write a list of all the current Flask Jinja views in an Appendix at the bottom, with checkboxes next to each
 - [ ] Create all the new API views, stopping to discuss after each one.
+- [ ] Update the Svelte frontend as appropriate to use the new API (e.g. add a new route, or a new button, or whatever)
+- [ ] Test the new functionality, e.g. with curl or Playwright MCP, or ask the user 
+
+#### API Creation Todo List
+Create the following missing API endpoints that correspond to existing view functions:
+
+**System API**
+- [ ] Create `health_check_api()` in `system_api.py` (from `health_check_vw()`)
+- [ ] Create `route_test_api()` in `system_api.py` (from `route_test_vw()`)
+
+**Search API**
+- [ ] Create `search_landing_api()` in `search_api.py` (from `search_landing_vw()`)
+- [ ] Create `search_word_api()` in `search_api.py` (from `search_word_vw()`)
+
+**Language Resources API**
+- [ ] Create `wordforms_list_api()` in `wordform_api.py` (from `wordforms_list_vw()`)
+- [ ] Create `get_wordform_metadata_api()` in `wordform_api.py` (from `get_wordform_metadata_vw()`)
+- [ ] Create `delete_wordform_api()` in `wordform_api.py` (from `delete_wordform_vw()`)
+- [ ] Create `lemmas_list_api()` in `lemma_api.py` (from `lemmas_list_vw()`)
+- [ ] Create `phrases_list_api()` in `phrase_api.py` (from `phrases_list_vw()`)
+- [ ] Create `get_phrase_metadata_api()` in `phrase_api.py` (from `get_phrase_metadata_vw()`)
+- [ ] Create `delete_phrase_api()` in `phrase_api.py` (from `delete_phrase_vw()`)
+- [x] Create `sentences_list_api()` in `sentence_api.py` (from `sentences_list_vw()`)
+
+**Source Files API**
+- [ ] Create `sourcefiles_for_sourcedir_api()` in `sourcedir_api.py` (from `sourcefiles_for_sourcedir_vw()`)
+- [ ] Create `inspect_sourcefile_api()` in `sourcefile_api.py` (from `inspect_sourcefile_vw()`)
+- [ ] Create `inspect_sourcefile_text_api()` in `sourcefile_api.py` (from `inspect_sourcefile_text_vw()`)
+- [ ] Create `inspect_sourcefile_words_api()` in `sourcefile_api.py` (from `inspect_sourcefile_words_vw()`)
+- [ ] Create `inspect_sourcefile_phrases_api()` in `sourcefile_api.py` (from `inspect_sourcefile_phrases_vw()`)
+- [ ] Create `view_sourcefile_api()` in `sourcefile_api.py` (from `view_sourcefile_vw()`)
+- [ ] Create `download_sourcefile_api()` in `sourcefile_api.py` (from `download_sourcefile_vw()`)
+- [ ] Create `process_sourcefile_api()` in `sourcefile_api.py` (from `process_sourcefile_vw()`)
+- [ ] Create `play_sourcefile_audio_api()` in `sourcefile_api.py` (from `play_sourcefile_audio_vw()`)
+- [ ] Create `sourcefile_sentences_api()` in `sourcefile_api.py` (from `sourcefile_sentences_vw()`)
+- [ ] Create `next_sourcefile_api()` in `sourcefile_api.py` (from `next_sourcefile_vw()`)
+- [ ] Create `prev_sourcefile_api()` in `sourcefile_api.py` (from `prev_sourcefile_vw()`)
+
+**Auth/User API**
+- [ ] Create `auth_page_api()` in `auth_api.py` (from `auth_page_vw()`)
+- [ ] Create `protected_page_api()` in `auth_api.py` (from `protected_page_vw()`)
+- [ ] Create `profile_page_api()` in `auth_api.py` (from `profile_page_vw()`)
+
+**Flashcard API**
+- [ ] Create `flashcard_landing_api()` in `flashcard_api.py` (from `flashcard_landing_vw()`)
 
 Sentence Component - Basic Structure
 - [x] Create Sentence component with minimal functionality

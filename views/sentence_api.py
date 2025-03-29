@@ -11,7 +11,11 @@ from peewee import DoesNotExist
 from slugify import slugify
 
 from db_models import Sentence
-from utils.sentence_utils import get_random_sentence, get_detailed_sentence_data
+from utils.sentence_utils import (
+    get_random_sentence,
+    get_detailed_sentence_data,
+    get_all_sentences,
+)
 from utils.audio_utils import ensure_model_audio_data
 
 # Create a blueprint with standardized prefix
@@ -161,3 +165,21 @@ def generate_sentence_audio_api(target_language_code: str, slug: str):
         return jsonify({"error": "Sentence not found"}), 404
     except Exception as e:
         return jsonify({"error": f"Failed to generate audio: {str(e)}"}), 500
+
+
+@sentence_api_bp.route("/<target_language_code>/sentences", methods=["GET"])
+def sentences_list_api(target_language_code: str):
+    """Get all sentences for a language.
+
+    Returns a list of all sentences for the specified language code.
+    Each sentence includes basic metadata like text, translation, and slug.
+    """
+    # Fetch all sentences for the language
+    sentences = get_all_sentences(target_language_code)
+
+    # Transform the response to match the frontend's expected format
+    for sentence in sentences:
+        if "sentence" in sentence:
+            sentence["text"] = sentence.pop("sentence")
+
+    return jsonify(sentences)

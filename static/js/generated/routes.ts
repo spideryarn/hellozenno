@@ -47,6 +47,7 @@ export enum RouteName {
   SOURCEDIR_API_RENAME_SOURCEDIR_API = "SOURCEDIR_API_RENAME_SOURCEDIR_API",
   SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API = "SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API",
   SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API = "SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API",
+  SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API = "SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API",
   WORDFORM_API_WORD_PREVIEW_API = "WORDFORM_API_WORD_PREVIEW_API",
   WORDFORM_API_GET_MP3_API = "WORDFORM_API_GET_MP3_API",
   LEMMA_API_GET_LEMMA_DATA_API = "LEMMA_API_GET_LEMMA_DATA_API",
@@ -66,6 +67,7 @@ export enum RouteName {
   SENTENCE_API_DELETE_SENTENCE_API = "SENTENCE_API_DELETE_SENTENCE_API",
   SENTENCE_API_RENAME_SENTENCE_API = "SENTENCE_API_RENAME_SENTENCE_API",
   SENTENCE_API_GENERATE_SENTENCE_AUDIO_API = "SENTENCE_API_GENERATE_SENTENCE_AUDIO_API",
+  SENTENCE_API_SENTENCES_LIST_API = "SENTENCE_API_SENTENCES_LIST_API",
   LANGUAGES_API_GET_LANGUAGES_API = "LANGUAGES_API_GET_LANGUAGES_API",
   LANGUAGES_API_GET_LANGUAGE_NAME_API = "LANGUAGES_API_GET_LANGUAGE_NAME_API",
 }
@@ -119,6 +121,7 @@ export const ROUTES = {
   SOURCEDIR_API_RENAME_SOURCEDIR_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/rename",
   SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/upload",
   SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/update_description",
+  SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API: "/api/lang/sourcedir/{target_language_code}/sources",
   WORDFORM_API_WORD_PREVIEW_API: "/api/lang/word/{target_language_code}/{word}/preview",
   WORDFORM_API_GET_MP3_API: "/api/lang/word/{target_language_code}/{word}/mp3",
   LEMMA_API_GET_LEMMA_DATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/data",
@@ -138,6 +141,7 @@ export const ROUTES = {
   SENTENCE_API_DELETE_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}",
   SENTENCE_API_RENAME_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}/rename",
   SENTENCE_API_GENERATE_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{slug}/generate_audio",
+  SENTENCE_API_SENTENCES_LIST_API: "/api/lang/sentence/{target_language_code}/sentences",
   LANGUAGES_API_GET_LANGUAGES_API: "/api/lang/languages",
   LANGUAGES_API_GET_LANGUAGE_NAME_API: "/api/lang/language_name/{language_code}",
 } as const;
@@ -191,6 +195,7 @@ export type RouteParams = {
   [RouteName.SOURCEDIR_API_RENAME_SOURCEDIR_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API]: { target_language_code: string; sourcedir_slug: string };
+  [RouteName.SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API]: { target_language_code: string };
   [RouteName.WORDFORM_API_WORD_PREVIEW_API]: { target_language_code: string; word: string };
   [RouteName.WORDFORM_API_GET_MP3_API]: { target_language_code: string; word: string };
   [RouteName.LEMMA_API_GET_LEMMA_DATA_API]: { target_language_code: string; lemma: string };
@@ -210,6 +215,7 @@ export type RouteParams = {
   [RouteName.SENTENCE_API_DELETE_SENTENCE_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_RENAME_SENTENCE_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_GENERATE_SENTENCE_AUDIO_API]: { target_language_code: string; slug: string };
+  [RouteName.SENTENCE_API_SENTENCES_LIST_API]: { target_language_code: string };
   [RouteName.LANGUAGES_API_GET_LANGUAGES_API]: {};
   [RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API]: { language_code: string };
 };
