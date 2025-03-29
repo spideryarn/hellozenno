@@ -1,0 +1,231 @@
+<script lang="ts">
+  import type { PageData } from './$types';  
+  import { Card } from '$lib';
+  import SentenceCard from '$lib/components/SentenceCard.svelte';
+  
+  export let data: PageData;
+  const { lemmaData } = data;
+  
+  // Unwrap the data from the response
+  const lemma_metadata = lemmaData.lemma_metadata;
+  const target_language_code = lemmaData.target_language_code;
+  const target_language_name = lemmaData.target_language_name;
+  const metadata = lemmaData.metadata;
+  
+  function handleDeleteSubmit(event: SubmitEvent) {
+    const confirmed = confirm('Are you sure you want to delete this lemma? All associated wordforms will also be deleted. This action cannot be undone.');
+    if (!confirmed) {
+      event.preventDefault();
+    }
+  }
+</script>
+
+<div class="container">
+  <div class="row mb-4">
+    <div class="col">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Languages</a></li>
+          <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{target_language_name}</a></li>
+          <li class="breadcrumb-item"><a href="/language/{target_language_code}/lemmas">Lemmas</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{lemma_metadata.lemma}</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+  
+  {#if metadata}
+  <div class="metadata-display mb-3">
+    <p class="small text-muted">Created: <span class="metadata-timestamp">{metadata.created_at}</span></p>
+    <p class="small text-muted">Updated: <span class="metadata-timestamp">{metadata.updated_at}</span></p>
+  </div>
+  {/if}
+
+  <h1 class="mb-4">{lemma_metadata.lemma}</h1>
+
+  <div class="mb-4">
+    <form action="/api/lang/lemma/{target_language_code}/lemma/{lemma_metadata.lemma}/delete" method="POST" 
+          on:submit={handleDeleteSubmit}>
+      <button type="submit" class="btn btn-danger">Delete lemma</button>
+    </form>
+  </div>
+  
+  <Card title="Lemma Details">
+    <div class="translations mb-3">
+      <p><strong>Translation:</strong> 
+        {#if lemma_metadata.translations && lemma_metadata.translations.length > 0}
+          {lemma_metadata.translations.join('; ')}
+        {:else}
+          No translation available
+        {/if}
+      </p>
+    </div>
+    
+    <p><strong>Part of Speech:</strong> {lemma_metadata.part_of_speech || 'Not available'}</p>
+    
+    <div class="etymology mb-3">
+      <p><strong>Etymology:</strong> {lemma_metadata.etymology || 'Not available'}</p>
+    </div>
+    
+    <div class="commonality mb-3">
+      <p><strong>Commonality:</strong> {Math.round((lemma_metadata.commonality || 0) * 100)}%</p>
+    </div>
+    
+    <div class="guessability mb-3">
+      <p><strong>Guessability:</strong> {Math.round((lemma_metadata.guessability || 0) * 100)}%</p>
+    </div>
+    
+    <div class="register mb-3">
+      <p><strong>Register:</strong> {lemma_metadata.register || 'Not available'}</p>
+    </div>
+  </Card>
+  
+  {#if lemma_metadata.example_usage && lemma_metadata.example_usage.length > 0}
+  <Card title="Example Usage" className="mt-4">
+    <div class="d-flex flex-column gap-3">
+      {#each lemma_metadata.example_usage as example}
+        <SentenceCard 
+          text={example.phrase} 
+          translation={example.translation} 
+          slug={example.slug || ''} 
+          language_code={target_language_code}
+        />
+      {/each}
+    </div>
+  </Card>
+  {/if}
+  
+  {#if lemma_metadata.mnemonics && lemma_metadata.mnemonics.length > 0}
+  <Card title="Mnemonics" className="mt-4">
+    <ul class="list-group">
+      {#each lemma_metadata.mnemonics as mnemonic}
+        <li class="list-group-item">{mnemonic}</li>
+      {/each}
+    </ul>
+  </Card>
+  {/if}
+  
+  {#if lemma_metadata.related_words_phrases_idioms && lemma_metadata.related_words_phrases_idioms.length > 0}
+  <Card title="Related Words, Phrases & Idioms" className="mt-4">
+    <div class="list-group">
+      {#each lemma_metadata.related_words_phrases_idioms as related}
+        <a href="/language/{target_language_code}/lemma/{related.lemma}" 
+           class="list-group-item list-group-item-action">
+          <p class="mb-1 hz-foreign-text">{related.lemma}</p>
+          <p class="mb-0 small text-muted">{related.translation || ''}</p>
+        </a>
+      {/each}
+    </div>
+  </Card>
+  {/if}
+  
+  {#if lemma_metadata.synonyms && lemma_metadata.synonyms.length > 0}
+  <Card title="Synonyms" className="mt-4">
+    <div class="list-group">
+      {#each lemma_metadata.synonyms as synonym}
+        <a href="/language/{target_language_code}/lemma/{synonym.lemma}" 
+           class="list-group-item list-group-item-action">
+          <p class="mb-1 hz-foreign-text">{synonym.lemma}</p>
+          <p class="mb-0 small text-muted">{synonym.translation || ''}</p>
+        </a>
+      {/each}
+    </div>
+  </Card>
+  {/if}
+  
+  {#if lemma_metadata.antonyms && lemma_metadata.antonyms.length > 0}
+  <Card title="Antonyms" className="mt-4">
+    <div class="list-group">
+      {#each lemma_metadata.antonyms as antonym}
+        <a href="/language/{target_language_code}/lemma/{antonym.lemma}" 
+           class="list-group-item list-group-item-action">
+          <p class="mb-1 hz-foreign-text">{antonym.lemma}</p>
+          <p class="mb-0 small text-muted">{antonym.translation || ''}</p>
+        </a>
+      {/each}
+    </div>
+  </Card>
+  {/if}
+  
+  {#if lemma_metadata.example_wordforms && lemma_metadata.example_wordforms.length > 0}
+  <Card title="Example Wordforms" className="mt-4">
+    <div class="list-group">
+      {#each lemma_metadata.example_wordforms as form}
+        <a href="/language/{target_language_code}/wordform/{form}" 
+           class="list-group-item list-group-item-action hz-foreign-text">
+          {form}
+        </a>
+      {/each}
+    </div>
+  </Card>
+  {/if}
+  
+  {#if lemma_metadata.cultural_context}
+  <Card title="Cultural Context" className="mt-4">
+    <p>{lemma_metadata.cultural_context}</p>
+  </Card>
+  {/if}
+  
+  {#if lemma_metadata.easily_confused_with && lemma_metadata.easily_confused_with.length > 0 && lemma_metadata.easily_confused_with[0].lemma}
+  <Card title="Easily Confused With" className="mt-4">
+    <div class="list-group">
+      {#each lemma_metadata.easily_confused_with as confused}
+        {#if confused.lemma}
+        <div class="list-group-item">
+          <h5 class="hz-foreign-text">{confused.lemma}</h5>
+          
+          {#if confused.explanation}
+          <p><strong>Explanation:</strong> {confused.explanation}</p>
+          {/if}
+          
+          {#if confused.example_usage_this_target && confused.example_usage_this_source}
+          <div class="mb-3">
+            <p class="mb-1 small text-secondary">This word:</p>
+            <SentenceCard
+              text={confused.example_usage_this_target}
+              translation={confused.example_usage_this_source}
+              slug=""
+              language_code={target_language_code}
+            />
+          </div>
+          {/if}
+          
+          {#if confused.example_usage_other_target && confused.example_usage_other_source}
+          <div class="mb-3">
+            <p class="mb-1 small text-secondary">Confused word:</p>
+            <SentenceCard
+              text={confused.example_usage_other_target}
+              translation={confused.example_usage_other_source}
+              slug=""
+              language_code={target_language_code}
+            />
+          </div>
+          {/if}
+          
+          {#if confused.notes}
+          <p><strong>Notes:</strong> {confused.notes}</p>
+          {/if}
+          
+          {#if confused.mnemonic}
+          <p><strong>Mnemonic:</strong> {confused.mnemonic}</p>
+          {/if}
+        </div>
+        {/if}
+      {/each}
+    </div>
+  </Card>
+  {/if}
+</div>
+
+<style>
+  .hz-foreign-text {
+    font-family: 'Times New Roman', Times, serif;
+    font-style: italic;
+  }
+  
+  .breadcrumb {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+  }
+</style> 
