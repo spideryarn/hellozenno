@@ -2,7 +2,7 @@
  * API utility for communicating with the Flask backend
  */
 
-import type { Language, Sentence, SentenceMetadata } from "./types";
+import type { Language, Lemma, Sentence, SentenceMetadata } from "./types";
 
 // Base URL for the Flask API
 const API_BASE_URL = "http://localhost:3000";
@@ -66,5 +66,17 @@ export async function getSentence(languageCode: string, slug: string) {
 export async function getSentencesForLanguage(languageCode: string) {
     return fetchFromApi<Sentence[]>(
         `/api/lang/sentence/${languageCode}/sentences`,
+    );
+}
+
+/**
+ * Fetch all lemmas for a language
+ */
+export async function getLemmasForLanguage(
+    languageCode: string,
+    sort: string = "alpha",
+) {
+    return fetchFromApi<Lemma[]>(
+        `/api/lang/lemma/${languageCode}/lemmas?sort=${sort}`,
     );
 }
