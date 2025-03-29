@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Sentence, SentenceMetadata } from '$lib/api';
+  import type { Sentence, SentenceMetadata } from '$lib/types';
   
   // Props for the Sentence component
   export let sentence: Sentence;
@@ -17,7 +17,7 @@
   }
   
   // Generate the audio URL
-  const audioUrl = `/api/language/${sentence.language_code}/sentence/${sentence.id}/audio`;
+  const audioUrl = `http://localhost:3000/api/lang/sentence/${sentence.language_code}/${sentence.id}/audio`;
 </script>
 
 <div class="sentence-page">

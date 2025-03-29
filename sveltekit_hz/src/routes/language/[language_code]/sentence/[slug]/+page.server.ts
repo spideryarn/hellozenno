@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     try {
         // Fetch sentence data from the Flask API
         const response = await fetch(
-            `http://localhost:3000/api/language/${language_code}/sentence/${slug}`,
+            `http://localhost:3000/api/lang/sentence/${language_code}/${slug}`,
         );
 
         if (!response.ok) {

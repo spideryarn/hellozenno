@@ -87,6 +87,15 @@ def get_sentence_audio_api(target_language_code: str, sentence_id: int):
         return jsonify({"error": "Sentence not found"}), 404
 
 
+# For compatibility with SvelteKit, add a route with 'language' in the path for audio too
+@sentence_api_bp.route(
+    "/language/<target_language_code>/<int:sentence_id>/audio", methods=["GET"]
+)
+def get_sentence_audio_by_language_api(target_language_code: str, sentence_id: int):
+    """Alias for get_sentence_audio_api for compatibility with SvelteKit."""
+    return get_sentence_audio_api(target_language_code, sentence_id)
+
+
 @sentence_api_bp.route("/<target_language_code>/<slug>", methods=["DELETE"])
 def delete_sentence_api(target_language_code: str, slug: str):
     """Delete a sentence."""

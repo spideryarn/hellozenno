@@ -4,7 +4,9 @@ import { error } from "@sveltejs/kit";
 export const load: PageServerLoad = async ({ fetch }) => {
     try {
         // In server-side code, we need to use the full URL
-        const response = await fetch("http://localhost:3000/api/languages");
+        const response = await fetch(
+            "http://localhost:3000/api/lang/languages",
+        );
 
         if (!response.ok) {
             throw new Error(
@@ -15,7 +17,7 @@ export const load: PageServerLoad = async ({ fetch }) => {
         const data = await response.json();
 
         return {
-            languages: data.languages,
+            languages: data,
         };
     } catch (err) {
         console.error("Failed to load languages:", err);

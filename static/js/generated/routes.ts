@@ -62,10 +62,12 @@ export enum RouteName {
   SENTENCE_API_GET_RANDOM_SENTENCE_API = "SENTENCE_API_GET_RANDOM_SENTENCE_API",
   SENTENCE_API_GET_SENTENCE_BY_SLUG_API = "SENTENCE_API_GET_SENTENCE_BY_SLUG_API",
   SENTENCE_API_GET_SENTENCE_AUDIO_API = "SENTENCE_API_GET_SENTENCE_AUDIO_API",
+  SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API = "SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API",
   SENTENCE_API_DELETE_SENTENCE_API = "SENTENCE_API_DELETE_SENTENCE_API",
   SENTENCE_API_RENAME_SENTENCE_API = "SENTENCE_API_RENAME_SENTENCE_API",
   SENTENCE_API_GENERATE_SENTENCE_AUDIO_API = "SENTENCE_API_GENERATE_SENTENCE_AUDIO_API",
   LANGUAGES_API_GET_LANGUAGES_API = "LANGUAGES_API_GET_LANGUAGES_API",
+  LANGUAGES_API_GET_LANGUAGE_NAME_API = "LANGUAGES_API_GET_LANGUAGE_NAME_API",
 }
 
 
@@ -132,10 +134,12 @@ export const ROUTES = {
   SENTENCE_API_GET_RANDOM_SENTENCE_API: "/api/lang/sentence/{target_language_code}/random",
   SENTENCE_API_GET_SENTENCE_BY_SLUG_API: "/api/lang/sentence/{target_language_code}/{slug}",
   SENTENCE_API_GET_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{sentence_id}/audio",
+  SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API: "/api/lang/sentence/language/{target_language_code}/{sentence_id}/audio",
   SENTENCE_API_DELETE_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}",
   SENTENCE_API_RENAME_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}/rename",
   SENTENCE_API_GENERATE_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{slug}/generate_audio",
   LANGUAGES_API_GET_LANGUAGES_API: "/api/lang/languages",
+  LANGUAGES_API_GET_LANGUAGE_NAME_API: "/api/lang/language_name/{language_code}",
 } as const;
 
 
@@ -202,10 +206,12 @@ export type RouteParams = {
   [RouteName.SENTENCE_API_GET_RANDOM_SENTENCE_API]: { target_language_code: string };
   [RouteName.SENTENCE_API_GET_SENTENCE_BY_SLUG_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API]: { target_language_code: string; sentence_id: string };
+  [RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API]: { target_language_code: string; sentence_id: string };
   [RouteName.SENTENCE_API_DELETE_SENTENCE_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_RENAME_SENTENCE_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_GENERATE_SENTENCE_AUDIO_API]: { target_language_code: string; slug: string };
   [RouteName.LANGUAGES_API_GET_LANGUAGES_API]: {};
+  [RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API]: { language_code: string };
 };
 
 
