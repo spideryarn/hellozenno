@@ -9,7 +9,7 @@ import logging
 import os
 
 from utils.url_registry import endpoint_for
-from utils.lang_utils import get_all_languages
+from views.languages_views import languages_list_vw
 
 
 core_views_bp = Blueprint("core_views", __name__)
@@ -21,19 +21,6 @@ logger = logging.getLogger(__name__)
 @core_views_bp.route("/")
 def home_vw():
     return redirect(url_for(endpoint_for(languages_list_vw)))
-
-
-@core_views_bp.route("/lang")
-def languages_list_vw(trailing_slash=""):
-    """Display all supported languages."""
-    # Import here to avoid circular imports
-    from views.sourcedir_views import sourcedirs_for_language_vw
-
-    languages = get_all_languages()
-    return render_template(
-        "languages.jinja",
-        languages=languages,
-    )
 
 
 @core_views_bp.route("/experim")
