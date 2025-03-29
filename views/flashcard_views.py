@@ -14,12 +14,17 @@ from flask import (
     current_app,
 )
 from peewee import DoesNotExist
+from typing import Dict, Any, cast
 
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_random_sentence
 from utils.audio_utils import ensure_model_audio_data
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
-from utils.flashcard_utils import get_flashcard_landing_data
+from utils.flashcard_utils import (
+    get_flashcard_landing_data,
+    get_flashcard_sentence_data,
+    get_random_flashcard_data,
+)
 
 from db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir
 
@@ -59,67 +64,34 @@ def flashcard_landing_vw(target_language_code: str):
 @flashcard_views_bp.route("/<target_language_code>/flashcards/sentence/<slug>")
 def flashcard_sentence_vw(target_language_code: str, slug: str):
     """View a specific sentence as a Svelte-based flashcard."""
-    target_language_name = get_language_name(target_language_code)
-
-    try:
-        sentence = Sentence.get(
-            (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
-        )
-    except DoesNotExist:
-        abort(404, description="Sentence not found")
-
-    # Pre-generate audio if needed
-    if not sentence.audio_data:
-        try:
-            ensure_model_audio_data(
-                model=sentence,
-                should_add_delays=True,
-                verbose=1,
-            )
-        except Exception as e:
-            # Log error but continue - audio can be generated on demand
-            print(f"Error pre-generating audio: {e}")
-
     # Get parameters from query
     sourcefile_slug = request.args.get("sourcefile")
     sourcedir_slug = request.args.get("sourcedir")
 
-    sourcefile_entry = None
-    sourcedir_entry = None
-    lemma_count = None
+    # Use the shared utility function
+    result = get_flashcard_sentence_data(
+        language_code=target_language_code,
+        slug=slug,
+        sourcefile_slug=sourcefile_slug,
+        sourcedir_slug=sourcedir_slug,
+    )
 
-    # If sourcedir is provided, get lemma count
-    if sourcedir_slug:
-        try:
-            sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
-            lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
-            lemma_count = len(lemmas)
-        except DoesNotExist:
-            abort(404, description="Sourcedir not found")
-    # If sourcefile is provided, get its lemma count
-    elif sourcefile_slug:
-        try:
-            sourcefile_entry = (
-                Sourcefile.select()
-                .join(SourcefileWordform)
-                .where(Sourcefile.slug == sourcefile_slug)
-                .get()
-            )
-            lemmas = get_sourcefile_lemmas(
-                target_language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
-            )
-            lemma_count = len(lemmas)
-        except DoesNotExist:
-            abort(404, description="Sourcefile not found")
+    if "error" in result:
+        abort(404, description=result["error"])
+
+    # Cast result to Dict[str, Any] to help type checking
+    data = cast(Dict[str, Any], result)
+    metadata = cast(Dict[str, Any], data.get("metadata", {}))
+    language_name = cast(str, metadata.get("language_name", ""))
 
     return render_template(
         "flashcard_sentence.jinja",
         target_language_code=target_language_code,
-        target_language_name=target_language_name,
-        sentence=sentence,
-        sourcefile=sourcefile_entry,
-        sourcedir=sourcedir_entry,
-        lemma_count=lemma_count,
+        target_language_name=language_name,
+        sentence=data["sentence"],  # Pass the full sentence model to the template
+        sourcefile=data.get("sourcefile"),
+        sourcedir=data.get("sourcedir"),
+        lemma_count=data.get("lemma_count"),
     )
 
 
@@ -129,38 +101,15 @@ def random_flashcard_vw(target_language_code: str):
     sourcefile_slug = request.args.get("sourcefile")
     sourcedir_slug = request.args.get("sourcedir")
 
-    lemmas = None
-
-    # If sourcedir is provided, get lemmas for filtering
-    if sourcedir_slug:
-        try:
-            sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
-            lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
-        except DoesNotExist:
-            abort(404, description="Sourcedir not found")
-    # If sourcefile is provided, get its lemmas for filtering
-    elif sourcefile_slug:
-        try:
-            sourcefile_entry = (
-                Sourcefile.select()
-                .join(SourcefileWordform)
-                .where(Sourcefile.slug == sourcefile_slug)
-                .get()
-            )
-            lemmas = get_sourcefile_lemmas(
-                target_language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
-            )
-        except DoesNotExist:
-            abort(404, description="Sourcefile not found")
-
-    # Get random sentence
-    sentence = get_random_sentence(
-        target_language_code=target_language_code,
-        required_lemmas=lemmas if lemmas else None,
+    # Use the shared utility function
+    data = get_random_flashcard_data(
+        language_code=target_language_code,
+        sourcefile_slug=sourcefile_slug,
+        sourcedir_slug=sourcedir_slug,
     )
 
-    if not sentence:
-        abort(404, description="No matching sentences found")
+    if "error" in data:
+        abort(404, description=data["error"])
 
     # Preserve only sourcefile/sourcedir in redirect
     query_params = {}
@@ -173,7 +122,7 @@ def random_flashcard_vw(target_language_code: str):
         url_for(
             "flashcard_views.flashcard_sentence_vw",
             target_language_code=target_language_code,
-            slug=sentence["slug"],
+            slug=data["slug"],
             **query_params,
         )
     )
