@@ -4,6 +4,9 @@
 /* Import custom theme */
 @import './theme.css';
 
+/* Import component styles */
+@import './components.css';
+
 /* Global styles */
 html,
 body {

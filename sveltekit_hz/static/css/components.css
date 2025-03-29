@@ -1,0 +1,58 @@
+/* Card component styles */
+.hz-language-item {
+    background-color: var(--bs-card-bg);
+    border: 1px solid var(--bs-card-border-color);
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hz-language-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.hz-language-item .card-title {
+    color: var(--bs-primary);
+}
+
+.hz-language-code {
+    color: rgba(233, 233, 233, 0.6);
+    font-size: 0.9rem;
+}
+
+/* Source item styles */
+.hz-source-item {
+    margin-bottom: 1rem;
+}
+
+.hz-source-item .source-stats {
+    font-size: 0.9rem;
+    color: var(--bs-secondary);
+}
+
+.hz-source-item .source-description {
+    font-size: 0.95rem;
+}
+
+/* Foreign text styling */
+.hz-foreign-text {
+    font-family: var(--hz-foreign-font);
+    font-style: italic;
+}
+
+/* Section header styles */
+.hz-section-header {
+    margin-bottom: 1.5rem;
+    color: var(--bs-primary);
+}
+
+/* Button styles */
+.hz-btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.hz-btn-primary:hover {
+    background-color: var(--bs-primary-rgb);
+    border-color: var(--bs-primary);
+}

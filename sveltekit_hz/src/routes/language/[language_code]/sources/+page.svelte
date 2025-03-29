@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import SourceItem from '$lib/components/SourceItem.svelte';
   
   export let data: PageData;
   
@@ -26,28 +27,14 @@
 {:else}
   <div class="list-group">
     {#each sources as source}
-      <div class="list-group-item hz-language-item mb-3">
-        <div class="d-flex flex-column">
-          <div class="mb-2">
-            <h3 class="mb-0">
-              <a href="/language/{languageCode}/source/{source.slug}" class="text-decoration-none">
-                {source.display_name || source.name}
-              </a>
-            </h3>
-          </div>
-          <div class="text-secondary small mb-2">
-            <span class="me-3">{source.statistics.file_count} files</span>
-            {#if source.statistics.sentence_count}
-              <span>{source.statistics.sentence_count} sentences</span>
-            {/if}
-          </div>
-          {#if source.description}
-            <div class="small">
-              {source.description}
-            </div>
-          {/if}
-        </div>
-      </div>
+      <SourceItem 
+        name={source.name}
+        displayName={source.display_name}
+        slug={source.slug}
+        {languageCode}
+        description={source.description}
+        statistics={source.statistics}
+      />
     {/each}
   </div>
 {/if} 
