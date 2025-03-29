@@ -50,8 +50,11 @@ export enum RouteName {
   SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API = "SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API",
   WORDFORM_API_WORD_PREVIEW_API = "WORDFORM_API_WORD_PREVIEW_API",
   WORDFORM_API_GET_MP3_API = "WORDFORM_API_GET_MP3_API",
+  WORDFORM_API_WORDFORMS_LIST_API = "WORDFORM_API_WORDFORMS_LIST_API",
+  WORDFORM_API_GET_WORDFORM_METADATA_API = "WORDFORM_API_GET_WORDFORM_METADATA_API",
   LEMMA_API_GET_LEMMA_DATA_API = "LEMMA_API_GET_LEMMA_DATA_API",
   LEMMA_API_LEMMAS_LIST_API = "LEMMA_API_LEMMAS_LIST_API",
+  LEMMA_API_GET_LEMMA_METADATA_API = "LEMMA_API_GET_LEMMA_METADATA_API",
   PHRASE_API_PHRASE_PREVIEW_API = "PHRASE_API_PHRASE_PREVIEW_API",
   SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API = "SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API",
   SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API = "SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API",
@@ -71,6 +74,9 @@ export enum RouteName {
   SENTENCE_API_SENTENCES_LIST_API = "SENTENCE_API_SENTENCES_LIST_API",
   LANGUAGES_API_GET_LANGUAGES_API = "LANGUAGES_API_GET_LANGUAGES_API",
   LANGUAGES_API_GET_LANGUAGE_NAME_API = "LANGUAGES_API_GET_LANGUAGE_NAME_API",
+  FLASHCARD_API_FLASHCARD_SENTENCE_API = "FLASHCARD_API_FLASHCARD_SENTENCE_API",
+  FLASHCARD_API_RANDOM_FLASHCARD_API = "FLASHCARD_API_RANDOM_FLASHCARD_API",
+  FLASHCARD_API_FLASHCARD_LANDING_API = "FLASHCARD_API_FLASHCARD_LANDING_API",
 }
 
 
@@ -125,8 +131,11 @@ export const ROUTES = {
   SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API: "/api/lang/sourcedir/{target_language_code}/sources",
   WORDFORM_API_WORD_PREVIEW_API: "/api/lang/word/{target_language_code}/{word}/preview",
   WORDFORM_API_GET_MP3_API: "/api/lang/word/{target_language_code}/{word}/mp3",
+  WORDFORM_API_WORDFORMS_LIST_API: "/api/lang/word/{target_language_code}/wordforms",
+  WORDFORM_API_GET_WORDFORM_METADATA_API: "/api/lang/word/{target_language_code}/wordform/{wordform}",
   LEMMA_API_GET_LEMMA_DATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/data",
   LEMMA_API_LEMMAS_LIST_API: "/api/lang/lemma/{target_language_code}/lemmas",
+  LEMMA_API_GET_LEMMA_METADATA_API: "/api/lang/lemma/{target_language_code}/lemma/{lemma}/metadata",
   PHRASE_API_PHRASE_PREVIEW_API: "/api/lang/phrase/{target_language_code}/preview/{phrase}",
   SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process_individual",
   SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/update_description",
@@ -146,6 +155,9 @@ export const ROUTES = {
   SENTENCE_API_SENTENCES_LIST_API: "/api/lang/sentence/{target_language_code}/sentences",
   LANGUAGES_API_GET_LANGUAGES_API: "/api/lang/languages",
   LANGUAGES_API_GET_LANGUAGE_NAME_API: "/api/lang/language_name/{language_code}",
+  FLASHCARD_API_FLASHCARD_SENTENCE_API: "/api/lang/{language_code}/flashcards/sentence/{slug}",
+  FLASHCARD_API_RANDOM_FLASHCARD_API: "/api/lang/{language_code}/flashcards/random",
+  FLASHCARD_API_FLASHCARD_LANDING_API: "/api/lang/{language_code}/flashcards/landing",
 } as const;
 
 
@@ -200,8 +212,11 @@ export type RouteParams = {
   [RouteName.SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API]: { target_language_code: string };
   [RouteName.WORDFORM_API_WORD_PREVIEW_API]: { target_language_code: string; word: string };
   [RouteName.WORDFORM_API_GET_MP3_API]: { target_language_code: string; word: string };
+  [RouteName.WORDFORM_API_WORDFORMS_LIST_API]: { target_language_code: string };
+  [RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API]: { target_language_code: string; wordform: string };
   [RouteName.LEMMA_API_GET_LEMMA_DATA_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_LEMMAS_LIST_API]: { target_language_code: string };
+  [RouteName.LEMMA_API_GET_LEMMA_METADATA_API]: { target_language_code: string; lemma: string };
   [RouteName.PHRASE_API_PHRASE_PREVIEW_API]: { target_language_code: string; phrase: string };
   [RouteName.SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
@@ -221,6 +236,9 @@ export type RouteParams = {
   [RouteName.SENTENCE_API_SENTENCES_LIST_API]: { target_language_code: string };
   [RouteName.LANGUAGES_API_GET_LANGUAGES_API]: {};
   [RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API]: { language_code: string };
+  [RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API]: { language_code: string; slug: string };
+  [RouteName.FLASHCARD_API_RANDOM_FLASHCARD_API]: { language_code: string };
+  [RouteName.FLASHCARD_API_FLASHCARD_LANDING_API]: { language_code: string };
 };
 
 

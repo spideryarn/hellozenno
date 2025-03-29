@@ -3,16 +3,18 @@ from utils.audio_utils import ensure_model_audio_data
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_random_sentence
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
+from utils.flashcard_utils import get_flashcard_landing_data
 from views.flashcard_views import flashcard_views_bp
 
 
-from flask import jsonify, request, url_for
+from flask import jsonify, request, url_for, Blueprint
 from peewee import DoesNotExist
 
+# Create a separate blueprint for API endpoints
+flashcard_api_bp = Blueprint("flashcard_api", __name__, url_prefix="/api/lang")
 
-@flashcard_views_bp.route(
-    "/<language_code>/flashcards/api/sentence/<slug>", methods=["GET"]
-)
+
+@flashcard_api_bp.route("/<language_code>/flashcards/sentence/<slug>", methods=["GET"])
 def flashcard_sentence_api(language_code: str, slug: str):
     """JSON API endpoint for a specific sentence."""
     try:
@@ -65,7 +67,7 @@ def flashcard_sentence_api(language_code: str, slug: str):
     return jsonify(response_data)
 
 
-@flashcard_views_bp.route("/<language_code>/flashcards/api/random", methods=["GET"])
+@flashcard_api_bp.route("/<language_code>/flashcards/random", methods=["GET"])
 def random_flashcard_api(language_code: str):
     """JSON API endpoint for a random sentence."""
     sourcefile_slug = request.args.get("sourcefile")
@@ -107,7 +109,7 @@ def random_flashcard_api(language_code: str):
     try:
         sentence = Sentence.get(
             (Sentence.language_code == language_code)
-            & (Sentence.id == sentence_data["id"])
+            & (Sentence.id == sentence_data["id"])  # type: ignore
         )
     except DoesNotExist:
         return jsonify({"error": "Sentence not found"}), 404
@@ -149,3 +151,22 @@ def random_flashcard_api(language_code: str):
         response_data["metadata"]["sourcedir"] = sourcedir_slug
 
     return jsonify(response_data)
+
+
+@flashcard_api_bp.route("/<language_code>/flashcards/landing", methods=["GET"])
+def flashcard_landing_api(language_code: str):
+    """JSON API endpoint for the flashcard landing page."""
+    sourcefile_slug = request.args.get("sourcefile")
+    sourcedir_slug = request.args.get("sourcedir")
+
+    # Use the shared utility function
+    data = get_flashcard_landing_data(
+        language_code=language_code,
+        sourcefile_slug=sourcefile_slug,
+        sourcedir_slug=sourcedir_slug,
+    )
+
+    if "error" in data:
+        return jsonify({"error": data["error"]}), 404
+
+    return jsonify(data)

@@ -163,6 +163,7 @@ def create_app():
     from views.sourcefile_api import sourcefile_api_bp
     from views.sentence_api import sentence_api_bp
     from views.languages_api import languages_api_bp
+    from views.flashcard_api import flashcard_api_bp
 
     app.register_blueprint(sourcedir_api_bp)
     app.register_blueprint(wordform_api_bp)
@@ -171,6 +172,7 @@ def create_app():
     app.register_blueprint(sourcefile_api_bp)
     app.register_blueprint(sentence_api_bp)
     app.register_blueprint(languages_api_bp)
+    app.register_blueprint(flashcard_api_bp)
 
     # Add middleware to handle URL decoding for all routes - see planning/250316_vercel_url_encoding_fix.md
     app.before_request(decode_url_params)
