@@ -5,6 +5,7 @@ import unicodedata
 from werkzeug.exceptions import NotFound
 
 from db_models import Sourcedir, Sourcefile, SourcefileWordform, Wordform, Lemma
+from utils.lang_utils import get_language_name
 from utils.sourcefile_utils import _get_sourcefile_entry
 
 
@@ -151,3 +152,61 @@ def get_sourcefile_lemmas(
         raise NotFound("Sourcefile contains no practice vocabulary.")
 
     return lemmas
+
+
+def get_wordform_metadata(target_language_code: str, wordform: str):
+    """
+    Get metadata for a specific wordform.
+
+    Args:
+        target_language_code: The language code (e.g. 'el' for Greek)
+        wordform: The wordform text
+
+    Returns:
+        A dictionary containing:
+        - wordform_metadata: The wordform data
+        - lemma_metadata: Associated lemma data if available
+        - metadata: Creation/update timestamps
+
+    Raises:
+        DoesNotExist: If wordform not found
+    """
+
+    # Ensure wordform is properly handled
+    wordform = ensure_nfc(wordform)
+
+    # First try to find existing wordform in database
+    wordform_model = Wordform.get(
+        Wordform.wordform == wordform,
+        Wordform.language_code == target_language_code,
+    )
+
+    # Get the data
+    wordform_metadata = wordform_model.to_dict()
+
+    # Split the inflection_type string into a list if it exists
+    wordform_metadata["inflection_types"] = (
+        wordform_metadata["inflection_type"].split()
+        if wordform_metadata["inflection_type"]
+        else []
+    )
+
+    lemma_metadata = (
+        wordform_model.lemma_entry.to_dict() if wordform_model.lemma_entry else {}
+    )
+
+    # Prepare metadata timestamps
+    metadata = {
+        "created_at": wordform_model.created_at,
+        "updated_at": wordform_model.updated_at,
+    }
+
+    result = {
+        "wordform_metadata": wordform_metadata,
+        "lemma_metadata": lemma_metadata,
+        "target_language_code": target_language_code,
+        "target_language_name": get_language_name(target_language_code),
+        "metadata": metadata,
+    }
+
+    return result

@@ -7,6 +7,7 @@ from utils.lang_utils import get_language_name
 from db_models import Wordform
 from utils.vocab_llm_utils import quick_search_for_wordform
 from utils.url_registry import endpoint_for
+from utils.word_utils import get_wordform_metadata
 
 # Import necessary view functions
 from views.languages_views import languages_list_vw
@@ -64,28 +65,16 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
 
     # First try to find existing wordform in database
     try:
-        wordform_model = Wordform.get(
-            Wordform.wordform == wordform,
-            Wordform.language_code == target_language_code,
-        )
-        wordform_metadata = wordform_model.to_dict()
-        lemma_metadata = (
-            wordform_model.lemma_entry.to_dict() if wordform_model.lemma_entry else {}
-        )
-
-        # Prepare metadata for template
-        metadata = {
-            "created_at": wordform_model.created_at,
-            "updated_at": wordform_model.updated_at,
-        }
+        # Get the metadata using the utility function
+        result = get_wordform_metadata(target_language_code, wordform)
 
         return render_template(
             "wordform.jinja",
-            wordform_metadata=wordform_metadata,
+            wordform_metadata=result["wordform_metadata"],
             target_language_code=target_language_code,
             target_language_name=get_language_name(target_language_code),
-            dict_html=dict_as_html(wordform_metadata),
-            metadata=metadata,  # Add metadata to template context
+            dict_html=dict_as_html(result["wordform_metadata"]),
+            metadata=result["metadata"],  # Add metadata to template context
         )
     except DoesNotExist:
         # If not found, use quick search to get metadata

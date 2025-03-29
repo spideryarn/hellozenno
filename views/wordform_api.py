@@ -6,9 +6,12 @@ These endpoints follow the standard pattern:
 """
 
 from flask import Blueprint, jsonify, send_file, abort, request
-from utils.word_utils import get_word_preview
+from peewee import DoesNotExist
 import urllib.parse
+
 from db_models import Wordform
+from utils.word_utils import get_word_preview, get_wordform_metadata
+from utils.lang_utils import get_language_name
 
 # Create a blueprint with standardized prefix
 wordform_api_bp = Blueprint("wordform_api", __name__, url_prefix="/api/lang/word")
@@ -61,3 +64,44 @@ def wordforms_list_api(target_language_code: str):
     wordforms_data = [wordform.to_dict() for wordform in wordforms]
 
     return jsonify(wordforms_data)
+
+
+@wordform_api_bp.route("/<target_language_code>/wordform/<wordform>")
+def get_wordform_metadata_api(target_language_code: str, wordform: str):
+    """Get metadata for a wordform and its lemma.
+
+    This API endpoint corresponds to the get_wordform_metadata_vw view function.
+    It returns complete metadata for a wordform, including its lemma if available.
+    """
+    # URL decode the wordform parameter to handle non-Latin characters properly
+    wordform = urllib.parse.unquote(wordform)
+
+    try:
+        # Get the metadata using the utility function
+        result = get_wordform_metadata(target_language_code, wordform)
+
+        # Split the inflection_type string into a list if it exists
+        if (
+            result["wordform_metadata"]
+            and "inflection_type" in result["wordform_metadata"]
+            and result["wordform_metadata"]["inflection_type"]
+        ):
+            inflection_type = result["wordform_metadata"]["inflection_type"]
+            if isinstance(inflection_type, str):
+                result["wordform_metadata"]["inflection_types"] = [
+                    inflection_type.strip()
+                    for inflection_type in inflection_type.split()
+                    if inflection_type.strip()
+                ]
+
+        return jsonify(result)
+    except DoesNotExist:
+        response_data = {
+            "error": "Not Found",
+            "description": f"Wordform '{wordform}' not found",
+            "target_language_code": target_language_code,
+            "target_language_name": get_language_name(target_language_code),
+        }
+        response = jsonify(response_data)
+        response.status_code = 404
+        return response

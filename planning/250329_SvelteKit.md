@@ -97,7 +97,7 @@ Create the following missing API endpoints that correspond to existing view func
 - [ ] Create `wordforms_list_api()` in `wordform_api.py` (from `wordforms_list_vw()`)
 - [ ] Create `get_wordform_metadata_api()` in `wordform_api.py` (from `get_wordform_metadata_vw()`)
 - [ ] Create `delete_wordform_api()` in `wordform_api.py` (from `delete_wordform_vw()`)
-- [ ] Create `lemmas_list_api()` in `lemma_api.py` (from `lemmas_list_vw()`)
+- [x] Create `lemmas_list_api()` in `lemma_api.py` (from `lemmas_list_vw()`)
 - [ ] Create `phrases_list_api()` in `phrase_api.py` (from `phrases_list_vw()`)
 - [ ] Create `get_phrase_metadata_api()` in `phrase_api.py` (from `get_phrase_metadata_vw()`)
 - [ ] Create `delete_phrase_api()` in `phrase_api.py` (from `delete_phrase_vw()`)
