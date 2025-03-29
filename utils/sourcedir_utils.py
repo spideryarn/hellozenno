@@ -3,8 +3,9 @@ from peewee import DoesNotExist, fn
 from config import (
     SOURCE_EXTENSIONS,
 )
-from db_models import Sourcedir, Sourcefile
+from db_models import Sourcedir, Sourcefile, SourcefilePhrase
 from utils.url_registry import endpoint_for
+from utils.lang_utils import get_language_name, get_all_languages
 
 
 def allowed_file(filename):
@@ -125,3 +126,81 @@ def get_sourcedir_or_404(target_language_code: str, sourcedir_slug: str) -> Sour
         return _get_sourcedir_entry(target_language_code, sourcedir_slug)
     except DoesNotExist:
         abort(404, description="Source directory not found")
+
+
+def get_sourcedirs_for_language(target_language_code: str, sort_by: str = "date"):
+    """
+    Get all sourcedirs for a specific language with statistics.
+
+    Args:
+        target_language_code: Language code to filter by
+        sort_by: How to sort results - 'date' (default) or 'alpha'
+
+    Returns:
+        A dictionary with the following keys:
+        - target_language_code: The language code
+        - target_language_name: The language name
+        - sourcedirs: List of sourcedir info dictionaries
+        - empty_sourcedirs: List of slugs for empty sourcedirs
+        - sourcedir_stats: Dictionary of statistics keyed by sourcedir slug
+    """
+    target_language_name = get_language_name(target_language_code)
+
+    # Get supported languages for the dropdown
+    supported_languages = get_all_languages()
+
+    # Query sourcedirs from database - filtered by language
+    query = Sourcedir.select().where(Sourcedir.language_code == target_language_code)
+
+    if sort_by == "date":
+        # Sort by modification time, newest first
+        query = query.order_by(
+            fn.COALESCE(Sourcedir.updated_at, Sourcedir.created_at).desc()
+        )
+    else:
+        # Default alphabetical sort
+        query = query.order_by(Sourcedir.path)
+
+    # Get all sourcedirs and check which ones are empty
+    sourcedirs = []
+    empty_sourcedirs = []
+    sourcedir_stats = {}
+
+    for sourcedir in query:
+        sourcedirs.append(
+            {
+                "path": sourcedir.path,
+                "slug": sourcedir.slug,
+                "description": sourcedir.description,
+            }
+        )
+
+        # Count sourcefiles
+        sourcefile_count = (
+            Sourcefile.select().where(Sourcefile.sourcedir == sourcedir).count()
+        )
+        if sourcefile_count == 0:
+            empty_sourcedirs.append(sourcedir.slug)
+
+        # Count phrases
+        phrase_count = (
+            SourcefilePhrase.select()
+            .join(Sourcefile)
+            .where(Sourcefile.sourcedir == sourcedir)
+            .count()
+        )
+
+        sourcedir_stats[sourcedir.slug] = {
+            "phrase_count": phrase_count,
+            "file_count": sourcefile_count,
+            "path": sourcedir.path,
+        }
+
+    return {
+        "target_language_code": target_language_code,
+        "target_language_name": target_language_name,
+        "sourcedirs": sourcedirs,
+        "empty_sourcedirs": empty_sourcedirs,
+        "sourcedir_stats": sourcedir_stats,
+        "supported_languages": supported_languages,
+    }

@@ -17,7 +17,11 @@ from config import (
 )
 from db_models import Sourcedir, Sourcefile
 from utils.lang_utils import VALID_LANGUAGE_CODES
-from utils.sourcedir_utils import _get_sourcedir_entry, allowed_file
+from utils.sourcedir_utils import (
+    _get_sourcedir_entry,
+    allowed_file,
+    get_sourcedirs_for_language,
+)
 from loguru import logger
 from utils.sourcefile_utils import process_uploaded_file
 from utils.url_registry import endpoint_for
@@ -361,4 +365,48 @@ def update_sourcedir_description_api(target_language_code: str, sourcedir_slug: 
     except DoesNotExist:
         return jsonify({"error": "Sourcedir not found"}), 404
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@sourcedir_api_bp.route("/<target_language_code>/sources", methods=["GET"])
+def get_sourcedirs_for_language_api(target_language_code: str):
+    """Get all source directories for a specific language.
+
+    Returns a JSON response with the sourcedirs and related statistics.
+    """
+    # Get sort parameter from query string (default to 'alpha')
+    sort_by = request.args.get("sort", "alpha")
+
+    try:
+        # Use the utility function to get all data
+        result = get_sourcedirs_for_language(target_language_code, sort_by)
+
+        # Format the response for the API
+        response = {
+            "language_code": result["target_language_code"],
+            "language_name": result["target_language_name"],
+            "sources": [],
+        }
+
+        # Format sources in the expected structure for SvelteKit
+        for sourcedir in result["sourcedirs"]:
+            stats = result["sourcedir_stats"].get(sourcedir["slug"], {})
+            source = {
+                "name": sourcedir["path"],
+                "display_name": sourcedir["path"],
+                "slug": sourcedir["slug"],
+                "description": sourcedir.get("description", ""),
+                "statistics": {
+                    "file_count": stats.get("file_count", 0),
+                    "sentence_count": stats.get("phrase_count", 0),
+                },
+                "is_empty": sourcedir["slug"] in result["empty_sourcedirs"],
+            }
+            response["sources"].append(source)
+
+        # Return the formatted data
+        return jsonify(response)
+
+    except Exception as e:
+        logger.error(f"Error getting sourcedirs: {str(e)}")
         return jsonify({"error": str(e)}), 500

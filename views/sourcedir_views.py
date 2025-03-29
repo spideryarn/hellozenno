@@ -13,6 +13,7 @@ from db_models import (
 )
 from utils.sourcedir_utils import (
     _get_sourcedir_entry,
+    get_sourcedirs_for_language,
 )
 
 sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/lang")
@@ -22,59 +23,19 @@ sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/lang")
 def sourcedirs_for_language_vw(target_language_code: str):
     """Display all source directories."""
     sort_by = request.args.get("sort", "date")  # Default to recently modified
-    target_language_name = get_language_name(target_language_code)
 
-    # Get supported languages for the dropdown
-    supported_languages = get_all_languages()
-
-    # Query sourcedirs from database - filtered by language
-    query = Sourcedir.select().where(Sourcedir.language_code == target_language_code)
-
-    if sort_by == "date":
-        # Sort by modification time, newest first
-        query = query.order_by(
-            fn.COALESCE(Sourcedir.updated_at, Sourcedir.created_at).desc()
-        )
-    else:
-        # Default alphabetical sort
-        query = query.order_by(Sourcedir.path)
-
-    # Get all sourcedirs and check which ones are empty
-    sourcedirs = []
-    empty_sourcedirs = []
-    sourcedir_stats = {}
-    for sourcedir in query:
-        sourcedirs.append({"path": sourcedir.path, "slug": sourcedir.slug})
-
-        # Count sourcefiles
-        sourcefile_count = (
-            Sourcefile.select().where(Sourcefile.sourcedir == sourcedir).count()
-        )
-        if sourcefile_count == 0:
-            empty_sourcedirs.append(sourcedir.slug)
-
-        # Count phrases
-        phrase_count = (
-            SourcefilePhrase.select()
-            .join(Sourcefile)
-            .where(Sourcefile.sourcedir == sourcedir)
-            .count()
-        )
-
-        sourcedir_stats[sourcedir.slug] = {
-            "phrase_count": phrase_count,
-            "path": sourcedir.path,
-        }
+    # Use the utility function to get all data
+    result = get_sourcedirs_for_language(target_language_code, sort_by)
 
     return render_template(
         "sourcedirs.jinja",
-        target_language_code=target_language_code,
-        target_language_name=target_language_name,
-        sourcedirs=sourcedirs,
-        empty_sourcedirs=empty_sourcedirs,
+        target_language_code=result["target_language_code"],
+        target_language_name=result["target_language_name"],
+        sourcedirs=result["sourcedirs"],
+        empty_sourcedirs=result["empty_sourcedirs"],
         current_sort=sort_by,
-        supported_languages=supported_languages,
-        sourcedir_stats=sourcedir_stats,
+        supported_languages=result["supported_languages"],
+        sourcedir_stats=result["sourcedir_stats"],
     )
 
 
