@@ -2,9 +2,16 @@ from typing import Optional
 import random
 
 from utils.audio_utils import ensure_audio_data
-from db_models import Sentence, Lemma, SentenceLemma
+from db_models import Sentence, Lemma, SentenceLemma, Wordform
 from utils.lang_utils import get_language_name
-from utils.vocab_llm_utils import anthropic_client, generate_gpt_from_template
+from utils.vocab_llm_utils import (
+    anthropic_client,
+    generate_gpt_from_template,
+    extract_tokens,
+    create_interactive_word_links,
+)
+from utils.word_utils import normalize_text
+from peewee import DoesNotExist
 
 
 def generate_sentence(
@@ -100,7 +107,7 @@ def get_all_sentences(target_language_code: str) -> list[dict]:
     """
     # Use the optimized class method to get all sentences with eager-loaded lemmas
     sentences = Sentence.get_all_sentences_for(target_language_code, sort_by="date")
-    
+
     print(f"Successfully loaded {len(sentences)} sentences")
     return sentences
 
@@ -208,3 +215,92 @@ def generate_practice_sentences(
                 translation=sentence_data["translation"],
                 lemma_words=[lemma],
             )
+
+
+def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
+    """Get detailed data for a specific sentence including enhanced text and metadata.
+
+    Args:
+        target_language_code: The language code
+        slug: The sentence slug
+
+    Returns:
+        A dictionary containing the sentence data, metadata, and enhanced text
+
+    Raises:
+        DoesNotExist: If the sentence is not found
+    """
+    sentence = Sentence.get(
+        (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
+    )
+
+    # Extract tokens from the sentence text
+    tokens_in_text = extract_tokens(str(sentence.sentence))
+
+    # Query database for all wordforms in this language
+    wordforms = list(
+        Wordform.select().where((Wordform.language_code == target_language_code))
+    )
+
+    # Filter wordforms in Python using normalize_text
+    normalized_tokens = {normalize_text(t) for t in tokens_in_text}
+    wordforms = [
+        wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
+    ]
+
+    # Convert to dictionary format
+    wordforms_d = []
+    for wordform in wordforms:
+        wordform_d = wordform.to_dict()
+        wordform_d["centrality"] = 0.3  # Default centrality
+        wordform_d["ordering"] = len(wordforms_d) + 1
+        wordforms_d.append(wordform_d)
+
+    # Create enhanced text with interactive word links
+    enhanced_sentence_text, found_wordforms = create_interactive_word_links(
+        text=str(sentence.sentence),
+        wordforms=wordforms_d,
+        target_language_code=target_language_code,
+    )
+
+    # Create serializable versions of the data
+    metadata = {
+        "created_at": (
+            sentence.created_at.isoformat() if sentence.created_at else None
+        ),
+        "updated_at": (
+            sentence.updated_at.isoformat() if sentence.updated_at else None
+        ),
+    }
+
+    # Get lemmas both from the database relationships and from the matched wordforms
+    db_lemma_words = sentence.lemma_words if hasattr(sentence, "lemma_words") else []
+
+    # Extract lemmas from the matched wordforms
+    matched_lemmas = []
+    for wf in wordforms_d:
+        if (
+            wf.get("lemma")
+            and wf["lemma"] not in matched_lemmas
+            and wf["lemma"] not in db_lemma_words
+        ):
+            matched_lemmas.append(wf["lemma"])
+
+    # Combine both sources of lemmas, removing duplicates
+    all_lemmas = list(set(db_lemma_words + matched_lemmas))
+
+    sentence_data = {
+        "id": sentence.id,
+        "sentence": str(sentence.sentence),
+        "translation": str(sentence.translation) if sentence.translation else None,
+        "slug": sentence.slug,
+        "language_code": sentence.language_code,
+        "has_audio": bool(sentence.audio_data),
+        "lemma_words": all_lemmas if all_lemmas else None,
+    }
+
+    return {
+        "sentence": sentence_data,
+        "metadata": metadata,
+        "enhanced_sentence_text": enhanced_sentence_text,
+    }

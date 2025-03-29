@@ -8,9 +8,10 @@ These endpoints follow the standard pattern:
 from flask import Blueprint, jsonify, request, send_file
 import io
 from peewee import DoesNotExist
+from slugify import slugify
 
 from db_models import Sentence
-from utils.sentence_utils import get_random_sentence
+from utils.sentence_utils import get_random_sentence, get_detailed_sentence_data
 from utils.audio_utils import ensure_model_audio_data
 
 # Create a blueprint with standardized prefix
@@ -29,7 +30,8 @@ def get_random_sentence_api(target_language_code: str):
 
     # Get random sentence
     sentence = get_random_sentence(
-        target_language_code=target_language_code, required_lemmas=lemmas if lemmas else None
+        target_language_code=target_language_code,
+        required_lemmas=lemmas if lemmas else None,
     )
 
     if not sentence:
@@ -38,7 +40,27 @@ def get_random_sentence_api(target_language_code: str):
     return jsonify(sentence)
 
 
-@sentence_api_bp.route("/<target_language_code>/<int:sentence_id>/audio", methods=["GET"])
+@sentence_api_bp.route("/<target_language_code>/<slug>", methods=["GET"])
+def get_sentence_by_slug_api(target_language_code: str, slug: str):
+    """Get a specific sentence by its slug.
+
+    Returns detailed information about the sentence, including:
+    - Sentence text and translation
+    - Metadata (created/updated timestamps)
+    - Enhanced text with interactive word links
+    - Associated lemmas
+    """
+    try:
+        # Use the shared utility function to get sentence data
+        sentence_data = get_detailed_sentence_data(target_language_code, slug)
+        return jsonify(sentence_data)
+    except DoesNotExist:
+        return jsonify({"error": "Sentence not found"}), 404
+
+
+@sentence_api_bp.route(
+    "/<target_language_code>/<int:sentence_id>/audio", methods=["GET"]
+)
 def get_sentence_audio_api(target_language_code: str, sentence_id: int):
     """Serve audio data for a sentence from the database.
 
@@ -103,20 +125,11 @@ def rename_sentence_api(target_language_code: str, slug: str):
 
     except DoesNotExist:
         return jsonify({"error": "Sentence not found"}), 404
-    except NameError:
-        # Import slugify here since it might not be available at module level
-        from slugify import slugify
-        # Try again with the import
-        sentence = Sentence.get(
-            (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
-        )
-        sentence.sentence = new_text
-        sentence.slug = slugify(new_text)
-        sentence.save()
-        return jsonify({"new_text": new_text, "new_slug": sentence.slug}), 200
 
 
-@sentence_api_bp.route("/<target_language_code>/<slug>/generate_audio", methods=["POST"])
+@sentence_api_bp.route(
+    "/<target_language_code>/<slug>/generate_audio", methods=["POST"]
+)
 def generate_sentence_audio_api(target_language_code: str, slug: str):
     """Generate audio for a sentence."""
     try:
