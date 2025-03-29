@@ -1,0 +1,22 @@
+/* Import Bootstrap */
+@import './extern/bootstrap/bootstrap.min.css';
+
+/* Import custom theme */
+@import './theme.css';
+
+/* Global styles */
+html,
+body {
+    height: 100%;
+}
+
+body {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    font-family: var(--bs-font-sans-serif);
+}
+
+/* Ensure dark mode is applied before page content loads */
+html[data-bs-theme="dark"] {
+    color-scheme: dark;
+}

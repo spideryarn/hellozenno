@@ -6,110 +6,48 @@
   const { languageCode, languageName, sources, currentSort } = data;
 </script>
 
-<div class="container">
-  <h1>{languageName} Sources</h1>
-  
-  <!-- Sort options -->
-  <div class="sort-options">
-    Sort by:
-    <a href="/language/{languageCode}/sources?sort=alpha" 
-       class="sort-link {currentSort === 'alpha' ? 'active' : ''}">
-      Alphabetical
-    </a> |
-    <a href="/language/{languageCode}/sources?sort=date"
-       class="sort-link {currentSort === 'date' ? 'active' : ''}">
-      Recently Modified
-    </a>
-  </div>
+<h1 class="mb-4">{languageName} Sources</h1>
 
-  {#if sources.length === 0}
-    <p>No sources available for {languageName} yet.</p>
-  {:else}
-    <ul class="source-list">
-      {#each sources as source}
-        <li class="source-item card">
-          <div class="source-header">
-            <h3>
-              <a href="/language/{languageCode}/source/{source.slug}">
+<!-- Sort options -->
+<div class="mb-4 text-secondary">
+  Sort by:
+  <a href="/language/{languageCode}/sources?sort=alpha" 
+     class="text-decoration-none ms-2 me-2 {currentSort === 'alpha' ? 'fw-bold text-primary' : ''}">
+    Alphabetical
+  </a> |
+  <a href="/language/{languageCode}/sources?sort=date"
+     class="text-decoration-none ms-2 {currentSort === 'date' ? 'fw-bold text-primary' : ''}">
+    Recently Modified
+  </a>
+</div>
+
+{#if sources.length === 0}
+  <div class="alert alert-info">No sources available for {languageName} yet.</div>
+{:else}
+  <div class="list-group">
+    {#each sources as source}
+      <div class="list-group-item hz-language-item mb-3">
+        <div class="d-flex flex-column">
+          <div class="mb-2">
+            <h3 class="mb-0">
+              <a href="/language/{languageCode}/source/{source.slug}" class="text-decoration-none">
                 {source.display_name || source.name}
               </a>
             </h3>
           </div>
-          <div class="source-stats">
-            <span>{source.statistics.file_count} files</span>
+          <div class="text-secondary small mb-2">
+            <span class="me-3">{source.statistics.file_count} files</span>
             {#if source.statistics.sentence_count}
               <span>{source.statistics.sentence_count} sentences</span>
             {/if}
           </div>
           {#if source.description}
-            <div class="source-description">
+            <div class="small">
               {source.description}
             </div>
           {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-</div>
-
-<style>
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-  
-  .sort-options {
-    margin: 1rem 0;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  .sort-link {
-    margin: 0 0.25rem;
-    text-decoration: none;
-    color: #0066cc;
-  }
-  
-  .sort-link.active {
-    font-weight: bold;
-  }
-  
-  .source-list {
-    list-style: none;
-    padding: 0;
-    margin: 20px 0;
-  }
-
-  .source-item {
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .source-header {
-    margin-bottom: 10px;
-  }
-
-  .source-header h3 {
-    margin: 0;
-  }
-
-  .source-stats {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-  }
-
-  .source-stats span {
-    margin-right: 15px;
-  }
-
-  .source-description {
-    color: #333;
-    font-size: 0.95rem;
-    line-height: 1.5;
-  }
-</style> 
+        </div>
+      </div>
+    {/each}
+  </div>
+{/if} 
