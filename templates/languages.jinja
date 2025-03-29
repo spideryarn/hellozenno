@@ -13,46 +13,26 @@ Learn vocabulary and phrases in any language.
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Available Languages ({{ languages|length }})</h1>
+<div class="container py-4">
+    <h1 class="mb-4">Available Languages ({{ languages|length }})</h1>
     
-    <ul class="languages-list">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
         {% for language in languages %}
-            <li>
-                <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=language.code) }}">
-                    {{ language.name }}
-                    <span class="language-code">({{ language.code }})</span>
+            <div class="col">
+                <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=language.code) }}" class="text-decoration-none">
+                    <div class="hz-language-item">
+                        <h3>{{ language.name }}</h3>
+                        <span class="hz-metadata">({{ language.code }})</span>
+                    </div>
                 </a>
-            </li>
+            </div>
         {% else %}
-            <li>No languages available</li>
+            <div class="col">
+                <div class="hz-language-item">
+                    <p class="text-muted">No languages available</p>
+                </div>
+            </div>
         {% endfor %}
-    </ul>
+    </div>
 </div>
-
-<style>
-.languages-list {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-}
-
-.languages-list li {
-    margin: 0;
-}
-
-.languages-list a {
-    padding: 1.5rem;
-    font-size: 1.25rem;
-    font-weight: 500;
-    text-align: center;
-}
-
-.language-code {
-    display: block;
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 0.25rem;
-}
-</style>
 {% endblock %} 

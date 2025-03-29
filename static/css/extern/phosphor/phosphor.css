@@ -1,0 +1,80 @@
+/* 
+ * Phosphor Icons CSS
+ * This file aggregates styles for Phosphor icons
+ */
+
+/* Import all Phosphor styles */
+@font-face {
+    font-family: "Phosphor";
+    src: url("./regular/phosphor.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Phosphor Fill";
+    src: url("./fill/phosphor-fill.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Phosphor Bold";
+    src: url("./bold/phosphor-bold.woff2") format("woff2");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Phosphor Light";
+    src: url("./light/phosphor-light.woff2") format("woff2");
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Phosphor Thin";
+    src: url("./thin/phosphor-thin.woff2") format("woff2");
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Phosphor Duotone";
+    src: url("./duotone/phosphor-duotone.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Common icon styles */
+.ph {
+    font-family: "Phosphor";
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.ph-fill {
+    font-family: "Phosphor Fill";
+}
+
+.ph-bold {
+    font-family: "Phosphor Bold";
+}
+
+.ph-light {
+    font-family: "Phosphor Light";
+}
+
+.ph-thin {
+    font-family: "Phosphor Thin";
+}
+
+.ph-duotone {
+    font-family: "Phosphor Duotone";
+}

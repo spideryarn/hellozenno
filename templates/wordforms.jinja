@@ -15,13 +15,17 @@ All {{ target_language_name }} Words and Forms - Hello Zenno
 {% endblock title %}
 
 {% block content %}
-<div class="container">
-    <h1>All Wordforms <span class="count">({{ wordforms_d|length }})</span></h1>
+<div class="container py-4">
+    <div class="mb-4">
+        <h1>All Wordforms <span class="badge bg-secondary">{{ wordforms_d|length }}</span></h1>
+    </div>
     
     {# Pass the list_endpoint variable for the sort options #}
     {% set list_endpoint = 'wordform_views.wordforms_list_vw' %}
     {% include '_sort_options.jinja' with context %}
     
-    {% include '_wordforms_list.jinja' %}
+    <div class="mt-4">
+        {% include '_wordforms_list.jinja' %}
+    </div>
 </div>
 {% endblock %}

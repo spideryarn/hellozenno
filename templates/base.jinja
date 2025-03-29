@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" translate="no">
+<html lang="en" translate="no" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -11,19 +11,115 @@
         {% endblock title %}
     </title>
     {% block head_imports %}
+    <!-- Preload critical CSS files -->
+    <link rel="preload" href="{{ url_for('static', filename='css/extern/bootstrap/bootstrap.min.css') }}" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='css/theme.css') }}" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='css/components.css') }}" as="style">
+    
+    <!-- Prevent FOUC by hiding content until CSS is loaded -->
+    <style>
+        /* Critical CSS to prevent FOUC */
+        html, body {
+            visibility: hidden;
+            opacity: 0;
+            background-color: #121212; /* Match dark theme background */
+        }
+        .js-loading-spinner {
+            visibility: visible;
+            opacity: 1;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #121212;
+            z-index: 9999;
+            transition: opacity 0.2s;
+        }
+        .js-loading-spinner::after {
+            content: '';
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #4CAD53;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    
+    <!-- Direct CSS imports instead of using @import in base.css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/extern/bootstrap/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/extern/tippy.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/extern/phosphor/phosphor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <!-- Use local files only -->
-    <script src="{{ url_for('static', filename='js/extern/popper.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/extern/tippy-bundle.umd.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/extern/light.css') }}">
-    <script src="{{ url_for('static', filename='js/extern/phosphor.js') }}"></script>
+    
+    <!-- Loading detection script - must be before other scripts -->
     <script>
-      window.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM Loaded, Tippy available:', !!window.tippy);
+      // Count of CSS files to load
+      const CSS_FILES_COUNT = 6;
+      let loadedCount = 0;
+      
+      // Function to check if all CSS is loaded
+      function cssLoaded() {
+        loadedCount++;
+        if (loadedCount >= CSS_FILES_COUNT) {
+          // Remove loading spinner
+          const spinner = document.querySelector('.js-loading-spinner');
+          if (spinner) {
+            spinner.style.opacity = '0';
+            setTimeout(() => {
+              spinner.remove();
+              // Make content visible
+              document.documentElement.style.visibility = 'visible';
+              document.documentElement.style.opacity = '1';
+              document.body.style.visibility = 'visible';
+              document.body.style.opacity = '1';
+            }, 200);
+          }
+        }
+      }
+      
+      // Add load event listeners to all stylesheets
+      document.addEventListener('DOMContentLoaded', () => {
+        const styleSheets = document.querySelectorAll('link[rel="stylesheet"]');
+        styleSheets.forEach(sheet => {
+          if (sheet.loaded) {
+            cssLoaded();
+          } else {
+            sheet.addEventListener('load', cssLoaded);
+            // Fallback in case load event doesn't fire
+            sheet.addEventListener('error', cssLoaded);
+          }
+        });
+        
+        // Fallback timeout - show content after 2 seconds regardless
+        setTimeout(() => {
+          document.documentElement.style.visibility = 'visible';
+          document.documentElement.style.opacity = '1';
+          document.body.style.visibility = 'visible';
+          document.body.style.opacity = '1';
+          const spinner = document.querySelector('.js-loading-spinner');
+          if (spinner) spinner.remove();
+        }, 2000);
       });
     </script>
+    
+    <!-- JS imports -->
+    <script src="{{ url_for('static', filename='js/extern/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extern/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extern/tippy-bundle.umd.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extern/phosphor.js') }}"></script>
     
     <!-- Route registry - generated from Flask application routes -->
     <script>
@@ -47,26 +143,32 @@
 </head>
 
 <body>
+    <!-- Loading spinner -->
+    <div class="js-loading-spinner"></div>
+    
     {% block top_nav %}
-    <nav>
-        <div class="nav-content">
-            <div class="breadcrumbs">
-                <a href="{{ url_for('core_views.languages_list_vw') }}">Home</a>
-                {% block breadcrumbs %}{% endblock breadcrumbs %}
-            </div>
-            {% if target_language_code is defined and target_language_code %}
-            <div class="search-box">
-                <form method="GET" action="{{ url_for('search_views.search_landing_vw', target_language_code=target_language_code) }}">
-                    <input type="text" name="q" placeholder="Search {{ target_language_name }} words..." required>
-                    <button type="submit" class="button">Search</button>
-                </form>
-            </div>
-            {% endif %}
-            
-            <div class="user-status-container">
-                <div id="user-status"></div>
-                {% from "base_svelte.jinja" import load_svelte_component %}
-                {{ load_svelte_component('userstatus', {}, component_id='user-status') }}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <div class="d-flex flex-grow-1">
+                <div class="breadcrumbs">
+                    <a href="{{ url_for('core_views.languages_list_vw') }}" class="navbar-brand">Home</a>
+                    <span class="text-light">{% block breadcrumbs %}{% endblock breadcrumbs %}</span>
+                </div>
+                
+                {% if target_language_code is defined and target_language_code %}
+                <div class="ms-auto">
+                    <form method="GET" action="{{ url_for('search_views.search_landing_vw', target_language_code=target_language_code) }}" class="d-flex">
+                        <input type="text" name="q" placeholder="Search {{ target_language_name }} words..." class="form-control me-2" required>
+                        <button type="submit" class="hz-btn-primary">Search</button>
+                    </form>
+                </div>
+                {% endif %}
+                
+                <div class="user-status-container ms-3">
+                    <div id="user-status"></div>
+                    {% from "base_svelte.jinja" import load_svelte_component %}
+                    {{ load_svelte_component('userstatus', {}, component_id='user-status') }}
+                </div>
             </div>
         </div>
     </nav>
@@ -74,9 +176,9 @@
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <div class="flash-messages">
+            <div class="container flash-messages">
                 {% for message in messages %}
-                    <div class="flash-message">{{ message }}</div>
+                    <div class="alert alert-info">{{ message }}</div>
                 {% endfor %}
             </div>
         {% endif %}
@@ -93,13 +195,17 @@
         <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
     {% endblock late_script_imports %}
 
-    <!-- Reusable Modal Dialog -->
-    <div id="reusableModal" class="modal">
-        <div class="modal-content">
-            <input type="text" id="modalInput" placeholder="">
-            <div class="modal-buttons">
-                <button id="modalConfirm" class="confirm-btn">Confirm</button>
-                <button id="modalCancel" class="cancel-btn">Cancel</button>
+    <!-- Reusable Modal Dialog (Bootstrap styled) -->
+    <div class="modal fade" id="reusableModal" tabindex="-1" aria-labelledby="reusableModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-body">
+                    <input type="text" id="modalInput" class="form-control" placeholder="">
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button id="modalConfirm" class="hz-btn-primary">Confirm</button>
+                        <button id="modalCancel" class="hz-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

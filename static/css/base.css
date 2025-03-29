@@ -1,0 +1,11 @@
+/* 
+ * Main CSS file for Hello Zenno
+ * 
+ * Note: We now load all CSS files directly in the HTML head using <link> tags
+ * rather than @import directives to avoid Flash of Unstyled Content (FOUC).
+ * 
+ * This file is kept for potential custom global styles that don't fit in 
+ * theme.css or components.css.
+ */
+
+/* Add any additional global styles here that aren't in theme.css or components.css */

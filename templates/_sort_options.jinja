@@ -1,20 +1,24 @@
 {# Default values if not provided by parent template #}
 {% set show_commonality = show_commonality|default(false) %}
 
-<div class="sort-options">
-    Sort by:
-    <a href="{{ url_for(list_endpoint, target_language_code=target_language_code, sort='alpha') }}" 
-       class="sort-link {% if current_sort == 'alpha' %}active{% endif %}">
-        Alphabetical
-    </a> |
-    <a href="{{ url_for(list_endpoint, target_language_code=target_language_code, sort='date') }}"
-       class="sort-link {% if current_sort == 'date' %}active{% endif %}">
-        Recently Modified
-    </a>
-    {% if show_commonality %}|
-    <a href="{{ url_for(list_endpoint, target_language_code=target_language_code, sort='commonality') }}"
-       class="sort-link {% if current_sort == 'commonality' %}active{% endif %}">
-        Most Common
-    </a>
-    {% endif %}
+<div class="card p-3 mb-4">
+    <div class="d-flex align-items-center">
+        <span class="me-2">Sort by:</span>
+        <div class="btn-group" role="group" aria-label="Sort options">
+            <a href="{{ url_for(list_endpoint, target_language_code=target_language_code, sort='alpha') }}" 
+               class="btn {% if current_sort == 'alpha' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Alphabetical
+            </a>
+            <a href="{{ url_for(list_endpoint, target_language_code=target_language_code, sort='date') }}"
+               class="btn {% if current_sort == 'date' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Recently Modified
+            </a>
+            {% if show_commonality %}
+            <a href="{{ url_for(list_endpoint, target_language_code=target_language_code, sort='commonality') }}"
+               class="btn {% if current_sort == 'commonality' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Most Common
+            </a>
+            {% endif %}
+        </div>
+    </div>
 </div> 

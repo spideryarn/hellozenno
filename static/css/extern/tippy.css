@@ -1,7 +1,5 @@
 /* https://cdnjs.cloudflare.com/ajax/libs/tippy.js/2.5.4/themes/light.css */
 
-/* TODO we should rename this to `tippy.css` */
-
 .tippy-popper[x-placement^=top] .tippy-tooltip.light-theme .tippy-arrow {
     border-top: 7px solid #fff;
     border-right: 7px solid transparent;

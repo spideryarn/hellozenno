@@ -1,0 +1,83 @@
+:root {
+    /* Bootstrap dark theme overrides */
+    --bs-body-color: #e9e9e9;
+    --bs-body-bg: #121212;
+    --bs-border-color: #333;
+
+    /* Our custom color scheme */
+    --color-text: #e9e9e9;
+    --color-text-muted: #a9a9a9;
+    --color-background: #121212;
+    --color-surface: #1e1e1e;
+    --color-primary: #4CAD53;
+    --color-primary-hover: #3d8c43;
+    --color-secondary: #D97A27;
+    --color-secondary-hover: #b36420;
+    --color-border: #333;
+
+    /* Typography */
+    --font-serif: Georgia, 'Times New Roman', Times, serif;
+    --font-mono: Menlo, Monaco, 'Courier New', monospace;
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-foreign: 'Times New Roman', serif;
+
+    /* Spacing */
+    --spacing-1: 0.25rem;
+    --spacing-2: 0.5rem;
+    --spacing-3: 0.75rem;
+    --spacing-4: 1rem;
+    --spacing-6: 1.5rem;
+    --spacing-8: 2rem;
+
+    /* Bootstrap component overrides */
+    --bs-primary: #4CAD53;
+    --bs-secondary: #D97A27;
+    --bs-link-color: var(--color-primary);
+    --bs-link-hover-color: var(--color-primary-hover);
+    --bs-card-bg: var(--color-surface);
+    --bs-card-border-color: var(--color-border);
+    --bs-btn-bg: var(--color-surface);
+    --bs-btn-color: var(--color-text);
+    --bs-btn-border-color: var(--color-border);
+}
+
+body {
+    font-family: var(--font-serif);
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-serif);
+    color: var(--color-text);
+}
+
+/* Links */
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+/* Foreign language text */
+.foreign-text {
+    font-family: var(--font-foreign);
+    font-style: italic;
+}
+
+/* Metadata text */
+.metadata {
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}

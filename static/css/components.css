@@ -1,0 +1,118 @@
+/* Custom Component Classes */
+
+/* Base card style */
+.hz-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+}
+
+/* Button styles */
+.hz-btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    border: 1px solid var(--color-primary);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.hz-btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+.hz-btn-secondary {
+    background-color: var(--color-surface);
+    color: var(--color-secondary);
+    border: 1px solid var(--color-secondary);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hz-btn-secondary:hover {
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+/* Language item */
+.hz-language-item {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: var(--spacing-4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+}
+
+.hz-language-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hz-language-item h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-2);
+    color: var(--color-primary);
+}
+
+/* Sentence styling */
+.hz-sentence {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-6);
+}
+
+.hz-foreign-text {
+    font-family: var(--font-foreign);
+    font-style: italic;
+    font-size: 1.5rem;
+    line-height: 1.6;
+    margin-bottom: var(--spacing-4);
+}
+
+.hz-metadata {
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-2);
+}
+
+/* Audio player styling */
+.hz-audio-player {
+    width: 100%;
+    margin: var(--spacing-4) 0;
+}
+
+.hz-playback-controls {
+    display: flex;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-4);
+}
+
+.hz-speed-button {
+    padding: var(--spacing-1) var(--spacing-2);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.hz-speed-button:hover {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}

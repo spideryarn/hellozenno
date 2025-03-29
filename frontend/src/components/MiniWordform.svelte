@@ -14,12 +14,8 @@
     notes: string | null - Optional contextual notes (displayed inline in parentheses)
 -->
 
-<!-- Define the props -->
-<script lang="ts">
-  import { onMount } from 'svelte';
-  import { RouteName, resolveRoute } from '../../../static/js/generated/routes';
-
-  // Declare types for Tippy
+<!-- Declare types for Tippy -->
+<script lang="ts" context="module">
   declare global {
     interface Window {
       tippy: any; // We could make this more specific if needed
@@ -28,6 +24,12 @@
       _tippy?: any;
     }
   }
+</script>
+
+<!-- Define the props -->
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { RouteName, resolveRoute } from '../../../static/js/generated/routes';
 
   export let wordform: string;
   export let translation: string | null = null;
@@ -89,14 +91,16 @@
           .then(data => {
             console.log(`Preview data for "${wordform}":`, data);
             instance.setContent(`
-              <h4>${data.lemma}</h4>
-              ${data.translation ? `<p class="translation">Translation: ${data.translation}</p>` : ''}
-              ${data.etymology ? `<p class="etymology">Etymology: ${data.etymology}</p>` : ''}
+              <div class="p-2">
+                <h4 class="mb-2">${data.lemma}</h4>
+                ${data.translation ? `<p class="mb-1 text-muted">Translation: ${data.translation}</p>` : ''}
+                ${data.etymology ? `<p class="mb-0 text-muted">Etymology: ${data.etymology}</p>` : ''}
+              </div>
             `);
           })
           .catch(error => {
             console.error(`Error fetching preview for "${wordform}":`, error);
-            instance.setContent('Error loading preview');
+            instance.setContent('<div class="p-2">Error loading preview</div>');
           });
       }
     });
@@ -104,15 +108,15 @@
 </script>
 
 <!-- Component template -->
-<div class="mini-wordform">
-  <a {href} class="wordform-link" bind:this={wordformLink}>
+<div class="mini-wordform card mb-2">
+  <a {href} class="wordform-link p-2" bind:this={wordformLink}>
     <div class="wordform-content">
-      <span class="wordform">{wordform}</span>
+      <span class="wordform fw-medium">{wordform}</span>
       {#if translation}
-        <span class="translation">- {translation}</span>
+        <span class="translation text-muted ms-1">- {translation}</span>
       {/if}
       {#if notes}
-        <span class="notes">({notes})</span>
+        <span class="notes text-muted fst-italic ms-1">({notes})</span>
       {/if}
     </div>
   </a>
@@ -121,9 +125,16 @@
 <!-- Component styles -->
 <style>
   .mini-wordform {
-    margin: 0.25rem 0;
     display: inline-block;
     margin-right: 1rem;
+    transition: transform 0.2s ease;
+    border-color: var(--color-border);
+    background-color: var(--color-surface);
+  }
+
+  .mini-wordform:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
   .wordform-link {
@@ -132,31 +143,15 @@
     display: block;
   }
 
-  .wordform-content {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    transition: all 0.2s;
-  }
-
-  .wordform-content:hover {
-    background-color: #f8fafc;
-  }
-
   .wordform {
-    font-size: 1rem;
-    line-height: 1.4;
+    color: var(--color-primary);
   }
 
   .translation {
     font-size: 0.875rem;
-    color: #64748b;
-    margin-left: 0.25rem;
   }
 
   .notes {
     font-size: 0.875rem;
-    color: #64748b;
-    font-style: italic;
-    margin-left: 0.25rem;
   }
 </style> 
