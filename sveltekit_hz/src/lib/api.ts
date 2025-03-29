@@ -2,7 +2,13 @@
  * API utility for communicating with the Flask backend
  */
 
-import type { Language, Lemma, Sentence, SentenceMetadata } from "./types";
+import type {
+    Language,
+    Lemma,
+    Sentence,
+    SentenceMetadata,
+    Wordform,
+} from "./types";
 
 // Base URL for the Flask API
 const API_BASE_URL = "http://localhost:3000";
@@ -78,5 +84,17 @@ export async function getLemmasForLanguage(
 ) {
     return fetchFromApi<Lemma[]>(
         `/api/lang/lemma/${languageCode}/lemmas?sort=${sort}`,
+    );
+}
+
+/**
+ * Fetch all wordforms for a language
+ */
+export async function getWordformsForLanguage(
+    languageCode: string,
+    sort: string = "alpha",
+) {
+    return fetchFromApi<Wordform[]>(
+        `/api/lang/word/${languageCode}/wordforms?sort=${sort}`,
     );
 }

@@ -5,9 +5,10 @@ These endpoints follow the standard pattern:
 /api/lang/word/...
 """
 
-from flask import Blueprint, jsonify, send_file, abort
+from flask import Blueprint, jsonify, send_file, abort, request
 from utils.word_utils import get_word_preview
 import urllib.parse
+from db_models import Wordform
 
 # Create a blueprint with standardized prefix
 wordform_api_bp = Blueprint("wordform_api", __name__, url_prefix="/api/lang/word")
@@ -39,3 +40,24 @@ def get_mp3_api(target_language_code: str, word: str):
         return send_file(mp3_filen, mimetype="audio/mpeg")
     except FileNotFoundError:
         abort(404, description="MP3 file not found")
+
+
+@wordform_api_bp.route("/<target_language_code>/wordforms")
+def wordforms_list_api(target_language_code: str):
+    """Return all wordforms for a language.
+
+    Returns a list of all wordforms for the specified language code.
+    Each wordform includes basic metadata like wordform, translations, and part of speech.
+    """
+    # Get sort parameter from request
+    sort_by = request.args.get("sort", "alpha")
+
+    # Get all wordforms for this language
+    wordforms = Wordform.get_all_wordforms_for(
+        language_code=target_language_code, sort_by=sort_by
+    )
+
+    # Convert to list of dictionaries for JSON serialization
+    wordforms_data = [wordform.to_dict() for wordform in wordforms]
+
+    return jsonify(wordforms_data)

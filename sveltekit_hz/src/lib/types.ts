@@ -44,3 +44,13 @@ export interface Lemma {
     example_wordforms?: string[];
     easily_confused_with?: any[];
 }
+
+export interface Wordform {
+    wordform: string;
+    lemma?: string;
+    language_code: string;
+    part_of_speech?: string;
+    translations: string[];
+    inflection_type?: string;
+    commonality?: number;
+}
