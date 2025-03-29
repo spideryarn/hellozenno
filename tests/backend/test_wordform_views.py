@@ -12,7 +12,7 @@ from tests.fixtures_for_tests import (
     create_test_wordform,
 )
 from tests.backend.utils_for_testing import build_url_with_query
-from views.core_views import languages_list_vw
+from views.languages_views import languages_list_vw
 from views.lemma_views import get_lemma_metadata_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 from views.wordform_views import (

@@ -196,7 +196,7 @@ def client(fixture_for_testing_db):
 
             This matches the function in api/index.py without importing it directly.
             """
-            from views.core_views import languages_list_vw
+            from views.languages_views import languages_list_vw
             from views.search_views import search_landing_vw
 
             return {

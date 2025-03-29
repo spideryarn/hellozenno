@@ -9,7 +9,7 @@ from utils.vocab_llm_utils import quick_search_for_wordform
 from utils.url_registry import endpoint_for
 
 # Import necessary view functions
-from views.core_views import languages_list_vw
+from views.languages_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 
 # Moving search_views and lemma_views imports inside functions to avoid circular imports

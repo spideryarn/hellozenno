@@ -8,7 +8,7 @@ from tests.fixtures_for_tests import (
 )
 from tests.backend.utils_for_testing import build_url_with_query
 from views.wordform_views import get_wordform_metadata_vw
-from views.core_views import languages_list_vw
+from views.languages_views import languages_list_vw
 from views.search_views import search_landing_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 

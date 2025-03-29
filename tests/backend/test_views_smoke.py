@@ -15,7 +15,8 @@ from tests.backend.utils_for_testing import (
 from unittest.mock import patch
 
 # Import all view functions that we'll need
-from views.core_views import languages_list_vw, home_vw, experim_vw, favicon_vw
+from views.core_views import home_vw, experim_vw, favicon_vw
+from views.languages_views import languages_list_vw
 from views.search_views import search_landing_vw, search_word_vw
 from views.lemma_views import lemmas_list_vw, get_lemma_metadata_vw
 from views.wordform_views import (

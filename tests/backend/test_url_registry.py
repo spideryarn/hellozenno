@@ -9,7 +9,7 @@ from tests.backend.utils_for_testing import build_url_with_query
 from views.lemma_views import get_lemma_metadata_vw
 from views.sourcedir_views import sourcefiles_for_sourcedir_vw
 from views.sourcedir_api import create_sourcedir_api
-from views.core_views import languages_list_vw
+from views.languages_views import languages_list_vw
 from views.search_views import search_landing_vw
 
 
@@ -29,7 +29,7 @@ def test_endpoint_for():
 
     # Test with languages_list_vw (from core_views blueprint)
     endpoint = endpoint_for(languages_list_vw)
-    assert endpoint == "core_views.languages_list_vw"
+    assert endpoint == "languages_views.languages_list_vw"
 
     # Test with search_landing_vw (from search_views blueprint)
     endpoint = endpoint_for(search_landing_vw)

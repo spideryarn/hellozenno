@@ -10,7 +10,7 @@ from utils.store_utils import load_or_generate_lemma_metadata
 from utils.url_registry import endpoint_for
 
 # Import necessary view functions
-from views.core_views import languages_list_vw
+from views.languages_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 
 # Import search views

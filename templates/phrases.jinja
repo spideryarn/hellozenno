@@ -3,7 +3,7 @@
 {% set vite_entries = ['miniphrase'] %}
 
 {% block breadcrumbs %}
-    » <a href="{{ url_for('core_views.languages_list_vw') }}">Languages</a>
+    » <a href="{{ url_for('languages_views.languages_list_vw') }}">Languages</a>
     » <a href="{{ url_for('sourcedir_views.sourcedirs_for_language_vw', target_language_code=target_language_code) }}">{{ target_language_name }}</a>
     » Phrases & Idioms
 {% endblock breadcrumbs %}
