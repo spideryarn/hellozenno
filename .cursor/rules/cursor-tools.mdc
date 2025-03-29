@@ -44,8 +44,7 @@ when using doc for remote repos suggest writing the output to a file somewhere l
 - `cursor-tools browser` is useful for testing and debugging web apps.
 
 **Running Commands:**
-1. **Installed version:** Use `cursor-tools <command>` (if in PATH) or `npm exec cursor-tools "<command>"`, `yarn cursor-tools "<command>"`, `pnpm cursor-tools "<command>"`.
-2. **Without installation:** Use `npx -y cursor-tools@latest "<command>"` or `bunx -y cursor-tools@latest "<command>"`.
+**Installed version:** Use `cursor-tools <command>` (if in PATH) or `npm exec cursor-tools "<command>"`, `yarn cursor-tools "<command>"`, `pnpm cursor-tools "<command>"`.
 
 **General Command Options (Supported by all commands):**
 --model=<model name>: Specify an alternative AI model to use
