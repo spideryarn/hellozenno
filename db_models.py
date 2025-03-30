@@ -501,7 +501,7 @@ class Sentence(BaseModel):
     def lemma_words(self) -> list[str]:
         """For backwards compatibility, return list of lemma words."""
         return [sl.lemma.lemma for sl in self.lemmas]  # type: ignore
-    
+
     @classmethod
     def get_all_sentences_for(
         cls,
@@ -509,59 +509,60 @@ class Sentence(BaseModel):
         sort_by: str = "date",
     ):
         """Get sentences for a language with efficient loading of related lemmas.
-        
+
         Args:
             language_code: 2-letter language code
             sort_by: Sorting method ("date" or "alpha")
-            
+
         Returns:
             List of sentence dictionaries with preloaded lemma data
         """
         # Start with a simple query for all sentences in this language
         query = cls.select().where(cls.language_code == language_code)
-        
+
         # Apply sorting
         if sort_by == "date":
             query = query.order_by(fn.COALESCE(cls.updated_at, cls.created_at).desc())
         else:
             query = query.order_by(fn.Lower(cls.sentence))
-            
+
         # Fetch sentences first
         sentences = list(query)
-        
+
         # Then fetch all related lemma data in one bulk query
         lemma_data = {}
         if sentences:
             sentence_ids = [s.id for s in sentences]
-            
+
             # Use a raw SQL query for the join to avoid ORM complexity
             # This gets all sentence-lemma relationships in one query
             lemma_query = (
-                SentenceLemma
-                .select(SentenceLemma.sentence, Lemma.lemma)
+                SentenceLemma.select(SentenceLemma.sentence, Lemma.lemma)
                 .join(Lemma)
                 .where(SentenceLemma.sentence.in_(sentence_ids))
             )
-            
+
             # Group lemmas by sentence id
             for sl in lemma_query:
                 if sl.sentence_id not in lemma_data:
                     lemma_data[sl.sentence_id] = []
                 lemma_data[sl.sentence_id].append(sl.lemma.lemma)
-            
+
         # Convert to dictionary format with lemmas preloaded
         results = []
         for sentence in sentences:
-            results.append({
-                "id": sentence.id,
-                "sentence": sentence.sentence,
-                "translation": sentence.translation,
-                "lemma_words": lemma_data.get(sentence.id, []),
-                "target_language_code": sentence.language_code,
-                "slug": sentence.slug,
-                "has_audio": bool(sentence.audio_data),
-            })
-            
+            results.append(
+                {
+                    "id": sentence.id,
+                    "sentence": sentence.sentence,
+                    "translation": sentence.translation,
+                    "lemma_words": lemma_data.get(sentence.id, []),
+                    "target_language_code": sentence.language_code,
+                    "slug": sentence.slug,
+                    "has_audio": bool(sentence.audio_data),
+                }
+            )
+
         return results
 
     class Meta:
@@ -586,7 +587,9 @@ class Phrase(BaseModel):
     canonical_form = CharField()  # the standard form of the phrase
     raw_forms = JSONField()  # list[str] of alternative forms
     translations = JSONField()  # list[str] of English translations
-    literal_translation = TextField(null=True)  # word-for-word translation showing structure
+    literal_translation = TextField(
+        null=True
+    )  # word-for-word translation showing structure
     part_of_speech = CharField()  # e.g. "verbal phrase"
     register = CharField(null=True)  # e.g. "informal"
     commonality = FloatField(null=True)  # from 0-1, how common in regular use
@@ -636,6 +639,16 @@ class Phrase(BaseModel):
             "usage_notes": self.usage_notes,
             "difficulty_level": self.difficulty_level,
             "slug": self.slug,
+            "created_at": (
+                self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if self.created_at
+                else None
+            ),
+            "updated_at": (
+                self.updated_at.strftime("%Y-%m-%d %H:%M:%S")
+                if self.updated_at
+                else None
+            ),
         }
 
     @classmethod
@@ -825,21 +838,21 @@ class SourcefilePhrase(BaseModel):
 
 class Profile(BaseModel):
     """User profile linked to Supabase auth.users."""
-    
+
     user_id = CharField(unique=True)  # References auth.users.id in Supabase
     target_language_code = CharField(null=True)  # User's preferred language
-    
+
     class Meta:
         indexes = ((("user_id",), True),)  # Unique index
-    
+
     @classmethod
     def get_or_create_for_user(cls, user_id: str, email: str = None):
         """Get or create a profile for a Supabase auth user.
-        
+
         Args:
             user_id: Supabase auth user ID
             email: User's email (optional)
-            
+
         Returns:
             Tuple of (profile, created)
         """
@@ -848,9 +861,7 @@ class Profile(BaseModel):
             return profile, False
         except DoesNotExist:
             # Create new profile with default values
-            profile = cls.create(
-                user_id=user_id
-            )
+            profile = cls.create(user_id=user_id)
             return profile, True
 
 
