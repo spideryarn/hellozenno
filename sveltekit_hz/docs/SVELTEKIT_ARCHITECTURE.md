@@ -14,7 +14,7 @@ Hello Zenno
 │   ├── utils/               # Shared utilities
 │   │   ├── lang_utils.py    # Language processing utilities
 │   │   └── ...              # Other utility modules
-│   └── models/              # Database models
+│   └── db_models.py         # Database models
 │
 └── SvelteKit Frontend
     ├── src/
@@ -66,3 +66,21 @@ This project represents a transition from a Flask/Jinja/Svelte application to a 
 4. **Parallel Operation**:
    - During development, both the original Flask app and the new SvelteKit app run in parallel
    - This allows gradual migration and testing without service disruption 
+
+
+## SvelteKit development server
+
+The SvelteKit development server (`scripts/local/run_sveltekit.sh`):
+- Is being run by the user separately, on port 5173, and generates logs in `logs/sveltekit_dev.log`
+- see code in `sveltekit_hz/src`
+
+
+## Flask API
+
+The Flask development server:
+- Is being run by the user separately, on port 3000, and generates logs in `logs/flask_app.log`
+- It generates a description of the API routes in `static/js/generated/routes.ts` (it's probably easiest to use grep to get the lines you want)
+- see code in `views/`
+
+see `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` for more information.
+
