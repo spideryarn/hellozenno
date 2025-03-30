@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';  
-  import { Card } from '$lib';
+  import { Card, LemmaCard } from '$lib';
   import SentenceCard from '$lib/components/SentenceCard.svelte';
   
   export let data: PageData;
@@ -107,13 +107,15 @@
   
   {#if lemma_metadata.related_words_phrases_idioms && lemma_metadata.related_words_phrases_idioms.length > 0}
   <Card title="Related Words, Phrases & Idioms" className="mt-4">
-    <div class="list-group">
+    <div class="row row-cols-1 row-cols-md-2 g-3">
       {#each lemma_metadata.related_words_phrases_idioms as related}
-        <a href="/language/{target_language_code}/lemma/{related.lemma}" 
-           class="list-group-item list-group-item-action">
-          <p class="mb-1 hz-foreign-text">{related.lemma}</p>
-          <p class="mb-0 small text-muted">{related.translation || ''}</p>
-        </a>
+        <div class="col">
+          <LemmaCard 
+            lemma={related} 
+            language_code={target_language_code} 
+            showDetails={false} 
+          />
+        </div>
       {/each}
     </div>
   </Card>
@@ -121,13 +123,15 @@
   
   {#if lemma_metadata.synonyms && lemma_metadata.synonyms.length > 0}
   <Card title="Synonyms" className="mt-4">
-    <div class="list-group">
+    <div class="row row-cols-1 row-cols-md-2 g-3">
       {#each lemma_metadata.synonyms as synonym}
-        <a href="/language/{target_language_code}/lemma/{synonym.lemma}" 
-           class="list-group-item list-group-item-action">
-          <p class="mb-1 hz-foreign-text">{synonym.lemma}</p>
-          <p class="mb-0 small text-muted">{synonym.translation || ''}</p>
-        </a>
+        <div class="col">
+          <LemmaCard 
+            lemma={synonym} 
+            language_code={target_language_code} 
+            showDetails={false} 
+          />
+        </div>
       {/each}
     </div>
   </Card>
@@ -135,13 +139,15 @@
   
   {#if lemma_metadata.antonyms && lemma_metadata.antonyms.length > 0}
   <Card title="Antonyms" className="mt-4">
-    <div class="list-group">
+    <div class="row row-cols-1 row-cols-md-2 g-3">
       {#each lemma_metadata.antonyms as antonym}
-        <a href="/language/{target_language_code}/lemma/{antonym.lemma}" 
-           class="list-group-item list-group-item-action">
-          <p class="mb-1 hz-foreign-text">{antonym.lemma}</p>
-          <p class="mb-0 small text-muted">{antonym.translation || ''}</p>
-        </a>
+        <div class="col">
+          <LemmaCard 
+            lemma={antonym}
+            language_code={target_language_code} 
+            showDetails={false} 
+          />
+        </div>
       {/each}
     </div>
   </Card>
@@ -172,43 +178,57 @@
       {#each lemma_metadata.easily_confused_with as confused}
         {#if confused.lemma}
         <div class="list-group-item">
-          <h5 class="hz-foreign-text">{confused.lemma}</h5>
-          
-          {#if confused.explanation}
-          <p><strong>Explanation:</strong> {confused.explanation}</p>
-          {/if}
-          
-          {#if confused.example_usage_this_target && confused.example_usage_this_source}
-          <div class="mb-3">
-            <p class="mb-1 small text-secondary">This word:</p>
-            <SentenceCard
-              text={confused.example_usage_this_target}
-              translation={confused.example_usage_this_source}
-              slug=""
-              language_code={target_language_code}
-            />
+          <div class="d-flex flex-column">
+            <div class="mb-3">
+              <LemmaCard 
+                lemma={{
+                  lemma: confused.lemma,
+                  translations: confused.translations || [],
+                  part_of_speech: confused.part_of_speech || '',
+                  commonality: confused.commonality || 0,
+                  is_complete: confused.is_complete || false
+                }} 
+                language_code={target_language_code} 
+                showDetails={false} 
+              />
+            </div>
+            
+            {#if confused.explanation}
+            <p><strong>Explanation:</strong> {confused.explanation}</p>
+            {/if}
+            
+            {#if confused.example_usage_this_target && confused.example_usage_this_source}
+            <div class="mb-3">
+              <p class="mb-1 small text-secondary">This word:</p>
+              <SentenceCard
+                text={confused.example_usage_this_target}
+                translation={confused.example_usage_this_source}
+                slug=""
+                language_code={target_language_code}
+              />
+            </div>
+            {/if}
+            
+            {#if confused.example_usage_other_target && confused.example_usage_other_source}
+            <div class="mb-3">
+              <p class="mb-1 small text-secondary">Confused word:</p>
+              <SentenceCard
+                text={confused.example_usage_other_target}
+                translation={confused.example_usage_other_source}
+                slug=""
+                language_code={target_language_code}
+              />
+            </div>
+            {/if}
+            
+            {#if confused.notes}
+            <p><strong>Notes:</strong> {confused.notes}</p>
+            {/if}
+            
+            {#if confused.mnemonic}
+            <p><strong>Mnemonic:</strong> {confused.mnemonic}</p>
+            {/if}
           </div>
-          {/if}
-          
-          {#if confused.example_usage_other_target && confused.example_usage_other_source}
-          <div class="mb-3">
-            <p class="mb-1 small text-secondary">Confused word:</p>
-            <SentenceCard
-              text={confused.example_usage_other_target}
-              translation={confused.example_usage_other_source}
-              slug=""
-              language_code={target_language_code}
-            />
-          </div>
-          {/if}
-          
-          {#if confused.notes}
-          <p><strong>Notes:</strong> {confused.notes}</p>
-          {/if}
-          
-          {#if confused.mnemonic}
-          <p><strong>Mnemonic:</strong> {confused.mnemonic}</p>
-          {/if}
         </div>
         {/if}
       {/each}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';
-  import { Card } from '$lib';
+  import { Card, LemmaCard } from '$lib';
   
   export let data: PageData;
   
@@ -63,29 +63,7 @@
           <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
             {#each lemmasByLetter[letter] as lemma}
               <div class="col">
-                <Card>
-                  <div class="lemma-card">
-                    <h3 class="fs-5 mb-1">
-                      <a href="/language/{data.language_code}/lemma/{lemma.lemma}" class="foreign-text text-decoration-none">
-                        {lemma.lemma}
-                      </a>
-                    </h3>
-                    <p class="text-muted small mb-1">{lemma.part_of_speech}</p>
-                    <p class="mb-2">{lemma.translations?.join(', ') || 'No translation'}</p>
-                    
-                    {#if lemma.commonality !== null && lemma.commonality !== undefined}
-                      <div class="progress mb-2" style="height: 6px;">
-                        <div class="progress-bar" role="progressbar" 
-                          style="width: {Math.round(lemma.commonality * 100)}%;" 
-                          aria-valuenow={Math.round(lemma.commonality * 100)} 
-                          aria-valuemin="0" 
-                          aria-valuemax="100">
-                        </div>
-                      </div>
-                      <p class="small text-muted mb-0">Commonality: {Math.round(lemma.commonality * 100)}%</p>
-                    {/if}
-                  </div>
-                </Card>
+                <LemmaCard lemma={lemma} language_code={data.language_code} />
               </div>
             {/each}
           </div>
@@ -97,29 +75,7 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
       {#each data.lemmas as lemma}
         <div class="col">
-          <Card>
-            <div class="lemma-card">
-              <h3 class="fs-5 mb-1">
-                <a href="/language/{data.language_code}/lemma/{lemma.lemma}" class="foreign-text text-decoration-none">
-                  {lemma.lemma}
-                </a>
-              </h3>
-              <p class="text-muted small mb-1">{lemma.part_of_speech}</p>
-              <p class="mb-2">{lemma.translations?.join(', ') || 'No translation'}</p>
-              
-              {#if lemma.commonality !== null && lemma.commonality !== undefined}
-                <div class="progress mb-2" style="height: 6px;">
-                  <div class="progress-bar" role="progressbar" 
-                    style="width: {Math.round(lemma.commonality * 100)}%;" 
-                    aria-valuenow={Math.round(lemma.commonality * 100)} 
-                    aria-valuemin="0" 
-                    aria-valuemax="100">
-                  </div>
-                </div>
-                <p class="small text-muted mb-0">Commonality: {Math.round(lemma.commonality * 100)}%</p>
-              {/if}
-            </div>
-          </Card>
+          <LemmaCard lemma={lemma} language_code={data.language_code} />
         </div>
       {/each}
     </div>
