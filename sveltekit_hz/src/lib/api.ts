@@ -127,3 +127,56 @@ export async function getWordformsForLanguage(
         headers: { "Content-Type": "application/json" },
     });
 }
+
+/**
+ * Get search landing page data
+ */
+export async function getSearchLandingData(
+    target_language_code: string,
+    query?: string,
+) {
+    // Use the full URL directly since we're dealing with a custom API endpoint
+    const url = new URL(
+        `${API_BASE_URL}/api/lang/${target_language_code}/search`,
+    );
+
+    // Add query parameter if provided
+    if (query) {
+        url.searchParams.append("q", query);
+    }
+
+    const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Search API error: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+/**
+ * Search for a word in a language
+ */
+export async function searchWord(
+    target_language_code: string,
+    wordform: string,
+) {
+    // Use the full URL directly
+    const url = `${API_BASE_URL}/api/lang/${target_language_code}/search/${
+        encodeURIComponent(wordform)
+    }`;
+
+    const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Search word API error: ${response.status}`);
+    }
+
+    return response.json();
+}

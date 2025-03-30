@@ -90,8 +90,8 @@ Create the following missing API endpoints that correspond to existing view func
 - [ ] Create `route_test_api()` in `system_api.py` (from `route_test_vw()`)
 
 **Search API**
-- [ ] Create `search_landing_api()` in `search_api.py` (from `search_landing_vw()`)
-- [ ] Create `search_word_api()` in `search_api.py` (from `search_word_vw()`)
+- [x] Create `search_landing_api()` in `search_api.py` (from `search_landing_vw()`)
+- [x] Create `search_word_api()` in `search_api.py` (from `search_word_vw()`)
 
 **Language Resources API**
 - [ ] Create `wordforms_list_api()` in `wordform_api.py` (from `wordforms_list_vw()`)
@@ -403,6 +403,127 @@ After completing the Sourcefile pages, we should focus on:
    - Focus on edge cases and error handling
 
 Our progress on the SvelteKit migration is solid, with most of the core functionality now implemented. The remaining work is primarily refinement, testing, and addressing edge cases.
+
+## Search Functionality Implementation
+
+Search functionality allows users to find words in the target language and view their details. Here's a detailed plan for implementing this feature in SvelteKit:
+
+### API Backend Development
+- Create `search_api.py` with Flask API endpoints
+  - Implement `search_landing_api()` function to provide data for the search form page
+  - Implement `search_word_api()` function to handle word search functionality
+  - Ensure proper URL decoding for search queries
+  - Add appropriate error handling and validation
+  - Update Blueprint registry to include the new API endpoints
+
+### SvelteKit Frontend Development
+
+Frontend Routes Setup
+- Create SvelteKit route structure
+  - Create `/src/routes/language/[language_code]/search/+page.svelte` for the search landing page
+  - Create `/src/routes/language/[language_code]/search/[wordform]/+page.svelte` for search results 
+  - Create corresponding server-side data loading files (`+page.server.ts`)
+
+Components and UX
+- Implement search form component
+  - Create clean, responsive form layout based on Bootstrap styling
+  - Handle form submission and validation
+  - Include search tips as in the original Jinja template
+- Implement appropriate loading states during search
+- Add error handling for common search issues
+- Ensure proper URL encoding/decoding for search terms
+
+Integration and Testing
+- Connect with Flask backend API using typed routes
+  - Use `getTypedApiUrl` utility for type-safe API URLs
+  - Handle API responses and errors appropriately
+- Test search functionality
+  - Test empty, valid, and invalid search terms
+  - Test special characters and non-Latin scripts
+  - Verify redirect behavior to wordform view
+  - Check URL encoding/decoding works correctly
+
+### Action Stages
+
+Backend API Implementation
+- Create `views/search_api.py` file with Blueprint setup
+- Refactor common search functionality to a utility module if needed
+- Implement `search_landing_api()` endpoint for search form data
+- Implement `search_word_api()` endpoint to handle search queries
+- Add appropriate error handling and validation
+- Test API endpoints with curl or similar tool
+
+SvelteKit Search Landing Page Implementation
+- Create route files for search landing page
+- Implement form component with Bootstrap styling
+- Add language name fetching from API
+- Include search tips section
+- Connect form submission to search functionality
+- Add appropriate loading state indicators
+
+SvelteKit Search Results Implementation
+- Create route files for search results page
+- Implement redirect to wordform view
+- Handle search term parameter extraction
+- Add error handling for failed searches
+- Implement loading states during redirection
+
+Testing and Refinement
+- Test form submission with various inputs
+- Test URL parameter handling
+- Test error cases and edge conditions
+- Check responsiveness and accessibility
+- Verify integration with wordform view works correctly
+
+### Detailed Component Structure
+
+Search Landing Page
+- `+page.svelte`: Main page component with search form
+  - Title and header showing the target language name
+  - Search form with input field and submit button
+  - Search tips card with information about search functionality
+- `+page.server.ts`: Server-side data fetching
+  - Get the language name for the given language code
+  - Prepare data for the template
+
+Search Word Page
+- `+page.svelte`: Minimal component that redirects to wordform view
+  - Loading indicator while redirection is in progress
+- `+page.server.ts`:
+  - Call the backend API to process the search term
+  - Handle redirection to the appropriate wordform view
+
+The search functionality will be built with a clean, simple UI following the existing Bootstrap-based styling system as outlined in the STYLING.md document.
+
+## Search Functionality Progress
+
+We have successfully implemented the search functionality in SvelteKit:
+
+### Backend API Implementation
+- Created `search_api.py` with Flask API endpoints:
+  - Implemented `search_landing_api()` for providing search form data 
+  - Implemented `search_word_api()` for processing search requests and providing redirection information
+  - Added proper URL decoding for search queries
+  - Registered the new API blueprint in the Flask application
+
+### Frontend Implementation
+- Created SvelteKit routes for search functionality:
+  - Implemented `/language/[language_code]/search/+page.svelte` for the search form
+  - Added proper server-side data loading in `+page.server.ts`
+  - Implemented direct navigation to wordform pages upon search
+
+### UX Considerations
+- Followed Bootstrap styling guidelines for responsive design
+- Maintained consistent UI with the rest of the application 
+- Provided helpful search tips for users
+- Implemented clean form handling and validation
+
+### Issues Encountered and Resolved
+- Initially attempted to use the search API for redirection, but faced issues with handling API-based redirects in SvelteKit
+- Simplified the approach by directly navigating to the wordform page from the client-side
+- Fixed API URL construction to ensure proper communication with the Flask backend
+
+The search functionality now provides a clean, user-friendly interface for searching words in any language. Users can enter a word and be taken directly to the corresponding wordform details page. The implementation follows the established patterns in the codebase and maintains consistency with the rest of the application.
 
 ## Type-Safe Route Integration
 

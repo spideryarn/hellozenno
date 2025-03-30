@@ -6,10 +6,10 @@ Hello Zenno is a web application for learning languages. A modern SvelteKit fron
 
 This project's documentation is organized into the following sections:
 
-- [Architecture](./docs/ARCHITECTURE.md) - System architecture and migration strategy
+- [Architecture](./docs/SVELTEKIT_ARCHITECTURE.md) - System architecture and migration strategy
 - [Setup and Development](./docs/SETUP.md) - Installation and development instructions
 - [UI and Styling](./docs/STYLING.md) - Styling system and component usage
-- [API Integration](./docs/API_INTEGRATION.md) - How to interact with the Flask backend, e.g. using `get_api_url()`
+- [API Integration](./docs/FLASK_API_INTEGRATION.md) - How to interact with the Flask backend, e.g. using `get_api_url()`
 
 ## Project Status and Roadmap
 
