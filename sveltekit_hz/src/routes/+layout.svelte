@@ -15,9 +15,7 @@
   </header>
   
   <main class="flex-grow-1 py-4">
-    <div class="container">
-      <slot />
-    </div>
+    <slot />
   </main>
   
   <footer class="bg-dark py-3 text-center text-white-50">
