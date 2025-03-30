@@ -82,3 +82,14 @@ The Flask development server:
 
 see `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` for more information.
 
+## SvelteKit State Management
+
+The application has been migrated from using the deprecated `$app/stores` module to the newer `$app/state` module, which is built on Svelte 5's runes API. This provides finer-grained reactivity and better performance:
+
+- `import { page } from '$app/stores'` → `import { page } from '$app/state'`
+- `$page.data` → `page.data` (no $ prefix needed)
+
+The migration was performed using the SvelteKit migration tool: `npx sv migrate app-state`
+
+This change ensures compatibility with future SvelteKit versions, as `$app/stores` will be removed in SvelteKit 3.
+

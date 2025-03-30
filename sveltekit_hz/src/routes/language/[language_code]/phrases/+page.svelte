@@ -1,7 +1,7 @@
 <script lang="ts">
     import { PhraseCard } from '$lib';
     import type { Phrase } from '$lib/types';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     
     export let data: {
         phrases: Phrase[],
@@ -18,10 +18,10 @@
     <h1 class="mb-4">{data.language_name} phrases and idioms <span class="text-muted">({data.phrases?.length || 0})</span></h1>
 
     <div class="sort-options mb-4">
-        <a href="{`/language/${data.language_code}/phrases?sort=alpha`}" class="sort-link me-3 {$page.url.searchParams.get('sort') === 'alpha' || !$page.url.searchParams.get('sort') ? 'active' : ''}">
+        <a href="{`/language/${data.language_code}/phrases?sort=alpha`}" class="sort-link me-3 {page.url.searchParams.get('sort') === 'alpha' || !page.url.searchParams.get('sort') ? 'active' : ''}">
             Sort alphabetically
         </a>
-        <a href="{`/language/${data.language_code}/phrases?sort=date`}" class="sort-link {$page.url.searchParams.get('sort') === 'date' ? 'active' : ''}">
+        <a href="{`/language/${data.language_code}/phrases?sort=date`}" class="sort-link {page.url.searchParams.get('sort') === 'date' ? 'active' : ''}">
             Sort by date
         </a>
     </div>

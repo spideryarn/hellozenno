@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { MetadataCard, Card } from '$lib';
   import WordformCard from '$lib/components/WordformCard.svelte';
   import PhraseCard from '$lib/components/PhraseCard.svelte';
@@ -9,7 +9,7 @@
   // Get parameters
   export let data;
   const { phrase, language_code: languageCode } = data;
-  const { slug } = $page.params;
+  const { slug } = page.params;
   const target_language_code = languageCode;
   
   // Create metadata object for MetadataCard
