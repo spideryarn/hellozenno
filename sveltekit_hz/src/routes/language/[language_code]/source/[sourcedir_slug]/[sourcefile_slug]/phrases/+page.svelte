@@ -27,7 +27,7 @@
       <li class="breadcrumb-item"><a href="/language">Languages</a></li>
       <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
       <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
-      <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}">{sourcefile.filename}</a></li>
+      <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
       <li class="breadcrumb-item active" aria-current="page">Phrases</li>
     </ol>
   </nav>
@@ -55,7 +55,7 @@
   />
   
   <div class="tabs mb-4">
-    <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}" class="tab">Text</a>
+    <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text" class="tab">Text</a>
     <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/words" class="tab">
       Words <small>({stats.wordforms_count || 0})</small>
     </a>
