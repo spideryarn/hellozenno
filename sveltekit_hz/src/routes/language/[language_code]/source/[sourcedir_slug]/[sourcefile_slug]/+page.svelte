@@ -27,7 +27,7 @@
 <div class="container">
   <nav class="breadcrumb">
     <a href="/">Home</a>
-    » <a href="/language">Languages</a>
+    » <a href="/languages">Languages</a>
     » <a href="/language/{language_code}/sources">{language_name || language_code}</a>
     » <a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a>
     » {sourcefile.filename}

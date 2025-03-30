@@ -24,7 +24,7 @@
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/language">Languages</a></li>
+      <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
       <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
       <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
       <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>

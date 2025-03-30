@@ -13,7 +13,7 @@
 <div class="container">
   <nav class="breadcrumb">
     <a href="/">Home</a>
-    » <a href="/language">Languages</a>
+    » <a href="/languages">Languages</a>
     » <a href="/language/{language_code}/sources">{language_name}</a>
     » {sourcedir.path}
   </nav>
