@@ -13,26 +13,37 @@
   
   let languages: Language[] = data.languages;
   let searchQuery = '';
-  let filteredLanguages: Language[] = languages;
   
-  // Function to filter languages based on search query
-  function filterLanguages() {
-    if (!searchQuery.trim()) {
-      filteredLanguages = languages;
-      return;
-    }
+  // Computed filtered languages based on searchQuery
+  $: filteredLanguages = searchQuery.trim() 
+    ? languages.filter(lang => 
+        lang.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) || 
+        lang.code.toLowerCase().includes(searchQuery.toLowerCase().trim())
+      )
+    : languages;
+  
+  // Group languages alphabetically
+  const alphabet = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+  
+  // Computed language groups based on filtered languages
+  $: languageGroups = (() => {
+    const groups: Record<string, Language[]> = {};
     
-    const query = searchQuery.toLowerCase().trim();
-    filteredLanguages = languages.filter((lang: Language) => 
-      lang.name.toLowerCase().includes(query) || 
-      lang.code.toLowerCase().includes(query)
-    );
-  }
+    alphabet.forEach(letter => {
+      const matches = filteredLanguages.filter(lang => 
+        lang.name.toUpperCase().startsWith(letter)
+      );
+      if (matches.length > 0) {
+        groups[letter] = matches;
+      }
+    });
+    
+    return groups;
+  })();
   
-  // Make sure filterLanguages is called whenever searchQuery changes
-  $: {
-    filterLanguages();
-  }
+  // Function to handle search form submission - the reactivity will automatically
+  // update filteredLanguages and languageGroups
+  function handleSearch() {}
   
   // Function to get a color for a language card based on the language code (deterministic)
   function getColorForLanguage(code: string): string {
@@ -50,28 +61,6 @@
     const hashCode = code.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     return colors[hashCode % colors.length];
   }
-  
-  // Group languages alphabetically
-  const alphabet = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
-  
-  // Group languages by first letter
-  function getLanguagesByLetter(): Record<string, Language[]> {
-    const groups: Record<string, Language[]> = {};
-    
-    alphabet.forEach(letter => {
-      const matches = filteredLanguages.filter((lang: Language) => 
-        lang.name.toUpperCase().startsWith(letter)
-      );
-      if (matches.length > 0) {
-        groups[letter] = matches;
-      }
-    });
-    
-    return groups;
-  }
-  
-  // This reactive statement updates languageGroups whenever filteredLanguages changes
-  $: languageGroups = getLanguagesByLetter();
 </script>
 
 <svelte:head>
@@ -85,18 +74,20 @@
       <p class="subtitle">Discover and learn new languages with Hello Zenno's interactive tools</p>
       
       <div class="search-container">
-        <input 
-          type="text" 
-          placeholder="Search languages..." 
-          bind:value={searchQuery}
-          class="search-input"
-        />
-        <div class="search-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </div>
+        <form on:submit|preventDefault={handleSearch}>
+          <input 
+            type="text" 
+            placeholder="Search languages..." 
+            bind:value={searchQuery}
+            class="search-input"
+          />
+          <button type="submit" class="search-icon" aria-label="Search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </form>
       </div>
       
       <div class="stats">
@@ -269,6 +260,19 @@
     top: 50%;
     transform: translateY(-50%);
     color: rgba(255, 255, 255, 0.5);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  
+  .search-icon:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  form {
+    position: relative;
+    width: 100%;
   }
   
   .stats {
