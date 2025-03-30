@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@languages_views_bp.route("/language", strict_slashes=False)
+@languages_views_bp.route("/languages", strict_slashes=False)
 def languages_list_vw():
     """Display all supported languages."""
     languages = get_all_languages()

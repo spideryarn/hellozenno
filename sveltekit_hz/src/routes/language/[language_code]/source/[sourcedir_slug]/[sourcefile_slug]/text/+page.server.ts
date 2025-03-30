@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { getApiUrl } from "$lib/api";
 import type { PageServerLoad } from "./$types";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
     const { language_code, sourcedir_slug, sourcefile_slug } = params;
@@ -9,7 +10,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Fetch sourcefile data
         const sourcfileResponse = await fetch(
             getApiUrl(
-                `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}`,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                    sourcefile_slug,
+                },
             ),
         );
 
@@ -24,7 +30,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Now get the text data
         const textResponse = await fetch(
             getApiUrl(
-                `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/text`,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                    sourcefile_slug,
+                },
             ),
         );
 
@@ -39,13 +50,23 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Also fetch words and phrases count data
         const wordsResponse = await fetch(
             getApiUrl(
-                `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/words`,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                    sourcefile_slug,
+                },
             ),
         );
 
         const phrasesResponse = await fetch(
             getApiUrl(
-                `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/phrases`,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                    sourcefile_slug,
+                },
             ),
         );
 

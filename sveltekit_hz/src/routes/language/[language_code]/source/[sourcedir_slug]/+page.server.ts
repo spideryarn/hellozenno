@@ -1,15 +1,20 @@
 import { error } from "@sveltejs/kit";
 import { getApiUrl } from "$lib/api";
 import type { PageServerLoad } from "./$types";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
     const { language_code, sourcedir_slug } = params;
 
     try {
-        // Fetch all sourcefiles for this sourcedir
+        // Fetch all sourcefiles for this sourcedir using type-safe route resolution
         const response = await fetch(
             getApiUrl(
-                `/api/lang/sourcedir/${language_code}/${sourcedir_slug}`,
+                RouteName.SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                },
             ),
         );
 

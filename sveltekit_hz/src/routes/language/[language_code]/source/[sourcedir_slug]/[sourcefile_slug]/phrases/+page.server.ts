@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { getApiUrl } from "$lib/api";
 import type { PageServerLoad } from "./$types";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
     const { language_code, sourcedir_slug, sourcefile_slug } = params;
@@ -9,7 +10,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // First fetch basic sourcefile data for the header
         const sourcefileResponse = await fetch(
             getApiUrl(
-                `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}`,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                    sourcefile_slug,
+                },
             ),
         );
 
@@ -24,7 +30,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Fetch text data for metadata and basic info
         const textResponse = await fetch(
             getApiUrl(
-                `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/text`,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                    sourcefile_slug,
+                },
             ),
         );
 
@@ -39,7 +50,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Fetch phrases data specifically
         const phrasesResponse = await fetch(
             getApiUrl(
-                `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/phrases`,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API,
+                {
+                    target_language_code: language_code,
+                    sourcedir_slug,
+                    sourcefile_slug,
+                },
             ),
         );
 

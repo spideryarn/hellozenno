@@ -27,8 +27,8 @@ def phrases_list_vw(target_language_code):
     )
 
 
-@phrase_views_bp.route("/<target_language_code>/phrases/<slug>")
-def get_phrase_metadata_vw(target_language_code, slug):
+@phrase_views_bp.route("/<target_language_code>/phrase/<slug>")
+def get_phrase_metadata_vw(target_language_code: str, slug: str):
     """Get metadata for a specific phrase using its slug."""
     target_language_name = get_language_name(target_language_code)
 

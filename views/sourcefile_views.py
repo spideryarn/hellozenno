@@ -49,7 +49,9 @@ from utils.word_utils import get_sourcefile_lemmas
 sourcefile_views_bp = Blueprint("sourcefile_views", __name__, url_prefix="/language")
 
 
-@sourcefile_views_bp.route("/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>")
+@sourcefile_views_bp.route(
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>"
+)
 def inspect_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -165,7 +167,7 @@ def _get_common_template_params(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/text"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/text"
 )
 def inspect_sourcefile_text_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -236,7 +238,7 @@ def inspect_sourcefile_text_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/words"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/words"
 )
 def inspect_sourcefile_words_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -300,7 +302,7 @@ def inspect_sourcefile_words_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/phrases"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/phrases"
 )
 def inspect_sourcefile_phrases_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -427,7 +429,7 @@ def access_sourcefile(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/view"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/view"
 )
 def view_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -439,7 +441,7 @@ def view_sourcefile_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/download"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/download"
 )
 def download_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -451,7 +453,7 @@ def download_sourcefile_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/process"
 )
 def process_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -518,7 +520,7 @@ def process_sourcefile_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/audio"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/audio"
 )
 def play_sourcefile_audio_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -547,7 +549,7 @@ def play_sourcefile_audio_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/sentences"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/sentences"
 )
 def sourcefile_sentences_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -596,7 +598,7 @@ def sourcefile_sentences_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/next"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/next"
 )
 def next_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -608,7 +610,7 @@ def next_sourcefile_vw(
 
 
 @sourcefile_views_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/prev"
+    "/<target_language_code>/source/<sourcedir_slug>/<sourcefile_slug>/prev"
 )
 def prev_sourcefile_vw(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str

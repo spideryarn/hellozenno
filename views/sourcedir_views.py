@@ -20,7 +20,7 @@ from utils.sourcedir_utils import (
 sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/language")
 
 
-@sourcedir_views_bp.route("/<target_language_code>/", strict_slashes=False)
+@sourcedir_views_bp.route("/<target_language_code>/sources", strict_slashes=False)
 def sourcedirs_for_language_vw(target_language_code: str):
     """Display all source directories."""
     sort_by = request.args.get("sort", "date")  # Default to recently modified
@@ -40,7 +40,7 @@ def sourcedirs_for_language_vw(target_language_code: str):
     )
 
 
-@sourcedir_views_bp.route("/<target_language_code>/<sourcedir_slug>")
+@sourcedir_views_bp.route("/<target_language_code>/source/<sourcedir_slug>")
 def sourcefiles_for_sourcedir_vw(target_language_code: str, sourcedir_slug: str):
     """Display all source files in a directory."""
     try:
