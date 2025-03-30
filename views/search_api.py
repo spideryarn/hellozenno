@@ -2,13 +2,10 @@ from flask import (
     Blueprint,
     request,
     jsonify,
-    url_for,
 )
 import logging
-import urllib.parse
 
-from utils.lang_utils import get_language_name
-from utils.url_registry import endpoint_for
+from utils.search_utils import prepare_search_landing_data, get_wordform_redirect_url
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -22,21 +19,8 @@ def search_landing_api(target_language_code: str):
     # Get the search query from URL parameters if it exists
     query = request.args.get("q", "")
 
-    response_data = {
-        "target_language_code": target_language_code,
-        "target_language_name": get_language_name(target_language_code),
-    }
-
-    if query:
-        # Fix URL encoding issues with Vercel by explicitly unquoting the query parameter
-        query = urllib.parse.unquote(query)
-
-        # If there's a query, include it in the response data
-        response_data["query"] = query
-        response_data["has_query"] = True
-    else:
-        response_data["has_query"] = False
-
+    # Prepare data using shared utility function
+    response_data = prepare_search_landing_data(target_language_code, query)
     return jsonify(response_data)
 
 
@@ -46,23 +30,15 @@ def search_word_api(target_language_code: str, wordform: str):
     API endpoint for searching a word.
     Returns the appropriate URL to redirect to (wordform view).
     """
-    # Fix URL encoding issues with Vercel by explicitly unquoting the wordform parameter
-    wordform = urllib.parse.unquote(wordform)
-
-    # Import here to avoid circular dependencies
-    from views.wordform_views import get_wordform_metadata_vw
-
-    # Get the URL to redirect to
-    redirect_url = url_for(
-        endpoint_for(get_wordform_metadata_vw),
-        target_language_code=target_language_code,
-        wordform=wordform,
+    # Get redirect URL using shared utility function
+    redirect_url, decoded_wordform = get_wordform_redirect_url(
+        target_language_code, wordform
     )
 
     return jsonify(
         {
             "target_language_code": target_language_code,
-            "wordform": wordform,
+            "wordform": decoded_wordform,
             "redirect_url": redirect_url,
         }
     )

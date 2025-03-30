@@ -3,14 +3,10 @@ from flask import (
     render_template,
     request,
     redirect,
-    url_for,
 )
 import logging
-import urllib.parse
 
-from utils.lang_utils import get_language_name
-from utils.url_registry import endpoint_for
-
+from utils.search_utils import prepare_search_landing_data, get_wordform_redirect_url
 
 search_views_bp = Blueprint("search_views", __name__, url_prefix="/language")
 
@@ -24,23 +20,18 @@ def search_landing_vw(target_language_code: str):
     # Get the search query from URL parameters if it exists
     query = request.args.get("q", "")
 
-    if query:
-        # Fix URL encoding issues with Vercel by explicitly unquoting the query parameter
-        query = urllib.parse.unquote(query)
+    # Prepare data using shared utility function
+    data = prepare_search_landing_data(target_language_code, query)
 
+    if data.get("has_query"):
         # If there's a query, redirect to the search endpoint
-        return redirect(
-            url_for(
-                endpoint_for(search_word_vw),
-                target_language_code=target_language_code,
-                wordform=query,
-            )
-        )
+        redirect_url, _ = get_wordform_redirect_url(target_language_code, data["query"])
+        return redirect(redirect_url)
 
     return render_template(
         "search.jinja",
         target_language_code=target_language_code,
-        target_language_name=get_language_name(target_language_code),
+        target_language_name=data["target_language_name"],
     )
 
 
@@ -51,16 +42,6 @@ def search_word_vw(target_language_code: str, wordform: str):
     Currently just redirects to the wordform view, but can be enhanced in the future
     to support more sophisticated search functionality.
     """
-    # Fix URL encoding issues with Vercel by explicitly unquoting the wordform parameter
-    wordform = urllib.parse.unquote(wordform)
-
-    # Import here to avoid circular dependencies
-    from views.wordform_views import get_wordform_metadata_vw
-
-    return redirect(
-        url_for(
-            endpoint_for(get_wordform_metadata_vw),
-            target_language_code=target_language_code,
-            wordform=wordform,
-        )
-    )
+    # Get redirect URL using shared utility function
+    redirect_url, _ = get_wordform_redirect_url(target_language_code, wordform)
+    return redirect(redirect_url)
