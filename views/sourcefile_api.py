@@ -26,6 +26,11 @@ from utils.env_config import ELEVENLABS_API_KEY
 from utils.audio_utils import add_delays, ensure_model_audio_data
 from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
+    DEFAULT_LANGUAGE_LEVEL,
+    DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE,
 )
 from db_models import (
     Lemma,
@@ -38,17 +43,259 @@ from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from utils.sourcedir_utils import (
     _get_sourcedir_entry,
     get_sourcedir_or_404,
+    _get_navigation_info,
 )
-from utils.sourcefile_utils import _get_sourcefile_entry
+from utils.sourcefile_utils import (
+    _get_sourcefile_entry,
+    get_sourcefile_details,
+    process_sourcefile,
+)
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.youtube_utils import YouTubeDownloadError, download_audio
 from slugify import slugify
+from utils.types import LanguageLevel
+from typing import get_args
 
 
 # Create a blueprint with standardized prefix
 sourcefile_api_bp = Blueprint(
     "sourcefile_api", __name__, url_prefix="/api/lang/sourcefile"
 )
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>", methods=["GET"]
+)
+def inspect_sourcefile_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get basic info about a sourcefile.
+
+    This serves as a redirect target in the main view function, but in the API
+    we'll return basic metadata and let the client decide which specific
+    view to load (text, words, phrases).
+    """
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Use the shared utility function to get details
+        details = get_sourcefile_details(sourcefile_entry, target_language_code)
+
+        # Create a simplified response with just the basic info
+        response_data = {
+            "success": True,
+            "sourcefile": details["sourcefile"],
+            "sourcedir": details["sourcedir"],
+            "metadata": details["metadata"],
+            "stats": details["stats"],
+        }
+
+        return jsonify(response_data)
+
+    except DoesNotExist:
+        return jsonify({"success": False, "error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error in inspect_sourcefile_api: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/text", methods=["GET"]
+)
+def inspect_sourcefile_text_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get the text content of a sourcefile."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Use the shared utility function to get details
+        details = get_sourcefile_details(sourcefile_entry, target_language_code)
+
+        # Create response with text-specific details
+        response_data = {
+            "success": True,
+            "sourcefile": {
+                "filename": details["sourcefile"]["filename"],
+                "slug": details["sourcefile"]["slug"],
+                "sourcefile_type": details["sourcefile"]["sourcefile_type"],
+                "description": details["sourcefile"]["description"],
+                "text_target": details["sourcefile"]["text_target"],
+                "text_english": details["sourcefile"]["text_english"],
+                "enhanced_text": details["enhanced_text"],
+            },
+            "sourcedir": details["sourcedir"],
+            "metadata": details["metadata"],
+            "navigation": details["navigation"],
+            "stats": details["stats"],
+        }
+
+        return jsonify(response_data)
+
+    except DoesNotExist:
+        return jsonify({"success": False, "error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error in inspect_sourcefile_text_api: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/words", methods=["GET"]
+)
+def inspect_sourcefile_words_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get the words content of a sourcefile."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Use the shared utility function to get details
+        details = get_sourcefile_details(sourcefile_entry, target_language_code)
+
+        # Create response with words-specific details
+        response_data = {
+            "success": True,
+            "sourcefile": {
+                "filename": details["sourcefile"]["filename"],
+                "slug": details["sourcefile"]["slug"],
+                "sourcefile_type": details["sourcefile"]["sourcefile_type"],
+                "description": details["sourcefile"]["description"],
+            },
+            "sourcedir": details["sourcedir"],
+            "wordforms": details["wordforms"],
+            "metadata": details["metadata"],
+            "navigation": details["navigation"],
+            "stats": details["stats"],
+        }
+
+        return jsonify(response_data)
+
+    except DoesNotExist:
+        return jsonify({"success": False, "error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error in inspect_sourcefile_words_api: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/phrases",
+    methods=["GET"],
+)
+def inspect_sourcefile_phrases_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get the phrases content of a sourcefile."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Use the shared utility function to get details
+        details = get_sourcefile_details(sourcefile_entry, target_language_code)
+
+        # Create response with phrases-specific details
+        response_data = {
+            "success": True,
+            "sourcefile": {
+                "filename": details["sourcefile"]["filename"],
+                "slug": details["sourcefile"]["slug"],
+                "sourcefile_type": details["sourcefile"]["sourcefile_type"],
+                "description": details["sourcefile"]["description"],
+            },
+            "sourcedir": details["sourcedir"],
+            "phrases": details["phrases"],
+            "metadata": details["metadata"],
+            "navigation": details["navigation"],
+            "stats": details["stats"],
+        }
+
+        return jsonify(response_data)
+
+    except DoesNotExist:
+        return jsonify({"success": False, "error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error in inspect_sourcefile_phrases_api: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process",
+    methods=["POST"],
+)
+def process_sourcefile_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """Process a source file to transcribe, translate, and extract wordforms and phrases."""
+    try:
+        # Get the sourcefile entry using helper
+        sourcefile_entry = _get_sourcefile_entry(
+            target_language_code, sourcedir_slug, sourcefile_slug
+        )
+
+        # Get processing parameters from request or use defaults
+        data = request.get_json() or {}
+
+        def already_processed(sourcefile_entry: Sourcefile):
+            return bool(sourcefile_entry.text_target)
+
+        # Set default parameters based on whether the file has been processed before
+        if "max_new_words" in data:
+            max_new_words = int(data["max_new_words"])
+        else:
+            if already_processed(sourcefile_entry):
+                max_new_words = DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE
+            else:
+                max_new_words = DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE
+
+        if "max_new_phrases" in data:
+            max_new_phrases = int(data["max_new_phrases"])
+        else:
+            if already_processed(sourcefile_entry):
+                max_new_phrases = DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE
+            else:
+                max_new_phrases = DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE
+
+        language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
+        assert language_level in get_args(
+            LanguageLevel
+        ), f"Invalid language level: {language_level}"
+
+        # Process the sourcefile
+        process_sourcefile(
+            sourcefile_entry,
+            language_level=language_level,  # type: ignore
+            max_new_words=max_new_words,
+            max_new_phrases=max_new_phrases,
+        )
+
+        # Return success response
+        return jsonify(
+            {
+                "success": True,
+                "message": "Sourcefile processing started",
+                "params": {
+                    "max_new_words": max_new_words,
+                    "max_new_phrases": max_new_phrases,
+                    "language_level": language_level,
+                },
+            }
+        )
+
+    except DoesNotExist:
+        return jsonify({"success": False, "error": "File not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error processing sourcefile: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 def _process_individual_lemma(lemma: str, target_language_code: str):

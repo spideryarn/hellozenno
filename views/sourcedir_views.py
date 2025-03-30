@@ -14,6 +14,7 @@ from db_models import (
 from utils.sourcedir_utils import (
     _get_sourcedir_entry,
     get_sourcedirs_for_language,
+    get_sourcefiles_for_sourcedir,
 )
 
 sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/lang")
@@ -42,69 +43,24 @@ def sourcedirs_for_language_vw(target_language_code: str):
 @sourcedir_views_bp.route("/<target_language_code>/<sourcedir_slug>")
 def sourcefiles_for_sourcedir_vw(target_language_code: str, sourcedir_slug: str):
     """Display all source files in a directory."""
-    target_language_name = get_language_name(target_language_code)
-
-    # Get supported languages for the dropdown
-    supported_languages = get_all_languages()
-
     try:
-        # Get the sourcedir entry by slug
-        sourcedir_entry = _get_sourcedir_entry(target_language_code, sourcedir_slug)
+        # Use the utility function to get data
+        result = get_sourcefiles_for_sourcedir(target_language_code, sourcedir_slug)
 
-        # Get all sourcefiles for this directory
-        sourcefiles = []
-        for sourcefile_entry in (
-            Sourcefile.select()
-            .where(Sourcefile.sourcedir == sourcedir_entry)
-            .order_by(fn.LOWER(Sourcefile.filename))
-        ):
-            # Count wordforms and phrases
-            wordform_count = sourcefile_entry.wordform_entries.count()
-            phrase_count = sourcefile_entry.phrase_entries.count()
-
-            # Prepare metadata for each file
-            metadata = {
-                "created_at": sourcefile_entry.created_at,
-                "updated_at": sourcefile_entry.updated_at,
-                "has_audio": sourcefile_entry.audio_data is not None,
-                "wordform_count": wordform_count,
-                "phrase_count": phrase_count,
-            }
-            if sourcefile_entry.metadata:
-                if "image_processing" in sourcefile_entry.metadata:
-                    metadata["image_processing"] = sourcefile_entry.metadata[
-                        "image_processing"
-                    ]
-                if "duration" in sourcefile_entry.metadata:
-                    metadata["duration"] = sourcefile_entry.metadata["duration"]
-                if "video_title" in sourcefile_entry.metadata:
-                    metadata["video_title"] = sourcefile_entry.metadata["video_title"]
-
-            sourcefiles.append(
-                {
-                    "filename": sourcefile_entry.filename,
-                    "slug": sourcefile_entry.slug,
-                    "sourcefile_type": sourcefile_entry.sourcefile_type,
-                    "metadata": metadata,
-                }
-            )
-
-        # Check if any sourcefile has vocabulary
-        has_vocabulary = any(sf["metadata"]["wordform_count"] > 0 for sf in sourcefiles)
+        # Extract values from result
+        sourcedir_entry = result["sourcedir"]
 
         return render_template(
             "sourcefiles.jinja",
             target_language_code=target_language_code,
-            target_language_name=target_language_name,
+            target_language_name=result["target_language_name"],
             sourcedir_path=sourcedir_entry.path,  # Use path for display
             sourcedir_slug=sourcedir_slug,  # Use slug for URL generation
             sourcedir_description=sourcedir_entry.description,  # Pass description to template
-            sourcefiles=sourcefiles,
-            supported_languages=supported_languages,
-            has_vocabulary=has_vocabulary,
+            sourcefiles=result["sourcefiles"],
+            supported_languages=result["supported_languages"],
+            has_vocabulary=result["has_vocabulary"],
         )
     except DoesNotExist:
-        # # Return empty JSON array for nonexistent directories
-        # return "[]", 200, {"Content-Type": "application/json"}
         # Return 404 for nonexistent directories
         return render_template("404.jinja", message="Source directory not found"), 404

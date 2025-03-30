@@ -48,6 +48,7 @@ export enum RouteName {
   SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API = "SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API",
   SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API = "SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API",
   SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API = "SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API",
+  SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API = "SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API",
   WORDFORM_API_WORD_PREVIEW_API = "WORDFORM_API_WORD_PREVIEW_API",
   WORDFORM_API_GET_MP3_API = "WORDFORM_API_GET_MP3_API",
   WORDFORM_API_WORDFORMS_LIST_API = "WORDFORM_API_WORDFORMS_LIST_API",
@@ -59,6 +60,11 @@ export enum RouteName {
   PHRASE_API_PHRASE_PREVIEW_API = "PHRASE_API_PHRASE_PREVIEW_API",
   PHRASE_API_GET_PHRASE_METADATA_API = "PHRASE_API_GET_PHRASE_METADATA_API",
   PHRASE_API_DELETE_PHRASE_API = "PHRASE_API_DELETE_PHRASE_API",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_API",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API",
+  SOURCEFILE_API_PROCESS_SOURCEFILE_API = "SOURCEFILE_API_PROCESS_SOURCEFILE_API",
   SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API = "SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API",
   SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API = "SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API",
   SOURCEFILE_API_MOVE_SOURCEFILE_API = "SOURCEFILE_API_MOVE_SOURCEFILE_API",
@@ -132,6 +138,7 @@ export const ROUTES = {
   SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/upload",
   SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/update_description",
   SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API: "/api/lang/sourcedir/{target_language_code}/sources",
+  SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/files",
   WORDFORM_API_WORD_PREVIEW_API: "/api/lang/word/{target_language_code}/{word}/preview",
   WORDFORM_API_GET_MP3_API: "/api/lang/word/{target_language_code}/{word}/mp3",
   WORDFORM_API_WORDFORMS_LIST_API: "/api/lang/word/{target_language_code}/wordforms",
@@ -143,6 +150,11 @@ export const ROUTES = {
   PHRASE_API_PHRASE_PREVIEW_API: "/api/lang/phrase/{target_language_code}/preview/{phrase}",
   PHRASE_API_GET_PHRASE_METADATA_API: "/api/lang/phrase/{target_language_code}/detail/{slug}",
   PHRASE_API_DELETE_PHRASE_API: "/api/lang/phrase/{target_language_code}/detail/{slug}/delete",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/text",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/words",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/phrases",
+  SOURCEFILE_API_PROCESS_SOURCEFILE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process",
   SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process_individual",
   SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/update_description",
   SOURCEFILE_API_MOVE_SOURCEFILE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/move",
@@ -216,6 +228,7 @@ export type RouteParams = {
   [RouteName.SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API]: { target_language_code: string };
+  [RouteName.SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.WORDFORM_API_WORD_PREVIEW_API]: { target_language_code: string; word: string };
   [RouteName.WORDFORM_API_GET_MP3_API]: { target_language_code: string; word: string };
   [RouteName.WORDFORM_API_WORDFORMS_LIST_API]: { target_language_code: string };
@@ -227,6 +240,11 @@ export type RouteParams = {
   [RouteName.PHRASE_API_PHRASE_PREVIEW_API]: { target_language_code: string; phrase: string };
   [RouteName.PHRASE_API_GET_PHRASE_METADATA_API]: { target_language_code: string; slug: string };
   [RouteName.PHRASE_API_DELETE_PHRASE_API]: { target_language_code: string; slug: string };
+  [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
+  [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
+  [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
+  [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
+  [RouteName.SOURCEFILE_API_PROCESS_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_MOVE_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };

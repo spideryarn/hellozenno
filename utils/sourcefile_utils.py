@@ -403,6 +403,117 @@ def ensure_tricky_phrases(
     return sourcefile_entry, extra
 
 
+def get_sourcefile_details(sourcefile_entry: Sourcefile, target_language_code: str):
+    """Get all details for a sourcefile that can be used by both API and view functions.
+
+    Args:
+        sourcefile_entry: The Sourcefile object
+        target_language_code: The language code
+
+    Returns:
+        A dictionary with all the details needed for the sourcefile
+    """
+    from utils.sourcedir_utils import _get_navigation_info
+    from utils.vocab_llm_utils import create_interactive_word_links
+    from db_models import Sourcedir, SourcefileWordform, SourcefilePhrase
+
+    # Get navigation info
+    nav_info = _get_navigation_info(sourcefile_entry.sourcedir, sourcefile_entry.slug)
+
+    # Get wordforms and phrases data
+    # Define helper functions directly here instead of importing from views
+    def _get_wordforms_data(sourcefile_entry):
+        """Get wordforms data with junction table data in one query."""
+        from db_models import Wordform
+
+        return Wordform.get_all_wordforms_for(
+            language_code=target_language_code,
+            sourcefile=sourcefile_entry,
+            include_junction_data=True,
+        )
+
+    def _get_phrases_data(sourcefile_entry):
+        """Get phrases data with junction table data in one query."""
+        from db_models import Phrase
+
+        return Phrase.get_all_phrases_for(
+            language_code=target_language_code,
+            sourcefile=sourcefile_entry,
+            include_junction_data=True,
+        )
+
+    def _get_available_sourcedirs(target_language_code):
+        """Get all available sourcedirs for a language."""
+        return (
+            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
+            .where(Sourcedir.language_code == target_language_code)
+            .order_by(Sourcedir.path)
+        )
+
+    wordforms_d = _get_wordforms_data(sourcefile_entry)
+    phrases_d = _get_phrases_data(sourcefile_entry)
+    wordforms_count = len(wordforms_d)
+    phrases_count = len(phrases_d)
+
+    # Create enhanced text with interactive word links if text exists
+    enhanced_text = None
+    found_wordforms = None
+    if sourcefile_entry.text_target:
+        enhanced_text, found_wordforms = create_interactive_word_links(
+            text=str(sourcefile_entry.text_target),
+            wordforms=wordforms_d,
+            target_language_code=target_language_code,
+        )
+
+    # Get metadata
+    metadata = {
+        "created_at": sourcefile_entry.created_at,
+        "updated_at": sourcefile_entry.updated_at,
+    }
+
+    if sourcefile_entry.metadata and "image_processing" in sourcefile_entry.metadata:
+        metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
+
+    # Check if file has been processed before
+    already_processed = bool(wordforms_d)
+
+    # Get available sourcedirs for this language (for move dropdown)
+    available_sourcedirs = _get_available_sourcedirs(target_language_code)
+
+    return {
+        "sourcefile": {
+            "id": sourcefile_entry.id,
+            "filename": sourcefile_entry.filename,
+            "slug": sourcefile_entry.slug,
+            "description": sourcefile_entry.description,
+            "sourcefile_type": sourcefile_entry.sourcefile_type,
+            "text_target": sourcefile_entry.text_target,
+            "text_english": sourcefile_entry.text_english,
+            "has_audio": bool(sourcefile_entry.audio_data),
+            "has_image": bool(sourcefile_entry.image_data),
+        },
+        "sourcedir": {
+            "id": sourcefile_entry.sourcedir.id,
+            "path": sourcefile_entry.sourcedir.path,
+            "slug": sourcefile_entry.sourcedir.slug,
+            "language_code": sourcefile_entry.sourcedir.language_code,
+        },
+        "enhanced_text": enhanced_text,
+        "wordforms": wordforms_d,
+        "phrases": phrases_d,
+        "metadata": metadata,
+        "navigation": nav_info,
+        "stats": {
+            "wordforms_count": wordforms_count,
+            "phrases_count": phrases_count,
+            "already_processed": already_processed,
+        },
+        "available_sourcedirs": [
+            {"path": sd.path, "slug": sd.slug} for sd in available_sourcedirs
+        ],
+    }
+
+
 def process_sourcefile(
     sourcefile_entry: Sourcefile,
     language_level: LanguageLevel,

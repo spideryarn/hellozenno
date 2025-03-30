@@ -21,6 +21,7 @@ from utils.sourcedir_utils import (
     _get_sourcedir_entry,
     allowed_file,
     get_sourcedirs_for_language,
+    get_sourcefiles_for_sourcedir,
 )
 from loguru import logger
 from utils.sourcefile_utils import process_uploaded_file
@@ -410,3 +411,41 @@ def get_sourcedirs_for_language_api(target_language_code: str):
     except Exception as e:
         logger.error(f"Error getting sourcedirs: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
+@sourcedir_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/files", methods=["GET"]
+)
+def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str):
+    """
+    Get all source files in a directory.
+
+    Returns a JSON response with the sourcedir info and its sourcefiles.
+    """
+    try:
+        # Use the utility function to get all data
+        result = get_sourcefiles_for_sourcedir(target_language_code, sourcedir_slug)
+
+        # Format the response for the API
+        sourcedir_entry = result["sourcedir"]
+        response = {
+            "success": True,
+            "sourcedir": {
+                "id": sourcedir_entry.id,
+                "path": sourcedir_entry.path,
+                "slug": sourcedir_entry.slug,
+                "description": sourcedir_entry.description,
+                "language_code": sourcedir_entry.language_code,
+            },
+            "sourcefiles": result["sourcefiles"],
+            "language_name": result["target_language_name"],
+            "has_vocabulary": result["has_vocabulary"],
+        }
+
+        return jsonify(response)
+
+    except DoesNotExist:
+        return jsonify({"success": False, "error": "Source directory not found"}), 404
+    except Exception as e:
+        logger.error(f"Error retrieving sourcefiles: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500

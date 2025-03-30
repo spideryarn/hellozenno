@@ -15,34 +15,31 @@ import type {
 const API_BASE_URL = "http://localhost:3000";
 
 /**
- * Generic fetch function with error handling
+ * Constructs an API URL based on the provided endpoint
+ * Default API is running on localhost:3000 but can be configured with VITE_API_URL environment variable
+ *
+ * @param endpoint The API endpoint path (should start with a slash)
+ * @returns The complete API URL
  */
-async function fetchFromApi<T>(
-    endpoint: string,
-    options: RequestInit = {},
-): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+export function getApiUrl(endpoint: string): string {
+    const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    return `${apiBaseUrl}${endpoint}`;
+}
 
-    try {
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                "Content-Type": "application/json",
-                ...options.headers,
-            },
-        });
+/**
+ * Fetches data from the API with proper error handling
+ *
+ * @param endpoint The API endpoint path
+ * @returns A promise that resolves to the JSON response
+ */
+export async function fetchFromApi<T>(endpoint: string): Promise<T> {
+    const response = await fetch(getApiUrl(endpoint));
 
-        if (!response.ok) {
-            throw new Error(
-                `API error: ${response.status} ${response.statusText}`,
-            );
-        }
-
-        return await response.json() as T;
-    } catch (error) {
-        console.error("API request failed:", error);
-        throw error;
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
+
+    return response.json() as Promise<T>;
 }
 
 /**

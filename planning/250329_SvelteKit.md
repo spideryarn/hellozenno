@@ -224,5 +224,259 @@ We use the prefix `hz-` for all custom component classes:
 - How to handle environment configuration across both services?
 - Deployment strategy details for Vercel?
 
+## Sourcefile Page Implementation
+
+### Stages for Implementation
+
+1. **API Backend**
+   - [ ] Create `inspect_sourcefile_api()` in `views/sourcefile_api.py`
+   - [ ] Create `inspect_sourcefile_text_api()` in `views/sourcefile_api.py`
+   - [ ] Test API endpoints with curl or similar tool
+
+2. **SvelteKit Basic Structure**
+   - [ ] Create route structure for `/language/[language_code]/source/[sourcefile_slug]`
+   - [ ] Implement server-side data fetching in `+page.server.ts`
+   - [ ] Create basic layout for the page in `+page.svelte`
+
+3. **Component Breakdown**
+   - [ ] Create `SourcefileHeader` component
+     - [ ] Implement file metadata display
+     - [ ] Add navigation buttons
+     - [ ] Include sourcefile tabs
+   - [ ] Create `SourcefileText` component
+     - [ ] Display the text content
+     - [ ] Add collapsible translation section
+
+4. **Functionality**
+   - [ ] Implement tab navigation
+   - [ ] Hook up process button
+   - [ ] Set up previous/next navigation
+   - [ ] Add description editing functionality
+
+5. **Later Enhancements**
+   - [ ] Implement enhanced text with interactive word links
+   - [ ] Add styling to match the original design
+   - [ ] Create words and phrases tabs with full functionality
+
+6. **SvelteKit Structure**:
+
+We're approaching the SvelteKit implementation with a component-based architecture:
+
+```
+/routes/language/[language_code]/source/[sourcefile_slug]/
+├── +page.server.ts         # Server-side data fetching
+├── +page.svelte            # Main page component
+├── +layout.svelte          # Layout with navigation
+├── components/
+│   ├── SourcefileHeader.svelte
+│   ├── SourcefileText.svelte  
+│   ├── SourcefileWords.svelte
+│   └── SourcefilePhrases.svelte
+└── words/+page.svelte      # Words tab view
+```
+
+4. **TypeScript Interface**:
+
+```typescript
+interface SourcefileAPIResponse {
+  success: boolean;
+  sourcefile: {
+    id: number;
+    filename: string;
+    slug: string;
+    description: string | null;
+    sourcefile_type: 'text' | 'image' | 'audio' | 'youtube_audio';
+    text_target: string | null;
+    text_english: string | null;
+    has_audio: boolean;
+    has_image: boolean;
+  };
+  sourcedir: {
+    id: number;
+    path: string;
+    slug: string;
+    language_code: string;
+  };
+  enhanced_text: string | null;
+  wordforms: Array<Wordform>;
+  phrases: Array<Phrase>;
+  metadata: {
+    created_at: string;
+    updated_at: string;
+    image_processing?: {
+      original_size: number;
+      final_size: number;
+      was_resized: boolean;
+    };
+  };
+  navigation: {
+    current_position: number;
+    total_files: number;
+    is_first: boolean;
+    is_last: boolean;
+    prev_slug?: string;
+    next_slug?: string;
+  };
+  stats: {
+    wordforms_count: number;
+    phrases_count: number;
+    already_processed: boolean;
+  };
+}
+```
+
+### Progress Update (March 30, 2023)
+
+#### API Implementation
+
+We've made significant progress on the API side:
+
+1. **New Pattern for API Endpoints**:
+   - Created a reusable utility function `get_sourcefile_details()` in `utils/sourcefile_utils.py` to:
+     - Centralize logic for retrieving sourcefile data
+     - Avoid code duplication between view and API functions
+     - Make data format consistent between endpoints
+
+2. **Implemented API Endpoints**:
+   - Created `inspect_sourcefile_api()` for basic sourcefile metadata
+   - Created `inspect_sourcefile_text_api()` for text content and enhanced text
+   - Created `inspect_sourcefile_words_api()` for wordforms data
+   - Created `inspect_sourcefile_phrases_api()` for phrases data
+   - Created `process_sourcefile_api()` for triggering file processing
+
+3. **Code Refactoring**:
+   - Moved common logic from view functions to utility functions
+   - Standardized response format with consistent fields
+
+#### Current Challenges
+
+1. **API Connection Issues**:
+   - Testing with curl shows connection issues to the Flask API
+   - Need to verify if Flask server is running on expected port (3000)
+   - May need to check CORS settings if SvelteKit frontend encounters issues
+
+2. **Data Structure Complexity**:
+   - Working with nested data structures (sourcefile contains wordforms, phrases)
+   - Need to ensure proper typing on the SvelteKit side
+
+3. **Linter Errors**:
+   - Import error for `get_sourcefile_details` in `sourcefile_api.py` which needs to be fixed
+   - TypeScript errors in SvelteKit frontend related to API response types
+
+#### Next Steps
+
+1. **Debug API Connections**:
+   - Verify Flask server is running and accessible
+   - Test API endpoints directly with curl
+   - Fix any import or linter errors
+
+2. **Continue SvelteKit Implementation**:
+   - Update the frontend page structure based on available API data
+   - Break down the sourcefile page into reusable components
+   - Implement navigation between tabs and files
+
+3. **Enhance Error Handling**:
+   - Improve error handling in both API and frontend
+   - Add proper loading states in SvelteKit
+   - Provide fallbacks for missing data
+
+4. **Documentation**:
+   - Document API endpoints and expected response formats
+   - Create TypeScript interfaces for API responses
+
+By taking a modular approach with shared utilities, we're making the codebase more maintainable while providing consistent data to both Jinja templates and the SvelteKit frontend.
+
+#### Implementation Details
+
+1. **Shared Utility Function**:
+
+```python
+def get_sourcefile_details(sourcefile_entry: Sourcefile, target_language_code: str):
+    # Gets all details needed for both view and API functions in one place
+    # Navigation, wordforms, phrases, enhanced text, metadata, etc.
+    # Returns a standardized dictionary structure
+```
+
+This approach offers several benefits:
+- **Consistency**: Same data structure used in both Jinja templates and SvelteKit
+- **DRY Principle**: Avoid duplicating complex data retrieval logic
+- **Maintainability**: Changes to data structure only need to be made in one place
+- **Performance**: Optimized database queries in one place
+
+2. **API Response Structure**:
+
+```json
+{
+  "success": true,
+  "sourcefile": {
+    "id": 123,
+    "filename": "example.txt",
+    "slug": "example",
+    "description": "Example description",
+    "sourcefile_type": "text",
+    "text_target": "Original text",
+    "text_english": "Translated text",
+    "has_audio": false,
+    "has_image": false
+  },
+  "sourcedir": {
+    "id": 456,
+    "path": "Example Directory",
+    "slug": "example-directory",
+    "language_code": "el"
+  },
+  "enhanced_text": "<p>Enhanced <a href=\"...\">text</a> with links</p>",
+  "wordforms": [...],
+  "phrases": [...],
+  "metadata": {
+    "created_at": "2023-03-30T12:00:00",
+    "updated_at": "2023-03-30T12:00:00"
+  },
+  "navigation": {
+    "current_position": 1,
+    "total_files": 10,
+    "is_first": true,
+    "is_last": false
+  },
+  "stats": {
+    "wordforms_count": 5,
+    "phrases_count": 3,
+    "already_processed": true
+  }
+}
+```
+
+### Detailed Next Actions
+
+1. **Fix API Issues**
+   - [ ] Fix the import issue with `get_sourcefile_details` in `sourcefile_api.py`
+   - [ ] Check that Flask server is running on port 3000
+   - [ ] Test API endpoints with curl to confirm they return the expected data
+   - [ ] Address any CORS issues that may arise
+
+2. **SvelteKit Frontend Implementation**
+   - [ ] Finish creating the component directories and files
+   - [ ] Implement the TypeScript interfaces for API responses
+   - [ ] Create API utility functions for fetching sourcefile data
+   - [ ] Develop the +page.server.ts file for data fetching
+
+3. **Component Development**
+   - [ ] Implement the SourcefileHeader component
+   - [ ] Implement the SourcefileText component for the Text tab
+   - [ ] Create a basic layout with styling placeholder
+   - [ ] Ensure tab navigation works correctly
+
+4. **Process Tab-Specific Components**
+   - [ ] Create the Words tab view with data display
+   - [ ] Create the Phrases tab view with data display
+   - [ ] Implement API calls for tab-specific data
+   - [ ] Add tab state retention during navigation
+
+5. **Testing and Documentation**
+   - [ ] Test page layout on different screen sizes
+   - [ ] Document API response formats in the SvelteKit codebase
+   - [ ] Write usage examples for the getApiUrl utility function
+   - [ ] Test with various sourcefiles to ensure proper display
+
 
     
