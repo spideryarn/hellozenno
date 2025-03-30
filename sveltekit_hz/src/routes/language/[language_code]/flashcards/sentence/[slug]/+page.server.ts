@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { get_api_url } from "$lib/utils";
+import { getApiUrl } from "$lib/api";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ params, fetch, url }) => {
     const { language_code, slug } = params;
@@ -10,8 +11,7 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
     const sourcefile = url.searchParams.get("sourcefile");
     const sourcedir = url.searchParams.get("sourcedir");
 
-    // Build API path with query parameters
-    let apiPath = `lang/${language_code}/flashcards/sentence/${slug}`;
+    // Build query parameters
     let queryParams = new URLSearchParams();
 
     if (sourcefile) {
@@ -20,16 +20,24 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
         queryParams.append("sourcedir", sourcedir);
     }
 
-    if (queryParams.toString()) {
-        apiPath += `?${queryParams.toString()}`;
-    }
-
     try {
-        // Make the API request
-        const apiUrl = get_api_url(apiPath);
-        console.log(`Fetching flashcard sentence from API: ${apiUrl}`);
+        // Generate type-safe API URL
+        const apiUrl = getApiUrl(
+            RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API,
+            {
+                language_code: language_code,
+                slug: slug,
+            },
+        );
 
-        const response = await fetch(apiUrl);
+        // Add query parameters if any
+        const fullUrl = queryParams.toString()
+            ? `${apiUrl}?${queryParams.toString()}`
+            : apiUrl;
+
+        console.log(`Fetching flashcard sentence from API: ${fullUrl}`);
+
+        const response = await fetch(fullUrl);
 
         if (!response.ok) {
             // If API returns an error, handle it

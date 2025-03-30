@@ -1,5 +1,8 @@
 // Helper function to get language name from language code
 // This now uses the API instead of hardcoded values
+import { getApiUrl } from "./api";
+import { RouteName } from "./generated/routes";
+
 export async function get_language_name(
     language_code: string,
     customFetch?: typeof fetch,
@@ -7,7 +10,9 @@ export async function get_language_name(
     const fetchFunc = customFetch || fetch;
     try {
         const response = await fetchFunc(
-            get_api_url(`lang/language_name/${language_code}`),
+            getApiUrl(RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API, {
+                language_code: language_code,
+            }),
         );
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);

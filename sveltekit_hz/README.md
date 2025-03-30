@@ -9,7 +9,7 @@ This project's documentation is organized into the following sections:
 - [Architecture](./docs/SVELTEKIT_ARCHITECTURE.md) - System architecture and migration strategy
 - [Setup and Development](./docs/SETUP.md) - Installation and development instructions
 - [UI and Styling](./docs/STYLING.md) - Styling system and component usage
-- [API Integration](./docs/FLASK_API_INTEGRATION.md) - How to interact with the Flask backend, e.g. using `get_api_url()`
+- [API Integration](./docs/FLASK_API_INTEGRATION.md) - How to interact with the Flask backend, e.g. using `getApiUrl()`
 
 ## Project Status and Roadmap
 

@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { get_api_url } from "$lib/utils";
+import { getApiUrl } from "$lib/api";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ params, fetch, url }) => {
     const { language_code } = params;
@@ -9,17 +10,30 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
     const sourcefile = url.searchParams.get("sourcefile");
     const sourcedir = url.searchParams.get("sourcedir");
 
-    // Build URL for API fetch with appropriate query parameters
-    let apiPath = `lang/${language_code}/flashcards/landing`;
+    // Create query parameters
+    let queryParams = new URLSearchParams();
 
     if (sourcefile) {
-        apiPath += `?sourcefile=${sourcefile}`;
+        queryParams.append("sourcefile", sourcefile);
     } else if (sourcedir) {
-        apiPath += `?sourcedir=${sourcedir}`;
+        queryParams.append("sourcedir", sourcedir);
     }
 
     try {
-        const response = await fetch(get_api_url(apiPath));
+        // Generate type-safe API URL
+        const apiUrl = getApiUrl(
+            RouteName.FLASHCARD_API_FLASHCARD_LANDING_API,
+            {
+                language_code: language_code,
+            },
+        );
+
+        // Add query parameters if any
+        const fullUrl = queryParams.toString()
+            ? `${apiUrl}?${queryParams.toString()}`
+            : apiUrl;
+
+        const response = await fetch(fullUrl);
 
         if (!response.ok) {
             const errorData = await response.json();

@@ -1,6 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { get_api_url } from "$lib/utils";
+import { getApiUrl } from "$lib/api";
+import { RouteName } from "$lib/generated/routes";
 
 export const GET: RequestHandler = async ({ params, url, fetch }) => {
     const { language_code } = params;
@@ -9,8 +10,7 @@ export const GET: RequestHandler = async ({ params, url, fetch }) => {
     const sourcefile = url.searchParams.get("sourcefile");
     const sourcedir = url.searchParams.get("sourcedir");
 
-    // Build API path with query parameters
-    let apiPath = `lang/${language_code}/flashcards/random`;
+    // Build query parameters
     let queryParams = new URLSearchParams();
 
     if (sourcefile) {
@@ -19,16 +19,20 @@ export const GET: RequestHandler = async ({ params, url, fetch }) => {
         queryParams.append("sourcedir", sourcedir);
     }
 
-    if (queryParams.toString()) {
-        apiPath += `?${queryParams.toString()}`;
-    }
-
     try {
-        // Make the API request
-        const apiUrl = get_api_url(apiPath);
-        console.log(`Fetching random flashcard from API: ${apiUrl}`);
+        // Make the API request using type-safe URL generation
+        const apiUrl = getApiUrl(RouteName.FLASHCARD_API_RANDOM_FLASHCARD_API, {
+            language_code: language_code,
+        });
 
-        const response = await fetch(apiUrl);
+        // Add query parameters if any
+        const fullUrl = queryParams.toString()
+            ? `${apiUrl}?${queryParams.toString()}`
+            : apiUrl;
+
+        console.log(`Fetching random flashcard from API: ${fullUrl}`);
+
+        const response = await fetch(fullUrl);
 
         if (!response.ok) {
             // If API returns an error, handle it
