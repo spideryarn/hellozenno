@@ -2,6 +2,15 @@
 
 To understand more about the purpose of the app, see `./README.md`
 
+## Project Architecture
+
+HelloZenno is currently transitioning from a Flask/Jinja/Svelte application to a SvelteKit frontend with a Flask API backend:
+
+- **Legacy Frontend**: Flask/Jinja + Svelte components (being phased out)
+- **New Frontend**: SvelteKit with TypeScript and Bootstrap styling
+- **Backend**: Flask API + PostgreSQL database on Supabase
+- **Migration Status**: See `planning/250329_SvelteKit.md` for current progress
+
 ## Coding
 
 **Principles**
@@ -16,17 +25,30 @@ To understand more about the purpose of the app, see `./README.md`
 - Make sure you read `.cursor/rules/gjdutils_rules/coding.mdc`
 
 - **Backend (Flask + PostgreSQL)**
-  - `index.py` - Main Flask application
-  - `views/` - Route handlers and view functions
+  - `api/index.py` - Main Flask application entry point
+  - `views/` - Route handlers and API functions
   - `utils/` - Helper functions
   - `db_models.py` - Database models (using Peewee ORM)
   - `migrations/` - Database migration scripts
 
-- **Frontend (Svelte + TypeScript + Vite)**
-  - Read `FRONTEND_INFRASTRUCTURE.md` before creating new frontend components
+- **SvelteKit Frontend**
+  - See `sveltekit_hz/README.md` for detailed documentation
+  - Documentation for specific aspects:
+    - `sveltekit_hz/docs/SETUP.md` - Installation and development
+    - `sveltekit_hz/docs/STYLING.md` - Bootstrap theming and component usage
+    - `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` - API integration
+    - `sveltekit_hz/docs/SVELTEKIT_ARCHITECTURE.md` - Architecture overview
+  - Structure:
+    - `sveltekit_hz/src/routes/` - SvelteKit routes and pages
+    - `sveltekit_hz/src/lib/components/` - Reusable Svelte components
+    - `sveltekit_hz/src/lib/generated/routes.ts` - Auto-generated API route types
+    - `sveltekit_hz/static/` - Static assets and CSS
+
+- **Legacy Frontend (Svelte + TypeScript + Vite) - Being phased out**
+  - Read `FRONTEND_INFRASTRUCTURE.md` before modifying legacy components
   - Use the `cursor-tools browser` commands for browser automation, testing, and debugging
   - folder structure:
-    - `frontend/src/components/` - Svelte components
+    - `frontend/src/components/` - Legacy Svelte components
     - `frontend/src/entries/` - Entry points for different pages
     - `frontend/src/lib/` - Shared utilities
     - `templates/` - Jinja templates
@@ -40,12 +62,33 @@ To understand more about the purpose of the app, see `./README.md`
 
 ### Logging
 - **Backend logs**: `/logs/flask_app.log` (managed by Loguru via LimitingFileWriter)
-- **Frontend logs**: `/logs/vite_dev.log` (captured from Vite development server)
+- **SvelteKit logs**: `/logs/sveltekit_dev.log` (captured from SvelteKit development server)
 - Use the `loguru` library for Python logging: `from loguru import logger`
-- Configuration in `utils/logging_utils.py` (backend) and `scripts/local/run_frontend_dev.sh` (frontend)
-- Look at logs for debugging both Flask backend and Vite/Svelte frontend issues
+- Configuration in `utils/logging_utils.py` (backend) and `scripts/local/run_sveltekit.sh` (SvelteKit frontend)
+- Look at logs for debugging backend and frontend issues
 
 ### Frontend Components
+
+#### SvelteKit Component Library
+
+The SvelteKit frontend uses reusable Bootstrap-styled components:
+
+- `Card.svelte` - Base card component with title, content, and optional link
+- `LemmaCard.svelte` - For displaying lemma information
+- `Sentence.svelte` - For sentence display with enhanced text and translations
+- `SourceItem.svelte` - For source listing items
+
+See `sveltekit_hz/docs/STYLING.md` for detailed component usage.
+
+#### Type-Safe API Integration
+
+The SvelteKit frontend uses type-safe API integration with the Flask backend:
+
+- Flask generates TypeScript type definitions in `sveltekit_hz/src/lib/generated/routes.ts`
+- SvelteKit uses the `getApiUrl()` function to generate properly typed API URLs
+- All API endpoints follow a standard structure
+
+See `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` for details.
 
 ### Browser Testing and Web Search with cursor-tools
 
@@ -168,8 +211,8 @@ psql -d hellozenno_development -P pager=off -A -t -c "SELECT * FROM table;"
 # Run Flask server - the user will always have this running in another terminal
 source .env.local && ./scripts/local/run_flask.sh
 
-# Run frontend development server (Vite) - the user will always have this running in another terminal
-source .env.local && ./scripts/local/run_frontend_dev.sh
+# Run SvelteKit development server - the user will always have this running in another terminal
+source .env.local && ./scripts/local/run_sveltekit.sh
 
 # Database migrations
 ./scripts/local/migrations_list.sh # List available migrations
