@@ -1,9 +1,12 @@
+import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
-// Reuse data from parent route
-export const load: PageServerLoad = async ({ parent }) => {
-    const parentData = await parent();
-    return {
-        ...parentData,
-    };
+export const load: PageServerLoad = async ({ params }) => {
+    const { language_code, sourcedir_slug, sourcefile_slug } = params;
+
+    // Redirect to the main sourcefile page
+    throw redirect(
+        307,
+        `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}`,
+    );
 };

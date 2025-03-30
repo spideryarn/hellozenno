@@ -25,7 +25,7 @@ The app uses a dark theme with a color scheme defined in `theme-variables.css`:
 
 ## Component Library
 
-We provide reusable Svelte components to maintain consistent styling:
+We provide reusable Svelte components to maintain consistent styling, e.g.:
 
 - `Card.svelte`: For card-based layouts (used in language listings)
 - `SourceItem.svelte`: For displaying source items
