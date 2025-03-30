@@ -29,7 +29,8 @@ trap cleanup EXIT INT TERM
 # Start SvelteKit in the background with error handling and log capturing to both file and stdout
 echo "Starting SvelteKit development server (logs in $LOG_FILE and stdout)..."
 cd "$PROJECT_ROOT/sveltekit_hz"
-npm run dev -- --open 2>&1 | tee -a "$LOG_FILE" &
+# npm run dev -- --open 2>&1 | tee -a "$LOG_FILE" &
+npm run dev 2>&1 | tee -a "$LOG_FILE" &
 SVELTEKIT_PID=$!
 
 # Monitor the SvelteKit process
