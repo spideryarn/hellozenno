@@ -1,8 +1,26 @@
 # Hello Zenno - Language Learning Assistant
 
-A web application for learning languages through interactive content.
+An open-source web application for intermediate and advanced language learners, designed to assist with vocabulary acquisition and listening practice through AI-generated content.
+
+## About Hello Zenno
+
+Hello Zenno helps you learn languages by:
+- Assisting you in reading texts in your target language
+- Creating AI-generated dictionary entries with rich metadata
+- Highlighting unfamiliar words with interactive hover explanations
+- Generating audio dictation exercises with words in different contexts
+- Supporting vocabulary acquisition through contextual learning
+
+Built by a co-founder of Memrise, Hello Zenno fills the gap in language learning apps by providing deeper context and richer dictionary information tailored to what you're reading.
 
 ## Features
+
+### AI-Enhanced Learning
+- Rich AI-generated dictionary with detailed metadata and examples
+- Dynamic audio generation for hearing words in various contexts
+- Interactive text highlighting for quick vocabulary lookup
+- Etymology explanations and contextual usage examples
+- Dictation flashcards for listening practice
 
 ### Source Files
 Source files are the primary way to add learning content. They can be created in two ways:
