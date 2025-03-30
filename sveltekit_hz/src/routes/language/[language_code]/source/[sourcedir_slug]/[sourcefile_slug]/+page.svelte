@@ -1,9 +1,12 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import { MetadataCard } from '$lib';
   import SourcefileHeader from './components/SourcefileHeader.svelte';
   import SourcefileText from './components/SourcefileText.svelte';
   import SourcefileWords from './components/SourcefileWords.svelte';
   import SourcefilePhrases from './components/SourcefilePhrases.svelte';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
   
   export let data: PageData;
   
@@ -16,8 +19,29 @@
   const navigation = textData.navigation;
   const stats = textData.stats;
   
-  // Active tab (default to 'text')
-  let activeTab = 'text';
+  // Determine active tab from URL path
+  $: activeTab = $page.url.pathname.endsWith('/text') 
+    ? 'text' 
+    : $page.url.pathname.endsWith('/words')
+      ? 'words'
+      : $page.url.pathname.endsWith('/phrases')
+        ? 'phrases'
+        : 'text';
+
+  // Function to handle tab clicks and update URL
+  function handleTabClick(tab: string) {
+    const baseUrl = `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}`;
+    goto(`${baseUrl}/${tab}`);
+  }
+
+  // If we're at the base URL without a tab, redirect to the text tab
+  $: if (!$page.url.pathname.includes('/text') && 
+         !$page.url.pathname.includes('/words') && 
+         !$page.url.pathname.includes('/phrases') && 
+         sourcefile_slug) {
+    const baseUrl = `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}`;
+    goto(`${baseUrl}/text`, { replaceState: true });
+  }
 </script>
 
 <svelte:head>
@@ -25,44 +49,57 @@
 </svelte:head>
 
 <div class="container">
-  <nav class="breadcrumb">
-    <a href="/">Home</a>
-    » <a href="/language">Languages</a>
-    » <a href="/language/{language_code}/sources">{language_name || language_code}</a>
-    » <a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a>
-    » {sourcefile.filename}
-  </nav>
+  <div class="row mb-4">
+    <div class="col">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="/language">Languages</a></li>
+          <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
+          <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{sourcefile.filename}</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
 
-  <SourcefileHeader 
-    {sourcefile}
-    {sourcedir}
-    {metadata}
-    {navigation}
-    {stats}
-    {language_code}
-    {sourcedir_slug}
-    {sourcefile_slug}
-  />
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <SourcefileHeader 
+        {sourcefile}
+        {sourcedir}
+        {metadata}
+        {navigation}
+        {stats}
+        {language_code}
+        {sourcedir_slug}
+        {sourcefile_slug}
+      />
+    </div>
+    <div class="col-md-4 text-md-end">
+      <MetadataCard {metadata} />
+    </div>
+  </div>
   
   <div class="tabs">
     <a 
-      href="#text" 
+      href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text" 
       class="tab {activeTab === 'text' ? 'active' : ''}" 
-      on:click|preventDefault={() => activeTab = 'text'}
+      on:click|preventDefault={() => handleTabClick('text')}
     >
       Text
     </a>
     <a 
-      href="#words" 
+      href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/words" 
       class="tab {activeTab === 'words' ? 'active' : ''}" 
-      on:click|preventDefault={() => activeTab = 'words'}
+      on:click|preventDefault={() => handleTabClick('words')}
     >
       Words <small>({stats.wordforms_count})</small>
     </a>
     <a 
-      href="#phrases" 
+      href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/phrases" 
       class="tab {activeTab === 'phrases' ? 'active' : ''}" 
-      on:click|preventDefault={() => activeTab = 'phrases'}
+      on:click|preventDefault={() => handleTabClick('phrases')}
     >
       Phrases <small>({stats.phrases_count})</small>
     </a>
@@ -99,16 +136,9 @@
   }
   
   .breadcrumb {
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-  }
-  
-  .breadcrumb a {
-    text-decoration: none;
-  }
-  
-  .breadcrumb a:hover {
-    text-decoration: underline;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
   }
   
   .tabs {

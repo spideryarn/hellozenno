@@ -138,7 +138,7 @@ export const ROUTES = {
   SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/upload",
   SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/update_description",
   SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API: "/api/lang/sourcedir/{target_language_code}/sources",
-  SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}/files",
+  SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API: "/api/lang/sourcedir/{target_language_code}/{sourcedir_slug}",
   WORDFORM_API_WORD_PREVIEW_API: "/api/lang/word/{target_language_code}/{word}/preview",
   WORDFORM_API_GET_MP3_API: "/api/lang/word/{target_language_code}/{word}/mp3",
   WORDFORM_API_WORDFORMS_LIST_API: "/api/lang/word/{target_language_code}/wordforms",

@@ -159,16 +159,6 @@
   }
 </script>
 
-<div class="metadata-display">
-  {#if metadata}
-    <p>Created: <span class="metadata-timestamp">{metadata.created_at}</span></p>
-    <p>Updated: <span class="metadata-timestamp">{metadata.updated_at}</span></p>
-    {#if metadata.image_processing && metadata.image_processing.was_resized}
-      <p>Image resized: {Math.round(metadata.image_processing.original_size / 1024)}KB → {Math.round(metadata.image_processing.final_size / 1024)}KB</p>
-    {/if}
-  {/if}
-</div>
-
 <h1>
   <span class="file-icon">{getSourcefileTypeIcon(sourcefile.sourcefile_type)}</span>
   {sourcefile.filename}
@@ -265,16 +255,6 @@
 </div>
 
 <style>
-  .metadata-display {
-    font-size: 0.8rem;
-    color: #666;
-    margin-bottom: 1rem;
-  }
-  
-  .metadata-timestamp {
-    font-family: monospace;
-  }
-  
   h1 {
     display: flex;
     align-items: center;
