@@ -12,7 +12,7 @@ from utils.lang_utils import get_language_name
 from utils.url_registry import endpoint_for
 
 
-search_views_bp = Blueprint("search_views", __name__, url_prefix="/lang")
+search_views_bp = Blueprint("search_views", __name__, url_prefix="/language")
 
 # Configure logging
 logger = logging.getLogger(__name__)

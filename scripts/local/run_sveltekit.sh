@@ -7,10 +7,11 @@ set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Create logs directory if it doesn't exist
-mkdir -p "$SCRIPT_DIR/logs"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." &> /dev/null && pwd )"
+mkdir -p "$PROJECT_ROOT/logs"
 
 # Define log file location using absolute path
-LOG_FILE="$SCRIPT_DIR/logs/sveltekit_dev.log"
+LOG_FILE="$PROJECT_ROOT/logs/sveltekit_dev.log"
 rm -f "$LOG_FILE"
 touch "$LOG_FILE"
 
@@ -27,7 +28,7 @@ trap cleanup EXIT INT TERM
 
 # Start SvelteKit in the background with error handling and log capturing to both file and stdout
 echo "Starting SvelteKit development server (logs in $LOG_FILE and stdout)..."
-cd "$SCRIPT_DIR/sveltekit_hz"
+cd "$PROJECT_ROOT/sveltekit_hz"
 npm run dev -- --open 2>&1 | tee -a "$LOG_FILE" &
 SVELTEKIT_PID=$!
 

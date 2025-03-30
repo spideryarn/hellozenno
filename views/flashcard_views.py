@@ -30,7 +30,7 @@ from db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir
 
 # Create the blueprint for flashcard views
 flashcard_views_bp = Blueprint(
-    "flashcard_views", __name__, url_prefix="/lang", static_folder="../static/build"
+    "flashcard_views", __name__, url_prefix="/language", static_folder="../static/build"
 )
 
 

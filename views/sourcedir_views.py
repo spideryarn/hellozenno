@@ -17,7 +17,7 @@ from utils.sourcedir_utils import (
     get_sourcefiles_for_sourcedir,
 )
 
-sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/lang")
+sourcedir_views_bp = Blueprint("sourcedir_views", __name__, url_prefix="/language")
 
 
 @sourcedir_views_bp.route("/<target_language_code>/", strict_slashes=False)

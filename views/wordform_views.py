@@ -15,7 +15,7 @@ from views.sourcedir_views import sourcedirs_for_language_vw
 
 # Moving search_views and lemma_views imports inside functions to avoid circular imports
 
-wordform_views_bp = Blueprint("wordform_views", "/", url_prefix="/lang")
+wordform_views_bp = Blueprint("wordform_views", "/", url_prefix="/language")
 
 
 @wordform_views_bp.route("/<target_language_code>/wordforms/")

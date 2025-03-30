@@ -446,6 +446,10 @@ This architectural improvement provides significant benefits with minimal overhe
 
 ## URL Path Standardization
 
+We're in the process of updating the Flask view urls in `views/*_views.py`, then the user will regenerate the @routes.ts by restarting the Flask server.
+
+Then hopefully Flask will be the source of truth for API urls, SvelteKit is the source of truth for user-facing urls. In the short-term, Flask is also duplicatively defining view urls and feeding those into routes.ts, but over time we'll eliminate those.
+
 We've identified a critical inconsistency between Flask and SvelteKit routing paths:
 
 - Flask routes use `/lang/...` as the base path

@@ -22,7 +22,7 @@ from views.languages_views import languages_list_vw
 from views.sourcedir_views import sourcedirs_for_language_vw
 
 
-sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/lang")
+sentence_views_bp = Blueprint("sentence_views", __name__, url_prefix="/language")
 
 
 @sentence_views_bp.route("/<target_language_code>/sentences")

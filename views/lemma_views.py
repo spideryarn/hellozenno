@@ -18,7 +18,7 @@ from views.search_views import search_word_vw, search_landing_vw
 
 # Moving imports inside functions to avoid circular imports
 
-lemma_views_bp = Blueprint("lemma_views", __name__, url_prefix="/lang")
+lemma_views_bp = Blueprint("lemma_views", __name__, url_prefix="/language")
 logger = logging.getLogger(__name__)
 
 

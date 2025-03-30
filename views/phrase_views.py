@@ -6,7 +6,7 @@ from utils.vocab_llm_utils import extract_phrases_from_text
 from utils.phrase_utils import get_phrases_query, get_phrase_by_slug
 from slugify import slugify
 
-phrase_views_bp = Blueprint("phrase_views", __name__, url_prefix="/lang")
+phrase_views_bp = Blueprint("phrase_views", __name__, url_prefix="/language")
 
 
 @phrase_views_bp.route("/<target_language_code>/phrases")
