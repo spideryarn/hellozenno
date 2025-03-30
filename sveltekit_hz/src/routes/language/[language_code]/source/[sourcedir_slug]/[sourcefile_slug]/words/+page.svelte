@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';
-  import { WordformCard, MetadataCard } from '$lib';
+  import { WordformCard } from '$lib';
   import SourcefileHeader from '../components/SourcefileHeader.svelte';
   
   export let data: PageData;
@@ -32,17 +32,6 @@
     </ol>
   </nav>
   
-  <div class="row mb-4">
-    <div class="col-md-8">
-      <h1 class="mb-3">{sourcefile.filename}</h1>
-    </div>
-    <div class="col-md-4 text-md-end">
-      {#if metadata}
-        <MetadataCard {metadata} />
-      {/if}
-    </div>
-  </div>
-
   <SourcefileHeader 
     {sourcefile}
     {sourcedir}

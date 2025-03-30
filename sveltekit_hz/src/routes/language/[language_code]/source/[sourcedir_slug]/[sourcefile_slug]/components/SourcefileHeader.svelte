@@ -2,6 +2,7 @@
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
+  import { MetadataCard } from '$lib';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -199,26 +200,23 @@
   );
 </script>
 
-<div class="metadata-display">
-  {#if metadata}
-    <p>Created: <span class="metadata-timestamp">{metadata.created_at}</span></p>
-    <p>Updated: <span class="metadata-timestamp">{metadata.updated_at}</span></p>
-    {#if metadata.image_processing && metadata.image_processing.was_resized}
-      <p>Image resized: {Math.round(metadata.image_processing.original_size / 1024)}KB → {Math.round(metadata.image_processing.final_size / 1024)}KB</p>
-    {/if}
-  {/if}
-</div>
-
-<h1>
-  <span class="file-icon">{getSourcefileTypeIcon(sourcefile.sourcefile_type)}</span>
-  {sourcefile.filename}
-  <button on:click={renameSourcefile} class="button small-button">
-    <i class="fas fa-edit"></i> Rename
-  </button>
-  <div class="icon-delete-wrapper" on:click={deleteSourcefile} style="display: inline-block; cursor: pointer;">
-    <span class="delete-button">🗑️ Delete</span>
+<div class="header-container">
+  <div class="header-content">
+    <h1>
+      <span class="file-icon">{getSourcefileTypeIcon(sourcefile.sourcefile_type)}</span>
+      {sourcefile.filename}
+      <button on:click={renameSourcefile} class="button small-button">
+        <i class="fas fa-edit"></i> Rename
+      </button>
+      <div class="icon-delete-wrapper" on:click={deleteSourcefile} style="display: inline-block; cursor: pointer;">
+        <span class="delete-button">🗑️ Delete</span>
+      </div>
+    </h1>
   </div>
-</h1>
+  <div class="metadata-container">
+    <MetadataCard {metadata} />
+  </div>
+</div>
 
 <div class="description-container">
   {#if isEditingDescription}
@@ -305,14 +303,19 @@
 </div>
 
 <style>
-  .metadata-display {
-    font-size: 0.8rem;
-    color: #666;
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 1rem;
   }
   
-  .metadata-timestamp {
-    font-family: monospace;
+  .header-content {
+    flex: 1;
+  }
+  
+  .metadata-container {
+    margin-left: 1rem;
   }
   
   h1 {
