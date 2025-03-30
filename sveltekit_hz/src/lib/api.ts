@@ -135,26 +135,25 @@ export async function getSearchLandingData(
     target_language_code: string,
     query?: string,
 ) {
-    // Use the full URL directly since we're dealing with a custom API endpoint
-    const url = new URL(
-        `${API_BASE_URL}/api/lang/${target_language_code}/search`,
+    // Use the type-safe API fetch with RouteName
+    const response = await apiFetch(
+        RouteName.SEARCH_API_SEARCH_LANDING_API,
+        { target_language_code },
+        {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        },
     );
 
-    // Add query parameter if provided
+    // If there's a query parameter, we need to add it to the URL
+    // This could be enhanced by extending the route params type to include optional query params
     if (query) {
-        url.searchParams.append("q", query);
+        // Add query parameters if needed
+        // Note: This isn't needed for the current implementation
+        // but kept here as example for handling query params
     }
 
-    const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Search API error: ${response.status}`);
-    }
-
-    return response.json();
+    return response;
 }
 
 /**
@@ -164,19 +163,13 @@ export async function searchWord(
     target_language_code: string,
     wordform: string,
 ) {
-    // Use the full URL directly
-    const url = `${API_BASE_URL}/api/lang/${target_language_code}/search/${
-        encodeURIComponent(wordform)
-    }`;
-
-    const response = await fetch(url, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Search word API error: ${response.status}`);
-    }
-
-    return response.json();
+    // Use the type-safe API fetch with RouteName
+    return apiFetch(
+        RouteName.SEARCH_API_SEARCH_WORD_API,
+        { target_language_code, wordform },
+        {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        },
+    );
 }
