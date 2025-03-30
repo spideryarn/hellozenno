@@ -157,7 +157,8 @@ export async function getSearchLandingData(
 }
 
 /**
- * Search for a word in a language
+ * Search for a word in a language using the search API
+ * (Simple redirect method)
  */
 export async function searchWord(
     target_language_code: string,
@@ -172,4 +173,46 @@ export async function searchWord(
             headers: { "Content-Type": "application/json" },
         },
     );
+}
+
+/**
+ * Get wordform metadata with enhanced search capabilities
+ * 
+ * This API will:
+ * - Return wordform data if found
+ * - Search for similar words if not found
+ * - Return search results for multiple matches
+ * - Handle English translation search
+ */
+export async function getWordformWithSearch(
+    target_language_code: string,
+    wordform: string,
+) {
+    try {
+        // Use the type-safe API fetch to get wordform metadata
+        return await apiFetch(
+            RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
+            { target_language_code, wordform },
+            {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            },
+        );
+    } catch (error) {
+        // For 404 errors, return the error response
+        // This allows us to handle "invalid word" cases with proper data
+        if (error instanceof Error && error.message.includes('404')) {
+            const response = await fetch(
+                getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, 
+                    { target_language_code, wordform }
+                ),
+                {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+            return await response.json();
+        }
+        throw error;
+    }
 }

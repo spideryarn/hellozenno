@@ -72,36 +72,23 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
 
     This API endpoint corresponds to the get_wordform_metadata_vw view function.
     It returns complete metadata for a wordform, including its lemma if available.
+    If the wordform doesn't exist, it will search for possible matches.
     """
     # URL decode the wordform parameter to handle non-Latin characters properly
     wordform = urllib.parse.unquote(wordform)
 
-    try:
-        # Get the metadata using the utility function
-        result = get_wordform_metadata(target_language_code, wordform)
-
-        # Split the inflection_type string into a list if it exists
-        if (
-            result["wordform_metadata"]
-            and "inflection_type" in result["wordform_metadata"]
-            and result["wordform_metadata"]["inflection_type"]
-        ):
-            inflection_type = result["wordform_metadata"]["inflection_type"]
-            if isinstance(inflection_type, str):
-                result["wordform_metadata"]["inflection_types"] = [
-                    inflection_type.strip()
-                    for inflection_type in inflection_type.split()
-                    if inflection_type.strip()
-                ]
-
-        return jsonify(result)
-    except DoesNotExist:
-        response_data = {
-            "error": "Not Found",
-            "description": f"Wordform '{wordform}' not found",
-            "target_language_code": target_language_code,
-            "target_language_name": get_language_name(target_language_code),
-        }
-        response = jsonify(response_data)
+    # Use the shared utility function to find or create the wordform
+    from utils.word_utils import find_or_create_wordform
+    result = find_or_create_wordform(target_language_code, wordform)
+    
+    # Handle different status responses
+    if result["status"] == "found":
+        return jsonify(result["data"])
+    elif result["status"] == "multiple_matches":
+        return jsonify(result["data"])
+    elif result["status"] == "redirect":
+        return jsonify(result["data"])
+    else:  # invalid
+        response = jsonify(result["data"])
         response.status_code = 404
         return response

@@ -210,3 +210,107 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
     }
 
     return result
+
+
+def find_or_create_wordform(target_language_code: str, wordform: str):
+    """
+    Find or create a wordform, handling common search behavior.
+    
+    This shared utility function handles the common logic used by both
+    get_wordform_metadata_vw and get_wordform_metadata_api.
+    
+    Args:
+        target_language_code: The language code (e.g. 'el' for Greek)
+        wordform: The wordform text
+        
+    Returns:
+        A dictionary with the following structure:
+        {
+            "status": str, # "found", "multiple_matches", "redirect", or "invalid"
+            "data": dict,  # The result data appropriate for the status
+        }
+    """
+    from utils.vocab_llm_utils import quick_search_for_wordform
+    from peewee import DoesNotExist
+    
+    # Ensure wordform is properly handled
+    wordform = ensure_nfc(wordform)
+    
+    try:
+        # Try to find existing wordform in database
+        result = get_wordform_metadata(target_language_code, wordform)
+        return {
+            "status": "found",
+            "data": result
+        }
+    except DoesNotExist:
+        # If not found, use quick search to get metadata
+        search_result, _ = quick_search_for_wordform(wordform, target_language_code, 1)
+
+        # Count total matches from both result types
+        target_matches = search_result["target_language_results"]["matches"]
+        english_matches = search_result["english_results"]["matches"]
+        total_matches = len(target_matches) + len(english_matches)
+
+        # Check for possible misspellings
+        target_misspellings = search_result["target_language_results"]["possible_misspellings"]
+        english_misspellings = search_result["english_results"]["possible_misspellings"]
+
+        # If there are multiple matches or misspellings, return search results
+        if total_matches > 1 or target_misspellings or english_misspellings:
+            return {
+                "status": "multiple_matches",
+                "data": {
+                    "target_language_code": target_language_code,
+                    "target_language_name": get_language_name(target_language_code),
+                    "search_term": wordform,
+                    "target_language_results": search_result["target_language_results"],
+                    "english_results": search_result["english_results"],
+                }
+            }
+
+        # If there's exactly one match, create that wordform and return redirect info
+        elif total_matches == 1:
+            # Get the single match (either from target or english results)
+            match = target_matches[0] if target_matches else english_matches[0]
+            match_wordform = match.get("target_language_wordform")
+
+            if match_wordform:
+                # Convert from new response format to metadata format
+                metadata = {
+                    "wordform": match_wordform,
+                    "lemma": match.get("target_language_lemma"),
+                    "part_of_speech": match.get("part_of_speech"),
+                    "translations": match.get("english", []),
+                    "inflection_type": match.get("inflection_type"),
+                    "possible_misspellings": None,
+                }
+
+                # Create the wordform in the database
+                Wordform.get_or_create_from_metadata(
+                    wordform=match_wordform,
+                    language_code=target_language_code,
+                    metadata=metadata,
+                )
+                
+                return {
+                    "status": "redirect",
+                    "data": {
+                        "target_language_code": target_language_code,
+                        "target_language_name": get_language_name(target_language_code),
+                        "redirect_to": match_wordform,
+                    }
+                }
+
+        # If no matches or misspellings, return invalid word data
+        return {
+            "status": "invalid",
+            "data": {
+                "error": "Not Found",
+                "description": f"Wordform '{wordform}' not found",
+                "target_language_code": target_language_code,
+                "target_language_name": get_language_name(target_language_code),
+                "wordform": wordform,
+                "possible_misspellings": target_misspellings,
+            }
+        }

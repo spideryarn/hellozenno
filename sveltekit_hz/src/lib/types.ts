@@ -67,3 +67,34 @@ export interface Phrase {
     created_at?: string;
     updated_at?: string;
 }
+
+/**
+ * Search result types and interfaces
+ */
+
+export interface SearchMatch {
+    target_language_wordform: string;
+    target_language_lemma?: string;
+    part_of_speech?: string;
+    english?: string[];
+    inflection_type?: string;
+    confidence?: number;
+}
+
+export interface SearchResultCategory {
+    matches: SearchMatch[];
+    possible_misspellings?: string[];
+}
+
+export interface SearchResults {
+    status: 'found' | 'multiple_matches' | 'redirect' | 'invalid';
+    target_language_code: string;
+    target_language_name: string;
+    search_term: string;
+    target_language_results?: SearchResultCategory;
+    english_results?: SearchResultCategory;
+    redirect_to?: string;
+    wordform_metadata?: Wordform;
+    possible_misspellings?: string[];
+    error?: string;
+}

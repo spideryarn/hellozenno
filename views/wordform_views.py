@@ -63,89 +63,51 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
     # Defense in depth: decode explicitly here, in addition to middleware
     wordform = urllib.parse.unquote(wordform)
 
-    # First try to find existing wordform in database
-    try:
-        # Get the metadata using the utility function
-        result = get_wordform_metadata(target_language_code, wordform)
-
+    # Use the shared utility function to find or create the wordform
+    from utils.word_utils import find_or_create_wordform
+    result = find_or_create_wordform(target_language_code, wordform)
+    
+    # Handle different status responses
+    if result["status"] == "found":
+        data = result["data"]
         return render_template(
             "wordform.jinja",
-            wordform_metadata=result["wordform_metadata"],
+            wordform_metadata=data["wordform_metadata"],
             target_language_code=target_language_code,
             target_language_name=get_language_name(target_language_code),
-            dict_html=dict_as_html(result["wordform_metadata"]),
-            metadata=result["metadata"],  # Add metadata to template context
+            dict_html=dict_as_html(data["wordform_metadata"]),
+            metadata=data["metadata"],  # Add metadata to template context
         )
-    except DoesNotExist:
-        # If not found, use quick search to get metadata
-        search_result, _ = quick_search_for_wordform(wordform, target_language_code, 1)
-
-        # Count total matches from both result types
-        target_matches = search_result["target_language_results"]["matches"]
-        english_matches = search_result["english_results"]["matches"]
-        total_matches = len(target_matches) + len(english_matches)
-
-        # Check for possible misspellings
-        target_misspellings = search_result["target_language_results"][
-            "possible_misspellings"
-        ]
-        english_misspellings = search_result["english_results"]["possible_misspellings"]
-
-        # If there are multiple matches or misspellings, show search results
-        if total_matches > 1 or target_misspellings or english_misspellings:
-            return render_template(
-                "translation_search_results.jinja",
+    elif result["status"] == "multiple_matches":
+        data = result["data"]
+        return render_template(
+            "translation_search_results.jinja",
+            target_language_code=target_language_code,
+            target_language_name=get_language_name(target_language_code),
+            search_term=data["search_term"],
+            target_language_results=data["target_language_results"],
+            english_results=data["english_results"],
+        )
+    elif result["status"] == "redirect":
+        data = result["data"]
+        # Redirect to the wordform URL
+        return redirect(
+            url_for(
+                endpoint_for(get_wordform_metadata_vw),
                 target_language_code=target_language_code,
-                target_language_name=get_language_name(target_language_code),
-                search_term=wordform,
-                target_language_results=search_result["target_language_results"],
-                english_results=search_result["english_results"],
+                wordform=data["redirect_to"],
             )
-
-        # If there's exactly one match, redirect to that wordform
-        elif total_matches == 1:
-            # Get the single match (either from target or english results)
-            match = target_matches[0] if target_matches else english_matches[0]
-            match_wordform = match.get("target_language_wordform")
-
-            if match_wordform:
-                # First create the wordform in the database to avoid redirect loops
-                # Convert from new response format to metadata format expected by get_or_create_from_metadata
-                metadata = {
-                    "wordform": match_wordform,
-                    "lemma": match.get("target_language_lemma"),
-                    "part_of_speech": match.get("part_of_speech"),
-                    "translations": match.get("english", []),
-                    "inflection_type": match.get("inflection_type"),
-                    "possible_misspellings": None,
-                }
-
-                # Create the wordform in the database
-                Wordform.get_or_create_from_metadata(
-                    wordform=match_wordform,
-                    language_code=target_language_code,
-                    metadata=metadata,
-                )
-
-                # Now redirect to the wordform URL
-                return redirect(
-                    url_for(
-                        endpoint_for(get_wordform_metadata_vw),
-                        target_language_code=target_language_code,
-                        wordform=match_wordform,
-                    )
-                )
-
-        # If no matches or misspellings, show invalid word template
-        else:
-            return render_template(
-                "invalid_word.jinja",
-                target_language_code=target_language_code,
-                target_language_name=get_language_name(target_language_code),
-                wordform=wordform,
-                possible_misspellings=target_misspellings,
-                metadata=None,
-            )
+        )
+    else:  # invalid
+        data = result["data"]
+        return render_template(
+            "invalid_word.jinja",
+            target_language_code=target_language_code,
+            target_language_name=get_language_name(target_language_code),
+            wordform=data["wordform"],
+            possible_misspellings=data["possible_misspellings"],
+            metadata=None,
+        )
 
 
 @wordform_views_bp.route(
