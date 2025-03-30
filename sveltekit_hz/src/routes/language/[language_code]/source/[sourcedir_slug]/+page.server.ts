@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Fetch all sourcefiles for this sourcedir
         const response = await fetch(
             getApiUrl(
-                `/api/lang/sourcedir/${language_code}/${sourcedir_slug}/files`,
+                `/api/lang/sourcedir/${language_code}/${sourcedir_slug}`,
             ),
         );
 
