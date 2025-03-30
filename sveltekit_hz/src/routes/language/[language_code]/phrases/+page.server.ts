@@ -1,14 +1,14 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { get_language_name } from "$lib/utils";
 import { getPhrasesForLanguage } from "$lib/api";
+import { get_language_name } from "$lib/utils";
 
 export const load: PageServerLoad = async ({ params, url }) => {
     const { language_code } = params;
     const sort = url.searchParams.get("sort") || "alpha";
 
     try {
-        // Fetch phrases using the API helper
+        // Fetch the phrases for the language
         const phrases = await getPhrasesForLanguage(language_code, sort);
 
         // Get language name
@@ -16,12 +16,14 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
         return {
             phrases,
-            language_code,
             language_name,
+            language_code,
             current_sort: sort,
         };
     } catch (err) {
-        console.error("Error loading phrases:", err);
-        throw error(500, "Failed to load phrases data");
+        console.error("Error loading phrases data:", err);
+        throw error(500, {
+            message: "Failed to load phrases data",
+        });
     }
 };

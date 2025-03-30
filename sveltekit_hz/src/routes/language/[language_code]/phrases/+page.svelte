@@ -1,107 +1,86 @@
 <script lang="ts">
-    import type { PageData } from './$types';
-    import { Card } from '$lib';
+    import { PhraseCard } from '$lib';
+    import type { Phrase } from '$lib/types';
+    import { page } from '$app/stores';
     
-    export let data: PageData;
-    
-    // Destructure data for easier access
-    const { language_code, language_name, phrases, current_sort } = data;
+    export let data: {
+        phrases: Phrase[],
+        language_name: string,
+        language_code: string
+    };
 </script>
 
 <svelte:head>
-    <title>Phrases - {language_name}</title>
+    <title>{data.language_name} phrases and idioms - Hello Zenno</title>
 </svelte:head>
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/">Languages</a></li>
-                    <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name}</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Phrases</li>
-                </ol>
-            </nav>
-            
-            <h1>Phrases in {language_name}</h1>
-            
-            <div class="mb-3">
-                <a href="/language/{language_code}/sources" class="btn btn-outline-primary me-2">
-                    Browse Sources
-                </a>
-                <a href="/language/{language_code}/lemmas" class="btn btn-outline-primary me-2">
-                    Browse Lemmas
-                </a>
-                <a href="/language/{language_code}/sentences" class="btn btn-outline-primary">
-                    Browse Sentences
-                </a>
-            </div>
-            
-            <div class="mb-3">
-                <div class="btn-group" role="group" aria-label="Sorting options">
-                    <a href="?sort=alpha" class="btn btn-outline-secondary {current_sort === 'alpha' ? 'active' : ''}">
-                        Sort Alphabetically
-                    </a>
-                    <a href="?sort=date" class="btn btn-outline-secondary {current_sort === 'date' ? 'active' : ''}">
-                        Sort by Date
-                    </a>
-                </div>
-            </div>
-        </div>
+<div class="container my-5">
+    <h1 class="mb-4">{data.language_name} phrases and idioms <span class="text-muted">({data.phrases?.length || 0})</span></h1>
+
+    <div class="sort-options mb-4">
+        <a href="{`/language/${data.language_code}/phrases?sort=alpha`}" class="sort-link me-3 {$page.url.searchParams.get('sort') === 'alpha' || !$page.url.searchParams.get('sort') ? 'active' : ''}">
+            Sort alphabetically
+        </a>
+        <a href="{`/language/${data.language_code}/phrases?sort=date`}" class="sort-link {$page.url.searchParams.get('sort') === 'date' ? 'active' : ''}">
+            Sort by date
+        </a>
     </div>
-    
-    {#if phrases && phrases.length > 0}
-        <div class="row">
-            {#each phrases as phrase}
-                <div class="col-12 col-md-6 col-lg-4 mb-4">
-                    <Card>
-                        <div class="phrase-card">
-                            <h3 class="mb-2">
-                                <a href="/language/{language_code}/phrases/{phrase.slug}" class="hz-foreign-text text-decoration-none">
-                                    {phrase.canonical_form}
-                                </a>
-                            </h3>
-                            
-                            <p>
-                                <strong>Translation:</strong> 
-                                {#if phrase.translations && phrase.translations.length > 0}
-                                    {phrase.translations.join('; ')}
-                                {:else}
-                                    No translation available
-                                {/if}
-                            </p>
-                            
-                            {#if phrase.part_of_speech}
-                                <p><strong>Part of Speech:</strong> {phrase.part_of_speech}</p>
-                            {/if}
-                            
-                            {#if phrase.usage_notes}
-                                <p><strong>Usage:</strong> {phrase.usage_notes}</p>
-                            {/if}
-                            
-                            {#if phrase.raw_forms && phrase.raw_forms.length > 0}
-                                <p><strong>Raw Forms:</strong> {phrase.raw_forms.join(', ')}</p>
-                            {/if}
-                        </div>
-                    </Card>
+
+    {#if data.phrases?.length > 0}
+        <div class="phrases-list">
+            {#each data.phrases as phrase}
+                <div class="phrase-item mb-4">
+                    <PhraseCard 
+                        phrase={phrase.canonical_form} 
+                        translations={phrase.translations} 
+                        slug={phrase.slug}
+                        part_of_speech={phrase.part_of_speech}
+                        notes={phrase.usage_notes}
+                        language_code={data.language_code}
+                    />
                 </div>
             {/each}
         </div>
     {:else}
-        <div class="alert alert-info">
-            No phrases found for {language_name}.
-        </div>
+        <div class="alert alert-info">No phrases available</div>
     {/if}
 </div>
 
 <style>
-    .hz-foreign-text {
-        font-family: 'Times New Roman', Times, serif;
-        font-style: italic;
-        color: var(--bs-primary);
+    .sort-link {
+        text-decoration: none;
+        padding: 0.5em 0.8em;
+        border-radius: 4px;
+        color: var(--bs-secondary);
+        transition: all 0.2s ease;
     }
     
-    .phrase-card h3 {
-        font-size: 1.4rem;
+    .sort-link:hover {
+        background-color: rgba(76, 173, 83, 0.1);
+    }
+    
+    .sort-link.active {
+        font-weight: bold;
+        color: var(--bs-primary);
+        background-color: rgba(76, 173, 83, 0.15);
+    }
+    
+    .phrases-list {
+        display: grid;
+        gap: 1.5rem;
+    }
+    
+    .phrase-item {
+        transition: transform 0.2s ease;
+    }
+    
+    .phrase-item:hover {
+        transform: translateY(-2px);
+    }
+    
+    @media (min-width: 768px) {
+        .phrases-list {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
     }
 </style> 
