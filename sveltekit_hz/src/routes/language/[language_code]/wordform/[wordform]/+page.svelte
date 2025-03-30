@@ -7,18 +7,21 @@
   export let data: PageData;
   const { wordformData } = data;
   
-  // Unwrap the data from the response
-  const wordform_metadata = wordformData.wordform_metadata;
-  const lemma_metadata = wordformData.lemma_metadata;
-  const target_language_code = wordformData.target_language_code;
-  const target_language_name = wordformData.target_language_name;
-  const metadata = wordformData.metadata;
+  // Make sure we have valid data before unwrapping
+  $: isValidData = wordformData && wordformData.wordform_metadata;
   
-  // Generate API URL for delete action
-  const deleteUrl = getApiUrl(RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW, {
+  // Unwrap the data from the response
+  $: wordform_metadata = isValidData ? wordformData.wordform_metadata : null;
+  $: lemma_metadata = isValidData ? wordformData.lemma_metadata : null;
+  $: target_language_code = isValidData ? wordformData.target_language_code : '';
+  $: target_language_name = isValidData ? wordformData.target_language_name : '';
+  $: metadata = isValidData ? wordformData.metadata : null;
+  
+  // Generate API URL for delete action only if we have valid data
+  $: deleteUrl = isValidData ? getApiUrl(RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW, {
     target_language_code,
     wordform: wordform_metadata.wordform
-  });
+  }) : '';
   
   function handleDeleteSubmit(event: SubmitEvent) {
     const confirmed = confirm('Are you sure you want to delete this wordform? This action cannot be undone.');
@@ -29,104 +32,113 @@
 </script>
 
 <div class="container py-4">
-  <div class="row mb-4">
-    <div class="col">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Languages</a></li>
-          <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{target_language_name}</a></li>
-          <li class="breadcrumb-item"><a href="/language/{target_language_code}/wordforms">Wordforms</a></li>
-          <li class="breadcrumb-item active" aria-current="page">{wordform_metadata.wordform}</li>
-        </ol>
-      </nav>
+  {#if !isValidData}
+    <div class="alert alert-warning" role="alert">
+      <h4 class="alert-heading">Loading Wordform Data...</h4>
+      <p>Please wait while we load the wordform information. If this message persists, the wordform may not exist.</p>
+      <hr>
+      <p class="mb-0">You will be redirected to search results if this wordform cannot be found directly.</p>
     </div>
-  </div>
-  
-  <div class="row mb-3">
-    <div class="col-md-8">
-      <h1 class="display-4 mb-3 hz-foreign-text">{wordform_metadata.wordform}</h1>
-    </div>
-    <div class="col-md-4 text-md-end">
-      {#if metadata}
-      <MetadataCard {metadata} />
-      {/if}
-    </div>
-  </div>
-
-  <div class="row mb-4">
-    <div class="col">
-      <form action={deleteUrl} method="POST" 
-            on:submit={handleDeleteSubmit}>
-        <button type="submit" class="btn btn-sm btn-danger">Delete wordform</button>
-      </form>
-    </div>
-  </div>
-  
-  <div class="row">
-    <div class="col-md-6">
-      <Card title="Wordform Details">
-        <div class="translations mb-3">
-          <p><strong>Translation:</strong> 
-            {#if wordform_metadata.translations && wordform_metadata.translations.length > 0}
-              {#each wordform_metadata.translations as translation}
-                <span class="badge bg-secondary me-1">{translation}</span>
-              {/each}
-            {:else}
-              <span class="text-muted">No translation available</span>
-            {/if}
-          </p>
-        </div>
-        
-        <p><strong>Part of Speech:</strong> <span class="badge rounded-pill bg-light-subtle me-1">{wordform_metadata.part_of_speech || 'Unknown'}</span></p>
-        
-        <div class="mb-3">
-          <p class="mb-2"><strong>Inflection Type:</strong></p> 
-          {#if wordform_metadata.inflection_types && wordform_metadata.inflection_types.length > 0}
-            {#each wordform_metadata.inflection_types as inflection_type}
-              <span class="badge bg-light-subtle me-1 mb-1">{inflection_type}</span>
-            {/each}
-          {:else if wordform_metadata.inflection_type}
-            <span class="badge bg-light-subtle me-1">{wordform_metadata.inflection_type}</span>
-          {:else}
-            <span class="text-muted">Not available</span>
-          {/if}
-        </div>
-        
-        <p>
-          <strong>Is Dictionary Form:</strong> 
-          {#if wordform_metadata.is_lemma}
-            <span class="text-success">Yes</span>
-          {:else}
-            <span class="text-warning">No</span>
-          {/if}
-        </p>
-      </Card>
+  {:else}
+    <div class="row mb-4">
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Languages</a></li>
+            <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{target_language_name}</a></li>
+            <li class="breadcrumb-item"><a href="/language/{target_language_code}/wordforms">Wordforms</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{wordform_metadata.wordform}</li>
+          </ol>
+        </nav>
+      </div>
     </div>
     
-    <div class="col-md-6">
-      {#if lemma_metadata && Object.keys(lemma_metadata).length > 0}
-        <Card title="Dictionary Form Information">
-          <div class="text-center mb-3">
-            <a href="/language/{target_language_code}/lemma/{lemma_metadata.lemma}" 
-               class="btn btn-lg btn-primary hz-foreign-text fw-bold">
-              {lemma_metadata.lemma}
-            </a>
+    <div class="row mb-3">
+      <div class="col-md-8">
+        <h1 class="display-4 mb-3 hz-foreign-text">{wordform_metadata.wordform}</h1>
+      </div>
+      <div class="col-md-4 text-md-end">
+        {#if metadata}
+        <MetadataCard {metadata} />
+        {/if}
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col">
+        <form action={deleteUrl} method="POST" 
+              on:submit={handleDeleteSubmit}>
+          <button type="submit" class="btn btn-sm btn-danger">Delete wordform</button>
+        </form>
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col-md-6">
+        <Card title="Wordform Details">
+          <div class="translations mb-3">
+            <p><strong>Translation:</strong> 
+              {#if wordform_metadata.translations && wordform_metadata.translations.length > 0}
+                {#each wordform_metadata.translations as translation}
+                  <span class="badge bg-secondary me-1">{translation}</span>
+                {/each}
+              {:else}
+                <span class="text-muted">No translation available</span>
+              {/if}
+            </p>
           </div>
           
-          {#if wordform_metadata.possible_misspellings && wordform_metadata.possible_misspellings.length > 0}
-            <div class="possible-misspellings mb-3">
-              <p><strong>Possible Corrections:</strong></p>
-              <ul class="list-group">
-                {#each wordform_metadata.possible_misspellings as misspelling}
-                  <li class="list-group-item hz-foreign-text">{misspelling}</li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
+          <p><strong>Part of Speech:</strong> <span class="badge rounded-pill bg-light-subtle me-1">{wordform_metadata.part_of_speech || 'Unknown'}</span></p>
+          
+          <div class="mb-3">
+            <p class="mb-2"><strong>Inflection Type:</strong></p> 
+            {#if wordform_metadata.inflection_types && wordform_metadata.inflection_types.length > 0}
+              {#each wordform_metadata.inflection_types as inflection_type}
+                <span class="badge bg-light-subtle me-1 mb-1">{inflection_type}</span>
+              {/each}
+            {:else if wordform_metadata.inflection_type}
+              <span class="badge bg-light-subtle me-1">{wordform_metadata.inflection_type}</span>
+            {:else}
+              <span class="text-muted">Not available</span>
+            {/if}
+          </div>
+          
+          <p>
+            <strong>Is Dictionary Form:</strong> 
+            {#if wordform_metadata.is_lemma}
+              <span class="text-success">Yes</span>
+            {:else}
+              <span class="text-warning">No</span>
+            {/if}
+          </p>
         </Card>
-      {/if}
+      </div>
+      
+      <div class="col-md-6">
+        {#if lemma_metadata && Object.keys(lemma_metadata).length > 0}
+          <Card title="Dictionary Form Information">
+            <div class="text-center mb-3">
+              <a href="/language/{target_language_code}/lemma/{lemma_metadata.lemma}" 
+                class="btn btn-lg btn-primary hz-foreign-text fw-bold">
+                {lemma_metadata.lemma}
+              </a>
+            </div>
+            
+            {#if wordform_metadata.possible_misspellings && wordform_metadata.possible_misspellings.length > 0}
+              <div class="possible-misspellings mb-3">
+                <p><strong>Possible Corrections:</strong></p>
+                <ul class="list-group">
+                  {#each wordform_metadata.possible_misspellings as misspelling}
+                    <li class="list-group-item hz-foreign-text">{misspelling}</li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+          </Card>
+        {/if}
+      </div>
     </div>
-  </div>
+  {/if}
 </div>
 
 <style>
