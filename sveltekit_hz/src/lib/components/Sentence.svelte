@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Sentence, SentenceMetadata } from '$lib/types';
+  import { MetadataCard } from '$lib';
   
   // Props for the Sentence component
   export let sentence: Sentence;
@@ -25,13 +26,8 @@
     <div class="card-body">
       <!-- Metadata -->
       {#if metadata && (metadata.created_at || metadata.updated_at)}
-        <div class="text-end text-secondary small mb-3">
-          {#if metadata.created_at}
-            <p class="mb-1">Created: <span class="font-monospace">{new Date(metadata.created_at).toLocaleString()}</span></p>
-          {/if}
-          {#if metadata.updated_at}
-            <p class="mb-1">Updated: <span class="font-monospace">{new Date(metadata.updated_at).toLocaleString()}</span></p>
-          {/if}
+        <div class="text-end">
+          <MetadataCard {metadata} />
         </div>
       {/if}
 

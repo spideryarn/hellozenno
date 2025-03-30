@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';  
-  import { Card, LemmaCard } from '$lib';
+  import { Card, LemmaCard, MetadataCard } from '$lib';
   import SentenceCard from '$lib/components/SentenceCard.svelte';
   
   export let data: PageData;
@@ -34,14 +34,16 @@
     </div>
   </div>
   
-  {#if metadata}
-  <div class="metadata-display mb-3">
-    <p class="small text-muted">Created: <span class="metadata-timestamp">{metadata.created_at}</span></p>
-    <p class="small text-muted">Updated: <span class="metadata-timestamp">{metadata.updated_at}</span></p>
+  <div class="row mb-3">
+    <div class="col-md-8">
+      <h1 class="mb-4">{lemma_metadata.lemma}</h1>
+    </div>
+    <div class="col-md-4 text-md-end">
+      {#if metadata}
+      <MetadataCard {metadata} />
+      {/if}
+    </div>
   </div>
-  {/if}
-
-  <h1 class="mb-4">{lemma_metadata.lemma}</h1>
 
   <div class="mb-4">
     <form action="/api/lang/lemma/{target_language_code}/lemma/{lemma_metadata.lemma}/delete" method="POST" 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';  
-  import { Card } from '$lib';
+  import { Card, MetadataCard } from '$lib';
   
   export let data: PageData;
   const { wordformData } = data;
@@ -40,10 +40,7 @@
     </div>
     <div class="col-md-4 text-md-end">
       {#if metadata}
-      <div class="metadata-display mb-3">
-        <p class="small text-muted">Created: <span class="metadata-timestamp">{metadata.created_at}</span></p>
-        <p class="small text-muted">Updated: <span class="metadata-timestamp">{metadata.updated_at}</span></p>
-      </div>
+      <MetadataCard {metadata} />
       {/if}
     </div>
   </div>
