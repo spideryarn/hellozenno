@@ -5,6 +5,7 @@
 import type {
     Language,
     Lemma,
+    Phrase,
     Sentence,
     SentenceMetadata,
     Wordform,
@@ -84,6 +85,18 @@ export async function getLemmasForLanguage(
 ) {
     return fetchFromApi<Lemma[]>(
         `/api/lang/lemma/${languageCode}/lemmas?sort=${sort}`,
+    );
+}
+
+/**
+ * Fetch all phrases for a language
+ */
+export async function getPhrasesForLanguage(
+    languageCode: string,
+    sort: string = "alpha",
+) {
+    return fetchFromApi<Phrase[]>(
+        `/api/lang/phrase/${languageCode}/phrases?sort=${sort}`,
     );
 }
 

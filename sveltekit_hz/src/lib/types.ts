@@ -54,3 +54,16 @@ export interface Wordform {
     inflection_type?: string;
     commonality?: number;
 }
+
+export interface Phrase {
+    canonical_form: string;
+    translations: string[];
+    part_of_speech: string;
+    slug: string;
+    raw_forms: string[];
+    difficulty_level?: number;
+    register?: string;
+    usage_notes?: string;
+    created_at?: string;
+    updated_at?: string;
+}
