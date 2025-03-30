@@ -2,10 +2,12 @@
   import type { PageData } from './$types';
   import SourcefileHeader from './components/SourcefileHeader.svelte';
   import SourcefileText from './components/SourcefileText.svelte';
+  import SourcefileWords from './components/SourcefileWords.svelte';
+  import SourcefilePhrases from './components/SourcefilePhrases.svelte';
   
   export let data: PageData;
   
-  const { sourcefileData, textData, language_code, sourcedir_slug, sourcefile_slug } = data;
+  const { sourcefileData, textData, wordsData, phrasesData, language_code, sourcedir_slug, sourcefile_slug, language_name } = data;
   
   // Extract needed data
   const sourcefile = textData.sourcefile;
@@ -75,15 +77,15 @@
         text_english={sourcefile.text_english}
       />
     {:else if activeTab === 'words'}
-      <div class="words-content">
-        <h2>Words</h2>
-        <p>Words tab content will go here</p>
-      </div>
+      <SourcefileWords 
+        wordforms={wordsData.wordforms || []}
+        {language_code}
+      />
     {:else if activeTab === 'phrases'}
-      <div class="phrases-content">
-        <h2>Phrases</h2>
-        <p>Phrases tab content will go here</p>
-      </div>
+      <SourcefilePhrases 
+        phrases={phrasesData.phrases || []}
+        {language_code}
+      />
     {/if}
   </div>
 </div>

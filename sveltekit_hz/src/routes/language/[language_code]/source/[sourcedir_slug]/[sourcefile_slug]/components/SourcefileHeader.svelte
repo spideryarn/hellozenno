@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
+  import { getApiUrl } from '$lib/api';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -13,15 +14,133 @@
   // For description editing
   let isEditingDescription = false;
   let descriptionText = sourcefile.description || '';
+  let isProcessing = false;
+  let processingError = '';
   
   function editDescription() {
     isEditingDescription = true;
   }
   
   async function saveDescription() {
-    // This would call the API to save the description
-    // For now, just toggle the edit mode off
-    isEditingDescription = false;
+    try {
+      const response = await fetch(
+        getApiUrl(
+          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/update_description`
+        ),
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ description: descriptionText }),
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update description: ${response.statusText}`);
+      }
+      
+      // Update the local state to reflect the change
+      sourcefile.description = descriptionText;
+      isEditingDescription = false;
+    } catch (error) {
+      console.error('Error updating description:', error);
+      alert('Failed to update description. Please try again.');
+    }
+  }
+  
+  async function processSourcefile() {
+    if (isProcessing) return;
+    
+    try {
+      isProcessing = true;
+      processingError = '';
+      
+      const response = await fetch(
+        getApiUrl(
+          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/process`
+        ),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || `Failed to process file: ${response.statusText}`);
+      }
+      
+      // Reload the page to see the processed results
+      window.location.reload();
+    } catch (error) {
+      console.error('Error processing file:', error);
+      processingError = error instanceof Error ? error.message : 'Unknown error';
+    } finally {
+      isProcessing = false;
+    }
+  }
+  
+  async function deleteSourcefile() {
+    if (!confirm(`Are you sure you want to delete "${sourcefile.filename}"? This cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(
+        getApiUrl(
+          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}`
+        ),
+        {
+          method: 'DELETE',
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete file: ${response.statusText}`);
+      }
+      
+      // Navigate back to the sourcedir page
+      window.location.href = `/language/${language_code}/source/${sourcedir_slug}`;
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      alert('Failed to delete file. Please try again.');
+    }
+  }
+  
+  async function renameSourcefile() {
+    const newName = prompt('Enter new filename:', sourcefile.filename);
+    if (!newName || newName === sourcefile.filename) return;
+    
+    try {
+      const response = await fetch(
+        getApiUrl(
+          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/rename`
+        ),
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ new_name: newName }),
+        }
+      );
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || `Failed to rename file: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      // Redirect to the new URL with the updated slug
+      window.location.href = `/language/${language_code}/source/${sourcedir_slug}/${result.new_slug}`;
+    } catch (error) {
+      console.error('Error renaming file:', error);
+      alert('Failed to rename file: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
   }
   
   function getSourcefileTypeIcon(type: string) {
@@ -53,10 +172,10 @@
 <h1>
   <span class="file-icon">{getSourcefileTypeIcon(sourcefile.sourcefile_type)}</span>
   {sourcefile.filename}
-  <button on:click={() => alert('Rename feature not implemented yet')} class="button small-button">
+  <button on:click={renameSourcefile} class="button small-button">
     <i class="fas fa-edit"></i> Rename
   </button>
-  <div class="icon-delete-wrapper" on:click={() => alert('Delete feature not implemented yet')} style="display: inline-block; cursor: pointer;">
+  <div class="icon-delete-wrapper" on:click={deleteSourcefile} style="display: inline-block; cursor: pointer;">
     <span class="delete-button">🗑️ Delete</span>
   </div>
 </h1>
@@ -101,9 +220,16 @@
       {/if}
     </li>
     <li class="button-group">
-      <a href="/api/lang/sourcefile/{language_code}/{sourcedir_slug}/{sourcefile_slug}/process" class="button">
-        Process this text
-      </a>
+      <button on:click={processSourcefile} class="button" disabled={isProcessing}>
+        {#if isProcessing}
+          Processing...
+        {:else}
+          Process this text
+        {/if}
+      </button>
+      {#if processingError}
+        <span class="error-message">{processingError}</span>
+      {/if}
     </li>
     {#if sourcefile.text_target}
       <li class="button-group">
@@ -121,7 +247,7 @@
         </a>
       {/if}
       
-      <a href="/language/{language_code}/sourcedir/{sourcedir_slug}" class="button">
+      <a href="/language/{language_code}/source/{sourcedir_slug}" class="button">
         Up
       </a>
       
@@ -168,6 +294,11 @@
     text-decoration: none;
     border: none;
     cursor: pointer;
+  }
+  
+  .button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
   }
   
   .small-button {
@@ -221,6 +352,7 @@
   .button-group {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
   }
   
   .navigation-buttons {
@@ -234,6 +366,11 @@
   }
   
   .delete-button {
+    color: #d9534f;
+    font-size: 0.9rem;
+  }
+  
+  .error-message {
     color: #d9534f;
     font-size: 0.9rem;
   }

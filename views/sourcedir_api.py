@@ -413,9 +413,7 @@ def get_sourcedirs_for_language_api(target_language_code: str):
         return jsonify({"error": str(e)}), 500
 
 
-@sourcedir_api_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/files", methods=["GET"]
-)
+@sourcedir_api_bp.route("/<target_language_code>/<sourcedir_slug>", methods=["GET"])
 def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """
     Get all source files in a directory.
