@@ -4,7 +4,7 @@ Contains shared functionality for phrase-related operations.
 """
 
 from typing import Optional, List
-from peewee import fn
+from peewee import fn, DoesNotExist
 from db_models import Phrase
 
 
@@ -29,3 +29,21 @@ def get_phrases_query(target_language_code: str, sort_by: str = "alpha"):
         query = query.order_by(Phrase.canonical_form)
 
     return query
+
+
+def get_phrase_by_slug(target_language_code: str, slug: str) -> Phrase:
+    """Get a specific phrase by its language code and slug.
+
+    Args:
+        target_language_code: The language code to filter by
+        slug: The slug of the phrase to retrieve
+
+    Returns:
+        The Phrase object if found
+
+    Raises:
+        DoesNotExist: If no phrase with the given slug exists for the language
+    """
+    return Phrase.get(
+        (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
+    )

@@ -3,7 +3,7 @@ from db_models import Phrase
 from peewee import DoesNotExist, fn
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import extract_phrases_from_text
-from utils.phrase_utils import get_phrases_query
+from utils.phrase_utils import get_phrases_query, get_phrase_by_slug
 from slugify import slugify
 
 phrase_views_bp = Blueprint("phrase_views", __name__, url_prefix="/lang")
@@ -33,10 +33,8 @@ def get_phrase_metadata_vw(target_language_code, slug):
     target_language_name = get_language_name(target_language_code)
 
     try:
-        # First try to find existing phrase in database by slug
-        phrase = Phrase.get(
-            (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
-        )
+        # Use the utility function to find phrase by slug
+        phrase = get_phrase_by_slug(target_language_code, slug)
     except DoesNotExist:
         abort(404, description=f"Phrase with slug '{slug}' not found")
 
@@ -61,9 +59,7 @@ def get_phrase_metadata_vw(target_language_code, slug):
 def delete_phrase_vw(target_language_code, slug):
     """Delete a specific phrase using its slug."""
     try:
-        phrase = Phrase.get(
-            (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
-        )
+        phrase = get_phrase_by_slug(target_language_code, slug)
         phrase_text = phrase.canonical_form
         phrase.delete_instance()
         flash(f"Phrase '{phrase_text}' has been deleted.", "success")

@@ -9,7 +9,7 @@ from flask import Blueprint, jsonify, request
 from peewee import DoesNotExist, fn
 from db_models import Phrase
 import urllib.parse
-from utils.phrase_utils import get_phrases_query
+from utils.phrase_utils import get_phrases_query, get_phrase_by_slug
 
 
 # Create a blueprint with standardized prefix
@@ -93,4 +93,73 @@ def phrase_preview_api(target_language_code: str, phrase: str):
     except Exception as e:
         response = jsonify({"error": "Internal Server Error", "description": str(e)})
         response.status_code = 500
+        return response
+
+
+@phrase_api_bp.route("/<target_language_code>/detail/<slug>")
+def get_phrase_metadata_api(target_language_code: str, slug: str):
+    """Get metadata for a specific phrase using its slug.
+
+    Returns detailed information about a phrase, including:
+    - All phrase fields
+    - Creation and modification timestamps
+    """
+    try:
+        # Use the utility function to find phrase by slug
+        phrase = get_phrase_by_slug(target_language_code, slug)
+
+        # Create response object with all phrase data
+        phrase_data = {
+            "canonical_form": phrase.canonical_form,
+            "translations": phrase.translations,
+            "part_of_speech": phrase.part_of_speech,
+            "raw_forms": phrase.raw_forms,
+            "usage_notes": phrase.usage_notes,
+            "slug": phrase.slug,
+            "difficulty_level": phrase.difficulty_level,
+            "register": phrase.register,
+            "created_at": str(phrase.created_at) if phrase.created_at else None,
+            "updated_at": str(phrase.updated_at) if phrase.updated_at else None,
+        }
+
+        return jsonify(phrase_data)
+
+    except DoesNotExist:
+        response = jsonify(
+            {
+                "error": "Not Found",
+                "description": f"Phrase with slug '{slug}' not found",
+            }
+        )
+        response.status_code = 404
+        return response
+
+
+@phrase_api_bp.route("/<target_language_code>/detail/<slug>/delete", methods=["POST"])
+def delete_phrase_api(target_language_code: str, slug: str):
+    """Delete a specific phrase using its slug.
+
+    Request must be a POST request.
+    """
+    try:
+        phrase = get_phrase_by_slug(target_language_code, slug)
+        phrase_text = phrase.canonical_form
+        phrase.delete_instance()
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Phrase '{phrase_text}' has been deleted.",
+                "deleted_phrase": phrase_text,
+            }
+        )
+
+    except DoesNotExist:
+        response = jsonify(
+            {
+                "error": "Not Found",
+                "description": f"Phrase with slug '{slug}' not found",
+            }
+        )
+        response.status_code = 404
         return response

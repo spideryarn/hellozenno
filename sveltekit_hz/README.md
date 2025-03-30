@@ -9,7 +9,7 @@ This project's documentation is organized into the following sections:
 - [Architecture](./docs/ARCHITECTURE.md) - System architecture and migration strategy
 - [Setup and Development](./docs/SETUP.md) - Installation and development instructions
 - [UI and Styling](./docs/STYLING.md) - Styling system and component usage
-- [API Integration](./docs/API_INTEGRATION.md) - How to interact with the Flask backend
+- [API Integration](./docs/API_INTEGRATION.md) - How to interact with the Flask backend, e.g. using `get_api_url()`
 
 ## Project Status and Roadmap
 
@@ -21,14 +21,14 @@ See [planning/250329_SvelteKit.md](../planning/250329_SvelteKit.md) for the deta
 - [Flask API Entry Point](../api/index.py) - Details of the Flask API setup
 - [Database Documentation](../docs/DATABASE.md) - Database configuration information
 
-## Quick Start
+## Quickstart
 
 ```bash
 # Install dependencies
 npm install
 
 # Start the development server
-npm run dev -- --open
+./run_sveltekit.sh
 ```
 
 For more detailed setup instructions, see the [Setup and Development](./docs/SETUP.md) guide.
