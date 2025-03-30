@@ -9,6 +9,18 @@
 
 <h1 class="mb-4">{languageName} Sources</h1>
 
+<!-- Navigation links -->
+<div class="mb-3">
+  <nav class="nav nav-pills gap-2">
+    <a class="nav-link active" href="/language/{languageCode}/sources">Sources</a>
+    <a class="nav-link" href="/language/{languageCode}/wordforms">Wordforms</a>
+    <a class="nav-link" href="/language/{languageCode}/lemmas">Lemmas</a>
+    <a class="nav-link" href="/language/{languageCode}/sentences">Sentences</a>
+    <a class="nav-link" href="/language/{languageCode}/phrases">Phrases</a>
+    <a class="nav-link" href="/language/{languageCode}/flashcards">Flashcards</a>
+  </nav>
+</div>
+
 <!-- Sort options -->
 <div class="mb-4 text-secondary">
   Sort by:
