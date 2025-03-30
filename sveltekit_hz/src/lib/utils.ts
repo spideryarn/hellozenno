@@ -27,10 +27,3 @@ export async function get_language_name(
         return language_code; // Fallback to the code itself if API fails
     }
 }
-
-// Helper to create consistent API URLs
-export function get_api_url(endpoint: string): string {
-    // In a real app, this would come from environment variables
-    const API_BASE_URL = "http://localhost:3000/api";
-    return `${API_BASE_URL}/${endpoint}`;
-}
