@@ -10,101 +10,120 @@ import type {
     SentenceMetadata,
     Wordform,
 } from "./types";
+import { resolveRoute, RouteName, type RouteParams } from "./generated/routes";
 
 // Base URL for the Flask API
 const API_BASE_URL = "http://localhost:3000";
 
 /**
- * Constructs an API URL based on the provided endpoint
- * Default API is running on localhost:3000 but can be configured with VITE_API_URL environment variable
+ * Type-safe way to build URLs using the route mapping
  *
- * @param endpoint The API endpoint path (should start with a slash)
- * @returns The complete API URL
+ * @param routeName Name of the route from RouteName enum
+ * @param params Parameters required for the route
+ * @returns The full URL including the API base
  */
-export function getApiUrl(endpoint: string): string {
-    const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-    return `${apiBaseUrl}${endpoint}`;
+export function getApiUrl<T extends RouteName>(
+    routeName: T,
+    params: RouteParams[T],
+): string {
+    const routePath = resolveRoute(routeName, params);
+    return `${API_BASE_URL}${routePath}`;
 }
 
 /**
- * Fetches data from the API with proper error handling
+ * Type-safe API fetch function
  *
- * @param endpoint The API endpoint path
- * @returns A promise that resolves to the JSON response
+ * @param routeName Name of the route from RouteName enum
+ * @param params Parameters required for the route
+ * @param options Fetch options
+ * @returns The JSON response
  */
-export async function fetchFromApi<T>(endpoint: string): Promise<T> {
-    const response = await fetch(getApiUrl(endpoint));
+export async function apiFetch<T extends RouteName, R = any>(
+    routeName: T,
+    params: RouteParams[T],
+    options: RequestInit = {},
+): Promise<R> {
+    const url = getApiUrl(routeName, params);
+    const response = await fetch(url, options);
 
     if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+            errorData.description ||
+                `API request failed: ${response.status}`,
+        );
     }
 
-    return response.json() as Promise<T>;
+    return response.json();
 }
 
 /**
  * Fetch all available languages
  */
 export async function getLanguages() {
-    return fetchFromApi<{ languages: Language[] }>("/api/languages");
+    return apiFetch(RouteName.LANGUAGES_API_GET_LANGUAGES_API, {});
 }
 
 /**
  * Fetch a sentence by language code and slug
  */
-export async function getSentence(languageCode: string, slug: string) {
-    return fetchFromApi<
-        {
-            sentence: Sentence;
-            enhanced_sentence_text: string;
-            metadata: SentenceMetadata;
-        }
-    >(
-        `/api/language/${languageCode}/sentence/${slug}`,
-    );
+export async function getSentence(target_language_code: string, slug: string) {
+    return apiFetch(RouteName.SENTENCE_API_GET_SENTENCE_BY_SLUG_API, {
+        target_language_code,
+        slug,
+    });
 }
 
 /**
  * Fetch all sentences for a language
  */
-export async function getSentencesForLanguage(languageCode: string) {
-    return fetchFromApi<Sentence[]>(
-        `/api/lang/sentence/${languageCode}/sentences`,
-    );
+export async function getSentencesForLanguage(target_language_code: string) {
+    return apiFetch(RouteName.SENTENCE_API_SENTENCES_LIST_API, {
+        target_language_code,
+    });
 }
 
 /**
  * Fetch all lemmas for a language
  */
 export async function getLemmasForLanguage(
-    languageCode: string,
+    target_language_code: string,
     sort: string = "alpha",
 ) {
-    return fetchFromApi<Lemma[]>(
-        `/api/lang/lemma/${languageCode}/lemmas?sort=${sort}`,
-    );
+    return apiFetch(RouteName.LEMMA_API_LEMMAS_LIST_API, {
+        target_language_code,
+    }, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
 }
 
 /**
  * Fetch all phrases for a language
  */
 export async function getPhrasesForLanguage(
-    languageCode: string,
+    target_language_code: string,
     sort: string = "alpha",
 ) {
-    return fetchFromApi<Phrase[]>(
-        `/api/lang/phrase/${languageCode}/phrases?sort=${sort}`,
-    );
+    return apiFetch(RouteName.PHRASE_API_PHRASES_LIST_API, {
+        target_language_code,
+    }, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
 }
 
 /**
  * Fetch all wordforms for a language
  */
 export async function getWordformsForLanguage(
-    languageCode: string,
+    target_language_code: string,
     sort: string = "alpha",
 ) {
-    return fetchFromApi<Wordform[]>(
-        `/api/lang/word/${languageCode}/wordforms?sort=${sort}`,
-    );
+    return apiFetch(RouteName.WORDFORM_API_WORDFORMS_LIST_API, {
+        target_language_code,
+    }, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
 }

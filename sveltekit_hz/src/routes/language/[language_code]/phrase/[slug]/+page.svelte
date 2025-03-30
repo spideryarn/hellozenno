@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { getApiUrl } from '$lib/api';
+  import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/stores';
-  import { get_api_url } from '$lib/utils';
   import { MetadataCard, Card } from '$lib';
   import WordformCard from '$lib/components/WordformCard.svelte';
   import PhraseCard from '$lib/components/PhraseCard.svelte';
@@ -8,13 +9,37 @@
   // Get parameters
   export let data;
   const { phrase, language_code: languageCode } = data;
-  const slug = $page.params.slug;
+  const { slug } = $page.params;
+  const target_language_code = languageCode;
   
   // Create metadata object for MetadataCard
   const metadata = {
     created_at: phrase.created_at,
     updated_at: phrase.updated_at
   };
+
+  function deletePhrase() {
+    if (confirm('Are you sure you want to delete this phrase?')) {
+      const url = getApiUrl(RouteName.PHRASE_API_DELETE_PHRASE_API, {
+        target_language_code,
+        slug
+      });
+      
+      fetch(url, {
+        method: 'POST'
+      }).then(async (response) => {
+        if (response.ok) {
+          window.location.href = `/language/${languageCode}/phrases`;
+        } else {
+          const errorData = await response.json();
+          alert(errorData.description || 'Failed to delete phrase');
+        }
+      }).catch(err => {
+        console.error('Error deleting phrase:', err);
+        alert('An error occurred while trying to delete this phrase');
+      });
+    }
+  }
 </script>
 
 <svelte:head>
@@ -235,23 +260,7 @@
         <div class="card-body">
           <button 
             class="btn btn-danger" 
-            on:click={() => {
-              if (confirm('Are you sure you want to delete this phrase?')) {
-                fetch(get_api_url(`lang/phrase/${languageCode}/detail/${slug}/delete`), {
-                  method: 'POST'
-                }).then(async (response) => {
-                  if (response.ok) {
-                    window.location.href = `/language/${languageCode}/phrases`;
-                  } else {
-                    const errorData = await response.json();
-                    alert(errorData.description || 'Failed to delete phrase');
-                  }
-                }).catch(err => {
-                  console.error('Error deleting phrase:', err);
-                  alert('An error occurred while trying to delete this phrase');
-                });
-              }
-            }}
+            on:click={deletePhrase}
           >
             Delete Phrase
           </button>

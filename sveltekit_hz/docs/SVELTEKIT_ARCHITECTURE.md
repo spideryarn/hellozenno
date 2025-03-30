@@ -13,6 +13,7 @@ Hello Zenno
 │   │   └── ...              # Other API modules
 │   ├── utils/               # Shared utilities
 │   │   ├── lang_utils.py    # Language processing utilities
+│   │   ├── url_registry.py  # URL type registry generation
 │   │   └── ...              # Other utility modules
 │   └── db_models.py         # Database models
 │
@@ -26,12 +27,14 @@ Hello Zenno
     │   │       │   └── sentence/     # Individual sentence view
     │   │       │       └── [slug]/   # Dynamic sentence route
     │   │   ├── lib/            # Shared libraries and components
+    │   │   │   ├── api.ts      # Type-safe API communication layer
+    │   │   │   ├── generated/  # Auto-generated TypeScript files
+    │   │   │   │   └── routes.ts  # Type definitions for API routes
     │   │   │   ├── components/ # Reusable Svelte components
     │   │   │   │   └── Sentence.svelte   # Sentence component
     │   │   │   │   └── Card.svelte       # Card component
     │   │   │   │   └── SourceItem.svelte # Source item component
-    │   │   │   ├── utils.ts    # Utility functions
-    │   │   │   └── api.ts      # API communication layer
+    │   │   │   └── utils.ts    # Utility functions
     │   │   └── app.html        # SvelteKit app template
     │   └── static/             # Static assets
     │       ├── css/
@@ -52,21 +55,16 @@ This project represents a transition from a Flask/Jinja/Svelte application to a 
 1. **Backend/Frontend Separation**: 
    - Flask handles all API endpoints and database operations
    - SvelteKit manages all user-facing interfaces and client-side logic
-
-2. **API-First Approach**:
-   - All data exchange happens through well-defined API endpoints
-   - Flask API endpoints follow the pattern `/api/[resource]/[action]`
-   - SvelteKit consumes these APIs using fetch requests
+   - Flask API endpoints should follow the pattern `/api/[resource]/[action]`
 
 3. **Progressive Migration**:
    - Each Flask Jinja view is methodically replaced with a SvelteKit route
    - Components are rebuilt with Svelte's reactive paradigm
-   - We maintain feature parity while improving UX
 
 4. **Parallel Operation**:
    - During development, both the original Flask app and the new SvelteKit app run in parallel
-   - This allows gradual migration and testing without service disruption 
 
+5. **Type Safety**: uses Flask-generated TypeScript definitions for all API routes
 
 ## SvelteKit development server
 
@@ -79,7 +77,7 @@ The SvelteKit development server (`scripts/local/run_sveltekit.sh`):
 
 The Flask development server:
 - Is being run by the user separately, on port 3000, and generates logs in `logs/flask_app.log`
-- It generates a description of the API routes in `static/js/generated/routes.ts` (it's probably easiest to use grep to get the lines you want)
+- It generates type definitions for routes in `sveltekit_hz/src/lib/generated/routes.ts`
 - see code in `views/`
 
 see `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` for more information.

@@ -2,10 +2,9 @@
 
 SvelteKit components communicate with the Flask backend through API calls. The backend provides a set of RESTful endpoints that are consumed by the frontend.
 
+## Type-Safe API Structure
 
-## API Structure
-
-Flask API endpoints follow the pattern `/api/[resource]/[action]`, with all API endpoints defined in corresponding `*_api.py` files in the Flask backend.
+Flask API endpoints follow the pattern `/api/[resource]/[action]`. All API endpoints are automatically mapped to TypeScript types through a generated routes file, providing type-safety and refactoring protection.
 
 ## Example Usage
 
@@ -13,34 +12,41 @@ Here's how to fetch data from the API in a SvelteKit component:
 
 ```typescript
 // In a SvelteKit component or page
-import { get_api_url } from '$lib/utils';
+import { getApiUrl } from '$lib/api';
+import { RouteName } from '$lib/generated/routes';
 
-// Fetch languages from the API
+// Fetch languages from the API (type-safe)
 async function fetchLanguages() {
-    const response = await fetch(get_api_url('lang/languages'));
+    const url = getApiUrl(RouteName.LANGUAGES_API_GET_LANGUAGES_API, {});
+    const response = await fetch(url);
+    return await response.json();
+}
+
+// Fetch a specific source directory (with parameters)
+async function fetchSourceDir(target_language_code: string, sourcedir_slug: string) {
+    const url = getApiUrl(
+        RouteName.SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API, 
+        { target_language_code, sourcedir_slug }
+    );
+    const response = await fetch(url);
     return await response.json();
 }
 ```
 
 ## Common Endpoints
 
-- `/api/lang/languages` - Get all available languages
-- `/api/lang/language/<code>` - Get details for a specific language
-- `/api/sentence/<slug>` - Get a specific sentence by slug
-- `/api/sources/<language_code>` - Get sources for a specific language
+All API endpoints are available as enum values in `RouteName` from the generated routes file.
 
-## Data Types
+## Parameter Naming
 
-When working with the API, ensure your TypeScript definitions match the data structures returned by the API. Define types for all data exchanged with the backend to maintain type safety. 
-
+The backend API uses `target_language_code` as the parameter name, while SvelteKit routes may use `language_code`. When calling APIs, always map the SvelteKit route parameter to `target_language_code`.
 
 ## Flask development server
 
 The Flask development server (`scripts/local/run_flask.sh`):
 - Is being run by the user separately, on port 3000, and generates logs in `logs/flask_app.log`
-- It generates a description of the API routes in `static/js/generated/routes.ts`
+- It generates type definitions for routes in `sveltekit_hz/src/lib/generated/routes.ts`
 
-
-## SvelteKit 
+## SvelteKit 
 
 For more information on SvelteKit, see `sveltekit_hz/docs/SVELTEKIT_ARCHITECTURE.md`

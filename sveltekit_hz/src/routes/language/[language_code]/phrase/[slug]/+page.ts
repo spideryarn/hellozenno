@@ -1,14 +1,21 @@
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
-import { get_api_url } from "$lib/utils";
+import { getApiUrl } from "$lib/api";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageLoad = async ({ params, fetch }) => {
+    // Use target_language_code for API calls, mapping from the route parameter language_code
     const { language_code, slug } = params;
+    const target_language_code = language_code;
 
     try {
-        const response = await fetch(
-            get_api_url(`lang/phrase/${language_code}/detail/${slug}`),
-        );
+        // Use the typed API utility for better type safety and refactoring support
+        const url = getApiUrl(RouteName.PHRASE_API_GET_PHRASE_METADATA_API, {
+            target_language_code,
+            slug,
+        });
+
+        const response = await fetch(url);
 
         if (!response.ok) {
             const errorData = await response.json();

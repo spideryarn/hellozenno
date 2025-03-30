@@ -404,5 +404,48 @@ After completing the Sourcefile pages, we should focus on:
 
 Our progress on the SvelteKit migration is solid, with most of the core functionality now implemented. The remaining work is primarily refinement, testing, and addressing edge cases.
 
+## Type-Safe Route Integration
+
+We've implemented a powerful type-safe route integration system between Flask and SvelteKit:
+
+### Completed:
+
+- [x] Updated Flask's URL registry system to generate TypeScript definitions at `sveltekit_hz/src/lib/generated/routes.ts`
+- [x] Created type-safe utility functions in SvelteKit:
+  - [x] `getApiUrl<T extends RouteName>` for generating typed API URLs
+  - [x] `apiFetch<T extends RouteName, R>` for type-safe API requests
+- [x] Standardized parameter naming using `target_language_code` for API calls
+- [x] Refactored existing routes to use the type-safe approach:
+  - [x] Updated phrase detail page
+  - [x] Updated sources listing page
+  - [x] Fixed component imports and structure
+
+### Benefits:
+
+1. **Type Safety**: Compiler catches parameter mismatches and missing route parameters
+2. **Refactoring Protection**: Changing Flask routes automatically updates TypeScript, highlighting any inconsistencies
+3. **IDE Support**: Autocomplete for route names and parameters
+4. **Single Source of Truth**: Flask routes are the canonical definition, TypeScript types are generated
+
+### Remaining Work:
+
+- [ ] Update all remaining API calls in SvelteKit components:
+  - [ ] Flashcard components
+  - [ ] Sourcefile components
+  - [ ] Sentence components
+- [ ] Standardize parameter naming across Flask routes (e.g. `language_code` vs `target_language_code`)
+- [ ] Consider enhancement to include API response types in the generated TypeScript
+- [ ] Write tests for key API integration points
+- [ ] Add environment variable support for API_BASE_URL rather than hardcoding
+
+### Next Actions:
+
+1. Systematically update all remaining components to use the type-safe approach
+2. Test all API interactions to ensure they're working correctly
+3. Expand documentation with examples of the type-safe pattern
+4. Consider adding response type definitions for common API endpoints
+
+This architectural improvement provides significant benefits with minimal overhead, making our codebase more maintainable and robust against future changes.
+
 
     

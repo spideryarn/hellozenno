@@ -1,20 +1,23 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { get_api_url, get_language_name } from "$lib/utils";
+import { getApiUrl } from "$lib/api";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ params, fetch, url }) => {
     const { language_code } = params;
+    const target_language_code = language_code;
 
     try {
         // Get sort parameter (default to 'alpha')
         const sort = url.searchParams.get("sort") || "alpha";
 
-        // Use the get_api_url helper to generate the correct API URL
-        const apiUrl = get_api_url(
-            `lang/sourcedir/${language_code}/sources?sort=${sort}`,
+        // Use the typed API utility for type-safe URL generation
+        const apiUrl = getApiUrl(
+            RouteName.SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API,
+            { target_language_code },
         );
 
-        // Fetch sources data from our new API endpoint
+        // Fetch sources data from our API endpoint
         const sourcesResponse = await fetch(apiUrl);
 
         if (!sourcesResponse.ok) {
