@@ -100,29 +100,14 @@ def phrase_preview_api(target_language_code: str, phrase: str):
 def get_phrase_metadata_api(target_language_code: str, slug: str):
     """Get metadata for a specific phrase using its slug.
 
-    Returns detailed information about a phrase, including:
-    - All phrase fields
-    - Creation and modification timestamps
+    Returns detailed information about a phrase.
     """
     try:
         # Use the utility function to find phrase by slug
         phrase = get_phrase_by_slug(target_language_code, slug)
 
-        # Create response object with all phrase data
-        phrase_data = {
-            "canonical_form": phrase.canonical_form,
-            "translations": phrase.translations,
-            "part_of_speech": phrase.part_of_speech,
-            "raw_forms": phrase.raw_forms,
-            "usage_notes": phrase.usage_notes,
-            "slug": phrase.slug,
-            "difficulty_level": phrase.difficulty_level,
-            "register": phrase.register,
-            "created_at": str(phrase.created_at) if phrase.created_at else None,
-            "updated_at": str(phrase.updated_at) if phrase.updated_at else None,
-        }
-
-        return jsonify(phrase_data)
+        # Convert the model to a dictionary and return as JSON
+        return jsonify(phrase.to_dict())
 
     except DoesNotExist:
         response = jsonify(
