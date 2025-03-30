@@ -37,7 +37,6 @@ export enum RouteName {
   SENTENCE_VIEWS_GET_SENTENCE_VW = "SENTENCE_VIEWS_GET_SENTENCE_VW",
   SEARCH_VIEWS_SEARCH_LANDING_VW = "SEARCH_VIEWS_SEARCH_LANDING_VW",
   SEARCH_VIEWS_SEARCH_WORD_VW = "SEARCH_VIEWS_SEARCH_WORD_VW",
-  FLASHCARD_VIEWS_STATIC = "FLASHCARD_VIEWS_STATIC",
   FLASHCARD_VIEWS_FLASHCARD_LANDING_VW = "FLASHCARD_VIEWS_FLASHCARD_LANDING_VW",
   FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW = "FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW",
   FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW = "FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW",
@@ -129,7 +128,6 @@ export const ROUTES = {
   SENTENCE_VIEWS_GET_SENTENCE_VW: "/language/{target_language_code}/sentence/{slug}",
   SEARCH_VIEWS_SEARCH_LANDING_VW: "/language/{target_language_code}/search",
   SEARCH_VIEWS_SEARCH_WORD_VW: "/language/{target_language_code}/search/{wordform}",
-  FLASHCARD_VIEWS_STATIC: "/languages/build/{filename}",
   FLASHCARD_VIEWS_FLASHCARD_LANDING_VW: "/languages/{target_language_code}/flashcards",
   FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW: "/languages/{target_language_code}/flashcards/sentence/{slug}",
   FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW: "/languages/{target_language_code}/flashcards/random",
@@ -221,7 +219,6 @@ export type RouteParams = {
   [RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW]: { target_language_code: string; slug: string };
   [RouteName.SEARCH_VIEWS_SEARCH_LANDING_VW]: { target_language_code: string };
   [RouteName.SEARCH_VIEWS_SEARCH_WORD_VW]: { target_language_code: string; wordform: string };
-  [RouteName.FLASHCARD_VIEWS_STATIC]: { filename: string };
   [RouteName.FLASHCARD_VIEWS_FLASHCARD_LANDING_VW]: { target_language_code: string };
   [RouteName.FLASHCARD_VIEWS_FLASHCARD_SENTENCE_VW]: { target_language_code: string; slug: string };
   [RouteName.FLASHCARD_VIEWS_RANDOM_FLASHCARD_VW]: { target_language_code: string };

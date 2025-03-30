@@ -29,12 +29,7 @@ from utils.flashcard_utils import (
 from db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir
 
 # Create the blueprint for flashcard views
-flashcard_views_bp = Blueprint(
-    "flashcard_views",
-    __name__,
-    url_prefix="/languages",
-    static_folder="../static/build",
-)
+flashcard_views_bp = Blueprint("flashcard_views", __name__, url_prefix="/languages")
 
 
 @flashcard_views_bp.route("/<target_language_code>/flashcards")
