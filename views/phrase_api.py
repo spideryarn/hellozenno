@@ -9,6 +9,7 @@ from flask import Blueprint, jsonify, request
 from peewee import DoesNotExist, fn
 from db_models import Phrase
 import urllib.parse
+from utils.phrase_utils import get_phrases_query
 
 
 # Create a blueprint with standardized prefix
@@ -27,41 +28,18 @@ def phrases_list_api(target_language_code: str):
     # Get sort parameter from request
     sort_by = request.args.get("sort", "alpha")  # Default to alphabetical
 
-    # Query phrases from database
-    query = Phrase.select().where(Phrase.language_code == target_language_code)
+    # Get the query using the shared utility function
+    query = get_phrases_query(target_language_code, sort_by)
 
-    if sort_by == "date":
-        # Sort by modification time, newest first
-        query = query.order_by(fn.COALESCE(Phrase.updated_at, Phrase.created_at).desc())
-    else:
-        # Default alphabetical sort
-        query = query.order_by(Phrase.canonical_form)
+    # Convert query results to a list of dictionaries using Peewee's dicts() method
+    phrases_list = list(query.dicts())
 
-    # Convert to list of dictionaries
-    phrases_list = []
-    for phrase in query:
-        phrases_list.append(
-            {
-                "canonical_form": phrase.canonical_form,
-                "translations": phrase.translations,
-                "part_of_speech": phrase.part_of_speech,
-                "slug": phrase.slug,
-                "raw_forms": phrase.raw_forms,
-                "difficulty_level": phrase.difficulty_level,
-                "register": phrase.register,
-                "usage_notes": phrase.usage_notes,
-                "created_at": (
-                    phrase.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                    if phrase.created_at
-                    else None
-                ),
-                "updated_at": (
-                    phrase.updated_at.strftime("%Y-%m-%d %H:%M:%S")
-                    if phrase.updated_at
-                    else None
-                ),
-            }
-        )
+    # Format datetime fields for JSON serialization
+    for phrase in phrases_list:
+        if phrase.get("created_at"):
+            phrase["created_at"] = phrase["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+        if phrase.get("updated_at"):
+            phrase["updated_at"] = phrase["updated_at"].strftime("%Y-%m-%d %H:%M:%S")
 
     return jsonify(phrases_list)
 

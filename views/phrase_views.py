@@ -3,6 +3,7 @@ from db_models import Phrase
 from peewee import DoesNotExist, fn
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import extract_phrases_from_text
+from utils.phrase_utils import get_phrases_query
 from slugify import slugify
 
 phrase_views_bp = Blueprint("phrase_views", __name__, url_prefix="/lang")
@@ -14,15 +15,8 @@ def phrases_list_vw(target_language_code):
     sort_by = request.args.get("sort", "alpha")  # Default to alphabetical
     target_language_name = get_language_name(target_language_code)
 
-    # Query phrases from database
-    query = Phrase.select().where(Phrase.language_code == target_language_code)
-
-    if sort_by == "date":
-        # Sort by modification time, newest first
-        query = query.order_by(fn.COALESCE(Phrase.updated_at, Phrase.created_at).desc())
-    else:
-        # Default alphabetical sort
-        query = query.order_by(Phrase.canonical_form)
+    # Get the query using the shared utility function
+    query = get_phrases_query(target_language_code, sort_by)
 
     return render_template(
         "phrases.jinja",
