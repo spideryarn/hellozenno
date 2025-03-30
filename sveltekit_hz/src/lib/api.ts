@@ -31,6 +31,27 @@ export function getApiUrl<T extends RouteName>(
 }
 
 /**
+ * Type-safe frontend route generator that converts Flask /lang/ paths to SvelteKit /language/ paths
+ *
+ * @param routeName Name of the route from RouteName enum
+ * @param params Parameters required for the route
+ * @returns The frontend route URL adapted for SvelteKit
+ */
+export function getFrontendUrl<T extends RouteName>(
+    routeName: T,
+    params: RouteParams[T],
+): string {
+    const flaskPath = resolveRoute(routeName, params);
+
+    // Replace /lang/ with /language/ for frontend routes
+    if (flaskPath.startsWith("/lang/")) {
+        return `/language${flaskPath.substring(5)}`;
+    }
+
+    return flaskPath;
+}
+
+/**
  * Type-safe API fetch function
  *
  * @param routeName Name of the route from RouteName enum

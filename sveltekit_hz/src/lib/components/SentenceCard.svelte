@@ -1,12 +1,20 @@
 <script lang="ts">
+    import { RouteName, resolveRoute } from '$lib/generated/routes';
+    
     export let text: string;
     export let translation: string;
     export let slug: string;
     export let lemma_words: string[] = [];
     export let language_code: string;
+    
+    // Generate typed route for navigation
+    const sentenceUrl = resolveRoute(RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW, {
+        target_language_code: language_code,
+        slug
+    });
 </script>
 
-<a href={`/language/${language_code}/sentence/${slug}`} class="text-decoration-none">
+<a href={sentenceUrl} class="text-decoration-none">
     <div class="hz-sentence-item">
         <h3 class="mb-2">
             <span class="hz-foreign-text">{text}</span>

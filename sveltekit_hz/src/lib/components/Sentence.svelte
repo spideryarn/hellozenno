@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Sentence, SentenceMetadata } from '$lib/types';
   import { MetadataCard } from '$lib';
+  import { getApiUrl } from '$lib/api';
+  import { RouteName } from '$lib/generated/routes';
   
   // Props for the Sentence component
   export let sentence: Sentence;
@@ -17,8 +19,11 @@
     }
   }
   
-  // Generate the audio URL
-  const audioUrl = `http://localhost:3000/api/lang/sentence/${sentence.language_code}/${sentence.id}/audio`;
+  // Generate the audio URL using type-safe route resolution
+  const audioUrl = getApiUrl(RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API, {
+    target_language_code: sentence.language_code,
+    sentence_id: String(sentence.id)
+  });
 </script>
 
 <div class="container py-3">

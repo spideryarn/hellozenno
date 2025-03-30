@@ -1,17 +1,25 @@
 <script lang="ts">
+  import { RouteName, resolveRoute } from '$lib/generated/routes';
+  
   export let name: string = '';
   export let displayName: string = '';
   export let slug: string = '';
   export let languageCode: string = '';
   export let description: string = '';
   export let statistics = { file_count: 0, sentence_count: 0 };
+  
+  // Generate typed route for navigation
+  const sourceUrl = resolveRoute(RouteName.SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW, {
+    target_language_code: languageCode,
+    sourcedir_slug: slug
+  });
 </script>
 
 <div class="list-group-item hz-language-item hz-source-item mb-3">
   <div class="d-flex flex-column">
     <div class="mb-2">
       <h3 class="mb-0">
-        <a href="/language/{languageCode}/source/{slug}" class="text-decoration-none">
+        <a href={sourceUrl} class="text-decoration-none">
           {displayName || name}
         </a>
       </h3>

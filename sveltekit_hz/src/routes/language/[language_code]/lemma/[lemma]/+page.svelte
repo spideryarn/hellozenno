@@ -2,6 +2,8 @@
   import type { PageData } from './$types';  
   import { Card, LemmaCard, MetadataCard } from '$lib';
   import SentenceCard from '$lib/components/SentenceCard.svelte';
+  import { getApiUrl } from '$lib/api';
+  import { RouteName } from '$lib/generated/routes';
   
   export let data: PageData;
   const { lemmaData } = data;
@@ -11,6 +13,12 @@
   const target_language_code = lemmaData.target_language_code;
   const target_language_name = lemmaData.target_language_name;
   const metadata = lemmaData.metadata;
+  
+  // Generate API URL for delete action
+  const deleteUrl = getApiUrl(RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW, {
+    target_language_code,
+    lemma: lemma_metadata.lemma
+  });
   
   function handleDeleteSubmit(event: SubmitEvent) {
     const confirmed = confirm('Are you sure you want to delete this lemma? All associated wordforms will also be deleted. This action cannot be undone.');
@@ -46,7 +54,7 @@
   </div>
 
   <div class="mb-4">
-    <form action="/api/lang/lemma/{target_language_code}/lemma/{lemma_metadata.lemma}/delete" method="POST" 
+    <form action={deleteUrl} method="POST" 
           on:submit={handleDeleteSubmit}>
       <button type="submit" class="btn btn-danger">Delete lemma</button>
     </form>

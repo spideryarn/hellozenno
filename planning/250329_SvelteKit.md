@@ -429,11 +429,8 @@ We've implemented a powerful type-safe route integration system between Flask an
 
 ### Remaining Work:
 
-- [ ] Update all remaining API calls in SvelteKit components:
-  - [ ] Flashcard components
-  - [ ] Sourcefile components
-  - [ ] Sentence components
-- [ ] Standardize parameter naming across Flask routes (e.g. `language_code` vs `target_language_code`)
+- [ ] Update all remaining API calls in SvelteKit components
+- [ ] Standardize parameter naming across Flask routes
 - [ ] Consider enhancement to include API response types in the generated TypeScript
 - [ ] Write tests for key API integration points
 - [ ] Add environment variable support for API_BASE_URL rather than hardcoding
@@ -446,6 +443,60 @@ We've implemented a powerful type-safe route integration system between Flask an
 4. Consider adding response type definitions for common API endpoints
 
 This architectural improvement provides significant benefits with minimal overhead, making our codebase more maintainable and robust against future changes.
+
+## URL Path Standardization
+
+We've identified a critical inconsistency between Flask and SvelteKit routing paths:
+
+- Flask routes use `/lang/...` as the base path
+- SvelteKit routes use `/language/...` as the base path
+
+This mismatch is causing 404 errors when navigating between pages or using generated routes.
+
+### Immediate Action:
+
+- [ ] Update all Flask view routes from `/lang/...` to `/language/...`
+- [ ] Update the Flask API routes (`/api/lang/...`) to match too?
+- [ ] Look for any other inconsistencies between the SvelteKit urls and the Flask view urls - update the Flask urls
+- [ ] Ask the user to restart the Flask server, which will automatically regenerate TypeScript routes.ts with the updated paths
+- [] Test navigation across the application with Playwright MCP or curl
+
+### Implementation Steps:
+
+1. **Modify Flask Blueprint Routes**:
+   - Update all user-facing view routes in Flask blueprints to use `/language/` instead of `/lang/`
+   - Ensure all URL parameters remain consistent across Flask and SvelteKit (e.g., `target_language_code`)
+
+2. **Route Generation**:
+   - After updating, restart Flask server to regenerate the `routes.ts` file
+   - Verify that the generated `RouteName` enum contains updated paths
+
+3. **We do not care about backward Compatibility** - the goal is to end up with a simple, consistent system.
+
+4. **Testing**:
+   - Test all main navigation paths:
+     - `/language/{language_code}/sources`
+     - `/language/{language_code}/source/{sourcedir_slug}`
+     - `/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}`
+     - `/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/phrases`
+     - `/language/{language_code}/sentence/{slug}`
+     - `/language/{language_code}/phrases/{slug}`
+
+5. **Benefits**:
+   - Consistent URL structure across frontend and backend
+   - More descriptive URLs (full word "language" instead of abbreviation)
+   - Simplified codebase with single source of truth for routes
+   - Elimination of URL conversion/redirection code
+
+This approach takes advantage of the fact that we're planning to eventually deprecate Flask/Jinja routes, making this a good time to update the Flask URL structure to match our SvelteKit conventions rather than the other way around.
+
+### Remaining Work:
+
+- [ ] Update all remaining API calls in SvelteKit components
+- [ ] Standardize parameter naming across Flask routes
+- [ ] Consider enhancement to include API response types in the generated TypeScript
+- [ ] Write tests for key API integration points
+- [ ] Add environment variable support for API_BASE_URL rather than hardcoding
 
 
     

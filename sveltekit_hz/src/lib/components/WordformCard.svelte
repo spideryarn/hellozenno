@@ -1,18 +1,30 @@
 <script lang="ts">
+    import { RouteName, resolveRoute } from '$lib/generated/routes';
+    
     export let wordform: string;
     export let translations: string[] = [];
     export let part_of_speech: string | undefined = undefined;
     export let lemma: string | undefined = undefined;
     export let language_code: string;
 
+    // Generate typed routes for navigation
+    const wordformUrl = resolveRoute(RouteName.WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW, {
+        target_language_code: language_code,
+        wordform
+    });
+    
     function navigateToLemma() {
         if (lemma) {
-            window.location.href = `/language/${language_code}/lemma/${lemma}`;
+            const lemmaUrl = resolveRoute(RouteName.LEMMA_VIEWS_GET_LEMMA_METADATA_VW, {
+                target_language_code: language_code,
+                lemma
+            });
+            window.location.href = lemmaUrl;
         }
     }
 </script>
 
-<a href={`/language/${language_code}/wordform/${wordform}`} class="text-decoration-none">
+<a href={wordformUrl} class="text-decoration-none">
     <div class="hz-wordform-item">
         <h3 class="mb-2">
             <span class="hz-foreign-text">{wordform}</span>

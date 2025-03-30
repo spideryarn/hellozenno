@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import { getApiUrl } from '$lib/api';
+  import { RouteName } from '$lib/generated/routes';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -25,7 +26,12 @@
     try {
       const response = await fetch(
         getApiUrl(
-          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/update_description`
+          RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API,
+          {
+            target_language_code: language_code,
+            sourcedir_slug,
+            sourcefile_slug
+          }
         ),
         {
           method: 'PUT',
@@ -58,7 +64,12 @@
       
       const response = await fetch(
         getApiUrl(
-          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/process`
+          RouteName.SOURCEFILE_API_PROCESS_SOURCEFILE_API,
+          {
+            target_language_code: language_code,
+            sourcedir_slug,
+            sourcefile_slug
+          }
         ),
         {
           method: 'POST',
@@ -91,7 +102,12 @@
     try {
       const response = await fetch(
         getApiUrl(
-          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}`
+          RouteName.SOURCEFILE_API_DELETE_SOURCEFILE_API,
+          {
+            target_language_code: language_code,
+            sourcedir_slug,
+            sourcefile_slug
+          }
         ),
         {
           method: 'DELETE',
@@ -117,7 +133,12 @@
     try {
       const response = await fetch(
         getApiUrl(
-          `/api/lang/sourcefile/${language_code}/${sourcedir_slug}/${sourcefile_slug}/rename`
+          RouteName.SOURCEFILE_API_RENAME_SOURCEFILE_API,
+          {
+            target_language_code: language_code,
+            sourcedir_slug,
+            sourcefile_slug
+          }
         ),
         {
           method: 'PUT',
@@ -157,6 +178,25 @@
         return '📄';
     }
   }
+
+  // Generate URLs for view and download
+  const viewUrl = getApiUrl(
+    RouteName.SOURCEFILE_VIEWS_VIEW_SOURCEFILE_VW,
+    {
+      target_language_code: language_code,
+      sourcedir_slug,
+      sourcefile_slug
+    }
+  );
+
+  const downloadUrl = getApiUrl(
+    RouteName.SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW,
+    {
+      target_language_code: language_code,
+      sourcedir_slug,
+      sourcefile_slug
+    }
+  );
 </script>
 
 <div class="metadata-display">
@@ -207,14 +247,14 @@
   <ul>
     <li class="button-group">
       {#if sourcefile.sourcefile_type === "image"}
-        <a href="/api/lang/sourcefile/{language_code}/{sourcedir_slug}/{sourcefile_slug}/view" class="button">
+        <a href={viewUrl} class="button">
           View image
         </a>
-        <a href="/api/lang/sourcefile/{language_code}/{sourcedir_slug}/{sourcefile_slug}/download" class="button">
+        <a href={downloadUrl} class="button">
           Download image
         </a>
       {:else if sourcefile.sourcefile_type === "audio" || sourcefile.sourcefile_type === "youtube_audio"}
-        <a href="/api/lang/sourcefile/{language_code}/{sourcedir_slug}/{sourcefile_slug}/download" class="button">
+        <a href={downloadUrl} class="button">
           Download audio
         </a>
       {/if}

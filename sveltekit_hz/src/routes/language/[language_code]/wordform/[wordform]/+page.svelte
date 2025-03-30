@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PageData } from './$types';  
   import { Card, MetadataCard } from '$lib';
+  import { getApiUrl } from '$lib/api';
+  import { RouteName } from '$lib/generated/routes';
   
   export let data: PageData;
   const { wordformData } = data;
@@ -11,6 +13,12 @@
   const target_language_code = wordformData.target_language_code;
   const target_language_name = wordformData.target_language_name;
   const metadata = wordformData.metadata;
+  
+  // Generate API URL for delete action
+  const deleteUrl = getApiUrl(RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW, {
+    target_language_code,
+    wordform: wordform_metadata.wordform
+  });
   
   function handleDeleteSubmit(event: SubmitEvent) {
     const confirmed = confirm('Are you sure you want to delete this wordform? This action cannot be undone.');
@@ -47,7 +55,7 @@
 
   <div class="row mb-4">
     <div class="col">
-      <form action="/api/lang/word/{target_language_code}/wordform/{wordform_metadata.wordform}/delete" method="POST" 
+      <form action={deleteUrl} method="POST" 
             on:submit={handleDeleteSubmit}>
         <button type="submit" class="btn btn-sm btn-danger">Delete wordform</button>
       </form>
