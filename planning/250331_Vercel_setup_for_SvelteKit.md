@@ -1,8 +1,8 @@
 # Vercel Deployment Strategy for Hello Zenno: Flask API + SvelteKit Frontend
 
 This document outlines our deployment strategy for the Hello Zenno application, which consists of:
-- Flask API backend (currently deployed on Vercel)
-- SvelteKit frontend (to be deployed on Vercel)
+- Flask API backend (currently deployed on Vercel) - will move to `api.hellozenno.com`
+- SvelteKit frontend (to be deployed on Vercel) - will take over `www.hellozenno.com` and redirected from the apex domain
 
 We have no users, so we don't care about backwards compatibility.
 
@@ -34,19 +34,30 @@ At the moment, SvelteKit talks to Flask, which talks to Supabase. In the future,
 └─────────────────────────────────────────┘
 ```
 
+## Project Organization
+
+We're using two separate Vercel projects to cleanly separate the deployments:
+
+1. **Flask API Project**
+   - Code located in the `api/` directory
+   - Vercel configuration files located in `api/.vercel/`
+   - Configuration file: `api/vercel.json`
+   - Will be deployed to `api.hellozenno.com`
+
+2. **SvelteKit Frontend Project**
+   - Code located in the `sveltekit_hz/` directory
+   - Vercel configuration files located in `sveltekit_hz/.vercel/`
+   - No `vercel.json` needed (handled by `@sveltejs/adapter-vercel`)
+   - Will be deployed to `www.hellozenno.com` and `hellozenno.com`
+
 ## Deployment Stages
 
 ### Stage 1: Prepare the Flask API Project ✅
 
 1. **Review Current Flask Deployment** ✅
    - Ensure the Flask API is properly structured for Vercel serverless deployment
-   - Confirm the entry point is in `/api/index.py`
-   - Verify the `vercel.json` configuration:
-     ```json
-     {
-       "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
-     }
-     ```
+   - Flask API entry point is in `api/index.py`
+   - Moved `.vercel` and `vercel.json` configuration files to the `api/` directory:
 
 2. **Update CORS Settings** ✅
    - Modified Flask CORS configuration to allow requests from SvelteKit domains:
@@ -97,7 +108,7 @@ At the moment, SvelteKit talks to Flask, which talks to Supabase. In the future,
      ```
 
 3. **Configure API URLs** ✅
-   - Created `.env.local` and `.env.prod` files with appropriate API URLs:
+   - Added to `.env.local` and `.env.prod`:
      - `.env.local`:
        ```
        VITE_API_URL=http://localhost:3000
@@ -132,14 +143,16 @@ At the moment, SvelteKit talks to Flask, which talks to Supabase. In the future,
 
 2. **Project Configuration** ✅
    - Project builds successfully in the Vercel environment
-   - Preview deployment working at: https://hellozenno-gpd48p7x8-greg-detre.vercel.app
+   - Auto-detected SvelteKit settings:
+     - Build Command: vite build
+     - Development Command: vite dev --port $PORT
+     - Output Directory: public
 
 3. **Environment Variables** ✅
    - Added production environment variable on Vercel
 
 4. **Preview Deployment** ✅
    - Successfully deployed a preview version
-   - Preview URL: https://hellozenno-gpd48p7x8-greg-detre.vercel.app
 
 ### Stage 4: Configure Custom Domains ⏳
 
@@ -165,14 +178,22 @@ At the moment, SvelteKit talks to Flask, which talks to Supabase. In the future,
 1. **Deploy SvelteKit to Production**
    - Ready to deploy to production:
      ```bash
+     cd sveltekit_hz
      vercel --prod
      ```
 
-2. **Run Final Tests**
+2. **Deploy Flask API to Production**
+   - Ready to deploy to production:
+     ```bash
+     cd api
+     vercel --prod
+     ```
+
+3. **Run Final Tests**
    - Verify all routes and API interactions work on production domains
    - Ensure frontend-backend communication is working properly
 
-3. **Setup Monitoring**
+4. **Setup Monitoring**
    - Enable Vercel Analytics in both projects
 
 ## Next Steps
