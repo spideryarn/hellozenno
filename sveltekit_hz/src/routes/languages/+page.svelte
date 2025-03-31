@@ -13,6 +13,14 @@
   
   let languages: Language[] = data.languages;
   let searchQuery = '';
+  let searchInput: HTMLInputElement;
+  
+  onMount(() => {
+    // Focus on the search input when component mounts
+    if (searchInput) {
+      searchInput.focus();
+    }
+  });
   
   // Computed filtered languages based on searchQuery
   $: filteredLanguages = searchQuery.trim() 
@@ -79,6 +87,8 @@
             type="text" 
             placeholder="Search languages..." 
             bind:value={searchQuery}
+            bind:this={searchInput}
+            autofocus
             class="search-input"
           />
           <button type="submit" class="search-icon" aria-label="Search">
