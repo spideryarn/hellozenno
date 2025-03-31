@@ -1,0 +1,30 @@
+{
+  "_browser-MVJaYfKS.js": {
+    "file": "browser-MVJaYfKS.js",
+    "name": "browser",
+    "isDynamicEntry": true,
+    "imports": [
+      "_index-VAzTizur.js"
+    ]
+  },
+  "_index-VAzTizur.js": {
+    "file": "index-VAzTizur.js",
+    "name": "index",
+    "dynamicImports": [
+      "_browser-MVJaYfKS.js"
+    ]
+  },
+  "src/entries/index.ts": {
+    "file": "js/hz-components.es.js",
+    "name": "index",
+    "src": "src/entries/index.ts",
+    "isEntry": true,
+    "imports": [
+      "_index-VAzTizur.js"
+    ]
+  },
+  "style.css": {
+    "file": "assets/style.css",
+    "src": "style.css"
+  }
+}

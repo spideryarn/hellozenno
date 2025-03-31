@@ -62,6 +62,18 @@ if [ -z "$FLASK_PORT" ]; then
     exit 1
 fi
 
+# Install API requirements if Flask is not installed
+if ! pip show flask > /dev/null 2>&1; then
+    echo "Installing API requirements..."
+    pip install -r api/requirements.txt
+fi
+
+# Install gjdutils in development mode if not already installed
+if ! pip show gjdutils > /dev/null 2>&1; then
+    echo "Installing gjdutils in development mode..."
+    pip install -e api/gjdutils
+fi
+
 # Always kill existing Flask servers
 kill_flask_servers
 
@@ -95,6 +107,9 @@ else
     unset LOCAL_CHECK_OF_PROD_FRONTEND
     export NODE_ENV=development
 fi
+
+# Add the parent directory to PYTHONPATH to ensure all imports work correctly
+export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/api
 
 # Run Flask with the appropriate settings
 FLASK_DEBUG=$DEBUG_MODE FLASK_ENV=$FLASK_MODE FLASK_APP=api/index.py flask run --host=localhost --port $FLASK_PORT

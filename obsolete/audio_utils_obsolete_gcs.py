@@ -6,7 +6,7 @@ from gdutils.audios import play_mp3
 from gdutils.outloud_text_to_speech import outloud_elevenlabs
 from gdutils.strings import PathOrStr
 from obsolete.google_cloud_storage_utils import upload_file, get_storage_client
-from config import GOOGLE_CLOUD_STORAGE_BUCKET
+from api.config import GOOGLE_CLOUD_STORAGE_BUCKET
 from slugify import slugify
 from gdutils.hashing import hash_consistent
 

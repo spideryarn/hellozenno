@@ -12,7 +12,7 @@ from google_auth_oauthlib.flow import Flow
 
 # from google.oauth2.credentials import Credentials
 
-from config import GOOGLE_CLIENT_CREDENTIALS
+from api.config import GOOGLE_CLIENT_CREDENTIALS
 
 
 # Create a Blueprint for our API routes
