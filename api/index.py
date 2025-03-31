@@ -81,13 +81,30 @@ def create_app():
     CORS(
         app,
         resources={
-            r"/api/*": {"origins": "*"},  # Allow all origins for API endpoints
+            r"/api/*": {
+                "origins": [
+                    "https://www.hellozenno.com",
+                    "https://hellozenno.com",
+                    "http://localhost:5173",  # SvelteKit local dev
+                    "http://localhost:3000",  # Local Flask dev
+                ]
+            },
             r"/lang/*/flashcards/*": {
-                "origins": "*"
-            },  # Allow all origins for flashcard endpoints with new URL structure
+                "origins": [
+                    "https://www.hellozenno.com",
+                    "https://hellozenno.com",
+                    "http://localhost:5173",
+                    "http://localhost:3000",
+                ]
+            },
             r"/api/lang/*": {
-                "origins": "*"
-            },  # Allow all origins for language-related API endpoints
+                "origins": [
+                    "https://www.hellozenno.com",
+                    "https://hellozenno.com",
+                    "http://localhost:5173",
+                    "http://localhost:3000",
+                ]
+            },
         },
     )
 
