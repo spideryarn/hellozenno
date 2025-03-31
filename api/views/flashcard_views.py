@@ -26,7 +26,7 @@ from utils.flashcard_utils import (
     get_random_flashcard_data,
 )
 
-from api.db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir
+from db_models import Sentence, Sourcefile, SourcefileWordform, Sourcedir
 
 # Create the blueprint for flashcard views
 flashcard_views_bp = Blueprint("flashcard_views", __name__, url_prefix="/languages")

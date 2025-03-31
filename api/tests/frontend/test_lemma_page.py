@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 import pytest
 from tests.fixtures_for_tests import SAMPLE_LEMMA_DATA
-from api.db_models import Lemma, Sentence, LemmaExampleSentence, SentenceLemma
+from db_models import Lemma, Sentence, LemmaExampleSentence, SentenceLemma
 from tests.backend.utils_for_testing import assert_html_response
 
 

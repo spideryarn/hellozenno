@@ -5,7 +5,7 @@ Contains shared functionality for phrase-related operations.
 
 from typing import Optional, List
 from peewee import fn, DoesNotExist
-from api.db_models import Phrase, RelatedPhrase, PhraseExampleSentence, Sentence
+from db_models import Phrase, RelatedPhrase, PhraseExampleSentence, Sentence
 
 
 def get_phrases_query(target_language_code: str, sort_by: str = "alpha"):
@@ -48,7 +48,7 @@ def get_phrase_by_slug(target_language_code: str, slug: str) -> Phrase:
     Raises:
         DoesNotExist: If no phrase with the given slug exists for the language
     """
-    from api.db_models import RelatedPhrase, PhraseExampleSentence, Sentence
+    from db_models import RelatedPhrase, PhraseExampleSentence, Sentence
 
     # Find the phrase with eager loading of related data
     phrase = Phrase.get(

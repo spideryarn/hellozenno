@@ -6,7 +6,7 @@ from flask import (
 from peewee import fn, DoesNotExist
 
 from utils.lang_utils import get_language_name, get_all_languages
-from api.db_models import (
+from db_models import (
     Sourcedir,
     Sourcefile,
     SourcefilePhrase,

@@ -24,7 +24,7 @@ from peewee import DoesNotExist
 
 from utils.env_config import ELEVENLABS_API_KEY
 from utils.audio_utils import add_delays, ensure_model_audio_data
-from api.config import (
+from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
     DEFAULT_LANGUAGE_LEVEL,
     DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
@@ -32,7 +32,7 @@ from api.config import (
     DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
     DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE,
 )
-from api.db_models import (
+from db_models import (
     Lemma,
     Sourcedir,
     Sourcefile,

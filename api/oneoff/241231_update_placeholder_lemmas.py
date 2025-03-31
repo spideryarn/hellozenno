@@ -12,7 +12,7 @@ from playhouse.sqlite_ext import JSONField
 sys.path.append(str(Path(__file__).parent.parent))
 
 from utils.db_connection import init_db, database
-from api.db_models import Lemma
+from db_models import Lemma
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import metadata_for_lemma_full
 

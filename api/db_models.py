@@ -18,7 +18,7 @@ from typing import Optional
 from slugify import slugify
 
 from utils.db_connection import database
-from api.config import (
+from config import (
     SOURCEDIR_SLUG_MAX_LENGTH,
     SOURCEFILE_SLUG_MAX_LENGTH,
     VALID_SOURCEFILE_TYPES,

@@ -1,7 +1,7 @@
 import pytest
 from playwright.sync_api import Page, expect
 from tests.fixtures_for_tests import SAMPLE_LEMMA_DATA
-from api.db_models import Lemma
+from db_models import Lemma
 
 
 @pytest.mark.skip(reason="Component test requiring frontend build - run separately")

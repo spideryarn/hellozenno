@@ -8,7 +8,7 @@ from utils.vocab_llm_utils import (
     extract_phrases_from_text,
     create_interactive_word_links,
 )
-from api.db_models import Lemma, Wordform
+from db_models import Lemma, Wordform
 from tests.fixtures_for_tests import (
     SAMPLE_PHRASE_DATA,
     TEST_IMAGE_PATH_JPG,

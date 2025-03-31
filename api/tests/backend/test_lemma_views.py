@@ -2,7 +2,7 @@ import pytest
 from peewee import DoesNotExist
 from peewee import fn
 
-from api.db_models import (
+from db_models import (
     Lemma,
     Wordform,
     Sentence,

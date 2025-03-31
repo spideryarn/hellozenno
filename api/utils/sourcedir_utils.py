@@ -1,9 +1,9 @@
 from flask import abort, redirect, url_for
 from peewee import DoesNotExist, fn
-from api.config import (
+from config import (
     SOURCE_EXTENSIONS,
 )
-from api.db_models import Sourcedir, Sourcefile, SourcefilePhrase
+from db_models import Sourcedir, Sourcefile, SourcefilePhrase
 from utils.url_registry import endpoint_for
 from utils.lang_utils import get_language_name, get_all_languages
 
@@ -223,7 +223,7 @@ def get_sourcefiles_for_sourcedir(target_language_code: str, sourcedir_slug: str
         - supported_languages: List of supported languages
     """
     from utils.lang_utils import get_language_name, get_all_languages
-    from api.db_models import Sourcefile
+    from db_models import Sourcefile
     from peewee import fn, DoesNotExist
 
     target_language_name = get_language_name(target_language_code)

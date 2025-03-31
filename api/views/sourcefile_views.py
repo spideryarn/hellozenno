@@ -13,14 +13,14 @@ from flask import (
 from pathlib import Path
 from peewee import DoesNotExist
 
-from api.config import (
+from config import (
     DEFAULT_LANGUAGE_LEVEL,
     DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
     DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE,
     DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
     DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE,
 )
-from api.db_models import (
+from db_models import (
     Phrase,
     Sourcedir,
     Sourcefile,

@@ -7,7 +7,7 @@ These endpoints follow the standard pattern:
 
 from flask import Blueprint, jsonify, request
 from peewee import DoesNotExist, fn
-from api.db_models import Phrase
+from db_models import Phrase
 import urllib.parse
 from utils.phrase_utils import get_phrases_query, get_phrase_by_slug
 

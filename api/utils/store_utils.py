@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import metadata_for_lemma_full
-from api.db_models import Lemma, Wordform, Phrase, DoesNotExist
+from db_models import Lemma, Wordform, Phrase, DoesNotExist
 from peewee import DatabaseError
 
 

@@ -2,7 +2,7 @@ import pytest
 from slugify import slugify
 from werkzeug.exceptions import NotFound
 from peewee import DoesNotExist
-from api.db_models import (
+from db_models import (
     Sourcedir,
     Sourcefile,
     Lemma,

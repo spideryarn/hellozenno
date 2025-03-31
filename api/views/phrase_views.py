@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
-from api.db_models import Phrase
+from db_models import Phrase
 from peewee import DoesNotExist, fn
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import extract_phrases_from_text

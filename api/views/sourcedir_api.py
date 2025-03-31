@@ -9,13 +9,13 @@ import datetime
 from flask import Blueprint, flash, jsonify, redirect, request, url_for
 from peewee import DoesNotExist
 
-from api.config import (
+from config import (
     MAX_AUDIO_SIZE_UPLOAD_ALLOWED,
     MAX_IMAGE_SIZE_UPLOAD_ALLOWED,
     MAX_NUMBER_UPLOAD_FILES,
     SOURCE_EXTENSIONS,
 )
-from api.db_models import Sourcedir, Sourcefile
+from db_models import Sourcedir, Sourcefile
 from utils.lang_utils import VALID_LANGUAGE_CODES
 from utils.sourcedir_utils import (
     _get_sourcedir_entry,

@@ -3,7 +3,7 @@
 from peewee import CharField, TextField, ForeignKeyField, BlobField, Model
 from playhouse.postgres_ext import JSONField
 
-from api.db_models import BaseModel, Lemma
+from db_models import BaseModel, Lemma
 
 
 # Local model definitions matching schema at this migration point

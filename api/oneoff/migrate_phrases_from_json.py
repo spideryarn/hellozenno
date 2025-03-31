@@ -10,7 +10,7 @@ from datetime import datetime
 project_root = Path(__file__).parent.parent.parent
 sys.path.append(str(project_root))
 
-from api.db_models import Sourcedir, Sourcefile, Phrase, SourcefilePhrase
+from db_models import Sourcedir, Sourcefile, Phrase, SourcefilePhrase
 from utils.db_connection import get_db_config, init_db
 
 # Configure logging

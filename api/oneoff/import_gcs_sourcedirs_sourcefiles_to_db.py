@@ -10,7 +10,7 @@ import glob
 
 
 from utils.db_connection import database, init_db
-from api.db_models import Sourcedir, Sourcefile
+from db_models import Sourcedir, Sourcefile
 from utils.logging_utils import setup_logging
 
 

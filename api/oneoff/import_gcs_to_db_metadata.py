@@ -6,9 +6,9 @@ from typing import Optional, Dict, Any, Tuple
 import logging
 from datetime import datetime
 
-from api.config import GOOGLE_CLOUD_STORAGE_BUCKET, SUPPORTED_LANGUAGES
+from config import GOOGLE_CLOUD_STORAGE_BUCKET, SUPPORTED_LANGUAGES
 from utils.db_connection import database, init_db
-from api.db_models import (
+from db_models import (
     Wordform,
     Lemma,
     Sentence,

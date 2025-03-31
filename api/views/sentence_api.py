@@ -10,7 +10,7 @@ import io
 from peewee import DoesNotExist
 from slugify import slugify
 
-from api.db_models import Sentence
+from db_models import Sentence
 from utils.sentence_utils import (
     get_random_sentence,
     get_detailed_sentence_data,

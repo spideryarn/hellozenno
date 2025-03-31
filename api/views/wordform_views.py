@@ -4,7 +4,7 @@ from peewee import DoesNotExist
 import urllib.parse
 
 from utils.lang_utils import get_language_name
-from api.db_models import Wordform
+from db_models import Wordform
 from utils.vocab_llm_utils import quick_search_for_wordform
 from utils.url_registry import endpoint_for
 from utils.word_utils import get_wordform_metadata

@@ -8,7 +8,7 @@ from utils.youtube_utils import (
     download_subtitles,
     YouTubeDownloadError,
 )
-from api.config import MAX_AUDIO_SIZE_UPLOAD_ALLOWED
+from config import MAX_AUDIO_SIZE_UPLOAD_ALLOWED
 import shutil
 import os
 import yt_dlp

@@ -2,7 +2,7 @@ from flask import g
 from playhouse.pool import PooledPostgresqlExtDatabase
 import logging
 from datetime import datetime
-from api.config import DB_POOL_CONFIG
+from config import DB_POOL_CONFIG
 from utils.env_config import DATABASE_URL, is_vercel, is_local_to_prod
 from urllib.parse import urlparse
 
@@ -147,7 +147,7 @@ def init_db(app=None, test_db=None):
         database = get_db_config()
 
     # Bind all models to the database
-    from api.db_models import get_models
+    from db_models import get_models
 
     for model in get_models():
         model._meta.database = database
@@ -185,7 +185,7 @@ def teardown_request(exception):
 def init_tables():
     """Create all tables"""
     global database
-    from api.db_models import get_models
+    from db_models import get_models
 
     if database is None:
         database = get_db_config()

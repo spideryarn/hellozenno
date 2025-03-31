@@ -3,7 +3,7 @@ from unittest.mock import patch
 from peewee import DoesNotExist
 from peewee import fn
 
-from api.db_models import Wordform
+from db_models import Wordform
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
     TEST_LANGUAGE_CODE,

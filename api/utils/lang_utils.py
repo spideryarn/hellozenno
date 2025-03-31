@@ -1,5 +1,5 @@
 from pycountry import languages
-from api.config import LANGUAGE_NAME_OVERRIDES, SUPPORTED_LANGUAGES
+from config import LANGUAGE_NAME_OVERRIDES, SUPPORTED_LANGUAGES
 
 VALID_LANGUAGE_CODES = set(
     lang.alpha_2 for lang in languages if hasattr(lang, "alpha_2")  # type: ignore

@@ -8,7 +8,7 @@ from io import BytesIO
 import pytest
 from pathlib import Path
 
-from api.db_models import (
+from db_models import (
     Sourcedir,
     Sourcefile,
 )
@@ -32,7 +32,7 @@ from views.sourcedir_api import (
     update_sourcedir_language_api,
     rename_sourcedir_api,
 )
-from api.config import (
+from config import (
     MAX_IMAGE_SIZE_UPLOAD_ALLOWED,
 )
 

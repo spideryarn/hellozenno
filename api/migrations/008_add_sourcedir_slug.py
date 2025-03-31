@@ -3,7 +3,7 @@
 from peewee import Model, CharField, DateTimeField
 from slugify import slugify
 
-from api.config import SOURCEDIR_SLUG_MAX_LENGTH
+from config import SOURCEDIR_SLUG_MAX_LENGTH
 
 
 def migrate(migrator, database, **kwargs):

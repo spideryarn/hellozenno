@@ -9,7 +9,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.append(str(project_root))
 
 from utils.db_connection import get_db_config, init_db
-from api.db_models import get_models
+from db_models import get_models
 
 
 def fix_sequences(database):

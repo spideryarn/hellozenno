@@ -4,7 +4,7 @@ from peewee import DoesNotExist, prefetch
 import unicodedata
 from werkzeug.exceptions import NotFound
 
-from api.db_models import Sourcedir, Sourcefile, SourcefileWordform, Wordform, Lemma
+from db_models import Sourcedir, Sourcefile, SourcefileWordform, Wordform, Lemma
 from utils.lang_utils import get_language_name
 from utils.sourcefile_utils import _get_sourcefile_entry
 
@@ -40,7 +40,7 @@ def ensure_nfc(text: str) -> str:
 
 def get_word_preview(target_language_code: str, word: str) -> WordPreview | None:
     """Get preview data for a word tooltip."""
-    from api.db_models import Wordform, fn
+    from db_models import Wordform, fn
 
     # Ensure consistent NFC normalization for lookups
     word = ensure_nfc(word)
@@ -217,7 +217,7 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
     Find or create a wordform, handling common search behavior.
 
     This shared utility function handles the common logic used by both
-    get_wordform_metadata_vw and get_wordform_metadata_api.
+    get_wordform_metadata_vw and get_wordform_metadata_
 
     Args:
         target_language_code: The language code (e.g. 'el' for Greek)

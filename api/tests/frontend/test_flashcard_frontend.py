@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 import pytest
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
-from api.db_models import (
+from db_models import (
     Sourcefile,
     Sourcedir,
     Wordform,
@@ -51,7 +51,7 @@ def test_sourcefile(fixture_for_testing_db):
     )
 
     # Link wordform to sourcefile
-    from api.db_models import SourcefileWordform
+    from db_models import SourcefileWordform
 
     SourcefileWordform.create(
         sourcefile=sourcefile,

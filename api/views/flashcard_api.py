@@ -1,4 +1,4 @@
-from api.db_models import Sentence, Sourcedir, Sourcefile, SourcefileWordform
+from db_models import Sentence, Sourcedir, Sourcefile, SourcefileWordform
 from utils.audio_utils import ensure_model_audio_data
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_random_sentence
@@ -87,7 +87,7 @@ def random_flashcard_api(language_code: str):
         "translation": sentence.translation,
         "lemma_words": sentence.lemma_words,
         "audio_url": url_for(
-            "sentence_api.get_sentence_audio_api",
+            "sentence_get_sentence_audio_api",
             target_language_code=language_code,
             sentence_id=sentence.id,
         ),

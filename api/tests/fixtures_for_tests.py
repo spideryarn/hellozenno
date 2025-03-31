@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, Union
 from pathlib import Path
-from api.db_models import (
+from db_models import (
     Lemma,
     Wordform,
     Sentence,

@@ -13,7 +13,7 @@ from pathlib import Path
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from flask import Flask
 
-from api.db_models import (
+from db_models import (
     Lemma,
     Wordform,
     Sentence,

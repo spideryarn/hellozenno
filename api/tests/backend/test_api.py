@@ -1,5 +1,5 @@
 import pytest
-from api.db_models import Lemma, Wordform
+from db_models import Lemma, Wordform
 from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
 from tests.backend.utils_for_testing import build_url_with_query
 

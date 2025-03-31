@@ -7,7 +7,7 @@ import yt_dlp
 from datetime import datetime
 import os
 
-from api.config import MAX_AUDIO_SIZE_UPLOAD_ALLOWED
+from config import MAX_AUDIO_SIZE_UPLOAD_ALLOWED
 
 
 class YouTubeDownloadError(Exception):

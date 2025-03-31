@@ -1,8 +1,8 @@
 import pytest
 from datetime import datetime
-from api.config import MAX_AUDIO_SIZE_UPLOAD_ALLOWED, MAX_IMAGE_SIZE_UPLOAD_ALLOWED
+from config import MAX_AUDIO_SIZE_UPLOAD_ALLOWED, MAX_IMAGE_SIZE_UPLOAD_ALLOWED
 from io import BytesIO
-from api.db_models import (
+from db_models import (
     Lemma,
     Phrase,
     Sourcedir,

@@ -4,7 +4,7 @@ Utility functions for the flashcard system.
 
 from peewee import DoesNotExist
 
-from api.db_models import Sourcedir, Sourcefile, SourcefileWordform, Sentence
+from db_models import Sourcedir, Sourcefile, SourcefileWordform, Sentence
 from utils.lang_utils import get_language_name
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
 from utils.audio_utils import ensure_model_audio_data
@@ -155,7 +155,7 @@ def get_flashcard_sentence_data(
         "translation": sentence.translation,
         "lemma_words": sentence.lemma_words,
         "audio_url": url_for(
-            "sentence_api.get_sentence_audio_api",
+            "sentence_get_sentence_audio_api",
             target_language_code=language_code,
             sentence_id=sentence.id,
         ),

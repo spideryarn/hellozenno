@@ -1,5 +1,5 @@
 import pytest
-from api.db_models import Sourcefile, Sourcedir, Lemma, Wordform, Phrase
+from db_models import Sourcefile, Sourcedir, Lemma, Wordform, Phrase
 
 
 def test_json_field_handling(fixture_for_testing_db):

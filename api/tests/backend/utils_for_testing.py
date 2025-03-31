@@ -15,7 +15,7 @@ from tests.fixtures_for_tests import (
     SAMPLE_LEMMA_DATA,
     SAMPLE_PHRASE_DATA,
 )
-from api.db_models import (
+from db_models import (
     Lemma,
     Wordform,
     Phrase,

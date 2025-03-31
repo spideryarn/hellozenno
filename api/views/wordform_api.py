@@ -9,7 +9,7 @@ from flask import Blueprint, jsonify, send_file, abort, request
 from peewee import DoesNotExist
 import urllib.parse
 
-from api.db_models import Wordform
+from db_models import Wordform
 from utils.word_utils import get_word_preview, get_wordform_metadata
 from utils.lang_utils import get_language_name
 

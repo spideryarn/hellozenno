@@ -10,8 +10,8 @@ from utils.audio_utils import (
     ensure_audio_data,
     ensure_model_audio_data,
 )
-from api.db_models import Sourcefile, Sourcedir, Sentence
-from api.config import MAX_AUDIO_SIZE_FOR_STORAGE
+from db_models import Sourcefile, Sourcedir, Sentence
+from config import MAX_AUDIO_SIZE_FOR_STORAGE
 
 
 @pytest.fixture

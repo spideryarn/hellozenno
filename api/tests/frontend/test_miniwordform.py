@@ -5,7 +5,7 @@ from tests.fixtures_for_tests import (
     create_test_lemma,
     create_test_wordform,
 )
-from api.db_models import Lemma, Wordform
+from db_models import Lemma, Wordform
 
 
 @pytest.fixture

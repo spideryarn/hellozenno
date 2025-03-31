@@ -14,8 +14,8 @@ from utils.auth_utils import (
     get_current_user,
 )
 from utils.url_registry import endpoint_for
-from api.db_models import Profile
-from api.config import SUPPORTED_LANGUAGES
+from db_models import Profile
+from config import SUPPORTED_LANGUAGES
 
 # Create auth-specific blueprint
 auth_views_bp = Blueprint("auth_views", __name__, url_prefix="/auth")

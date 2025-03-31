@@ -3,7 +3,7 @@
 from peewee import CharField, TextField, ForeignKeyField, Model
 from playhouse.postgres_ext import JSONField
 
-from api.db_models import BaseModel, Lemma, Sentence
+from db_models import BaseModel, Lemma, Sentence
 
 
 def migrate(migrator, database, fake=False, **kwargs):

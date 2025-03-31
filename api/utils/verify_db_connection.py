@@ -36,8 +36,8 @@ from db_connection import (
     parse_database_url,
 )
 from env_config import is_local_to_prod, DATABASE_URL
-from api.db_models import get_models
-from api.config import DB_POOL_CONFIG
+from db_models import get_models
+from config import DB_POOL_CONFIG
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

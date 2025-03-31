@@ -1,7 +1,7 @@
 """Test flashcard views."""
 
 import pytest
-from api.db_models import (
+from db_models import (
     Lemma,
     SentenceLemma,
     Sourcedir,

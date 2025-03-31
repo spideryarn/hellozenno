@@ -6,14 +6,14 @@ from typing import Optional
 from pathlib import Path
 
 # Internal imports
-from api.config import (
+from config import (
     DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
     DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
     MAX_IMAGE_SIZE_FOR_STORAGE,
     MAX_AUDIO_SIZE_FOR_STORAGE,
     SOURCE_IMAGE_EXTENSIONS,
 )
-from api.db_models import (
+from db_models import (
     Lemma,
     Sourcefile,
     Wordform,
@@ -415,7 +415,7 @@ def get_sourcefile_details(sourcefile_entry: Sourcefile, target_language_code: s
     """
     from utils.sourcedir_utils import _get_navigation_info
     from utils.vocab_llm_utils import create_interactive_word_links
-    from api.db_models import Sourcedir, SourcefileWordform, SourcefilePhrase
+    from db_models import Sourcedir, SourcefileWordform, SourcefilePhrase
 
     # Get navigation info
     nav_info = _get_navigation_info(sourcefile_entry.sourcedir, sourcefile_entry.slug)
@@ -424,7 +424,7 @@ def get_sourcefile_details(sourcefile_entry: Sourcefile, target_language_code: s
     # Define helper functions directly here instead of importing from views
     def _get_wordforms_data(sourcefile_entry):
         """Get wordforms data with junction table data in one query."""
-        from api.db_models import Wordform
+        from db_models import Wordform
 
         return Wordform.get_all_wordforms_for(
             language_code=target_language_code,
@@ -434,7 +434,7 @@ def get_sourcefile_details(sourcefile_entry: Sourcefile, target_language_code: s
 
     def _get_phrases_data(sourcefile_entry):
         """Get phrases data with junction table data in one query."""
-        from api.db_models import Phrase
+        from db_models import Phrase
 
         return Phrase.get_all_phrases_for(
             language_code=target_language_code,

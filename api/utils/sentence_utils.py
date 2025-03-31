@@ -2,7 +2,7 @@ from typing import Optional
 import random
 
 from utils.audio_utils import ensure_audio_data
-from api.db_models import Sentence, Lemma, SentenceLemma, Wordform
+from db_models import Sentence, Lemma, SentenceLemma, Wordform
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import (
     anthropic_client,

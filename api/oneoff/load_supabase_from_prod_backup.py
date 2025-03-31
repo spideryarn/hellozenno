@@ -13,7 +13,7 @@ import os
 from gjdutils.cmd import run_cmd
 from utils.db_connection import parse_database_url, init_db, get_db_config
 from utils.env_config import DATABASE_URL
-from api.db_models import get_models, Lemma, Sourcedir, Sourcefile
+from db_models import get_models, Lemma, Sourcedir, Sourcefile
 
 # Constants
 BACKUP_PATH = "/Users/greg/Dropbox/dev/experim/hellozenno/backup/production_backup_250209_0231_22.sql"

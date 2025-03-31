@@ -5,7 +5,7 @@ import logging
 import urllib.parse
 
 from utils.lang_utils import get_language_name
-from api.db_models import Lemma, LemmaExampleSentence
+from db_models import Lemma, LemmaExampleSentence
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.url_registry import endpoint_for
 

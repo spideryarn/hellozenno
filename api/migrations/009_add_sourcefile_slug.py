@@ -11,7 +11,7 @@ from peewee import (
 from playhouse.postgres_ext import JSONField
 from slugify import slugify
 
-from api.config import SOURCEFILE_SLUG_MAX_LENGTH
+from config import SOURCEFILE_SLUG_MAX_LENGTH
 
 
 def migrate(migrator, database, **kwargs):

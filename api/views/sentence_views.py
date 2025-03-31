@@ -7,7 +7,7 @@ from flask import (
 )
 from peewee import DoesNotExist
 
-from api.db_models import Sentence, Wordform
+from db_models import Sentence, Wordform
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_all_sentences, get_detailed_sentence_data
 from utils.vocab_llm_utils import (

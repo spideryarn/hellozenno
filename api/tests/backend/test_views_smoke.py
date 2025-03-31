@@ -5,7 +5,7 @@ from tests.fixtures_for_tests import (
     create_complete_test_data,
     create_test_sentence,
 )
-from api.db_models import Phrase
+from db_models import Phrase
 from tests.backend.utils_for_testing import (
     get_sourcedir_and_file,
     assert_html_response,

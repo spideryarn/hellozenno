@@ -41,10 +41,10 @@ echo "Using API Project ID: $API_PROJECT_ID"
 # Change to API directory
 cd api
 
-# Add VERCEL=1 environment variable
-echo "Setting VERCEL=1 for API project..."
-echo "1" | vercel env add VERCEL production --token $VERCEL_TOKEN --force
-echo "1" | vercel env add VERCEL preview --token $VERCEL_TOKEN --force
+# # UNNECESSARY: Add VERCEL=1 environment variable
+# echo "Setting VERCEL=1 for API project..."
+# echo "1" | vercel env add VERCEL production --token $VERCEL_TOKEN --force
+# echo "1" | vercel env add VERCEL preview --token $VERCEL_TOKEN --force
 
 # Read .env.prod and set each secret for API project
 # Only set the variables that are needed for the API

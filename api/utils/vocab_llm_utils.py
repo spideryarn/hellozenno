@@ -9,7 +9,7 @@ from slugify import slugify
 from gjdutils.llm_utils import generate_gpt_from_template
 from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
 from utils.lang_utils import get_language_name, get_language_code
-from api.db_models import (
+from db_models import (
     Lemma,
     Phrase,
     SourcefilePhrase,

@@ -1,4 +1,4 @@
-from api.db_models import Sentence, database
+from db_models import Sentence, database
 from utils.sentence_utils import generate_sentence
 from utils.db_connection import init_db
 
