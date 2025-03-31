@@ -1,5 +1,10 @@
 # Frontend Testing with Playwright
 
+THIS MAY BE OUT OF DATE. WE ARE SWITCHING to `sveltekit_hz` for user-facing code.
+
+
+
+
 see `docs/FRONTEND_INFRASTRUCTURE.md`
 
 ## Setup

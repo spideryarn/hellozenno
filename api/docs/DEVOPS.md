@@ -1,5 +1,11 @@
 # Infrastructure & Development Guide
 
+THIS MAY BE OUT OF DATE. WE ARE SWITCHING to `sveltekit_hz` for user-facing code.
+
+
+
+
+
 see also: `planning/`, e.g. `docs/DATABASE.md`, `docs/MIGRATIONS.md`, and `docs/FRONTEND_INFRASTRUCTURE.md`
 
 ## Common Operations

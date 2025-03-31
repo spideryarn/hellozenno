@@ -1,5 +1,10 @@
 # Frontend Infrastructure
 
+THIS MAY BE OUT OF DATE. WE ARE SWITCHING to `sveltekit_hz` for user-facing code.
+
+
+
+
 see `docs/FRONTEND_TESTING.md`
 
 This document describes the frontend infrastructure for Hello Zenno, including the tools, build process, and development workflow. see `250302_Vite_Svelte_Tailwind_plan.md` (though we've decided to ditch Tailwind)
