@@ -15,27 +15,22 @@ if ! command -v npm &> /dev/null; then
   exit 1
 fi
 
-# Create static/build directory if it doesn't exist
-mkdir -p static/build
+echo "Building SvelteKit frontend for production..."
 
-echo "Building frontend for production..."
+# Change to SvelteKit directory
+cd sveltekit_hz
 
 # Install dependencies if needed
-if [ ! -d "frontend/node_modules" ]; then
-  echo "Installing frontend dependencies..."
-  cd frontend && npm install && cd ..
+if [ ! -d "node_modules" ]; then
+  echo "Installing SvelteKit dependencies..."
+  npm install
 fi
 
-# Build the frontend
-cd frontend && npm run build
-cd ..
+# Build the SvelteKit frontend
+echo "Running npm build..."
+npm run build
 
-# Copy the Vite manifest to a more accessible location for Vercel
-if [ -f "static/build/.vite/manifest.json" ]; then
-  echo "Copying Vite manifest to static/build/ for better Vercel compatibility..."
-  cp static/build/.vite/manifest.json static/build/manifest.json
-else
-  echo "Warning: Vite manifest not found at static/build/.vite/manifest.json"
-fi
+echo "SvelteKit frontend build complete."
 
-echo "Frontend build complete. Assets are in static/build/" 
+# Note: With SvelteKit and the Vercel adapter, Vercel will handle the build process
+# during deployment. This script is mostly for local testing and verification. 

@@ -1,8 +1,8 @@
 # Vercel Deployment Strategy for Hello Zenno: Flask API + SvelteKit Frontend
 
 This document outlines our deployment strategy for the Hello Zenno application, which consists of:
-- Flask API backend (currently deployed on Vercel) - will move to `api.hellozenno.com`
-- SvelteKit frontend (to be deployed on Vercel) - will take over `www.hellozenno.com` and redirected from the apex domain
+- Flask API backend (currently deployed on Vercel as `hz_api` project) - will move to `api.hellozenno.com`
+- SvelteKit frontend (to be deployed on Vercel as `hz_frontend`) - will take over `www.hellozenno.com` and redirected from the apex domain
 
 We have no users, so we don't care about backwards compatibility.
 
@@ -178,15 +178,13 @@ We're using two separate Vercel projects to cleanly separate the deployments:
 1. **Deploy SvelteKit to Production**
    - Ready to deploy to production:
      ```bash
-     cd sveltekit_hz
-     vercel --prod
+     ./scripts/prod/deploy_frontend.sh
      ```
 
 2. **Deploy Flask API to Production**
    - Ready to deploy to production:
      ```bash
-     cd api
-     vercel --prod
+     ./scripts/prod/deploy_api.sh
      ```
 
 3. **Run Final Tests**
@@ -198,10 +196,10 @@ We're using two separate Vercel projects to cleanly separate the deployments:
 
 ## Next Steps
 
-1. **Complete Custom Domain Configuration**
-   - Configure `api.hellozenno.com` for the Flask API project
-   - Configure `www.hellozenno.com` for the SvelteKit project
-   - Set up redirect from apex domain to www
+1. **Complete Custom Domain Configuration** DONE
+   - DONE Configure `api.hellozenno.com` for the Flask API project
+   - DONE Configure `www.hellozenno.com` for the SvelteKit project
+   - DONE Set up redirect from apex domain to www
 
 2. **Deploy to Production**
    - Update Flask API with CORS settings

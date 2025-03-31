@@ -89,22 +89,6 @@ def create_app():
                     "http://localhost:3000",  # Local Flask dev
                 ]
             },
-            r"/lang/*/flashcards/*": {
-                "origins": [
-                    "https://www.hellozenno.com",
-                    "https://hellozenno.com",
-                    "http://localhost:5173",
-                    "http://localhost:3000",
-                ]
-            },
-            r"/api/lang/*": {
-                "origins": [
-                    "https://www.hellozenno.com",
-                    "https://hellozenno.com",
-                    "http://localhost:5173",
-                    "http://localhost:3000",
-                ]
-            },
         },
     )
 
