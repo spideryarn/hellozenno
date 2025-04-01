@@ -112,4 +112,4 @@ fi
 export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/api
 
 # Run Flask with the appropriate settings
-FLASK_DEBUG=$DEBUG_MODE FLASK_ENV=$FLASK_MODE FLASK_APP=api/index.py flask run --host=localhost --port $FLASK_PORT
+FLASK_DEBUG=$DEBUG_MODE FLASK_ENV=$FLASK_MODE FLASK_APP=backend/api/index.py flask run --host=localhost --port $FLASK_PORT

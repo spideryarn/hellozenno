@@ -39,7 +39,7 @@ fi
 echo "Using API Project ID: $API_PROJECT_ID"
 
 # Change to API directory
-cd api
+cd backend
 
 # # UNNECESSARY: Add VERCEL=1 environment variable
 # echo "Setting VERCEL=1 for API project..."

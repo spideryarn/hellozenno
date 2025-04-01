@@ -1,0 +1,41 @@
+docs/
+logs/
+frontend/
+gjdutils/
+obsolete/
+old_frontend/
+oneoff/
+planning/
+screenshots/
+scripts/
+static/
+tests/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.Python
+*.egg-info/
+.eggs/
+htmlcov/
+.coverage
+.tox/
+
+# System files
+.DS_Store
+*.swp
+*.swo
+
+# Git files
+.git/
+.github/
+.gitignore
+
+# Environment files
+.env*
+!.env.example
+
+

@@ -9,8 +9,8 @@ from gjdutils.env import get_env_var, list_env_example_vars
 import logging
 import os
 from pathlib import Path
-from pydantic import StrictStr, PositiveInt, SecretStr, TypeAdapter
-from typing import Any, TypeVar, Type, cast, Optional
+from pydantic import SecretStr
+from typing import TypeVar, Type
 
 # Update paths to point to the project root directory
 PROJECT_ROOT = Path(
@@ -60,15 +60,23 @@ def is_vercel() -> bool:
 
     Vercel sets VERCEL environment variable in all deployed applications.
     """
-    return os.getenv("VERCEL") == "1"
+    vercel = os.getenv("VERCEL", "0").strip()
+    assert vercel is None or vercel in [
+        "0",
+        "1",
+    ], f"VERCEL must be None, '0', or '1', got '{vercel}' ({type(vercel)})"
+    return vercel == "1"
 
 
 def is_local_to_prod() -> bool:
     """Check if we're connecting to production database from local machine."""
-    local_to_prod = os.getenv("USE_LOCAL_TO_PROD")
+    local_to_prod = os.getenv("USE_LOCAL_TO_PROD", "0").strip()
     if is_vercel():
         return False
-    assert local_to_prod is None or local_to_prod in ["0", "1"]
+    assert local_to_prod is None or local_to_prod in [
+        "0",
+        "1",
+    ], f"USE_LOCAL_TO_PROD must be '0' or '1', 'got '{local_to_prod}', {type(local_to_prod)}"
     return local_to_prod == "1"
 
 
@@ -105,6 +113,7 @@ def decide_environment_and_load_dotenv_file():
         AssertionError: If required environment file is missing
     """
     env_file = decide_environment_file()
+    logger.info("Using environment file: %s", env_file)
     # we don't want to send the .env file up to production, so don't
     # require it to be there it's there. we're setting all the
     # production environment variables with `set_secrets_for_fly_cloud.sh`
@@ -119,7 +128,7 @@ def decide_environment_and_load_dotenv_file():
 
 
 # Load environment on module import
-decide_environment_and_load_dotenv_file()
+env_file = decide_environment_and_load_dotenv_file()
 
 # Database configuration
 DATABASE_URL = get_env_var_and_track("DATABASE_URL", SecretStr)  # type: ignore
@@ -135,17 +144,17 @@ FLASK_SECRET_KEY = get_env_var_and_track("FLASK_SECRET_KEY", SecretStr).get_secr
 # Local to prod configuration
 USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ignore
 
-# Validate we processed all required variables
-# Get required variables before we start processing
-required_vars = list_env_example_vars(ENV_FILE_EXAMPLE)
-unprocessed = required_vars - _processed_vars
-if unprocessed:
-    raise ValueError(
-        f"Variables in .env.example not processed: {', '.join(sorted(unprocessed))}"
-    )
+# # Validate we processed all required variables
+# if env_file == ENV_FILE_LOCAL:
+#     required_vars = list_env_example_vars(ENV_FILE_EXAMPLE)
+#     unprocessed = required_vars - _processed_vars
+#     if unprocessed:
+#         raise ValueError(
+#             f"Variables in .env.example not processed: {', '.join(sorted(unprocessed))}"
+#         )
 
-unused = _processed_vars - required_vars
-if unused:
-    logger.warning(
-        "Processing variables not in .env.example: %s", ", ".join(sorted(unused))
-    )
+#     unused = _processed_vars - required_vars
+#     if unused:
+#         logger.warning(
+#             "Processing variables not in .env.example: %s", ", ".join(sorted(unused))
+#         )

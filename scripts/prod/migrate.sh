@@ -27,7 +27,7 @@ if [ "$(basename "$(pwd)")" = "api" ]; then
     VERCEL=1 python -m utils.migrate migrate
 else
     # If we're in the project root or somewhere else, run it from the api directory
-    cd "$PROJECT_ROOT/api"
+    cd "$PROJECT_ROOT/backend/api"
 VERCEL=1 python -m utils.migrate migrate
 fi
 

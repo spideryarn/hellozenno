@@ -5,7 +5,10 @@ import sys
 
 # Add the parent directory to sys.path to allow importing from the root directory
 # This must be done before any imports from modules within the project
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+my_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(my_path)
+print(my_path)
+# sys.exit(0)
 
 from loguru import logger
 from flask import Flask, render_template
@@ -77,18 +80,28 @@ def create_app():
         # ),
     )
 
+    # Set template_folder to point to the templates directory in the backend
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "../templates"
+        ),
+        static_folder=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "../static"
+        ),
+    )
+
     # Enable CORS for API and flashcard endpoints
     CORS(
         app,
         resources={
-            r"/api/*": {
-                "origins": [
-                    "https://www.hellozenno.com",
-                    "https://hellozenno.com",
-                    "http://localhost:5173",  # SvelteKit local dev
-                    "http://localhost:3000",  # Local Flask dev
-                ]
-            },
+            r"/api/*": {"origins": "*"},  # Allow all origins for API endpoints
+            r"/lang/*/flashcards/*": {
+                "origins": "*"
+            },  # Allow all origins for flashcard endpoints with new URL structure
+            r"/api/lang/*": {
+                "origins": "*"
+            },  # Allow all origins for language-related API endpoints
         },
     )
 
@@ -182,10 +195,10 @@ def create_app():
 
     # Configure WhiteNoise for static file serving
     static_folder = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
+        os.path.dirname(os.path.abspath(__file__)), "../static"
     )
     templates_folder = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
+        os.path.dirname(os.path.abspath(__file__)), "../templates"
     )
 
     # Wrap the WSGI app with WhiteNoise
