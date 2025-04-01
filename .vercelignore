@@ -10,6 +10,7 @@ screenshots/
 .cursor/
 hellozenno-vercel/
 gjdutils/
+scripts/
 
 # Frontend build artifacts
 node_modules/
@@ -53,4 +54,13 @@ htmlcov/
 # Config files not needed for Vercel
 fly.toml
 Dockerfile
-.dockerignore 
+.dockerignore
+
+sveltekit_hz/
+static/
+supabase
+
+api/__pycache__/
+api/logs/
+api/docs/
+
