@@ -1,6 +1,6 @@
 # Frontend Infrastructure
 
-THIS MAY BE OUT OF DATE. WE ARE SWITCHING to `sveltekit_hz` for user-facing code.
+THIS MAY BE OUT OF DATE. WE ARE SWITCHING to `frontend` for user-facing code.
 
 
 
@@ -43,7 +43,7 @@ We combine Svelte & TypeScript with our existing Python Flask application for in
 
 ### Development
 1. Set `FLASK_PORT` environment variable (e.g., 5000)
-2. Run Flask (assume the user has already done this): `source .env.local && ./scripts/local/run_flask.sh`
+2. Run Flask (assume the user has already done this): `source .env.local && ./scripts/local/run_backend.sh`
 3. Run Vite (assume the user has already done this): `source .env.local && ./scripts/local/run_frontend_dev.sh`
 4. Visit `http://localhost:$FLASK_PORT`
 

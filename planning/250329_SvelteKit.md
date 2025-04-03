@@ -34,7 +34,7 @@ We're going to keep Flask for an API (e.g., `views/*_api.py`), but port all user
 ## Plan: Small Stages
 
 Project Setup & Configuration
-- [x] Create SvelteKit project (done: renamed to `sveltekit_hz`)
+- [x] Create SvelteKit project (done: renamed to `frontend`)
 - [x] Configure SvelteKit routes and basic layout structure
 - [x] Setup basic API connection to Flask backend
 - [x] Test a simple API call from SvelteKit to Flask
@@ -56,7 +56,7 @@ API Integration
 - [x] Use backend API for translations and language information
 
 Docs
-- [x] Write up `sveltekit_hz/README.md` in detail
+- [x] Write up `frontend/README.md` in detail
 
 Bootstrap Styling Implementation
 - [x] Setup Bootstrap 5.3.2 with local files (not CDN)
@@ -530,7 +530,7 @@ We've implemented a powerful type-safe route integration system between Flask an
 
 ### Completed:
 
-- [x] Updated Flask's URL registry system to generate TypeScript definitions at `sveltekit_hz/src/lib/generated/routes.ts`
+- [x] Updated Flask's URL registry system to generate TypeScript definitions at `frontend/src/lib/generated/routes.ts`
 - [x] Created type-safe utility functions in SvelteKit:
   - [x] `getApiUrl<T extends RouteName>` for generating typed API URLs
   - [x] `apiFetch<T extends RouteName, R>` for type-safe API requests

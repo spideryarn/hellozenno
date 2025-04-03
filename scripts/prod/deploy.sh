@@ -35,7 +35,7 @@ fi
 
 # 1. Deploy the API
 echo "Deploying API to Vercel..."
-./scripts/prod/deploy_api.sh $([[ "$PREVIEW" == "true" ]] && echo "--preview")
+./scripts/prod/deploy_backend.sh $([[ "$PREVIEW" == "true" ]] && echo "--preview")
 
 # 2. Deploy the Frontend
 echo "Deploying Frontend to Vercel..."

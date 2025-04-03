@@ -9,7 +9,7 @@ see `.cursor/rules/cursor-tools.mdc` for browser automation (i.e. `cursor-tools 
 ## Local Development Logs
 
 ### Flask Logs
-Flask application logs are stored in `logs/flask_app.log` when running the app with `scripts/local/run_flask.sh`.
+Flask application logs are stored in `logs/flask_app.log` when running the app with `scripts/local/run_backend.sh`.
 
 ```bash
 # View latest Flask logs
@@ -35,10 +35,10 @@ tail -f logs/vite_dev.log
 
 ```bash
 # Development mode (default)
-./scripts/local/run_flask.sh
+./scripts/local/run_backend.sh
 
 # Production frontend testing locally
-./scripts/local/run_flask.sh --prod-frontend
+./scripts/local/run_backend.sh --prod-frontend
 ```
 
 ## Vercel Logs

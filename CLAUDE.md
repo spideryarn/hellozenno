@@ -32,17 +32,17 @@ HelloZenno is currently transitioning from a Flask/Jinja/Svelte application to a
   - `migrations/` - Database migration scripts
 
 - **SvelteKit Frontend**
-  - See `sveltekit_hz/README.md` for detailed documentation
+  - See `frontend/README.md` for detailed documentation
   - Documentation for specific aspects:
-    - `sveltekit_hz/docs/SETUP.md` - Installation and development
-    - `sveltekit_hz/docs/STYLING.md` - Bootstrap theming and component usage
-    - `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` - API integration
-    - `sveltekit_hz/docs/SVELTEKIT_ARCHITECTURE.md` - Architecture overview
+    - `frontend/docs/SETUP.md` - Installation and development
+    - `frontend/docs/STYLING.md` - Bootstrap theming and component usage
+    - `frontend/docs/FLASK_API_INTEGRATION.md` - API integration
+    - `frontend/docs/SVELTEKIT_ARCHITECTURE.md` - Architecture overview
   - Structure:
-    - `sveltekit_hz/src/routes/` - SvelteKit routes and pages
-    - `sveltekit_hz/src/lib/components/` - Reusable Svelte components
-    - `sveltekit_hz/src/lib/generated/routes.ts` - Auto-generated API route types
-    - `sveltekit_hz/static/` - Static assets and CSS
+    - `frontend/src/routes/` - SvelteKit routes and pages
+    - `frontend/src/lib/components/` - Reusable Svelte components
+    - `frontend/src/lib/generated/routes.ts` - Auto-generated API route types
+    - `frontend/static/` - Static assets and CSS
 
 - **Legacy Frontend (Svelte + TypeScript + Vite) - Being phased out**
   - Read `FRONTEND_INFRASTRUCTURE.md` before modifying legacy components
@@ -78,17 +78,17 @@ The SvelteKit frontend uses reusable Bootstrap-styled components:
 - `Sentence.svelte` - For sentence display with enhanced text and translations
 - `SourceItem.svelte` - For source listing items
 
-See `sveltekit_hz/docs/STYLING.md` for detailed component usage.
+See `frontend/docs/STYLING.md` for detailed component usage.
 
 #### Type-Safe API Integration
 
 The SvelteKit frontend uses type-safe API integration with the Flask backend:
 
-- Flask generates TypeScript type definitions in `sveltekit_hz/src/lib/generated/routes.ts`
+- Flask generates TypeScript type definitions in `frontend/src/lib/generated/routes.ts`
 - SvelteKit uses the `getApiUrl()` function to generate properly typed API URLs
 - All API endpoints follow a standard structure
 
-See `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` for details.
+See `frontend/docs/FLASK_API_INTEGRATION.md` for details.
 
 ### Browser Testing and Web Search with cursor-tools
 
@@ -209,7 +209,7 @@ psql -d hellozenno_development -P pager=off -A -t -c "SELECT * FROM table;"
 ### Development
 ```bash
 # Run Flask server - the user will always have this running in another terminal
-source .env.local && ./scripts/local/run_flask.sh
+source .env.local && ./scripts/local/run_backend.sh
 
 # Run SvelteKit development server - the user will always have this running in another terminal
 source .env.local && ./scripts/local/run_sveltekit.sh

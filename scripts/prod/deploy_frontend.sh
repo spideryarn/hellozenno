@@ -50,7 +50,7 @@ if ! echo "$ENV_ARGS" | grep -q "VITE_API_URL"; then
 fi
 
 # Change to SvelteKit directory
-cd sveltekit_hz
+cd frontend
 
 # Install dependencies if needed
 if [ ! -d "node_modules" ]; then

@@ -100,9 +100,7 @@ def generate_route_registry(app):
     return routes
 
 
-def generate_typescript_routes(
-    app, output_path="sveltekit_hz/src/lib/generated/routes.ts"
-):
+def generate_typescript_routes(app, output_path="frontend/src/lib/generated/routes.ts"):
     """Generate TypeScript route definitions from Flask app.url_map.
 
     Creates a TypeScript file with route constants, types, and a

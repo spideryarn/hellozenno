@@ -13,7 +13,7 @@
 
 HelloZenno uses a hybrid architecture:
 - **Flask Backend**: Provides all API endpoints (located in `views/*_api.py`)
-- **SvelteKit Frontend**: Handles all user-facing interfaces (located in `sveltekit_hz/src/`)
+- **SvelteKit Frontend**: Handles all user-facing interfaces (located in `frontend/src/`)
 
 The URL Registry ensures type-safe communication between these components.
 
@@ -21,7 +21,7 @@ The URL Registry ensures type-safe communication between these components.
 
 When the Flask app starts in development mode, it auto-generates TypeScript definitions:
 - Routes are extracted from `app.url_map`
-- TypeScript enums and types are written to `sveltekit_hz/src/lib/generated/routes.ts`
+- TypeScript enums and types are written to `frontend/src/lib/generated/routes.ts`
 - The SvelteKit frontend uses these types for API communication
 
 ## SvelteKit Frontend Integration

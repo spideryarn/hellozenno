@@ -10,7 +10,7 @@
 Install dependencies:
 
 ```bash
-cd sveltekit_hz
+cd frontend
 npm install
 ```
 
@@ -28,7 +28,7 @@ npm run dev -- --open
 
 The SvelteKit frontend runs on port 5173 by default (see `run_sveltekit.sh`): http://localhost:5173
 
-The Flask backend should be running separately (see `scripts/local/run_flask.sh`) on port 3000: http://localhost:3000
+The Flask backend should be running separately (see `scripts/local/run_backend.sh`) on port 3000: http://localhost:3000
 
 ## Build for Production
 

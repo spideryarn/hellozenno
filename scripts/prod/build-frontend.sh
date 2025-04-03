@@ -18,7 +18,7 @@ fi
 echo "Building SvelteKit frontend for production..."
 
 # Change to SvelteKit directory
-cd sveltekit_hz
+cd frontend
 
 # Install dependencies if needed
 if [ ! -d "node_modules" ]; then

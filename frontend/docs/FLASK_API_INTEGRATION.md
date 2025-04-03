@@ -43,10 +43,10 @@ The backend API uses `target_language_code` as the parameter name, while SvelteK
 
 ## Flask development server
 
-The Flask development server (`scripts/local/run_flask.sh`):
+The Flask development server (`scripts/local/run_backend.sh`):
 - Is being run by the user separately, on port 3000, and generates logs in `logs/flask_app.log`
-- It generates type definitions for routes in `sveltekit_hz/src/lib/generated/routes.ts`
+- It generates type definitions for routes in `frontend/src/lib/generated/routes.ts`
 
 ## SvelteKit 
 
-For more information on SvelteKit, see `sveltekit_hz/docs/SVELTEKIT_ARCHITECTURE.md`
+For more information on SvelteKit, see `frontend/docs/SVELTEKIT_ARCHITECTURE.md`

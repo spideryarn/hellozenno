@@ -1,6 +1,6 @@
 # Infrastructure & Development Guide
 
-THIS MAY BE OUT OF DATE. WE ARE SWITCHING to `sveltekit_hz` for user-facing code.
+THIS MAY BE OUT OF DATE. WE ARE SWITCHING to `frontend` for user-facing code.
 
 
 

@@ -23,7 +23,7 @@ We need to:
 - **Clear visual feedback** - Add visual indicators for component loading state and errors
 - **Configuration over convention** - Use explicit configuration parameters rather than implicit defaults
 - **Gradual progression** - Start with hard-coded values, test thoroughly, then make more general
-- **Reuse existing scripts** - Extend `run_flask.sh` rather than creating new scripts when possible
+- **Reuse existing scripts** - Extend `run_backend.sh` rather than creating new scripts when possible
 
 ## Current Status and Findings
 
@@ -80,7 +80,7 @@ We've made significant improvements to fix these issues:
 
 ### Stage 1: Update Flask Script to Support Production Testing Mode
 
-- [x] Update `run_flask.sh` to accept command-line parameter for production testing
+- [x] Update `run_backend.sh` to accept command-line parameter for production testing
   - [x] Add parameter parsing for `--prod-frontend` flag
   - [x] Use the flag to set environment variable for production mode
   - [x] Update the help text to explain the new option
@@ -91,7 +91,7 @@ We've made significant improvements to fix these issues:
 - [x] Replace `LOCAL_PROD_TEST` with `LOCAL_CHECK_OF_PROD_FRONTEND`
   - [x] Update `api/index.py` to use the new variable name
   - [x] Update `templates/base_svelte.jinja` to use the new variable name
-  - [x] Remove `scripts/local/test_prod.sh` as it's now redundant with `run_flask.sh --prod-frontend`
+  - [x] Remove `scripts/local/test_prod.sh` as it's now redundant with `run_backend.sh --prod-frontend`
   - [x] Test that all components still work with the new variable name
 
 ### Stage 3: Fix Vite Helper Registration
@@ -201,7 +201,7 @@ The process for testing production builds locally is now simpler:
 
 2. Run Flask with the production frontend flag:
    ```bash
-   ./scripts/local/run_flask.sh --prod-frontend
+   ./scripts/local/run_backend.sh --prod-frontend
    ```
 
 This gives more flexibility to:
@@ -372,7 +372,7 @@ To properly test in production mode, the complete workflow is:
 ./scripts/prod/build-frontend.sh
 
 # Then, run Flask with the production frontend flag
-./scripts/local/run_flask.sh --prod-frontend
+./scripts/local/run_backend.sh --prod-frontend
 ```
 
 The system now fails early and clearly if assets are missing, rather than attempting to use fallbacks which might mask underlying issues. This approach ensures that:

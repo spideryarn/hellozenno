@@ -45,8 +45,8 @@ We're using two separate Vercel projects to cleanly separate the deployments:
    - Will be deployed to `api.hellozenno.com`
 
 2. **SvelteKit Frontend Project**
-   - Code located in the `sveltekit_hz/` directory
-   - Vercel configuration files located in `sveltekit_hz/.vercel/`
+   - Code located in the `frontend/` directory
+   - Vercel configuration files located in `frontend/.vercel/`
    - No `vercel.json` needed (handled by `@sveltejs/adapter-vercel`)
    - Will be deployed to `www.hellozenno.com` and `hellozenno.com`
 
@@ -137,7 +137,7 @@ We're using two separate Vercel projects to cleanly separate the deployments:
      ```
    - Created a new Vercel project:
      ```bash
-     cd sveltekit_hz
+     cd frontend
      vercel
      ```
 
@@ -184,7 +184,7 @@ We're using two separate Vercel projects to cleanly separate the deployments:
 2. **Deploy Flask API to Production**
    - Ready to deploy to production:
      ```bash
-     ./scripts/prod/deploy_api.sh
+     ./scripts/prod/deploy_backend.sh
      ```
 
 3. **Run Final Tests**

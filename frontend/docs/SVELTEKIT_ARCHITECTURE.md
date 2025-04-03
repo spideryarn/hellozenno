@@ -70,17 +70,17 @@ This project represents a transition from a Flask/Jinja/Svelte application to a 
 
 The SvelteKit development server (`scripts/local/run_sveltekit.sh`):
 - Is being run by the user separately, on port 5173, and generates logs in `logs/sveltekit_dev.log`
-- see code in `sveltekit_hz/src`
+- see code in `frontend/src`
 
 
 ## Flask API
 
 The Flask development server:
 - Is being run by the user separately, on port 3000, and generates logs in `logs/flask_app.log`
-- It generates type definitions for routes in `sveltekit_hz/src/lib/generated/routes.ts`
+- It generates type definitions for routes in `frontend/src/lib/generated/routes.ts`
 - see code in `views/`
 
-see `sveltekit_hz/docs/FLASK_API_INTEGRATION.md` for more information.
+see `frontend/docs/FLASK_API_INTEGRATION.md` for more information.
 
 ## SvelteKit State Management
 

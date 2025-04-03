@@ -18,7 +18,7 @@ mv scripts/database/migrate_local.sh scripts/local/migrate.sh
 mv scripts/database/migrations_list.sh scripts/local/migrations_list.sh
 mv scripts/database/initialise_or_wipe_local_postgres.sh scripts/local/init_db.sh
 mv scripts/database/backup_local_db.sh scripts/local/backup_db.sh
-mv scripts/run_local_flask_server.sh scripts/local/run_flask.sh
+mv scripts/run_local_flask_server.sh scripts/local/run_backend.sh
 
 # Utility scripts
 mv scripts/export_envs.sh scripts/utils/

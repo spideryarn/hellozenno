@@ -131,7 +131,7 @@ The backend implementation has been refactored for better code sharing and maint
 The SvelteKit search implementation now includes:
 
 1. **Type Definitions**:
-   - Added comprehensive type definitions in `sveltekit_hz/src/lib/types.ts`
+   - Added comprehensive type definitions in `frontend/src/lib/types.ts`
    - Created interfaces for `SearchMatch`, `SearchResultCategory`, and `SearchResults`
    - Ensures type safety throughout the application
 

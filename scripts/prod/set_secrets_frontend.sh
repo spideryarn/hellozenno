@@ -39,7 +39,7 @@ fi
 echo "Using Frontend Project ID: $FRONTEND_PROJECT_ID"
 
 # Change to SvelteKit directory
-cd sveltekit_hz
+cd frontend
 
 # Add VERCEL=1 environment variable
 echo "Setting VERCEL=1 for Frontend project..."
