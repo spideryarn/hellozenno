@@ -18,9 +18,36 @@ else
     echo "Starting Frontend production deployment..."
 fi
 
-# Set environment variables for Frontend deployment
-echo "Setting Frontend environment variables..."
-./scripts/prod/set_secrets_frontend.sh
+# Build the environment variables command line arguments
+echo "Building environment variables for deployment..."
+ENV_ARGS=""
+if [ -f .env.prod ]; then
+    echo "Loading environment variables from .env.prod..."
+    while IFS= read -r line; do
+        # Skip comments and empty lines
+        [[ $line =~ ^#.*$ ]] && continue
+        [[ -z $line ]] && continue
+        
+        # Extract key and value
+        key=$(echo "$line" | cut -d'=' -f1)
+        value=$(echo "$line" | cut -d'=' -f2-)
+        
+        # Add to environment arguments
+        ENV_ARGS="$ENV_ARGS -e $key=\"$value\""
+        
+        # Print environment variables being set
+        echo "Setting environment variable: $key"
+    done < .env.prod
+else
+    echo_error ".env.prod file not found"
+    exit 1
+fi
+
+# Verify VITE_API_URL is included
+if ! echo "$ENV_ARGS" | grep -q "VITE_API_URL"; then
+    echo_error "VITE_API_URL not found in .env.prod"
+    exit 1
+fi
 
 # Change to SvelteKit directory
 cd sveltekit_hz
@@ -31,16 +58,18 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
-# Build is handled by Vercel automatically, no need to build locally
+# echo "ENV_ARGS: $ENV_ARGS"
+# exit 1
 
-# Deploy to Vercel
+
+# Deploy to Vercel with environment variables
 if [[ "$PREVIEW" == "true" ]]; then
     echo "Deploying Frontend to Vercel preview environment..."
-    DEPLOY_CMD="vercel"
+    DEPLOY_CMD="vercel $ENV_ARGS"
     DEPLOY_OUTPUT=$(eval $DEPLOY_CMD)
 else
     echo "Deploying Frontend to Vercel production..."
-    DEPLOY_CMD="vercel --prod"
+    DEPLOY_CMD="vercel --prod $ENV_ARGS"
     DEPLOY_OUTPUT=$(eval $DEPLOY_CMD)
     
     # Run health checks for production deployment

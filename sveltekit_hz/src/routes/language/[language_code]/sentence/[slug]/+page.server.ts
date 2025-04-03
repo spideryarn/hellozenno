@@ -1,14 +1,18 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
+import { getApiUrl } from "$lib/api";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
     const { language_code, slug } = params;
 
     try {
-        // Fetch sentence data from the Flask API
-        const response = await fetch(
-            `http://localhost:3000/api/lang/sentence/${language_code}/${slug}`,
-        );
+        // Fetch sentence data using type-safe API URL
+        const url = getApiUrl(RouteName.SENTENCE_API_GET_SENTENCE_BY_SLUG_API, {
+            target_language_code: language_code,
+            slug
+        });
+        const response = await fetch(url);
 
         if (!response.ok) {
             throw new Error(

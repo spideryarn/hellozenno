@@ -11,9 +11,7 @@ import type {
     Wordform,
 } from "./types";
 import { resolveRoute, RouteName, type RouteParams } from "./generated/routes";
-
-// Base URL for the Flask API
-const API_BASE_URL = "http://localhost:3000";
+import { API_BASE_URL } from "./config";
 
 /**
  * Type-safe way to build URLs using the route mapping

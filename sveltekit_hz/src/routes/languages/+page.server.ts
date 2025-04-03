@@ -1,12 +1,13 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
+import { getApiUrl } from "$lib/api";
+import { RouteName } from "$lib/generated/routes";
 
 export const load: PageServerLoad = async ({ fetch }) => {
     try {
-        // In server-side code, we need to use the full URL
-        const response = await fetch(
-            "http://localhost:3000/api/lang/languages",
-        );
+        // Use the type-safe getApiUrl function instead of hardcoded URL
+        const url = getApiUrl(RouteName.LANGUAGES_API_GET_LANGUAGES_API, {});
+        const response = await fetch(url);
 
         if (!response.ok) {
             throw new Error(

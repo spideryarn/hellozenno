@@ -2,6 +2,7 @@ import { redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getApiUrl } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
+import { API_BASE_URL } from "$lib/config";
 
 export const GET: RequestHandler = async ({ params, url, fetch }) => {
     const { language_code } = params;
@@ -62,7 +63,7 @@ export const GET: RequestHandler = async ({ params, url, fetch }) => {
 
         // Fix audio URL if present
         if (data.audio_url && data.audio_url.startsWith("/api")) {
-            data.audio_url = `http://localhost:3000${data.audio_url}`;
+            data.audio_url = `${API_BASE_URL}${data.audio_url}`;
             console.log(`Fixed audio URL: ${data.audio_url}`);
         }
 
