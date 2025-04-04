@@ -8,17 +8,20 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
     const target_language_code = language_code;
 
     try {
-        // Get sort parameter (default to 'alpha')
-        const sort = url.searchParams.get("sort") || "alpha";
+        // Get sort parameter (default to 'date')
+        const sort = url.searchParams.get("sort") || "date";
 
         // Use the typed API utility for type-safe URL generation
         const apiUrl = getApiUrl(
             RouteName.SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API,
             { target_language_code },
         );
+        
+        // Add the sort parameter to the API URL
+        const apiUrlWithParams = `${apiUrl}?sort=${sort}`;
 
         // Fetch sources data from our API endpoint
-        const sourcesResponse = await fetch(apiUrl);
+        const sourcesResponse = await fetch(apiUrlWithParams);
 
         if (!sourcesResponse.ok) {
             throw new Error(

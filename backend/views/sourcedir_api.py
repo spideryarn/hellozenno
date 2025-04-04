@@ -376,7 +376,7 @@ def get_sourcedirs_for_language_api(target_language_code: str):
     Returns a JSON response with the sourcedirs and related statistics.
     """
     # Get sort parameter from query string (default to 'alpha')
-    sort_by = request.args.get("sort", "alpha")
+    sort_by = request.args.get("sort", "date")
 
     try:
         # Use the utility function to get all data
