@@ -45,4 +45,4 @@ if [[ "$PREVIEW" == "true" ]]; then
     echo_success "Preview deployments completed successfully!"
 else
     echo_success "Production deployments completed successfully!"
-fi 
+fi
