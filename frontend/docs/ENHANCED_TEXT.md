@@ -8,8 +8,8 @@ Enhanced text is a key feature of Hello Zenno that transforms plain sentences in
 
 The enhanced text system processes raw text sentences through several steps:
 
-1. **Word Recognition**: The application analyzes sentences to identify known words and their lemmas (base forms)
-2. **Link Generation**: Recognized words are converted into HTML links that connect to corresponding lemma pages
+1. **Word Recognition**: The application analyzes sentences to identify known words and their forms
+2. **Link Generation**: Recognized words are converted into HTML links that connect to corresponding wordform pages
 3. **Formatting**: The text is formatted with proper paragraph structure, line breaks, and indentation
 4. **Display**: The enhanced text is rendered as HTML in the SvelteKit frontend using Svelte's `{@html}` directive
 
@@ -31,7 +31,7 @@ The function performs the following operations:
 
 1. Normalizes text for consistent pattern matching
 2. Identifies wordforms that appear in the text
-3. Wraps matched words with HTML links: `<a href="/lang/{language_code}/lemma/{lemma}" class="word-link">{word}</a>`
+3. Wraps matched words with HTML links: `<a href="/lang/{language_code}/wordform/{wordform}" class="word-link">{word}</a>`
 4. Formats paragraphs with `<p>` tags and proper indentation
 5. Wraps long lines at approximately 65 characters with `<br>` tags
 
@@ -45,7 +45,7 @@ Original text:
 Enhanced text (simplified):
 ```html
 <p>
- Μπορείς να μεταφέρεις τις φωτογραφίες από την <a href="/lang/el/lemma/κάρτα μνήμης" class="word-link">κάρτα μνήμης</a> στον<br>
+ Μπορείς να μεταφέρεις τις φωτογραφίες από την <a href="/lang/el/wordform/κάρτα μνήμης" class="word-link">κάρτα μνήμης</a> στον<br>
  υπολογιστή;
 </p>
 ```

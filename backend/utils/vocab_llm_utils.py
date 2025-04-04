@@ -450,8 +450,8 @@ def create_interactive_word_links(
     from flask import url_for
     from utils.url_registry import endpoint_for
 
-    # Import the lemma view function for url_for
-    from views.lemma_views import get_lemma_metadata_vw
+    # Import the wordform view function for url_for
+    from views.wordform_views import get_wordform_metadata_vw
 
     # Track which wordforms we actually find in the text
     found_wordforms = set()
@@ -489,13 +489,13 @@ def create_interactive_word_links(
             translation = "; ".join(t for t in translations if t)
             etymology = get_etymology(lemma)
             # Use the original word (with its case) in the link text
-            lemma_url = url_for(
-                endpoint_for(get_lemma_metadata_vw),
+            wordform_url = url_for(
+                endpoint_for(get_wordform_metadata_vw),
                 target_language_code=target_language_code,
-                lemma=lemma,
+                wordform=wf["wordform"],  # Link to the wordform instead of lemma
                 _external=False,
             )
-            return f'<a href="{lemma_url}" class="word-link">{word}</a>'
+            return f'<a href="{wordform_url}" class="word-link">{word}</a>'
         return word
 
     # Sort wordforms by length in descending order to handle overlapping words
