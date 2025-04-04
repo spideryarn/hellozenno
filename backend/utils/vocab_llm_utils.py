@@ -447,6 +447,11 @@ def create_interactive_word_links(
     """
     from utils.store_utils import load_or_generate_lemma_metadata
     from utils.word_utils import ensure_nfc, normalize_text
+    from flask import url_for
+    from utils.url_registry import endpoint_for
+
+    # Import the lemma view function for url_for
+    from views.lemma_views import get_lemma_metadata_vw
 
     # Track which wordforms we actually find in the text
     found_wordforms = set()
@@ -484,7 +489,13 @@ def create_interactive_word_links(
             translation = "; ".join(t for t in translations if t)
             etymology = get_etymology(lemma)
             # Use the original word (with its case) in the link text
-            return f'<a href="/lang/{target_language_code}/lemma/{lemma}" class="word-link">{word}</a>'
+            lemma_url = url_for(
+                endpoint_for(get_lemma_metadata_vw),
+                target_language_code=target_language_code,
+                lemma=lemma,
+                _external=False,
+            )
+            return f'<a href="{lemma_url}" class="word-link">{word}</a>'
         return word
 
     # Sort wordforms by length in descending order to handle overlapping words

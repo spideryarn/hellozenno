@@ -249,6 +249,26 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
         mock_load_or_generate_lemma_metadata,
     )
 
+    # Mock url_for to return a predictable URL
+    def mock_url_for(endpoint, **kwargs):
+        lemma = kwargs.get("lemma", "")
+        target_language_code = kwargs.get("target_language_code", "")
+        return f"/language/{target_language_code}/lemma/{lemma}"
+
+    monkeypatch.setattr(
+        "flask.url_for",
+        mock_url_for,
+    )
+
+    # Mock endpoint_for to return a dummy endpoint
+    def mock_endpoint_for(func):
+        return "lemma_views.get_lemma_metadata_vw"
+
+    monkeypatch.setattr(
+        "utils.url_registry.endpoint_for",
+        mock_endpoint_for,
+    )
+
     # Import ensure_nfc to normalize wordforms
     from utils.word_utils import ensure_nfc
 
@@ -290,11 +310,11 @@ def test_create_interactive_word_links_with_unicode_normalization(monkeypatch):
     assert len(found_wordforms_nfc) == 2
     assert len(found_wordforms_nfd) == 2
 
-    # Check that links are generated correctly with /lang/ prefix
-    assert 'href="/lang/el/lemma/τροφή"' in enhanced_text_nfc
-    assert 'href="/lang/el/lemma/θυμός"' in enhanced_text_nfc
-    assert 'href="/lang/el/lemma/τροφή"' in enhanced_text_nfd
-    assert 'href="/lang/el/lemma/θυμός"' in enhanced_text_nfd
+    # Check that links are generated correctly with the proper prefix
+    assert 'href="/language/el/lemma/τροφή"' in enhanced_text_nfc
+    assert 'href="/language/el/lemma/θυμός"' in enhanced_text_nfc
+    assert 'href="/language/el/lemma/τροφή"' in enhanced_text_nfd
+    assert 'href="/language/el/lemma/θυμός"' in enhanced_text_nfd
 
     # The original form of the word should be preserved in the link text
     assert ">τροφή<" in enhanced_text_nfc
