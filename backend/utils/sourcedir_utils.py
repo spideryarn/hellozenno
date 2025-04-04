@@ -89,6 +89,8 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
     - is_last: bool indicating if this is the last file
     - total_files: total number of files in the directory
     - current_position: 1-based position of current file
+    - prev_slug: slug of the previous file (if any)
+    - next_slug: slug of the next file (if any)
     """
     # Get all sourcefiles ordered by filename (case-insensitive)
     sourcefiles = list(
@@ -99,18 +101,37 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
 
     total_files = len(sourcefiles)
 
+    if total_files == 0:
+        return {
+            "is_first": True,
+            "is_last": True,
+            "total_files": 0,
+            "current_position": 0,
+        }
+
     try:
+        # Convert to slugs for easier manipulation
+        slugs = [sf.slug for sf in sourcefiles]
+
         # Find the current file's position in the ordered list
-        current_position = next(
-            i + 1 for i, sf in enumerate(sourcefiles) if sf.slug == sourcefile_slug
+        current_index = slugs.index(sourcefile_slug)
+        current_position = current_index + 1
+
+        # Determine previous and next slugs
+        prev_slug = slugs[current_index - 1] if current_index > 0 else None
+        next_slug = (
+            slugs[current_index + 1] if current_index < total_files - 1 else None
         )
+
         return {
             "is_first": current_position == 1,
             "is_last": current_position == total_files,
             "total_files": total_files,
             "current_position": current_position,
+            "prev_slug": prev_slug,
+            "next_slug": next_slug,
         }
-    except StopIteration:
+    except (ValueError, IndexError):
         # File not found
         return {
             "is_first": True,

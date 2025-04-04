@@ -3,6 +3,7 @@
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { MetadataCard } from '$lib';
+  import { goto } from '$app/navigation';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -21,6 +22,11 @@
   
   function editDescription() {
     isEditingDescription = true;
+  }
+  
+  // Helper function for navigation
+  function navigateTo(url: string) {
+    window.location.href = url;
   }
   
   async function saveDescription() {
@@ -271,7 +277,7 @@
     </li>
     {#if sourcefile.text_target}
       <li class="button-group">
-        <a href="/flashcard/{language_code}/{sourcefile_slug}" class="button">
+        <a href="/language/{language_code}/flashcards?sourcefile={sourcefile_slug}" class="button">
           Practice Flashcards
         </a>
       </li>
@@ -280,7 +286,11 @@
       {#if navigation.is_first}
         <span class="button disabled">Prev</span>
       {:else}
-        <a href="/language/{language_code}/source/{sourcedir_slug}/{navigation.prev_slug}" class="button">
+        <a 
+          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.prev_slug}" 
+          class="button"
+          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.prev_slug}/text`)}
+        >
           Prev
         </a>
       {/if}
@@ -292,7 +302,11 @@
       {#if navigation.is_last}
         <span class="button disabled">Next</span>
       {:else}
-        <a href="/language/{language_code}/source/{sourcedir_slug}/{navigation.next_slug}" class="button">
+        <a 
+          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.next_slug}" 
+          class="button"
+          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.next_slug}/text`)}
+        >
           Next
         </a>
       {/if}
