@@ -35,6 +35,8 @@ export interface Navigation {
     is_last: boolean;
     prev_slug?: string;
     next_slug?: string;
+    first_slug?: string;
+    last_slug?: string;
 }
 
 export interface Stats {

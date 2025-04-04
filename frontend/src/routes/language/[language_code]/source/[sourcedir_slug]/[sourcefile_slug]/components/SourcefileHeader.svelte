@@ -284,6 +284,18 @@
     {/if}
     <li class="navigation-buttons">
       {#if navigation.is_first}
+        <span class="button disabled">First</span>
+      {:else}
+        <a 
+          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.first_slug}" 
+          class="button"
+          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.first_slug}/text`)}
+        >
+          First
+        </a>
+      {/if}
+      
+      {#if navigation.is_first}
         <span class="button disabled">Prev</span>
       {:else}
         <a 
@@ -308,6 +320,18 @@
           on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.next_slug}/text`)}
         >
           Next
+        </a>
+      {/if}
+
+      {#if navigation.is_last}
+        <span class="button disabled">Last</span>
+      {:else}
+        <a 
+          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.last_slug}" 
+          class="button"
+          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.last_slug}/text`)}
+        >
+          Last
         </a>
       {/if}
       
