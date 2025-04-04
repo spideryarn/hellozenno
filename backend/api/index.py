@@ -50,12 +50,7 @@ def setup_route_registry(app, static_folder):
 
         # In development mode, generate TypeScript routes file
         if not app.config["IS_PRODUCTION"]:
-            # Create directory for SvelteKit routes
-            ts_output_path = "frontend/src/lib/generated/routes.ts"
-            os.makedirs(os.path.dirname(ts_output_path), exist_ok=True)
-
-            # Generate TypeScript routes
-            generate_typescript_routes(app, ts_output_path)
+            ts_output_path = generate_typescript_routes(app)
             logger.info(f"Generated TypeScript routes at {ts_output_path}")
 
     return route_registry
