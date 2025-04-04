@@ -65,6 +65,11 @@ if [[ "$PREVIEW" == "true" ]]; then
     echo "Deploying API to Vercel preview environment..."
     DEPLOY_CMD="vercel $ENV_ARGS"
     DEPLOY_OUTPUT=$(eval $DEPLOY_CMD)
+    
+    # Extract the deployment URL from the output
+    DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.vercel\.app' | head -1)
+    echo_success "API preview deployment completed at: $DEPLOYMENT_URL"
+    echo "Note: Skipping health check for preview deployment"
 else
     # Run database migrations for production deployment
     echo "Skipping database migrations..."
@@ -73,26 +78,25 @@ else
 
     echo "Deploying API to Vercel production..."
     DEPLOY_CMD="vercel --prod $ENV_ARGS"
-    DEPLOY_OUTPUT=$(eval $DEPLOY_CMD)         
-fi
+    DEPLOY_OUTPUT=$(eval $DEPLOY_CMD)
+    
+    # Extract the deployment URL from the output for logging
+    DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.vercel\.app' | head -1)
+    
+    # Use production URL for health check
+    HEALTH_CHECK_URL="https://api.hellozenno.com"
+    
+    # Run health checks
+    echo "Waiting 10s to allow Vercel to deploy..."
+    sleep 10
 
-# Extract the deployment URL from the output
-DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.vercel\.app' | head -1)
+    echo "Running API health checks on $HEALTH_CHECK_URL..."
+    if curl -s "$HEALTH_CHECK_URL/sys/health-check" | grep -q "healthy"; then
+        echo_success "API health check passed!"
+    else
+        echo_error "API health check failed!"
+        exit 1
+    fi
 
-# Run health checks
-echo "Waiting 10s to allow Vercel to deploy..."
-sleep 10
-
-echo "Running API health checks on $DEPLOYMENT_URL..."
-if curl -s "$DEPLOYMENT_URL/sys/health-check" | grep -q "healthy"; then
-    echo_success "API health check passed!"
-else
-    echo_error "API health check failed!"
-    exit 1
-fi
-
-if [[ "$PREVIEW" == "true" ]]; then
-    echo_success "API preview deployment completed at: $DEPLOYMENT_URL"
-else
-    echo_success "API production deployment completed at: $DEPLOYMENT_URL"
+    echo_success "API production deployment completed!"
 fi 

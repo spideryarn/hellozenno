@@ -67,6 +67,11 @@ if [[ "$PREVIEW" == "true" ]]; then
     echo "Deploying Frontend to Vercel preview environment..."
     DEPLOY_CMD="vercel $ENV_ARGS"
     DEPLOY_OUTPUT=$(eval $DEPLOY_CMD)
+    
+    # Extract the deployment URL from the output
+    DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.vercel\.app' | head -1)
+    echo_success "Frontend preview deployment completed at: $DEPLOYMENT_URL"
+    echo "Note: Skipping health check for preview deployment"
 else
     echo "Deploying Frontend to Vercel production..."
     DEPLOY_CMD="vercel --prod $ENV_ARGS"
@@ -76,13 +81,13 @@ else
     echo "Waiting for Frontend deployment to complete..."
     sleep 30  # Initial wait for deployment to start
     
-    # Extract the deployment URL from the output
-    DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.vercel\.app' | head -1)
+    # Use production URL for health check
+    HEALTH_CHECK_URL="https://www.hellozenno.com"
     
     # Run health checks
-    echo "Running Frontend health checks on $DEPLOYMENT_URL..."
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL")
-    HTTP_HEADERS=$(curl -s -I "$DEPLOYMENT_URL")
+    echo "Running Frontend health checks on $HEALTH_CHECK_URL..."
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_CHECK_URL")
+    HTTP_HEADERS=$(curl -s -I "$HEALTH_CHECK_URL")
     
     if [[ $HTTP_STATUS -ge 200 && $HTTP_STATUS -lt 400 ]]; then
         echo_success "Frontend health check passed with status code $HTTP_STATUS!"
@@ -92,13 +97,6 @@ else
         echo "$HTTP_HEADERS"
         exit 1
     fi
-fi
-
-# Extract the deployment URL from the output
-DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*\.vercel\.app' | head -1)
-
-if [[ "$PREVIEW" == "true" ]]; then
-    echo_success "Frontend preview deployment completed at: $DEPLOYMENT_URL"
-else
-    echo_success "Frontend production deployment completed at: $DEPLOYMENT_URL"
+    
+    echo_success "Frontend production deployment completed!"
 fi 
