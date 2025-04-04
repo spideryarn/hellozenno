@@ -50,10 +50,13 @@
 <style>
   .text-content {
     margin-bottom: 2rem;
+    max-width: 100%;
+    padding: 0;
   }
   
   .enhanced-text {
     line-height: 1.6;
+    max-width: 65ch; /* Ensure maximum of ~65 characters per line for readability */
   }
   
   .enhanced-text :global(a.word-link) {
@@ -66,9 +69,16 @@
     background-color: rgba(76, 173, 83, 0.1);
   }
   
+  /* Adjust spacing for enhanced text paragraphs */
+  .enhanced-text :global(p) {
+    margin-bottom: 1rem;
+    padding: 0;
+  }
+  
   .plain-text p {
     margin-bottom: 1rem;
     line-height: 1.6;
+    max-width: 65ch;
   }
   
   .translation-header {
@@ -91,10 +101,21 @@
   .translated-text p {
     margin-bottom: 1rem;
     line-height: 1.6;
+    max-width: 65ch;
   }
   
   .no-content {
     color: #666;
     font-style: italic;
+  }
+  
+  /* Responsive styling for different screen sizes */
+  @media (max-width: 768px) {
+    .text-content,
+    .enhanced-text,
+    .plain-text p,
+    .translated-text p {
+      padding: 0 5px; /* Minimal padding on mobile */
+    }
   }
 </style> 

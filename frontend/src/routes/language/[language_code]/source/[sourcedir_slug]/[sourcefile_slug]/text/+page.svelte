@@ -20,80 +20,90 @@
   <title>{sourcefile.filename} | {sourcedir.path}</title>
 </svelte:head>
 
-<div class="container py-4">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
-      <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
-      <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
-      <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Text</li>
-    </ol>
-  </nav>
-  
-  <SourcefileHeader 
-    {sourcefile}
-    {sourcedir}
-    {metadata}
-    {navigation}
-    {stats}
-    {language_code}
-    {sourcedir_slug}
-    {sourcefile_slug}
-  />
-  
-  <div class="tabs mb-4">
-    <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text" class="tab active">Text</a>
-    <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/words" class="tab">
-      Words <small>({stats.wordforms_count || wordsData.wordforms.length || 0})</small>
-    </a>
-    <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/phrases" class="tab">
-      Phrases <small>({stats.phrases_count || phrasesData.phrases.length || 0})</small>
-    </a>
+<div class="container-fluid text-container">
+  <div class="row">
+    <div class="col-lg-10 col-md-11 col-sm-12 mx-auto px-md-4 px-2">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
+          <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
+          <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
+          <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Text</li>
+        </ol>
+      </nav>
+      
+      <SourcefileHeader 
+        {sourcefile}
+        {sourcedir}
+        {metadata}
+        {navigation}
+        {stats}
+        {language_code}
+        {sourcedir_slug}
+        {sourcefile_slug}
+      />
+      
+      <div class="tabs">
+        <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text" class="tab active">
+          Text
+        </a>
+        <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/words" class="tab">
+          Words ({stats.wordforms_count})
+        </a>
+        <a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/phrases" class="tab">
+          Phrases ({stats.phrases_count})
+        </a>
+      </div>
+      
+      <SourcefileText 
+        {sourcefile}
+        enhanced_text={sourcefile.enhanced_text}
+        text_target={sourcefile.text_target}
+        text_english={sourcefile.text_english}
+      />
+    </div>
   </div>
-
-  <SourcefileText 
-    {sourcefile}
-    enhanced_text={sourcefile.enhanced_text}
-    text_target={sourcefile.text_target}
-    text_english={sourcefile.text_english}
-  />
 </div>
 
 <style>
-  .breadcrumb {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    margin-bottom: 1.5rem;
+  .text-container {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  /* Increase content width and reduce margins */
+  @media (min-width: 992px) {
+    .text-container .row > div {
+      max-width: 90%;
+    }
+  }
+  
+  /* For mobile devices, maximize content width */
+  @media (max-width: 768px) {
+    .text-container .row > div {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
   }
   
   .tabs {
     display: flex;
-    margin: 1.5rem 0 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #dee2e6;
   }
   
   .tab {
-    padding: 0.75rem 1.25rem;
-    margin-right: 0.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: none;
-    border-radius: 4px 4px 0 0;
+    padding: 0.5rem 1rem;
     text-decoration: none;
-    background-color: rgba(255, 255, 255, 0.03);
-    color: var(--bs-secondary, #6c757d);
-    transition: all 0.2s ease;
-  }
-  
-  .tab:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    color: #212529;
+    border-bottom: 2px solid transparent;
   }
   
   .tab.active {
-    background-color: var(--bs-primary, #4CAD53);
-    color: white;
-    border-color: var(--bs-primary, #4CAD53);
+    color: #4CAD53;
+    border-bottom: 2px solid #4CAD53;
+    font-weight: bold;
   }
 </style> 

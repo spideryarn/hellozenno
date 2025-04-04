@@ -4,6 +4,20 @@
   import { RouteName } from '$lib/generated/routes';
   import { MetadataCard } from '$lib';
   import { goto } from '$app/navigation';
+  import { 
+    CaretDoubleLeft, 
+    CaretDoubleRight, 
+    CaretLeft, 
+    CaretRight, 
+    ArrowUp, 
+    PencilSimple, 
+    Trash, 
+    Image, 
+    Download,
+    FileText,
+    SpeakerHigh,
+    MusicNotes
+  } from 'phosphor-svelte';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -174,15 +188,15 @@
   function getSourcefileTypeIcon(type: string) {
     switch (type) {
       case 'text':
-        return '📄';
+        return FileText;
       case 'image':
-        return '🖼️';
+        return Image;
       case 'audio':
-        return '🔊';
+        return SpeakerHigh;
       case 'youtube_audio':
-        return '🎵';
+        return MusicNotes;
       default:
-        return '📄';
+        return FileText;
     }
   }
 
@@ -209,14 +223,20 @@
 <div class="header-container">
   <div class="header-content">
     <h1>
-      <span class="file-icon">{getSourcefileTypeIcon(sourcefile.sourcefile_type)}</span>
+      <span class="file-icon">
+        {#if typeof getSourcefileTypeIcon(sourcefile.sourcefile_type) === 'string'}
+          {getSourcefileTypeIcon(sourcefile.sourcefile_type)}
+        {:else}
+          <svelte:component this={getSourcefileTypeIcon(sourcefile.sourcefile_type)} size={24} />
+        {/if}
+      </span>
       {sourcefile.filename}
       <button on:click={renameSourcefile} class="button small-button">
-        <i class="fas fa-edit"></i> Rename
+        <PencilSimple size={16} weight="bold" /> Rename
       </button>
-      <div class="icon-delete-wrapper" on:click={deleteSourcefile} style="display: inline-block; cursor: pointer;">
-        <span class="delete-button">🗑️ Delete</span>
-      </div>
+      <button on:click={deleteSourcefile} class="button delete-button small-button">
+        <Trash size={16} weight="bold" /> Delete
+      </button>
     </h1>
   </div>
   <div class="metadata-container">
@@ -242,7 +262,7 @@
       {/if}
     </div>
     <button on:click={editDescription} class="button small-button">
-      <i class="fas fa-edit"></i> Edit
+      <PencilSimple size={16} weight="bold" /> Edit
     </button>
   {/if}
 </div>
@@ -252,14 +272,14 @@
     <li class="button-group">
       {#if sourcefile.sourcefile_type === "image"}
         <a href={viewUrl} class="button">
-          View image
+          <Image size={16} weight="bold" /> View image
         </a>
         <a href={downloadUrl} class="button">
-          Download image
+          <Download size={16} weight="bold" /> Download image
         </a>
       {:else if sourcefile.sourcefile_type === "audio" || sourcefile.sourcefile_type === "youtube_audio"}
         <a href={downloadUrl} class="button">
-          Download audio
+          <Download size={16} weight="bold" /> Download audio
         </a>
       {/if}
     </li>
@@ -284,54 +304,62 @@
     {/if}
     <li class="navigation-buttons">
       {#if navigation.is_first}
-        <span class="button disabled">First</span>
+        <span class="button disabled">
+          <CaretDoubleLeft size={16} weight="bold" />
+        </span>
       {:else}
         <a 
           href="/language/{language_code}/source/{sourcedir_slug}/{navigation.first_slug}" 
           class="button"
           on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.first_slug}/text`)}
         >
-          First
+          <CaretDoubleLeft size={16} weight="bold" />
         </a>
       {/if}
       
       {#if navigation.is_first}
-        <span class="button disabled">Prev</span>
+        <span class="button disabled">
+          <CaretLeft size={16} weight="bold" />
+        </span>
       {:else}
         <a 
           href="/language/{language_code}/source/{sourcedir_slug}/{navigation.prev_slug}" 
           class="button"
           on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.prev_slug}/text`)}
         >
-          Prev
+          <CaretLeft size={16} weight="bold" />
         </a>
       {/if}
       
       <a href="/language/{language_code}/source/{sourcedir_slug}" class="button">
-        Up
+        <ArrowUp size={16} weight="bold" />
       </a>
       
       {#if navigation.is_last}
-        <span class="button disabled">Next</span>
+        <span class="button disabled">
+          <CaretRight size={16} weight="bold" />
+        </span>
       {:else}
         <a 
           href="/language/{language_code}/source/{sourcedir_slug}/{navigation.next_slug}" 
           class="button"
           on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.next_slug}/text`)}
         >
-          Next
+          <CaretRight size={16} weight="bold" />
         </a>
       {/if}
 
       {#if navigation.is_last}
-        <span class="button disabled">Last</span>
+        <span class="button disabled">
+          <CaretDoubleRight size={16} weight="bold" />
+        </span>
       {:else}
         <a 
           href="/language/{language_code}/source/{sourcedir_slug}/{navigation.last_slug}" 
           class="button"
           on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.last_slug}/text`)}
         >
-          Last
+          <CaretDoubleRight size={16} weight="bold" />
         </a>
       {/if}
       
@@ -365,6 +393,8 @@
   
   .file-icon {
     font-size: 1.5rem;
+    display: flex;
+    align-items: center;
   }
   
   .button {
@@ -375,6 +405,9 @@
     text-decoration: none;
     border: none;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
   }
   
   .button:disabled {
@@ -390,6 +423,10 @@
   .button.disabled {
     background-color: #ccc;
     cursor: not-allowed;
+  }
+  
+  .delete-button {
+    background-color: #d9534f;
   }
   
   .description-container {
@@ -444,11 +481,6 @@
   
   .file-position {
     margin-left: 0.5rem;
-  }
-  
-  .delete-button {
-    color: #d9534f;
-    font-size: 0.9rem;
   }
   
   .error-message {
