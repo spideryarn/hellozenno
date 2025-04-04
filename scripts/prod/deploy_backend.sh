@@ -22,7 +22,11 @@ fi
 
 # Generate TypeScript route definitions for the frontend to use
 echo "Generating TypeScript route definitions..."
-FLASK_APP=api.index flask generate-routes-ts
+# Change back to root directory before generating routes
+cd ..
+FLASK_APP=backend/api/index.py flask generate-routes-ts
+# Go back to backend directory
+cd backend
 
 # Run pre-deployment checks for production
 if [[ "$PREVIEW" == "false" ]]; then

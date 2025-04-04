@@ -100,7 +100,7 @@ def generate_route_registry(app):
     return routes
 
 
-def generate_typescript_routes(app, output_path="frontend/src/lib/generated/routes.ts"):
+def generate_typescript_routes(app, output_path=None):
     """Generate TypeScript route definitions from Flask app.url_map.
 
     Creates a TypeScript file with route constants, types, and a
@@ -115,6 +115,11 @@ def generate_typescript_routes(app, output_path="frontend/src/lib/generated/rout
     """
     import re
     import os
+
+    if output_path is None:
+        # Use absolute path to ensure the file is always generated in the same location
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        output_path = os.path.join(project_root, "frontend/src/lib/generated/routes.ts")
 
     with app.app_context():
         routes = generate_route_registry(app)
