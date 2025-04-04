@@ -67,14 +67,14 @@ def get_flashcard_landing_data(
         "sourcefile": (
             {
                 "slug": sourcefile_entry.slug,
-                "name": sourcefile_entry.name,
+                "name": sourcefile_entry.filename,
                 "sourcedir_slug": sourcefile_entry.sourcedir.slug,
             }
             if sourcefile_entry
             else None
         ),
         "sourcedir": (
-            {"slug": sourcedir_entry.slug, "name": sourcedir_entry.name}
+            {"slug": sourcedir_entry.slug, "name": sourcedir_entry.path}
             if sourcedir_entry
             else None
         ),
@@ -170,14 +170,14 @@ def get_flashcard_sentence_data(
     if sourcefile_entry:
         response_data["sourcefile"] = {
             "slug": sourcefile_entry.slug,
-            "name": sourcefile_entry.name,
+            "name": sourcefile_entry.filename,
             "sourcedir_slug": sourcefile_entry.sourcedir.slug,
         }
         response_data["metadata"]["sourcefile"] = sourcefile_entry.slug
     if sourcedir_entry:
         response_data["sourcedir"] = {
             "slug": sourcedir_entry.slug,
-            "name": sourcedir_entry.name,
+            "name": sourcedir_entry.path,
         }
         response_data["metadata"]["sourcedir"] = sourcedir_entry.slug
 
