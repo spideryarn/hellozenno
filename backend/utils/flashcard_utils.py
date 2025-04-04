@@ -155,7 +155,7 @@ def get_flashcard_sentence_data(
         "translation": sentence.translation,
         "lemma_words": sentence.lemma_words,
         "audio_url": url_for(
-            "sentence_get_sentence_audio_api",
+            "sentence_api.get_sentence_audio_api",
             target_language_code=language_code,
             sentence_id=sentence.id,
         ),
