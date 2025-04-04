@@ -81,10 +81,15 @@ else
     
     # Run health checks
     echo "Running Frontend health checks on $DEPLOYMENT_URL..."
-    if curl -s "$DEPLOYMENT_URL" -I | grep -q "200 OK"; then
-        echo_success "Frontend health check passed!"
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL")
+    HTTP_HEADERS=$(curl -s -I "$DEPLOYMENT_URL")
+    
+    if [[ $HTTP_STATUS -ge 200 && $HTTP_STATUS -lt 400 ]]; then
+        echo_success "Frontend health check passed with status code $HTTP_STATUS!"
     else
-        echo_error "Frontend health check failed!"
+        echo_error "Frontend health check failed! Status code: $HTTP_STATUS"
+        echo "Response headers:"
+        echo "$HTTP_HEADERS"
         exit 1
     fi
 fi
