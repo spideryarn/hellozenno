@@ -12,7 +12,7 @@
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;
   export let language_name: string;
-  export let activeTab: 'text' | 'words' | 'phrases';
+  export let activeTab: 'text' | 'words' | 'phrases' | 'translation';
   
   // Set up tabs for navigation
   $: tabs = [
@@ -20,6 +20,11 @@
       label: 'Text',
       href: `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}/text`,
       active: activeTab === 'text'
+    },
+    {
+      label: 'Translation',
+      href: `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}/translation`,
+      active: activeTab === 'translation'
     },
     {
       label: 'Words',

@@ -122,6 +122,7 @@ For detailed API integration information, see [Flask API Integration](./BACKEND_
 - [Architecture](./FRONTEND_SVELTEKIT_ARCHITECTURE.md) - SvelteKit architecture details
 - [Setup and Development](./SETUP.md) - Development instructions
 - [UI and Styling](./STYLING.md) - Component styling information
+- [Sourcefile Pages](./SOURCEFILE_PAGES.md) - Detailed structure of sourcefile pages and tabs
 
 ## URL Structure
 

@@ -5,12 +5,6 @@
   export let enhanced_text: string | null = null;
   export let text_target: string | null = null;
   export let text_english: string | null = null;
-  
-  // State for translation collapse/expand
-  let isTranslationExpanded = false;
-  
-  // Split the translation into paragraphs if available
-  $: translationParagraphs = text_english ? text_english.split('\n\n') : [];
 </script>
 
 <div class="text-content">
@@ -31,21 +25,6 @@
     <p class="no-content">No text available</p>
   {/if}
 </div>
-
-<details bind:open={isTranslationExpanded}>
-  <summary><h2 class="translation-header">Translation</h2></summary>
-  <div class="translated-text">
-    {#if text_english}
-      {#each translationParagraphs as paragraph}
-        {#if paragraph}
-          <p>{paragraph}</p>
-        {/if}
-      {/each}
-    {:else}
-      <p class="no-content"><em>No translation available</em></p>
-    {/if}
-  </div>
-</details>
 
 <style>
   .text-content {
@@ -81,29 +60,6 @@
     max-width: 65ch;
   }
   
-  .translation-header {
-    display: inline;
-    margin: 0;
-    font-size: 1.5rem;
-  }
-  
-  summary {
-    cursor: pointer;
-    margin-bottom: 1rem;
-  }
-  
-  .translated-text {
-    padding: 1rem;
-    background-color: rgba(0, 0, 0, 0.03);
-    border-radius: 4px;
-  }
-  
-  .translated-text p {
-    margin-bottom: 1rem;
-    line-height: 1.6;
-    max-width: 65ch;
-  }
-  
   .no-content {
     color: #666;
     font-style: italic;
@@ -113,8 +69,7 @@
   @media (max-width: 768px) {
     .text-content,
     .enhanced-text,
-    .plain-text p,
-    .translated-text p {
+    .plain-text p {
       padding: 0 5px; /* Minimal padding on mobile */
     }
   }
