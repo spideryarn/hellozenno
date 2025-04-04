@@ -68,7 +68,7 @@ def test_typescript_routes_match_flask_routes(client):
     app = client.application
 
     # Path to the TypeScript routes file
-    ts_file_path = os.path.join(app.static_folder, "js", "generated", "routes.ts")
+    ts_file_path = "frontend/src/lib/generated/routes.ts"
 
     # Skip the test if the file doesn't exist (e.g., in CI environments)
     if not os.path.exists(ts_file_path):

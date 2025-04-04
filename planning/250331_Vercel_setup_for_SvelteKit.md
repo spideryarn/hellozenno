@@ -1,7 +1,7 @@
 # Vercel Deployment Strategy for Hello Zenno: Flask API + SvelteKit Frontend
 
 This document outlines our deployment strategy for the Hello Zenno application, which consists of:
-- Flask API backend (currently deployed on Vercel as `hz_api` project) - will move to `api.hellozenno.com`
+- Flask API backend (currently deployed on Vercel as `hz_backend` project) - will move to `api.hellozenno.com`
 - SvelteKit frontend (to be deployed on Vercel as `hz_frontend`) - will take over `www.hellozenno.com` and redirected from the apex domain
 
 We have no users, so we don't care about backwards compatibility.
