@@ -2,7 +2,7 @@
   import type { PageData } from './$types';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import { Spinner, Trash } from 'phosphor-svelte';
+  import { Spinner, Trash, ArrowUp } from 'phosphor-svelte';
   import { onMount } from 'svelte';
   
   export let data: PageData;
@@ -396,7 +396,12 @@
           </select>
         </div>
         
-        <div>
+        <div class="d-flex gap-2">
+          <a href="/language/{language_code}/sources" 
+             class="btn btn-outline-secondary"
+             title="Back to Sources">
+            <ArrowUp size={16} weight="bold" class="me-1" /> Up
+          </a>
           <a href="/language/{language_code}/flashcards?sourcedir={sourcedir.slug}" 
              class="btn btn-primary {!has_vocabulary ? 'disabled' : ''}"
              title={!has_vocabulary ? 'No vocabulary found' : ''}>
