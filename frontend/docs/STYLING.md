@@ -74,6 +74,23 @@ Custom CSS classes for consistent styling:
      </div>
      ```
 
+4. Form elements and focus management:
+   - Avoid using `autofocus` attribute as it can be disruptive for screen reader users
+   - Instead, use the `use:focusOnMount` action from Svelte or focus elements programmatically
+   - Example:
+     ```svelte
+     <!-- Instead of this -->
+     <input autofocus />
+     
+     <!-- Use this -->
+     <script>
+       import { onMount } from 'svelte';
+       let input;
+       onMount(() => input.focus());
+     </script>
+     <input bind:this={input} />
+     ```
+
 ## How to Use
 
 1. Import components directly from `$lib`:

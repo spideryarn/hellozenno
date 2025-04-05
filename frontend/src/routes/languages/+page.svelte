@@ -88,7 +88,6 @@
             placeholder="Search languages..." 
             bind:value={searchQuery}
             bind:this={searchInput}
-            autofocus
             class="search-input"
           />
           <button type="submit" class="search-icon" aria-label="Search">
@@ -389,22 +388,7 @@
     gap: 1rem;
   }
   
-  .language-card {
-    height: 130px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, rgba(18, 18, 18, 0.8) 0%, rgba(32, 32, 32, 0.8) 100%);
-    backdrop-filter: blur(5px);
-  }
-  
-  .language-card:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, rgba(25, 25, 25, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%);
-  }
+  /* Card styling is managed in the Card component */
   
   .card-background-letter {
     position: absolute;
@@ -418,7 +402,7 @@
     transition: opacity 0.3s ease, transform 0.3s ease;
   }
   
-  .language-card:hover .card-background-letter {
+  :global(.card:hover) .card-background-letter {
     opacity: 0.3;
     transform: scale(1.1);
   }
@@ -490,7 +474,7 @@
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
     
-    .language-card {
+    :global(.languages-grid .card) {
       height: 110px;
     }
     
@@ -516,7 +500,7 @@
       gap: 0.8rem;
     }
     
-    .language-card {
+    :global(.languages-grid .card) {
       height: 100px;
     }
     
