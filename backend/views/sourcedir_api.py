@@ -438,6 +438,7 @@ def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str
             "sourcefiles": result["sourcefiles"],
             "language_name": result["target_language_name"],
             "has_vocabulary": result["has_vocabulary"],
+            "supported_languages": result["supported_languages"],
         }
 
         return jsonify(response)

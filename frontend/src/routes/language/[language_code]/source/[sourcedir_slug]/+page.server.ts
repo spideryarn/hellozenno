@@ -25,6 +25,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         }
 
         const data = await response.json();
+        console.log("API response data:", data);
+
+        // Default fallback for supported languages if not provided
+        const supported_languages = data.supported_languages || [
+            { code: language_code, name: data.language_name }
+        ];
 
         return {
             sourcedir: data.sourcedir,
@@ -32,6 +38,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             language_code,
             language_name: data.language_name,
             has_vocabulary: data.has_vocabulary,
+            supported_languages,
         };
     } catch (err: unknown) {
         console.error("Error loading sourcedir:", err);
