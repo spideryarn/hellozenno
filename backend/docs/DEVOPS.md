@@ -6,8 +6,8 @@ This document provides an overview of the infrastructure, deployment processes, 
 
 Hello Zenno uses a dual-architecture approach:
 
-1. **Flask API Backend** - Located in `/backend/api`, deployed to `api.hellozenno.com`
-2. **SvelteKit Frontend** - Located in `/frontend`, deployed to `www.hellozenno.com`
+1. **Flask API Backend** - Located in `backend/api/index.py` and `backend/views/*_api.py`, deployed to `api.hellozenno.com`
+2. **SvelteKit Frontend** - Located in `frontend/`, deployed to `www.hellozenno.com`
 
 For more detailed information on the architecture:
 - [SvelteKit Architecture](../../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)
