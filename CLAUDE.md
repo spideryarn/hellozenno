@@ -36,8 +36,8 @@ HelloZenno is currently transitioning from a Flask/Jinja/Svelte application to a
   - Documentation for specific aspects:
     - `frontend/docs/SETUP.md` - Installation and development
     - `frontend/docs/STYLING.md` - Bootstrap theming and component usage
-    - `frontend/docs/FLASK_API_INTEGRATION.md` - API integration
-    - `frontend/docs/SVELTEKIT_ARCHITECTURE.md` - Architecture overview
+    - `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md` - API integration
+    - `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` - Architecture overview
   - Structure:
     - `frontend/src/routes/` - SvelteKit routes and pages
     - `frontend/src/lib/components/` - Reusable Svelte components

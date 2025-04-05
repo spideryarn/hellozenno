@@ -10,8 +10,8 @@ Hello Zenno uses a dual-architecture approach:
 2. **SvelteKit Frontend** - Located in `/frontend`, deployed to `www.hellozenno.com`
 
 For more detailed information on the architecture:
-- [SvelteKit Architecture](../../frontend/docs/SVELTEKIT_ARCHITECTURE.md)
-- [Flask API Integration](../../frontend/docs/FLASK_API_INTEGRATION.md)
+- [SvelteKit Architecture](../../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)
+- [Flask API Integration](../../frontend/docs/BACKEND_FLASK_API_INTEGRATION.md)
 - [Vercel Setup Plan](../../planning/250331_Vercel_setup_for_SvelteKit.md)
 - See also: [Database Documentation](../../docs/DATABASE.md) and [Migrations Guide](../../docs/MIGRATIONS.md)
 
@@ -146,4 +146,4 @@ The Flask API automatically generates TypeScript type definitions for all routes
 - Route definitions are stored in `frontend/src/lib/generated/routes.ts`
 - SvelteKit components use these definitions for type-safe API calls
 
-For more details on API integration, see [Flask API Integration](../../frontend/docs/FLASK_API_INTEGRATION.md). 
+For more details on API integration, see [Flask API Integration](../../frontend/docs/BACKEND_FLASK_API_INTEGRATION.md). 

@@ -80,7 +80,7 @@ The Flask development server:
 - It generates type definitions for routes in `frontend/src/lib/generated/routes.ts`
 - see code in `views/`
 
-see `frontend/docs/FLASK_API_INTEGRATION.md` for more information.
+see `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md` for more information.
 
 ## SvelteKit State Management
 

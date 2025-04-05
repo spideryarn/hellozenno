@@ -49,4 +49,4 @@ The Flask development server (`scripts/local/run_backend.sh`):
 
 ## SvelteKit 
 
-For more information on SvelteKit, see `frontend/docs/SVELTEKIT_ARCHITECTURE.md`
+For more information on SvelteKit, see `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`
