@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         }
 
         const data = await response.json();
-        console.log("API response data:", data);
+        // console.log("API response data:", data);
 
         // Default fallback for supported languages if not provided
         const supported_languages = data.supported_languages || [
