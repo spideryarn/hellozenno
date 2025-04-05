@@ -8,6 +8,13 @@ source ./scripts/utils/common.sh
 echo_warning "Skipping API environment variables..."
 # ./scripts/prod/set_secrets_backend.sh
 
+# Check if virtual environment is activated
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo_error "Virtual environment is not activated. Please activate a virtual environment before deploying."
+    exit 1
+fi
+echo_success "Virtual environment is active: $VIRTUAL_ENV"
+
 # Change to api directory
 cd backend
 
