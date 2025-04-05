@@ -504,7 +504,8 @@
           
           <button class="btn btn-sm btn-outline-danger" 
                   on:click={() => deleteSourcefile(file.slug)}
-                  title="Delete this file">
+                  title="Delete this file"
+                  aria-label="Delete file {file.filename}">
             <Trash size={16} weight="bold" />
           </button>
         </div>
@@ -518,13 +519,16 @@
   <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog">
       <div class="modal-content" 
+           role="dialog"
+           aria-labelledby="create-text-modal-title"
+           tabindex="-1"
            on:keydown|stopPropagation={(e) => {
              if (e.key === 'Escape') closeCreateTextModal();
              if (e.key === 'Enter' && e.ctrlKey && textTitle.trim() && textContent.trim() && !isCreatingText) submitCreateText();
            }}>
         <div class="modal-header">
-          <h5 class="modal-title">Create Sourcefile from Text</h5>
-          <button type="button" class="btn-close" on:click={closeCreateTextModal}></button>
+          <h5 class="modal-title" id="create-text-modal-title">Create Sourcefile from Text</h5>
+          <button type="button" class="btn-close" aria-label="Close" on:click={closeCreateTextModal}></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
@@ -574,6 +578,7 @@
       <div class="modal-content"
            role="dialog"
            aria-labelledby="youtube-modal-title"
+           tabindex="-1"
            on:keydown|stopPropagation={(e) => {
              if (e.key === 'Escape') closeYoutubeModal();
              if (e.key === 'Enter' && youtubeUrl.trim() && !isDownloadingYoutube) downloadYoutube();
