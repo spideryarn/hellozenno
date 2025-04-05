@@ -18,7 +18,7 @@ The legacy search implementation is feature-rich and handles a wide range of sea
 
 ### Core Components
 
-- **API Endpoints**: `views/search_api.py`
+- **API Endpoints**: `api/search_api.py`
 - **View Controllers**: `views/search_views.py`
 - **Templates**: `templates/search.jinja`, `templates/translation_search_results.jinja`
 - **Utilities**: `utils/search_utils.py`, `utils/word_utils.py`
@@ -119,7 +119,7 @@ The backend implementation has been refactored for better code sharing and maint
    - Returns a standardized response format with status and data fields
 
 2. **Updated API Endpoints**:
-   - Refactored `get_wordform_metadata_api()` in `views/wordform_api.py` to use the shared utility
+   - Refactored `get_wordform_metadata_api()` in `api/wordform_api.py` to use the shared utility
    - Response format now consistently includes `status` field indicating the type of result
 
 3. **Updated View Functions**:

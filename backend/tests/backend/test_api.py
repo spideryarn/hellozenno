@@ -17,7 +17,7 @@ def test_word_preview(client, fixture_for_testing_db):
         )
 
         # Test existing word
-        from views.wordform_api import word_preview_api
+        from backend.api.wordform_api import word_preview_api
 
         url = build_url_with_query(
             client,
@@ -35,7 +35,7 @@ def test_word_preview(client, fixture_for_testing_db):
         assert "max-age=60" in response.headers["Cache-Control"]
 
         # Test nonexistent word
-        from views.wordform_api import word_preview_api
+        from backend.api.wordform_api import word_preview_api
 
         url = build_url_with_query(
             client,

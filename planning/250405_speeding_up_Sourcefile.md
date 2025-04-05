@@ -120,7 +120,7 @@ The function should:
 - Load wordforms only for "words" or "text" purposes (text tab needs wordforms for enhanced text)
 - Load phrases only for "phrases" purpose
 
-#### 2. Update API Endpoints in `backend/views/sourcefile_api.py`:
+#### 2. Update API Endpoints in `backend/api/sourcefile_api.py`:
 
 Update these functions to use the purpose parameter:
 - `inspect_sourcefile_api`: purpose="basic"
@@ -203,7 +203,7 @@ Frontend                                  Backend                               
   - `get_sourcefile_details()`: The central function that needs to be modified to support purpose-based loading
   - `_get_sourcefile_entry()`: Helper function to retrieve sourcefile entries
 
-- **`backend/views/sourcefile_api.py`**:
+- **`backend/api/sourcefile_api.py`**:
   - `inspect_sourcefile_api()`: Basic info endpoint
   - `inspect_sourcefile_text_api()`: Text tab endpoint
   - `inspect_sourcefile_words_api()`: Words tab endpoint

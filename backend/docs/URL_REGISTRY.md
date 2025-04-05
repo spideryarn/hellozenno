@@ -12,7 +12,7 @@
 ## Architecture Overview
 
 HelloZenno uses a hybrid architecture:
-- **Flask Backend**: Provides all API endpoints (located in `views/*_api.py`)
+- **Flask Backend**: Provides all API endpoints (located in `api/*_api.py`)
 - **SvelteKit Frontend**: Handles all user-facing interfaces (located in `frontend/src/`)
 
 The URL Registry ensures type-safe communication between these components.
