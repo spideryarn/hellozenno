@@ -19,7 +19,7 @@ else
 fi
 
 # Check git status once early to give immediate feedback
-./scripts/git/check_git_status.sh
+# ./scripts/git/check_git_status.sh
 
 # Check if vercel CLI is installed
 if ! command -v vercel &> /dev/null; then
