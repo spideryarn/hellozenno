@@ -1,18 +1,18 @@
 <script lang="ts">
   import type { Sourcefile } from '$lib/types/sourcefile';
+  import EnhancedText from '$lib/components/EnhancedText.svelte';
   
   export let sourcefile: Sourcefile;
   export let enhanced_text: string | null = null;
   export let text_target: string | null = null;
   export let text_english: string | null = null;
+  export let language_code: string;
 </script>
 
 <div class="text-content">
   <h2>Text</h2>
   {#if enhanced_text}
-    <div class="enhanced-text">
-      {@html enhanced_text}
-    </div>
+    <EnhancedText html={enhanced_text} {language_code} />
   {:else if text_target}
     <div class="plain-text">
       {#each text_target.split('\n\n') as paragraph}

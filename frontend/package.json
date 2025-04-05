@@ -54,6 +54,7 @@
 		"vitest": "^3.0.0"
 	},
 	"dependencies": {
-		"phosphor-svelte": "^3.0.1"
+		"phosphor-svelte": "^3.0.1",
+		"tippy.js": "^6.3.7"
 	}
 }
