@@ -1,8 +1,4 @@
 <script lang="ts">
-  // Tell Svelte to ignore unused export warnings for sourcedir and stats
-  /**
-   * @svelte-ignore unused-export-let
-   */
 
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import { getApiUrl } from '$lib/api';
@@ -25,10 +21,10 @@
   } from 'phosphor-svelte';
   
   export let sourcefile: Sourcefile;
-  export let sourcedir: Sourcedir;
+  export const sourcedir: Sourcedir = undefined as unknown as Sourcedir;
   export let metadata: Metadata;
   export let navigation: Navigation;
-  export let stats: Stats;
+  export const stats: Stats = undefined as unknown as Stats;
   export let language_code: string;
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;

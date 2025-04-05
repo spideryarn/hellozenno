@@ -2,10 +2,10 @@
   import type { Sourcefile } from '$lib/types/sourcefile';
   import EnhancedText from '$lib/components/EnhancedText.svelte';
   
-  export let sourcefile: Sourcefile;
+  export const sourcefile: Sourcefile = undefined as unknown as Sourcefile;
   export let enhanced_text: string | null = null;
   export let text_target: string | null = null;
-  export let text_english: string | null = null;
+  export const text_english: string | null = null;
   export let language_code: string;
 </script>
 
@@ -33,27 +33,6 @@
     padding: 0;
   }
   
-  .enhanced-text {
-    line-height: 1.6;
-    max-width: 65ch; /* Ensure maximum of ~65 characters per line for readability */
-  }
-  
-  .enhanced-text :global(a.word-link) {
-    color: #4CAD53;
-    text-decoration: none;
-    border-bottom: 1px dotted #4CAD53;
-  }
-  
-  .enhanced-text :global(a.word-link:hover) {
-    background-color: rgba(76, 173, 83, 0.1);
-  }
-  
-  /* Adjust spacing for enhanced text paragraphs */
-  .enhanced-text :global(p) {
-    margin-bottom: 1rem;
-    padding: 0;
-  }
-  
   .plain-text p {
     margin-bottom: 1rem;
     line-height: 1.6;
@@ -68,9 +47,8 @@
   /* Responsive styling for different screen sizes */
   @media (max-width: 768px) {
     .text-content,
-    .enhanced-text,
     .plain-text p {
       padding: 0 5px; /* Minimal padding on mobile */
     }
   }
-</style> 
+</style>
