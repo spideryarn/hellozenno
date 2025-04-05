@@ -2,8 +2,20 @@
   import type { PageData } from './$types';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
+  import { Spinner, Trash } from 'phosphor-svelte';
+  import { onMount } from 'svelte';
   
   export let data: PageData;
+  
+  // Custom action to focus an element when mounted
+  function focusOnMount(node: HTMLElement) {
+    // Focus the element after a small delay to ensure DOM is ready
+    setTimeout(() => {
+      node.focus();
+    }, 100);
+    
+    return {}; // Action must return an object
+  }
   
   const { sourcedir, sourcefiles, language_code, language_name, has_vocabulary, supported_languages } = data;
   
@@ -16,6 +28,9 @@
   let editedDescription = sourcedir.description || '';
   let uploadProgress = false;
   let uploadProgressValue = 0;
+  let isCreatingText = false;
+  let isDownloadingYoutube = false;
+  let isRenamingDir = false;
   
   // API functions
   async function editSourcedirDescription() {
@@ -51,9 +66,13 @@
   }
   
   async function renameSourcedir() {
+    if (isRenamingDir) return;
+    
     try {
       const newName = prompt('Enter new directory name:', sourcedir.path);
       if (!newName || newName === sourcedir.path) return;
+      
+      isRenamingDir = true;
       
       const response = await fetch(
         getApiUrl(RouteName.SOURCEDIR_API_RENAME_SOURCEDIR_API, {
@@ -79,6 +98,7 @@
       window.location.href = `/language/${language_code}/source/${data.slug}`;
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      isRenamingDir = false;
     }
   }
   
@@ -220,15 +240,11 @@
   }
   
   async function submitCreateText() {
-    if (!textTitle.trim()) {
-      alert('Please enter a title');
-      return;
+    if (!textTitle.trim() || !textContent.trim() || isCreatingText) {
+      return; // Validation should prevent this, but double-check
     }
     
-    if (!textContent.trim()) {
-      alert('Please enter some text');
-      return;
-    }
+    isCreatingText = true;
     
     try {
       const response = await fetch(
@@ -257,6 +273,7 @@
       window.location.href = `/language/${language_code}/source/${sourcedir.slug}/${data.slug}`;
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      isCreatingText = false; // Reset only on error, since on success we navigate away
     }
   }
   
@@ -271,10 +288,11 @@
   }
   
   async function downloadYoutube() {
-    if (!youtubeUrl.trim()) {
-      alert('Please enter a YouTube URL');
+    if (!youtubeUrl.trim() || isDownloadingYoutube) {
       return;
     }
+    
+    isDownloadingYoutube = true;
     
     try {
       const response = await fetch(
@@ -300,6 +318,7 @@
       window.location.href = `/language/${language_code}/source/${sourcedir.slug}/${data.slug}`;
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      isDownloadingYoutube = false; // Reset only on error, since on success we navigate away
     }
   }
 </script>
@@ -377,8 +396,12 @@
       
       <!-- Directory actions -->
       <div class="btn-group mb-4">
-        <button class="btn btn-outline-secondary" on:click={renameSourcedir}>Rename Directory</button>
-        <button class="btn btn-outline-danger" on:click={deleteSourcedir}>Delete Directory</button>
+        <button class="btn btn-outline-secondary" on:click={renameSourcedir}>
+          Rename Directory
+        </button>
+        <button class="btn btn-outline-danger" on:click={deleteSourcedir}>
+          <Trash size={16} weight="bold" class="me-1" /> Delete Directory
+        </button>
       </div>
       
       <!-- File upload section -->
@@ -463,8 +486,10 @@
             </div>
           </div>
           
-          <button class="btn btn-sm btn-outline-danger" on:click={() => deleteSourcefile(file.slug)}>
-            <i class="bi bi-trash"></i>
+          <button class="btn btn-sm btn-outline-danger" 
+                  on:click={() => deleteSourcefile(file.slug)}
+                  title="Delete this file">
+            <Trash size={16} weight="bold" />
           </button>
         </div>
       {/each}
@@ -476,7 +501,11 @@
 {#if showCreateTextModal}
   <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog">
-      <div class="modal-content">
+      <div class="modal-content" 
+           on:keydown|stopPropagation={(e) => {
+             if (e.key === 'Escape') closeCreateTextModal();
+             if (e.key === 'Enter' && e.ctrlKey && textTitle.trim() && textContent.trim() && !isCreatingText) submitCreateText();
+           }}>
         <div class="modal-header">
           <h5 class="modal-title">Create Sourcefile from Text</h5>
           <button type="button" class="btn-close" on:click={closeCreateTextModal}></button>
@@ -484,16 +513,38 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="textTitle" class="form-label">Title:</label>
-            <input type="text" class="form-control" id="textTitle" bind:value={textTitle} placeholder="Enter title for the text">
+            <input type="text" class="form-control" id="textTitle" bind:value={textTitle} 
+                   placeholder="Enter title for the text" autocomplete="off"
+                   use:focusOnMount>
           </div>
           <div class="mb-3">
             <label for="textContent" class="form-label">Text Content:</label>
-            <textarea class="form-control" id="textContent" rows="10" bind:value={textContent} placeholder="Enter or paste your text here"></textarea>
+            <textarea class="form-control" id="textContent" rows="10" bind:value={textContent} 
+                      placeholder="Enter or paste your text here"></textarea>
+          </div>
+          <div class="text-muted small">
+            <p class="mb-1">Keyboard shortcuts:</p>
+            <ul class="mb-0">
+              <li>ESC to cancel</li>
+              <li>CTRL+ENTER to create</li>
+            </ul>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" on:click={closeCreateTextModal}>Cancel</button>
-          <button type="button" class="btn btn-success" on:click={submitCreateText}>Create</button>
+          <button type="button" class="btn btn-outline-secondary" on:click={closeCreateTextModal} disabled={isCreatingText}>
+            Cancel
+          </button>
+          <button type="button" class="btn btn-success" 
+                  on:click={submitCreateText} 
+                  disabled={!textTitle.trim() || !textContent.trim() || isCreatingText}
+                  title={!textTitle.trim() || !textContent.trim() ? "Please fill in both title and text content" : ""}>
+            {#if isCreatingText}
+              <span class="me-2"><Spinner size={16} weight="bold" /></span>
+              Creating...
+            {:else}
+              Create
+            {/if}
+          </button>
         </div>
       </div>
     </div>
@@ -504,7 +555,11 @@
 {#if showYoutubeModal}
   <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog">
-      <div class="modal-content">
+      <div class="modal-content"
+           on:keydown|stopPropagation={(e) => {
+             if (e.key === 'Escape') closeYoutubeModal();
+             if (e.key === 'Enter' && youtubeUrl.trim() && !isDownloadingYoutube) downloadYoutube();
+           }}>
         <div class="modal-header">
           <h5 class="modal-title">Download YouTube Audio</h5>
           <button type="button" class="btn-close" on:click={closeYoutubeModal}></button>
@@ -512,16 +567,37 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="youtubeUrl" class="form-label">YouTube URL:</label>
-            <input type="text" class="form-control" id="youtubeUrl" bind:value={youtubeUrl} placeholder="Enter YouTube URL">
+            <input type="text" class="form-control" id="youtubeUrl" bind:value={youtubeUrl} 
+                   placeholder="Enter YouTube URL" autocomplete="off" 
+                   use:focusOnMount>
             <div class="form-text">
               Supports full YouTube URLs, short URLs (youtu.be), and mobile URLs (m.youtube.com).<br>
               Maximum audio length: 60 minutes
             </div>
           </div>
+          <div class="text-muted small">
+            <p class="mb-1">Keyboard shortcuts:</p>
+            <ul class="mb-0">
+              <li>ESC to cancel</li>
+              <li>ENTER to download</li>
+            </ul>
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" on:click={closeYoutubeModal}>Cancel</button>
-          <button type="button" class="btn btn-primary" on:click={downloadYoutube}>Download Audio</button>
+          <button type="button" class="btn btn-outline-secondary" on:click={closeYoutubeModal} disabled={isDownloadingYoutube}>
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" 
+                  on:click={downloadYoutube} 
+                  disabled={!youtubeUrl.trim() || isDownloadingYoutube}
+                  title={!youtubeUrl.trim() ? "Please enter a YouTube URL" : ""}>
+            {#if isDownloadingYoutube}
+              <span class="me-2"><Spinner size={16} weight="bold" /></span>
+              Downloading...
+            {:else}
+              Download Audio
+            {/if}
+          </button>
         </div>
       </div>
     </div>

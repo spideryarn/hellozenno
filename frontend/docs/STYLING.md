@@ -2,6 +2,8 @@
 
 The application uses Bootstrap 5.3.2 for styling, with a custom dark theme. The styling system is organized as follows:
 
+For user experience guidelines, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md).
+
 ## CSS Structure
 
 ```
