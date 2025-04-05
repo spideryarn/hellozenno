@@ -63,6 +63,7 @@ export enum RouteName {
   SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API",
   SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API",
   SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_TRANSLATION_API = "SOURCEFILE_API_INSPECT_SOURCEFILE_TRANSLATION_API",
   SOURCEFILE_API_PROCESS_SOURCEFILE_API = "SOURCEFILE_API_PROCESS_SOURCEFILE_API",
   SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API = "SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API",
   SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API = "SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API",
@@ -154,6 +155,7 @@ export const ROUTES = {
   SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/text",
   SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/words",
   SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/phrases",
+  SOURCEFILE_API_INSPECT_SOURCEFILE_TRANSLATION_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/translation",
   SOURCEFILE_API_PROCESS_SOURCEFILE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process",
   SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process_individual",
   SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/update_description",
@@ -245,6 +247,7 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_PHRASES_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
+  [RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TRANSLATION_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_PROCESS_SOURCEFILE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_PROCESS_INDIVIDUAL_WORDS_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };

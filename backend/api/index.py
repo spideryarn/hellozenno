@@ -267,12 +267,9 @@ def create_app():
         """Generate TypeScript route definitions from Flask app.url_map."""
         import os
 
-        # Use absolute path to ensure the file is always generated in the same location
-        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-        output_path = os.path.join(project_root, "frontend/src/lib/generated/routes.ts")
         with app.app_context():
-            generate_typescript_routes(app, output_path)
-        logger.info(f"Generated TypeScript routes at {output_path}")
+            ts_output_path = generate_typescript_routes(app)
+        logger.info(f"Generated TypeScript routes at {ts_output_path}")
 
     logger.info("Application initialized successfully")
     return app

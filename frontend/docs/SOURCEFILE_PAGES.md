@@ -11,6 +11,8 @@ Sourcefile pages follow a tab-based interface pattern with routes at:
 
 Each tab has its own route handler, with routes redirecting from the base path to `/text` by default.
 
+see also: `planning/250405_speeding_up_Sourcefile.md` for a discussion on refactoring, overlap, and performance.
+
 ## Components Organization
 
 ```

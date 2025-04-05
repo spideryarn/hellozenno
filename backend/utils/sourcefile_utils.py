@@ -2,7 +2,7 @@
 import os
 import tempfile
 import json
-from typing import Optional
+from typing import Optional, cast
 from pathlib import Path
 
 # Internal imports
@@ -18,6 +18,8 @@ from db_models import (
     Sourcefile,
     Wordform,
     SourcefileWordform,
+    SourcefilePhrase,
+    Sourcedir,
 )
 from utils.audio_utils import transcribe_audio
 from gjdutils.dt import dt_str
@@ -25,7 +27,7 @@ from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
 from utils.misc_utils import pop_multi
 from utils.parallelisation_utils import run_async
-from utils.sourcedir_utils import _get_sourcedir_entry
+from utils.sourcedir_utils import _get_sourcedir_entry, _get_navigation_info
 from utils.lang_utils import get_language_name
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.types import LanguageLevel
@@ -34,6 +36,7 @@ from utils.vocab_llm_utils import (
     translate_to_english,
     extract_tricky_words,
     process_phrases_from_text,
+    create_interactive_word_links,
 )
 
 """
@@ -403,115 +406,139 @@ def ensure_tricky_phrases(
     return sourcefile_entry, extra
 
 
-def get_sourcefile_details(sourcefile_entry: Sourcefile, target_language_code: str):
-    """Get all details for a sourcefile that can be used by both API and view functions.
+def get_sourcefile_details(
+    sourcefile_entry: Sourcefile,
+    target_language_code: str,
+    purpose="basic",  # "basic", "text", "words", "phrases", or "translation"
+):
+    """Get details for a sourcefile based on the specific purpose needed.
 
     Args:
         sourcefile_entry: The Sourcefile object
         target_language_code: The language code
+        purpose: What the data will be used for ("basic", "text", "words", "phrases", or "translation")
 
     Returns:
-        A dictionary with all the details needed for the sourcefile
+        A dictionary with the data needed for the specified purpose
     """
     from utils.sourcedir_utils import _get_navigation_info
-    from utils.vocab_llm_utils import create_interactive_word_links
-    from db_models import Sourcedir, SourcefileWordform, SourcefilePhrase
+    from db_models import SourcefileWordform, SourcefilePhrase, Sourcedir
 
-    # Get navigation info
-    nav_info = _get_navigation_info(sourcefile_entry.sourcedir, sourcefile_entry.slug)
+    # Get navigation info (needed by all views)
+    # First, ensure we're directly accessing the Sourcedir object, not the ForeignKeyField
+    # In practice, we can directly access the related model with sourcefile_entry.sourcedir
+    # Type annotations are added to satisfy the linter
+    sourcedir = cast(Sourcedir, sourcefile_entry.sourcedir)
 
-    # Get wordforms and phrases data
-    # Define helper functions directly here instead of importing from views
-    def _get_wordforms_data(sourcefile_entry):
-        """Get wordforms data with junction table data in one query."""
-        from db_models import Wordform
+    nav_info = _get_navigation_info(
+        sourcedir=sourcedir, sourcefile_slug=str(sourcefile_entry.slug)
+    )
 
-        return Wordform.get_all_wordforms_for(
-            language_code=target_language_code,
-            sourcefile=sourcefile_entry,
-            include_junction_data=True,
-        )
+    # Always get counts efficiently (these are small and needed for all tab navigation)
+    wordforms_count = (
+        SourcefileWordform.select()
+        .where(SourcefileWordform.sourcefile == sourcefile_entry)
+        .count()
+    )
 
-    def _get_phrases_data(sourcefile_entry):
-        """Get phrases data with junction table data in one query."""
-        from db_models import Phrase
+    phrases_count = (
+        SourcefilePhrase.select()
+        .where(SourcefilePhrase.sourcefile == sourcefile_entry)
+        .count()
+    )
 
-        return Phrase.get_all_phrases_for(
-            language_code=target_language_code,
-            sourcefile=sourcefile_entry,
-            include_junction_data=True,
-        )
-
-    def _get_available_sourcedirs(target_language_code):
-        """Get all available sourcedirs for a language."""
-        return (
-            Sourcedir.select(Sourcedir.path, Sourcedir.slug)
-            .where(Sourcedir.language_code == target_language_code)
-            .order_by(Sourcedir.path)
-        )
-
-    wordforms_d = _get_wordforms_data(sourcefile_entry)
-    phrases_d = _get_phrases_data(sourcefile_entry)
-    wordforms_count = len(wordforms_d)
-    phrases_count = len(phrases_d)
-
-    # Create enhanced text with interactive word links if text exists
-    enhanced_text = None
-    found_wordforms = None
-    if sourcefile_entry.text_target:
-        enhanced_text, found_wordforms = create_interactive_word_links(
-            text=str(sourcefile_entry.text_target),
-            wordforms=wordforms_d,
-            target_language_code=target_language_code,
-        )
-
-    # Get metadata
-    metadata = {
-        "created_at": sourcefile_entry.created_at,
-        "updated_at": sourcefile_entry.updated_at,
-    }
-
-    if sourcefile_entry.metadata and "image_processing" in sourcefile_entry.metadata:
-        metadata["image_processing"] = sourcefile_entry.metadata["image_processing"]
-
-    # Check if file has been processed before
-    already_processed = bool(wordforms_d)
-
-    # Get available sourcedirs for this language (for move dropdown)
-    available_sourcedirs = _get_available_sourcedirs(target_language_code)
-
-    return {
+    # Create basic result structure (common to all endpoints)
+    # Note: We're directly accessing the id field which is available at runtime
+    # even though it's not explicitly declared in the model class
+    result = {
         "sourcefile": {
-            "id": sourcefile_entry.id,
+            # Type ignored because Peewee models have this field at runtime
+            "id": sourcefile_entry.id,  # type: ignore
             "filename": sourcefile_entry.filename,
             "slug": sourcefile_entry.slug,
             "description": sourcefile_entry.description,
             "sourcefile_type": sourcefile_entry.sourcefile_type,
-            "text_target": sourcefile_entry.text_target,
-            "text_english": sourcefile_entry.text_english,
             "has_audio": bool(sourcefile_entry.audio_data),
             "has_image": bool(sourcefile_entry.image_data),
         },
         "sourcedir": {
-            "id": sourcefile_entry.sourcedir.id,
-            "path": sourcefile_entry.sourcedir.path,
-            "slug": sourcefile_entry.sourcedir.slug,
-            "language_code": sourcefile_entry.sourcedir.language_code,
+            # Type ignored because Peewee models have this field at runtime
+            "id": sourcedir.id,  # type: ignore
+            "path": sourcedir.path,
+            "slug": sourcedir.slug,
+            "language_code": sourcedir.language_code,
         },
-        "enhanced_text": enhanced_text,
-        "wordforms": wordforms_d,
-        "phrases": phrases_d,
-        "metadata": metadata,
+        "metadata": {
+            "created_at": sourcefile_entry.created_at,
+            "updated_at": sourcefile_entry.updated_at,
+        },
         "navigation": nav_info,
         "stats": {
             "wordforms_count": wordforms_count,
             "phrases_count": phrases_count,
-            "already_processed": already_processed,
+            "already_processed": bool(sourcefile_entry.text_target),
         },
-        "available_sourcedirs": [
-            {"path": sd.path, "slug": sd.slug} for sd in available_sourcedirs
-        ],
     }
+
+    # Add metadata from sourcefile if it exists
+    if sourcefile_entry.metadata and "image_processing" in sourcefile_entry.metadata:
+        result["metadata"]["image_processing"] = sourcefile_entry.metadata[
+            "image_processing"
+        ]
+
+    # Add purpose-specific data
+    if purpose in ["text", "translation"]:
+        # Add text content for both text and translation tabs
+        result["sourcefile"]["text_target"] = sourcefile_entry.text_target
+        result["sourcefile"]["text_english"] = sourcefile_entry.text_english
+
+    # Generate enhanced text only for text tab (requires wordforms)
+    if purpose == "text" and sourcefile_entry.text_target:
+        from utils.vocab_llm_utils import create_interactive_word_links
+        from db_models import Wordform
+
+        # Get minimal wordform data needed for links
+        wordforms_for_links = Wordform.get_all_wordforms_for(
+            language_code=target_language_code,
+            sourcefile=sourcefile_entry,
+            include_junction_data=True,
+        )
+
+        enhanced_text, found_wordforms = create_interactive_word_links(
+            text=str(sourcefile_entry.text_target),
+            wordforms=wordforms_for_links,
+            target_language_code=target_language_code,
+        )
+
+        result["enhanced_text"] = enhanced_text
+        # Include wordforms in the result so the frontend can use them
+        result["wordforms"] = wordforms_for_links
+
+    # Add word data only for words tab
+    elif purpose == "words":
+        from db_models import Wordform
+
+        wordforms = Wordform.get_all_wordforms_for(
+            language_code=target_language_code,
+            sourcefile=sourcefile_entry,
+            include_junction_data=True,
+        )
+
+        result["wordforms"] = wordforms
+
+    # Add phrase data only for phrases tab
+    elif purpose == "phrases":
+        from db_models import Phrase
+
+        phrases = Phrase.get_all_phrases_for(
+            language_code=target_language_code,
+            sourcefile=sourcefile_entry,
+            include_junction_data=True,
+        )
+
+        result["phrases"] = phrases
+
+    return result
 
 
 def process_sourcefile(

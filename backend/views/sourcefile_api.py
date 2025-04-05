@@ -63,17 +63,19 @@ sourcefile_api_bp = Blueprint(
 )
 
 
-@sourcefile_api_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>", methods=["GET"]
-)
-def inspect_sourcefile_api(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+def _inspect_sourcefile_core(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str, purpose: str
 ):
-    """API endpoint to get basic info about a sourcefile.
+    """Core implementation for all sourcefile inspection API endpoints.
 
-    This serves as a redirect target in the main view function, but in the API
-    we'll return basic metadata and let the client decide which specific
-    view to load (text, words, phrases).
+    Args:
+        target_language_code: The language code
+        sourcedir_slug: The sourcedir slug
+        sourcefile_slug: The sourcefile slug
+        purpose: The purpose of the request ("basic", "text", "words", "phrases", or "translation")
+
+    Returns:
+        JSON response with data specific to the requested purpose
     """
     try:
         # Get the sourcefile entry using helper
@@ -81,25 +83,56 @@ def inspect_sourcefile_api(
             target_language_code, sourcedir_slug, sourcefile_slug
         )
 
-        # Use the shared utility function to get details
-        details = get_sourcefile_details(sourcefile_entry, target_language_code)
+        # Use the shared utility function to get details with the specified purpose
+        details = get_sourcefile_details(
+            sourcefile_entry, target_language_code, purpose=purpose
+        )
 
-        # Create a simplified response with just the basic info
+        # Create a response with the details
         response_data = {
             "success": True,
             "sourcefile": details["sourcefile"],
             "sourcedir": details["sourcedir"],
             "metadata": details["metadata"],
+            "navigation": details["navigation"],
             "stats": details["stats"],
         }
+
+        # Add purpose-specific data
+        if purpose == "text" and "enhanced_text" in details:
+            response_data["enhanced_text"] = details["enhanced_text"]
+            response_data["wordforms"] = details.get("wordforms", [])
+            # Also add enhanced_text to the sourcefile object for backwards compatibility
+            # This is where the frontend component expects to find it
+            response_data["sourcefile"]["enhanced_text"] = details["enhanced_text"]
+        elif purpose == "words" and "wordforms" in details:
+            response_data["wordforms"] = details["wordforms"]
+        elif purpose == "phrases" and "phrases" in details:
+            response_data["phrases"] = details["phrases"]
+        elif purpose == "translation":
+            # For translation tab, ensure text content is included
+            # (this is already handled in get_sourcefile_details)
+            pass
 
         return jsonify(response_data)
 
     except DoesNotExist:
         return jsonify({"success": False, "error": "File not found"}), 404
     except Exception as e:
-        current_app.logger.error(f"Error in inspect_sourcefile_api: {str(e)}")
+        current_app.logger.error(f"Error in inspect_sourcefile_{purpose}_api: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>", methods=["GET"]
+)
+def inspect_sourcefile_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get basic info about a sourcefile."""
+    return _inspect_sourcefile_core(
+        target_language_code, sourcedir_slug, sourcefile_slug, "basic"
+    )
 
 
 @sourcefile_api_bp.route(
@@ -109,40 +142,9 @@ def inspect_sourcefile_text_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """API endpoint to get the text content of a sourcefile."""
-    try:
-        # Get the sourcefile entry using helper
-        sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
-        )
-
-        # Use the shared utility function to get details
-        details = get_sourcefile_details(sourcefile_entry, target_language_code)
-
-        # Create response with text-specific details
-        response_data = {
-            "success": True,
-            "sourcefile": {
-                "filename": details["sourcefile"]["filename"],
-                "slug": details["sourcefile"]["slug"],
-                "sourcefile_type": details["sourcefile"]["sourcefile_type"],
-                "description": details["sourcefile"]["description"],
-                "text_target": details["sourcefile"]["text_target"],
-                "text_english": details["sourcefile"]["text_english"],
-                "enhanced_text": details["enhanced_text"],
-            },
-            "sourcedir": details["sourcedir"],
-            "metadata": details["metadata"],
-            "navigation": details["navigation"],
-            "stats": details["stats"],
-        }
-
-        return jsonify(response_data)
-
-    except DoesNotExist:
-        return jsonify({"success": False, "error": "File not found"}), 404
-    except Exception as e:
-        current_app.logger.error(f"Error in inspect_sourcefile_text_api: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+    return _inspect_sourcefile_core(
+        target_language_code, sourcedir_slug, sourcefile_slug, "text"
+    )
 
 
 @sourcefile_api_bp.route(
@@ -152,38 +154,9 @@ def inspect_sourcefile_words_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """API endpoint to get the words content of a sourcefile."""
-    try:
-        # Get the sourcefile entry using helper
-        sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
-        )
-
-        # Use the shared utility function to get details
-        details = get_sourcefile_details(sourcefile_entry, target_language_code)
-
-        # Create response with words-specific details
-        response_data = {
-            "success": True,
-            "sourcefile": {
-                "filename": details["sourcefile"]["filename"],
-                "slug": details["sourcefile"]["slug"],
-                "sourcefile_type": details["sourcefile"]["sourcefile_type"],
-                "description": details["sourcefile"]["description"],
-            },
-            "sourcedir": details["sourcedir"],
-            "wordforms": details["wordforms"],
-            "metadata": details["metadata"],
-            "navigation": details["navigation"],
-            "stats": details["stats"],
-        }
-
-        return jsonify(response_data)
-
-    except DoesNotExist:
-        return jsonify({"success": False, "error": "File not found"}), 404
-    except Exception as e:
-        current_app.logger.error(f"Error in inspect_sourcefile_words_api: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+    return _inspect_sourcefile_core(
+        target_language_code, sourcedir_slug, sourcefile_slug, "words"
+    )
 
 
 @sourcefile_api_bp.route(
@@ -194,38 +167,22 @@ def inspect_sourcefile_phrases_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """API endpoint to get the phrases content of a sourcefile."""
-    try:
-        # Get the sourcefile entry using helper
-        sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
-        )
+    return _inspect_sourcefile_core(
+        target_language_code, sourcedir_slug, sourcefile_slug, "phrases"
+    )
 
-        # Use the shared utility function to get details
-        details = get_sourcefile_details(sourcefile_entry, target_language_code)
 
-        # Create response with phrases-specific details
-        response_data = {
-            "success": True,
-            "sourcefile": {
-                "filename": details["sourcefile"]["filename"],
-                "slug": details["sourcefile"]["slug"],
-                "sourcefile_type": details["sourcefile"]["sourcefile_type"],
-                "description": details["sourcefile"]["description"],
-            },
-            "sourcedir": details["sourcedir"],
-            "phrases": details["phrases"],
-            "metadata": details["metadata"],
-            "navigation": details["navigation"],
-            "stats": details["stats"],
-        }
-
-        return jsonify(response_data)
-
-    except DoesNotExist:
-        return jsonify({"success": False, "error": "File not found"}), 404
-    except Exception as e:
-        current_app.logger.error(f"Error in inspect_sourcefile_phrases_api: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/translation",
+    methods=["GET"],
+)
+def inspect_sourcefile_translation_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get the translation content of a sourcefile."""
+    return _inspect_sourcefile_core(
+        target_language_code, sourcedir_slug, sourcefile_slug, "translation"
+    )
 
 
 @sourcefile_api_bp.route(

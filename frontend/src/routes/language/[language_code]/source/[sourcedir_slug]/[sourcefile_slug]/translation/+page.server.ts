@@ -7,10 +7,10 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     const { language_code, sourcedir_slug, sourcefile_slug } = params;
 
     try {
-        // Fetch sourcefile data
-        const sourcfileResponse = await fetch(
+        // Fetch sourcefile translation data with a single API call
+        const translationResponse = await fetch(
             getApiUrl(
-                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_API,
+                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TRANSLATION_API,
                 {
                     target_language_code: language_code,
                     sourcedir_slug,
@@ -19,49 +19,26 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             ),
         );
 
-        if (!sourcfileResponse.ok) {
+        if (!translationResponse.ok) {
             throw new Error(
-                `Failed to fetch sourcefile: ${sourcfileResponse.statusText}`,
+                `Failed to fetch translation data: ${translationResponse.statusText}`,
             );
         }
 
-        const sourcefileData = await sourcfileResponse.json();
+        const translationData = await translationResponse.json();
 
-        // Now get the text data
-        const textResponse = await fetch(
-            getApiUrl(
-                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
-                {
-                    target_language_code: language_code,
-                    sourcedir_slug,
-                    sourcefile_slug,
-                },
-            ),
-        );
-
-        if (!textResponse.ok) {
-            throw new Error(
-                `Failed to fetch text data: ${textResponse.statusText}`,
-            );
-        }
-
-        const textData = await textResponse.json();
-
-        // Also fetch words and phrases count data (empty placeholders for TypeScript)
+        // Empty placeholders for TypeScript - these aren't needed but kept for compatibility
         const wordsData = { wordforms: [] };
         const phrasesData = { phrases: [] };
 
-        // Get language name from API response
-        const language_name = sourcefileData.language_name ||
-            textData.language_name;
-
+        // Use translationData for everything since it contains all the necessary info
         return {
-            sourcefileData,
-            textData,
+            sourcefileData: translationData,
+            textData: translationData,
             wordsData,
             phrasesData,
             language_code,
-            language_name,
+            language_name: translationData.language_name,
             sourcedir_slug,
             sourcefile_slug,
         };

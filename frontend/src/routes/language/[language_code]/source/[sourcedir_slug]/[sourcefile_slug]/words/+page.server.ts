@@ -7,47 +7,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     const { language_code, sourcedir_slug, sourcefile_slug } = params;
 
     try {
-        // First fetch basic sourcefile data for the header
-        const sourcefileResponse = await fetch(
-            getApiUrl(
-                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_API,
-                {
-                    target_language_code: language_code,
-                    sourcedir_slug,
-                    sourcefile_slug,
-                },
-            ),
-        );
-
-        if (!sourcefileResponse.ok) {
-            throw new Error(
-                `Failed to fetch sourcefile: ${sourcefileResponse.statusText}`,
-            );
-        }
-
-        const sourcefileData = await sourcefileResponse.json();
-
-        // Fetch text data for metadata and basic info
-        const textResponse = await fetch(
-            getApiUrl(
-                RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
-                {
-                    target_language_code: language_code,
-                    sourcedir_slug,
-                    sourcefile_slug,
-                },
-            ),
-        );
-
-        if (!textResponse.ok) {
-            throw new Error(
-                `Failed to fetch text data: ${textResponse.statusText}`,
-            );
-        }
-
-        const textData = await textResponse.json();
-
-        // Fetch words data specifically
+        // Fetch words data with a single API call (which now includes all necessary data)
         const wordsResponse = await fetch(
             getApiUrl(
                 RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_WORDS_API,
@@ -67,16 +27,16 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
         const wordsData = await wordsResponse.json();
 
-        // Get language name from API response
-        const language_name = sourcefileData.language_name ||
-            textData.language_name;
+        // Empty placeholders as needed
+        const phrasesData = { phrases: [] };
 
         return {
-            sourcefileData,
-            textData,
+            sourcefileData: wordsData, // Use wordsData for sourcefileData too
+            textData: wordsData, // Use wordsData for textData too
             wordsData,
+            phrasesData, // Added for consistency with other tabs
             language_code,
-            language_name,
+            language_name: wordsData.language_name || "",
             sourcedir_slug,
             sourcefile_slug,
         };
