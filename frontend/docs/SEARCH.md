@@ -205,6 +205,22 @@ To perform these tests, you would:
 4. Use browser developer tools to monitor network requests and responses
 5. Verify the UI properly displays all search result categories
 
+### Recent Progress
+
+We've recently enhanced the search functionality with several important improvements:
+
+1. **Integration Between Wordform and Search**:
+   - ✅ Updated wordform page to handle enhanced search responses
+   - ✅ Fixed direct wordform access for English translation searches 
+   - ✅ Added proper redirection logic between search and wordform pages
+   - ✅ Implemented robust error handling for invalid words
+
+2. **Learned Lessons**:
+   - The enhanced search API needs to be used consistently across the application
+   - Special care must be taken with URL encoding for non-Latin scripts
+   - Status-based response handling provides a consistent way to manage different search results
+   - Error handling should redirect to appropriate pages rather than showing generic errors
+
 ### Remaining Work
 
 The following items still need to be completed:
@@ -215,13 +231,14 @@ The following items still need to be completed:
    - [ ] Update TypeScript types for lemma redirect responses
 
 2. **Error Handling Improvements**:
-   - [ ] Add more detailed error messages for network issues
+   - [x] Add more detailed error messages for specific error cases
+   - [x] Redirect to search page instead of showing generic errors
    - [ ] Improve handling of timeout scenarios
    - [ ] Add retry logic for intermittent connection issues
 
 3. **UI Enhancements**:
-   - [ ] Add loading indicators for search in progress
-   - [ ] Improve styling of search result categories
+   - [x] Add loading indicators for search in progress
+   - [ ] Further improve styling of search result categories
    - [ ] Add visual grouping for related results
    - [ ] Make sure all texts are i18n ready
 
@@ -235,6 +252,11 @@ The following items still need to be completed:
    - [ ] Ensure proper keyboard navigation for search results
    - [ ] Add proper ARIA labels and roles
    - [ ] Test with screen readers
+
+6. **Testing**:
+   - [ ] Add comprehensive tests for various search scenarios
+   - [ ] Test with multiple languages and character sets
+   - [ ] Test English translation search thoroughly
 
 ### Implementation Notes
 
