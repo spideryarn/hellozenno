@@ -8,7 +8,7 @@ from utils.url_registry import endpoint_for, generate_route_registry
 from tests.backend.utils_for_testing import build_url_with_query
 from views.lemma_views import get_lemma_metadata_vw
 from views.sourcedir_views import sourcefiles_for_sourcedir_vw
-from backend.api.sourcedir_api import create_sourcedir_api
+from views.sourcedir_api import create_sourcedir_api
 from views.languages_views import languages_list_vw
 from views.search_views import search_landing_vw
 

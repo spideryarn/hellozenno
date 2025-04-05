@@ -7,9 +7,7 @@ Hello Zenno
 │
 ├── Flask Backend (API)
 │   ├── api/index.py         # Main Flask application entry point
-│   ├── views/               # View controllers (being phased out)
-│   │   └── ...              # View modules
-│   ├── api/                 # API endpoints
+│   ├── views/               # API endpoints and controllers
 │   │   ├── languages_api.py # Language-related APIs
 │   │   ├── sentence_api.py  # Sentence-related APIs
 │   │   └── ...              # Other API modules

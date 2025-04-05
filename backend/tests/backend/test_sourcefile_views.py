@@ -26,7 +26,7 @@ import utils.sourcefile_utils
 from utils.vocab_llm_utils import extract_tokens
 from utils.youtube_utils import YouTubeDownloadError
 from views import sourcefile_views
-from backend.api.sourcedir_api import upload_sourcedir_new_sourcefile_api
+from views.sourcedir_api import upload_sourcedir_new_sourcefile_api
 from views.sourcefile_views import (
     inspect_sourcefile_text_vw,
     inspect_sourcefile_vw,
@@ -39,7 +39,7 @@ from views.sourcefile_views import (
     inspect_sourcefile_phrases_vw,
     process_sourcefile_vw,
 )
-from backend.api.sourcefile_api import (
+from views.sourcefile_api import (
     process_individual_words_api,
     delete_sourcefile_api,
     rename_sourcefile_api,
@@ -1327,7 +1327,7 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
 def test_delete_sourcefile_with_wordforms(client):
     """Test deleting a source file that has associated wordforms."""
     # Import the view function we need
-    from backend.api.sourcefile_api import delete_sourcefile_api
+    from views.sourcefile_api import delete_sourcefile_api
 
     # Create test sourcedir and sourcefile with language code
     sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
