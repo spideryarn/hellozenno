@@ -3,6 +3,8 @@
   import tippy, { type Instance, hideAll } from 'tippy.js';
   import 'tippy.js/dist/tippy.css';
   import 'tippy.js/themes/light.css';
+  import { getApiUrl } from '../api';
+  import { RouteName } from '../generated/routes';
 
   export let html: string | null = null;
   export let language_code: string;
@@ -58,8 +60,14 @@
           
           console.log(`Fetching preview for word: "${word}" in language: ${language_code}`);
           
+          // Use type-safe API URL generation
+          const apiUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, {
+            target_language_code: language_code,
+            word: word
+          });
+          
           // Fetch preview data from API
-          fetch(`/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview`)
+          fetch(apiUrl)
             .then(response => {
               if (!response.ok) {
                 console.error(`API request failed: ${response.status}`);

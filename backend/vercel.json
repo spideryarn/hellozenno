@@ -7,6 +7,20 @@
     },
     "routes": [
         {
+            "src": "/favicon.png",
+            "status": 204,
+            "headers": {
+                "Content-Type": "image/png"
+            }
+        },
+        {
+            "src": "/favicon.ico",
+            "status": 204,
+            "headers": {
+                "Content-Type": "image/x-icon"
+            }
+        },
+        {
             "src": "/(.*)",
             "dest": "api/index.py"
         }
