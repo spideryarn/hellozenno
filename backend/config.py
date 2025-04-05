@@ -6,18 +6,6 @@ from utils.env_config import (
 from utils.types import LanguageLevel
 
 
-SOURCEFILES_DIRN = Path("sourcefiles")
-PROMPT_TEMPLATES_DIRN = Path("backend/prompt_templates")
-
-# Production uses a different metadata directory
-METADATA_DIRN = (
-    Path("/tmp/metadata")
-    if is_vercel()
-    else Path(
-        "/Users/greg/Library/Mobile Documents/3L68KQB4HG~com~readdle~CommonDocuments/Documents/Greek learning/hellozenno"
-    )
-)
-
 # Language configuration
 DEFAULT_LANGUAGE_LEVEL: LanguageLevel = "B1"  # CEFR level for language learning
 
