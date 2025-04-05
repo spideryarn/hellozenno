@@ -54,6 +54,26 @@ Custom CSS classes for consistent styling:
 - `.hz-section-header`: For section headings
 - `.hz-btn-primary`: For primary buttons
 
+## Accessibility Guidelines
+
+1. Elements with event handlers:
+   - Add appropriate ARIA roles to non-interactive elements that have event handlers
+   - Example: `<div role="dialog" on:keydown={handler}>`
+
+2. Close buttons and icon-only buttons:
+   - Always add an aria-label to buttons without visible text
+   - Example: `<button class="btn-close" aria-label="Close"></button>`
+
+3. Modal dialogs:
+   - Use `role="dialog"` on the modal container
+   - Associate the modal with its title using `aria-labelledby`
+   - Example: 
+     ```svelte
+     <div role="dialog" aria-labelledby="modal-title">
+       <h5 id="modal-title">Modal Title</h5>
+     </div>
+     ```
+
 ## How to Use
 
 1. Import components directly from `$lib`:
