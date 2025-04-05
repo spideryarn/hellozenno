@@ -211,18 +211,29 @@
         }),
         {
           method: 'POST',
-          body: formData
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
         }
       );
       
+      // Parse the response JSON
+      const data = await response.json().catch(() => ({}));
+      
       if (response.ok) {
+        // Successful upload - just reload the page
+        // The newly uploaded files will appear in the list
         window.location.reload();
       } else {
-        const data = await response.json();
-        throw new Error(data.error || 'Upload failed');
+        // Show error message
+        throw new Error(data.error || `Upload failed with status: ${response.status}`);
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      // Only show alerts for errors since they're important
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Upload error:", errorMessage);
+      alert(`Error: ${errorMessage}`);
     } finally {
       uploadProgress = false;
     }

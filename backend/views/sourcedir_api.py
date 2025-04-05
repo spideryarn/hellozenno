@@ -303,38 +303,29 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                 uploaded_count += 1
 
             except ValueError as e:
-                flash(str(e))
+                print(f"Upload validation error: {str(e)}")
                 continue
 
-        # Show appropriate messages for uploaded and skipped files
+        # Return JSON response with appropriate status code
+        response_data = {
+            "uploaded_count": uploaded_count,
+            "skipped_count": skipped_count
+        }
+        
+        # Use HTTP 200 if files were uploaded, 204 if only skipped files, 
+        # or 400 if no valid files were uploaded
         if uploaded_count > 0:
-            if uploaded_count == 1:
-                flash(f"Successfully uploaded {uploaded_count} file: {sourcefile.slug}")
-            else:
-                flash(f"Successfully uploaded {uploaded_count} files")
-        if skipped_count > 0:
-            if skipped_count == 1:
-                flash(f"Skipped {skipped_count} existing file")
-            else:
-                flash(f"Skipped {skipped_count} existing files")
-        if uploaded_count == 0 and skipped_count == 0:
-            flash("No valid files were uploaded")
-
-        return redirect(
-            url_for(
-                endpoint_for(sourcefiles_for_sourcedir_vw),
-                target_language_code=target_language_code,
-                sourcedir_slug=sourcedir_slug,
-            )
-        )
+            return jsonify(response_data), 200
+        elif skipped_count > 0:
+            return jsonify(response_data), 200
+        else:
+            return jsonify({"error": "No valid files were uploaded"}), 400
 
     except DoesNotExist:
-        flash("Source directory not found")
-        return redirect(request.referrer)
+        return jsonify({"error": "Source directory not found"}), 404
     except Exception as e:
         print(f"DEBUG: Upload failed: {str(e)}")
-        flash(f"Upload failed: {str(e)}")
-        return redirect(request.referrer)
+        return jsonify({"error": f"Upload failed: {str(e)}"}), 500
 
 
 @sourcedir_api_bp.route(
