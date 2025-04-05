@@ -7,6 +7,7 @@
   export let languageCode: string = '';
   export let description: string = '';
   export let statistics = { file_count: 0, sentence_count: 0 };
+  export let className: string = '';
   
   // Generate typed route for navigation
   const sourceUrl = resolveRoute(RouteName.SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW, {
@@ -15,7 +16,7 @@
   });
 </script>
 
-<div class="list-group-item hz-language-item hz-source-item mb-3">
+<div class="list-group-item hz-language-item hz-source-item mb-3 {className}">
   <div class="d-flex flex-column">
     <div class="mb-2">
       <h3 class="mb-0">
