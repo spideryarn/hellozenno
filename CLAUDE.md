@@ -11,12 +11,14 @@ HelloZenno is currently transitioning from a Flask/Jinja/Svelte application to a
 - **Backend**: Flask API + PostgreSQL database on Supabase
 - **Migration Status**: See `planning/250329_SvelteKit.md` for current progress
 
+see `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` for a good high-level intro, and references to other files.
+
 ## Coding
 
 **Principles**
 - Prioritise simplicity, debuggability, and readability. Try to keep things concise, don't over-comment, over-log, or over-engineer. This is a an MVP, so we care more about development speed than scaling etc.
 - Keep changes minimal, and focused on the task at hand.
-- Fix the root causes rather than just put on a band-aid 
+- Fix the root causes cleanly - avoid bandaids/fallbacks/hacks.
 - Raise errors early, clearly & fatally. Prefer not to wrap in try/except.
 - Aim to reuse code, and use sub-functions to make long/complex functions clearer.
 - If things don't make sense or seem like a bad idea or you need guidance, ask questions or discuss rather than just going along with it.
