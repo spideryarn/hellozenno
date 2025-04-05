@@ -7,6 +7,7 @@ from utils.types import LanguageLevel
 
 
 SOURCEFILES_DIRN = Path("sourcefiles")
+PROMPT_TEMPLATES_DIRN = Path("backend/prompt_templates")
 
 # Production uses a different metadata directory
 METADATA_DIRN = (

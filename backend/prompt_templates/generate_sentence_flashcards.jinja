@@ -1,0 +1,19 @@
+Generate simple, idiomatic sentences {{ target_language_name }} that use at least one (and ideally more) of the following lemma words. You can slightly inflect the lemma words (e.g. modify them slightly to agree in number, gender, tense, etc.) but not change the part of speech or meaning.
+
+Respond with pure JSON, with no commentary or other text, in the following schema:
+
+<json_schema>
+{
+    "sentences": [
+        {
+            "sentence": str,  # the sentence
+            "translation": str,  # the translation to English
+            "lemma_words": list[str],  # the lemma words from the list below used in this sentence
+        }
+    ]
+}
+</json_schema>
+
+<words>
+{{ already_words }}
+</words>

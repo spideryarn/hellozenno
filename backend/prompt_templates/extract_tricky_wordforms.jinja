@@ -1,0 +1,41 @@
+I'm learning {{ target_language_name }}{% if language_level %}, at about {{ language_level }} student level{% endif %}. Please identify {% if max_new_words %}{{ max_new_words }}{% else %}a comprehensive list of{% endif %} difficult/uncommon wordforms (i.e. single words rather than multi-word phrases) from this text that will help me to understand it.
+
+IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause URL routing issues.
+
+Return as JSON in the following schema:
+
+<json_schema>
+{
+    "wordforms": [
+        {
+            "wordform": str,  # the form without punctuation as it appears in the text, e.g. "Ακολούθησε," in the text -> "ακολούθησε" as the wordform (i.e. lower-case, no punctuation), unless it's a proper noun or should be capitalised
+            "lemma": str,  # the canonical form (e.g. for wordform "ακολούθησε", the lemma would be "ακολουθώ")
+            "translations": list[str],  # list of English translations
+            "part_of_speech": str,  # e.g. "verb", "noun", "adjective", etc.
+            "inflection_type": str,  # e.g. "first-person singular present", "feminine plural genitive"
+            "centrality": float,  # from 0-1, how central/important/frequent this wordform is to the meaning of the text
+        },
+    ]
+}
+</json_schema>
+{% if ignore_words %}
+Be thorough and try to find words that might have been missed in previous analysis. Consider:
+- Less common words that might still be important
+- Words with tricky grammar patterns
+- Words that look simple but have special usage
+- Cultural or contextual significance
+- Words that are part of important collocations
+
+Ignore these wordforms:
+{% for ignore_word in ignore_words %}
+- {{ ignore_word }}
+{% endfor %}
+{% endif %}
+
+Only output the valid JSON, with no other commentary.
+
+----
+
+<text>
+{{ txt_tgt }}
+</text>

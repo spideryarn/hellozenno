@@ -1,0 +1,11 @@
+Extract the text in {{ target_language_name }} from the image(s) exactly as it appears.
+
+Only output the {{ target_language_name }} text, nothing else. Use "\n\n" to separate paragraphs.
+
+Ignore page numbers, headers, footers, etc.
+
+If you see a word spanning the end of one line to the beginning of another with a hyphen, just join it together as a single word.
+
+If the text spans multiple pages in the image, return the text from all pages.
+
+If there is no text in the image, return "-".

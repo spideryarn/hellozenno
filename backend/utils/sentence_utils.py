@@ -10,6 +10,7 @@ from utils.vocab_llm_utils import (
     extract_tokens,
     create_interactive_word_links,
 )
+from utils.prompt_utils import get_prompt_template_path
 from utils.word_utils import normalize_text
 from peewee import DoesNotExist
 
@@ -190,7 +191,7 @@ def generate_practice_sentences(
         # Generate sentence and translation
         response = generate_gpt_from_template(
             client=anthropic_client,
-            prompt_template_var="generate_sentence_flashcards",
+            prompt_template=get_prompt_template_path("generate_sentence_flashcards"),
             context_d={
                 "target_language_name": get_language_name(target_language_code),
                 "already_words": [lemma],

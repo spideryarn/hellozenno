@@ -1,0 +1,59 @@
+We're building a rich, machine-readable dictionary of {{ target_language_name }} for English learners. Provide only the JSON output with no commentary and no other text. The JSON schema should be as follows.
+
+IMPORTANT: Never include slashes (/) in any lemmas or wordforms as they cause URL routing issues.
+
+{{ target_language_name }} lemma:
+<lemma>
+{{ lemma }}
+</lemma>
+
+<json_schema>
+{
+    "lemma": str,  # the dictionary form (i.e. canonical, headform) of the word
+    "part_of_speech": str,  # e.g. "verb", "adjective", "noun", "idiom", "phrase", "pronoun", "preposition", "adverb", "conjunction", etc...
+    "translations": list[str],  # one or more English translations, e.g. ["to pay", "to settle", "to fulfill"]
+    "etymology": str,  # Detailed origins of the word, paying especial attention to English cognates and examples. If the word is a loanword, explain the etymology. Don't include transliteration. Pay close attention to what's less obvious/more specific to this particular word that will help learn/remember/understand this particular word relative to other similar words. Try and make it rich, interesting, and memorable.
+    "synonyms": [
+        {
+            "lemma": str,  # e.g. "εξοφλώ"
+            "translation": str,  # to English
+        }
+    ],
+    "antonyms": [
+        {
+            "lemma": str,  # e.g. "λαμβάνω"
+            "translation": str,  # to English
+        }
+    ],
+    "related_words_phrases_idioms": [
+        {
+            "lemma": str,  # e.g. ["πληρώνομαι", "πληρωμή", ...]
+            "translation": str,  # to English
+        },
+    ],
+    "example_wordforms": list[str],  # inflected forms of this lemma that a learner might encounter, e.g. ["πληρώνει", "πλήρωσα", "πληρώνοντας", "πληρωμένος", ...]
+    "register": str,  # e.g. "neutral", "formal", "informal", "vulgar", "archaic", "medical", etc
+    "commonality": float,  # from 0-1, how common in regular use this lemma is
+    "guessability": float,  # from 0-1, how easy this lemma is to guess for an English speaker
+    "cultural_context": str,  # notes about usage in target language cultural context
+    "mnemonics": list[str],  # memory aids for sound/spelling/meaning
+    "example_usage": [
+        {
+            "phrase": str,  # e.g. "Πληρώνω το λογαριασμό."
+            "translation": str,  # e.g. "I pay the bill."
+        }
+    ],
+    "easily_confused_with": [
+        {
+            "lemma": str,  # another lemma that might be confused with this one
+            "explanation": str,  # how they are distinct
+            "example_usage_this_target": str,  # example using this lemma, in {{ target_language_name }}
+            "example_usage_this_source": str,  # example using this lemma, in English
+            "example_usage_other_target": str,  # example using the other lemma, in {{ target_language_name }}
+            "example_usage_other_source": str,  # example using the other lemma, in English
+            "mnemonic": str,  # memory aid for distinguishing
+            "notes": str,  # any other useful notes
+        }
+    ]
+}
+</json_schema>

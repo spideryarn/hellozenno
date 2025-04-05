@@ -20,15 +20,19 @@ def mock_gpt_from_template(monkeypatch):
     """Mock generate_gpt_from_template to avoid actual API calls."""
 
     def mock_generate(*args, **kwargs):
-        if "prompt_template_var" not in kwargs:
+        # Check if prompt_template is a Path, and if so, use its stem as template name
+        template_name = None
+        if isinstance(kwargs.get("prompt_template"), Path):
+            template_name = kwargs["prompt_template"].stem
+        else:
+            # For string templates or fallback, check context
             return "Unexpected template", {}
 
-        template = kwargs["prompt_template_var"]
-        if template == "extract_text_from_image":
+        if template_name == "extract_text_from_image":
             return "Test text in Greek", {}
-        elif template == "translate_to_english":
+        elif template_name == "translate_to_english":
             return "Test text in English", {}
-        elif template == "extract_tricky_wordforms":
+        elif template_name == "extract_tricky_wordforms":
             return {
                 "wordforms": [
                     {
@@ -42,7 +46,7 @@ def mock_gpt_from_template(monkeypatch):
                     }
                 ]
             }, {}
-        elif template == "extract_phrases_from_text":
+        elif template_name == "extract_phrases_from_text":
             return {
                 "phrases": [
                     {
@@ -146,7 +150,11 @@ def test_extract_phrases_from_text_empty(mock_gpt_from_template, monkeypatch):
     """Test extracting phrases from text when no phrases are found."""
 
     def mock_generate_empty(*args, **kwargs):
-        if kwargs.get("prompt_template_var") == "extract_phrases_from_text":
+        template_name = None
+        if isinstance(kwargs.get("prompt_template"), Path):
+            template_name = kwargs["prompt_template"].stem
+        
+        if template_name == "extract_phrases_from_text":
             return {
                 "phrases": [],
                 "source": {
@@ -177,7 +185,11 @@ def test_extract_phrases_from_text_invalid_response(
     """Test handling of invalid response from LLM."""
 
     def mock_generate_invalid(*args, **kwargs):
-        if kwargs.get("prompt_template_var") == "extract_phrases_from_text":
+        template_name = None
+        if isinstance(kwargs.get("prompt_template"), Path):
+            template_name = kwargs["prompt_template"].stem
+            
+        if template_name == "extract_phrases_from_text":
             return "Invalid response", {}
         return "Unexpected template", {}
 
@@ -201,7 +213,11 @@ def test_extract_phrases_from_text_missing_fields(mock_gpt_from_template, monkey
     """Test handling of response with missing fields."""
 
     def mock_generate_missing_fields(*args, **kwargs):
-        if kwargs.get("prompt_template_var") == "extract_phrases_from_text":
+        template_name = None
+        if isinstance(kwargs.get("prompt_template"), Path):
+            template_name = kwargs["prompt_template"].stem
+            
+        if template_name == "extract_phrases_from_text":
             return {
                 "phrases": [
                     {

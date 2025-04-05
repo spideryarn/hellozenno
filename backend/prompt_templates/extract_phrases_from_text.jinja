@@ -1,0 +1,52 @@
+You are a {{ target_language_name }} language expert. For the following text, identify and analyze {% if max_new_phrases %}{{ max_new_phrases }}{% else %}a comprehensive list of{% endif %} tricky, idiomatic phrases and expressions that are likely to be difficult for a {% if language_level %}{{ language_level }} student level{% endif %} learner of {{ target_language_name }} to understand.
+
+Only include *multiple*-word expressions that are idiomatic, common, and where the meaning isn't at all obvious from the individual words. In other words, don't include single words, simple word combinations, or literal phrases.
+
+<text>
+{{ txt_tgt }}
+</text>
+
+Return a JSON object with this structure:
+<json_schema>
+{
+    "phrases": [
+        {
+            "canonical_form": str,  # standard/abstracted form using lemmas or variables like (X, Y)
+            "raw_forms": list[str],  # forms found in text and other common variations
+            "translations": list[str],  # one or more English translations
+            "literal_translation": str,  # word-for-word translation showing grammatical structure
+            "part_of_speech": str,  # "verbal phrase", "prepositional phrase", "idiom", etc.
+            "register": str,  # "neutral", "formal", "informal", "vulgar", "archaic", etc.
+            "commonality": float,  # from 0-1, how frequently used this phrase is
+            "guessability": float,  # from 0-1, how intuitive the meaning is for English speakers
+            "etymology": str,  # origins and development of the phrase
+            "cultural_context": str,  # cultural background and usage notes
+            "mnemonics": list[str],  # one or more memory aids for remembering the phrase, based on sound/spelling/meaning/etymology
+            "example_usage": [
+                {
+                    "phrase": str,  # example in target language
+                    "translation": str,  # translation to English
+                    "context": str,  # optional situational context
+                }
+            ],
+            "related_phrases": [
+                {
+                    "canonical_form": str,  # related phrase
+                    "translation": str,  # its translation
+                    "relationship": str,  # e.g. "similar meaning", "opposite", "variation"
+                }
+            ],
+            "component_words": [
+                {
+                    "lemma": str,  # dictionary form of each key word
+                    "translation": str,  # individual word translation
+                    "notes": str  # usage notes specific to this context
+                }
+            ],
+            "usage_notes": str,  # grammatical patterns, restrictions, or special cases
+            "difficulty_level": str,  # "beginner", "intermediate", "advanced"
+        }
+    ]
+}
+</json_schema>
+Return only the JSON output, with no commentary or other text.

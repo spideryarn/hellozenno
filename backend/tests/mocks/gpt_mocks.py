@@ -1,7 +1,7 @@
-from tests.fixtures_for_tests import SAMPLE_LEMMA_DATA, SAMPLE_PHRASE_DATA
-
-
+from pathlib import Path
 import pytest
+
+from tests.fixtures_for_tests import SAMPLE_LEMMA_DATA, SAMPLE_PHRASE_DATA
 
 
 @pytest.fixture(autouse=True)
@@ -9,11 +9,28 @@ def mock_gpt_from_template(monkeypatch):
     """Mock generate_gpt_from_template to avoid actual API calls."""
 
     def mock_generate(*args, **kwargs):
-        if kwargs.get("prompt_template_var") == "extract_text_from_image":
+        # Check if prompt_template is a Path, and if so, use its stem as template name
+        template_name = None
+        if isinstance(kwargs.get("prompt_template"), Path):
+            template_name = kwargs["prompt_template"].stem
+        else:
+            # For string templates, no good way to identify them - rely on context
+            context = kwargs.get("context_d", {})
+            if "target_language_name" in context:
+                if kwargs.get("response_json") is False:
+                    if kwargs.get("image_filens") is not None:
+                        template_name = "extract_text_from_image"
+                    else:
+                        template_name = "translate_to_english"
+                else:
+                    template_name = "extract_tricky_wordforms"
+        
+        # Route based on identified template
+        if template_name == "extract_text_from_image":
             return "Test text in Greek", {}
-        elif kwargs.get("prompt_template_var") == "translate_to_english":
+        elif template_name == "translate_to_english":
             return "Test text in English", {}
-        elif kwargs.get("prompt_template_var") == "extract_tricky_wordforms":
+        elif template_name == "extract_tricky_wordforms":
             return {
                 "wordforms": [
                     {
@@ -27,7 +44,7 @@ def mock_gpt_from_template(monkeypatch):
                     }
                 ]
             }, {}
-        elif kwargs.get("prompt_template_var") == "extract_phrases_from_text":
+        elif template_name == "extract_phrases_from_text":
             return {
                 "phrases": [
                     {
@@ -50,7 +67,7 @@ def mock_gpt_from_template(monkeypatch):
                     "txt_tgt": "Test text in Greek",
                 },
             }, {}
-        elif kwargs.get("prompt_template_var") == "metadata_for_lemma_full":
+        elif template_name == "metadata_for_lemma":
             # Use SAMPLE_LEMMA_DATA for realistic test data
             return SAMPLE_LEMMA_DATA, {}
         return "Unexpected template", {}

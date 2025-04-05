@@ -7,6 +7,7 @@ from typing import Any, Optional
 from slugify import slugify
 
 from gjdutils.llm_utils import generate_gpt_from_template
+from utils.prompt_utils import get_prompt_template_path
 from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
 from utils.lang_utils import get_language_name, get_language_code
 from db_models import (
@@ -51,7 +52,7 @@ def extract_text_from_image(
     """
     txt_tgt, extra = generate_gpt_from_template(
         client=anthropic_client,
-        prompt_template_var="extract_text_from_image",
+        prompt_template=get_prompt_template_path("extract_text_from_image"),
         context_d={"target_language_name": target_language_name},
         response_json=False,
         image_filens=str(image_data),  # Ensure string type
@@ -86,7 +87,7 @@ def translate_to_english(inp: str, source_language_name: str, verbose: int = 1):
     """
     out, extra = generate_gpt_from_template(
         client=anthropic_client,
-        prompt_template_var="translate_to_english",
+        prompt_template=get_prompt_template_path("translate_to_english"),
         context_d={"txt_tgt": inp, "target_language_name": source_language_name},
         response_json=False,
         verbose=verbose - 1,
@@ -102,7 +103,7 @@ def translate_to_english(inp: str, source_language_name: str, verbose: int = 1):
 def translate_from_english(inp: str, target_language: str, verbose: int = 1):
     out, extra = generate_gpt_from_template(
         client=anthropic_client,
-        prompt_template_var="translate_from_english",
+        prompt_template=get_prompt_template_path("translate_from_english"),
         context_d={"txt_en": inp},
         response_json=False,
         verbose=verbose - 1,
@@ -138,7 +139,7 @@ def extract_tricky_words(
 
     out, extra = generate_gpt_from_template(
         client=anthropic_client,
-        prompt_template_var="extract_tricky_wordforms",
+        prompt_template=get_prompt_template_path("extract_tricky_wordforms"),
         context_d={
             "txt_tgt": txt,
             "target_language_name": target_language_name,
@@ -177,7 +178,7 @@ def metadata_for_lemma_full(
     # Generate metadata using GPT
     out, extra = generate_gpt_from_template(
         client=anthropic_client,
-        prompt_template_var="metadata_for_lemma",
+        prompt_template=get_prompt_template_path("metadata_for_lemma"),
         context_d={
             "lemma": lemma,
             "target_language_name": target_language_name,
@@ -304,7 +305,7 @@ def quick_search_for_wordform(
         try:
             out, extra = generate_gpt_from_template(
                 client=anthropic_client,
-                prompt_template_var="quick_search_for_wordform",
+                prompt_template=get_prompt_template_path("quick_search_for_wordform"),
                 context_d={
                     "wordform": wordform,
                     "target_language_name": target_language_name,
@@ -374,7 +375,7 @@ def extract_phrases_from_text(
 
     out, extra = generate_gpt_from_template(
         client=anthropic_client,
-        prompt_template_var="extract_phrases_from_text",
+        prompt_template=get_prompt_template_path("extract_phrases_from_text"),
         context_d={
             "txt_tgt": txt,
             "target_language_name": target_language_name,
