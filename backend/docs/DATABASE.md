@@ -20,7 +20,7 @@ The application uses PostgreSQL (via Supabase) in all environments:
    - Database name defaults to "hellozenno_development"
 
 3. **Local-to-Production**: Direct connection to Supabase for debugging
-   - Uses connection string from `.env.local_to_prod`
+   - Uses connection string from `.env.prod`
    - Connects directly to Supabase (no proxy needed)
    - Useful for debugging production database issues
    - Use with caution - read-only operations recommended
@@ -108,12 +108,12 @@ Test configuration (`conftest.py`) provides:
 
 For debugging or maintenance tasks, you can connect directly to the production database:
 
-- Use `.env.local_to_prod`:
+- Use `.env.prod`:
 
 - Connect using psql:
    ```bash
-   # Using the connection string from .env.local_to_prod
-   source .env.local_to_prod && psql "$DATABASE_URL"
+   # Using the connection string from .env.prod
+   source .env.prod && psql "$DATABASE_URL"
    ```
 
 - Or for specific operations:
@@ -122,7 +122,7 @@ For debugging or maintenance tasks, you can connect directly to the production d
    ./scripts/prod/backup_db.sh
 
    # Run a specific query
-   source .env.local_to_prod && psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM lemma;"
+   source .env.prod && psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM lemma;"
    ```
 
 **Important Safety Notes:**

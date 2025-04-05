@@ -14,14 +14,14 @@ Usage:
 
     2. Production database testing:
        ```
-       source ./scripts/export_envs.sh .env.local_to_prod
+       source ./scripts/export_envs.sh .env.prod
        PYTHONPATH=. python tests/backend/verify_db_connection.py
        ```
-       Uses settings from .env.local_to_prod to connect to production database
+       Uses settings from .env.prod to connect to production database
 
 Note:
     - When USE_LOCAL_TO_PROD=1, this connects directly to the production database
-      from your local machine. Use with caution.
+      from your local machine using credentials from .env.prod. Use with caution.
     - The script will display connection details and run basic queries to verify
       database access.
     - Exit code 0 indicates success, 1 indicates failure.

@@ -10,7 +10,7 @@ cd "$(dirname "$0")/../.."
 source scripts/utils/common.sh
 
 # Load environment variables
-source .env.local_to_prod
+source .env.prod
 echo "Using direct Supabase connection"
 
 # Configuration

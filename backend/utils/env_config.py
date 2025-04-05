@@ -19,7 +19,6 @@ PROJECT_ROOT = Path(
 ENV_FILE_EXAMPLE = PROJECT_ROOT / ".env.example"
 ENV_FILE_LOCAL = PROJECT_ROOT / ".env.local"
 ENV_FILE_TESTING = PROJECT_ROOT / ".env.testing"
-ENV_FILE_LOCAL_TO_PROD = PROJECT_ROOT / ".env.local_to_prod"
 ENV_FILE_PROD = PROJECT_ROOT / ".env.prod"
 
 
@@ -96,7 +95,7 @@ def decide_environment_file() -> Path:
     if is_vercel():
         return ENV_FILE_PROD
     if is_local_to_prod():
-        return ENV_FILE_LOCAL_TO_PROD
+        raise Exception("Local-to-prod is not supported in this script")
     return ENV_FILE_LOCAL
 
 

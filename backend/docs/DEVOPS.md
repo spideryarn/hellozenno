@@ -122,8 +122,7 @@ Managed through Supabase dashboard:
   - Automatic backups handled by Supabase
 
 For local development with production database:
-- Copy `.env.local_to_prod.example` to `.env.local_to_prod`
-- Update DATABASE_URL with your Supabase credentials
+- Use `.env.prod` which contains the production database credentials
 - Set environment variable: `export USE_LOCAL_TO_PROD=1`
 - Your script can now use utils/db_connection.py to connect to production
 - Remember to unset when done: `unset USE_LOCAL_TO_PROD`
@@ -138,7 +137,7 @@ For local development with production database:
 ### Logging
 - Flask API logs: `logs/flask_app.log` (limited to 200 lines)
 - SvelteKit dev server logs: `logs/sveltekit_dev.log`
-- Production logs: Available in respective Vercel dashboards
+- Production logs: use `vercel logs --json`
 
 ## API Integration
 
