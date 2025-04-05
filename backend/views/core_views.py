@@ -1,12 +1,10 @@
 from flask import (
     Blueprint,
     render_template,
-    send_from_directory,
     redirect,
     url_for,
 )
 import logging
-import os
 
 from utils.url_registry import endpoint_for
 from views.languages_views import languages_list_vw
@@ -51,15 +49,4 @@ def experim_vw():
     return render_template(
         "experim.jinja",
         sample_lemmas=sample_lemmas,
-    )
-
-
-@core_views_bp.route("/favicon.ico", defaults={"trailing_slash": ""})
-@core_views_bp.route("/favicon.ico/", defaults={"trailing_slash": "/"})
-def favicon_vw(trailing_slash):
-    """Handle favicon.ico requests with or without trailing slash."""
-    return send_from_directory(
-        os.path.join(os.path.dirname(core_views_bp.root_path), "static", "img"),
-        "favicon.ico",
-        mimetype="image/vnd.microsoft.icon",
     )
