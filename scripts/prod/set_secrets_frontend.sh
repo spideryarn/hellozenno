@@ -29,14 +29,6 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# Get Frontend project ID from .env.prod
-FRONTEND_PROJECT_ID=$(grep "VERCEL_PROD_FRONTEND_DEPLOYMENT_ID" .env.prod | cut -d'=' -f2)
-if [ -z "$FRONTEND_PROJECT_ID" ]; then
-    echo_error "VERCEL_PROD_FRONTEND_DEPLOYMENT_ID not found in .env.prod"
-    exit 1
-fi
-
-echo "Using Frontend Project ID: $FRONTEND_PROJECT_ID"
 
 # Change to SvelteKit directory
 cd frontend
@@ -56,12 +48,6 @@ while IFS= read -r line; do
     # Extract key and value
     key=$(echo "$line" | cut -d'=' -f1)
     value=$(echo "$line" | cut -d'=' -f2-)
-    
-    # Skip API-specific variables and only include frontend variables
-    # For SvelteKit, we mainly care about VITE_* variables
-    if [[ $key != VITE_* ]] && [[ $key != "VERCEL_PROD_FRONTEND_DEPLOYMENT_ID" ]]; then
-        continue
-    fi
     
     echo "Setting Frontend environment variable: $key..."
     

@@ -29,15 +29,6 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# Get API project ID from .env.prod
-API_PROJECT_ID=$(grep "VERCEL_PROD_BACKEND_DEPLOYMENT_ID" .env.prod | cut -d'=' -f2)
-if [ -z "$API_PROJECT_ID" ]; then
-    echo_error "VERCEL_PROD_BACKEND_DEPLOYMENT_ID not found in .env.prod"
-    exit 1
-fi
-
-echo "Using API Project ID: $API_PROJECT_ID"
-
 # Change to API directory
 cd backend
 
@@ -59,7 +50,6 @@ while IFS= read -r line; do
     
     # Skip frontend-specific variables
     [[ $key == VITE_* ]] && continue
-    [[ $key == VERCEL_PROD_FRONTEND_DEPLOYMENT_ID ]] && continue
     
     echo "Setting API environment variable: $key..."
     
