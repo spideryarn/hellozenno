@@ -4,42 +4,16 @@
   import { RouteName } from '$lib/generated/routes';
   import SourceItem from '$lib/components/SourceItem.svelte';
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   
   export let data: PageData;
   
   // Extract data with reactive declarations
-  $: ({ languageCode, languageName, sources: initialSources, currentSort: initialSort } = data);
+  $: ({ languageCode, languageName, sources, currentSort } = data);
   
-  // Create local state that can be modified directly
-  let sources = initialSources;
-  let currentSort = initialSort;
-  
-  // Update state when props change
-  $: {
-    sources = initialSources;
-    currentSort = initialSort;
-  }
-  
-  // Manually handle sorting through UI without changing URL
+  // Handle sorting by updating the URL with sort parameter
   function handleSort(sortBy) {
-    if (sortBy === 'alpha') {
-      // Sort alphabetically by name
-      sources = [...sources].sort((a, b) => 
-        a.name.localeCompare(b.name)
-      );
-      currentSort = 'alpha';
-    } else {
-      // Sort by most recently modified (assuming empty dirs first then by name)
-      sources = [...sources].sort((a, b) => {
-        // Put empty directories first
-        if (a.is_empty && !b.is_empty) return -1;
-        if (!a.is_empty && b.is_empty) return 1;
-        
-        // Fall back to name if all else equal
-        return a.name.localeCompare(b.name);
-      });
-      currentSort = 'date';
-    }
+    goto(`/language/${languageCode}/sources?sort=${sortBy}`, { keepFocus: true });
   }
   
   onMount(() => {
@@ -162,33 +136,31 @@
   </div>
 {/if}
 
-{#key currentSort}
-  {#if sources.length === 0}
-    <div class="alert alert-info">No sources available for {languageName} yet.</div>
-  {:else}
-    <div class="list-group">
-      {#each sources as source}
-        <div class="d-flex align-items-center">
-          <SourceItem 
-            name={source.name}
-            displayName={source.display_name}
-            slug={source.slug}
-            {languageCode}
-            description={source.description}
-            statistics={source.statistics}
-            className="flex-grow-1"
-          />
-          {#if source.is_empty}
-            <button 
-              type="button" 
-              class="btn btn-danger btn-sm ms-2"
-              on:click={() => deleteSourceDir(source.slug)}
-            >
-              Delete
-            </button>
-          {/if}
-        </div>
-      {/each}
-    </div>
-  {/if}
-{/key} 
+{#if sources.length === 0}
+  <div class="alert alert-info">No sources available for {languageName} yet.</div>
+{:else}
+  <div class="list-group">
+    {#each sources as source}
+      <div class="d-flex align-items-center">
+        <SourceItem 
+          name={source.name}
+          displayName={source.display_name}
+          slug={source.slug}
+          {languageCode}
+          description={source.description}
+          statistics={source.statistics}
+          className="flex-grow-1"
+        />
+        {#if source.is_empty}
+          <button 
+            type="button" 
+            class="btn btn-danger btn-sm ms-2"
+            on:click={() => deleteSourceDir(source.slug)}
+          >
+            Delete
+          </button>
+        {/if}
+      </div>
+    {/each}
+  </div>
+{/if} 
