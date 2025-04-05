@@ -25,16 +25,16 @@ see `frontend/src/routes/language/[language_code]/source/[sourcedir_slug]/[sourc
 That text should include a bunch of hyperlinks for Wordforms that exist in our database (i.e. those that are linked to the Sourcefile with the `SourcefileWordform` model - see `backend/db_models.py`)
 
 For each hyperlink:
-- I can hover with my mouse and it shows a tooltip (with Tippy.js, displaying the lemma form of the wordform, the translation of the wordform, and the etymology).
+- On desktop, I can hover with my mouse and it shows a tooltip (using Tippy.js, displaying the lemma form of the wordform, the translation of the wordform, and the etymology). see 
 - On mobile/tablet, I can long-press to reveal this tooltip.
 - If I click, it opens the Wordform in a new tab
 - While we're waiting for the Flask API to return these details, the tooltip should show "Loading..."
 - If there is a problem, should show "Error loading preview" - in this case, provide useful debugging information in the browser error console. (The main cause of this is related to issues with normalisation of accents/diacritics - we try to ensure everything is normalised, but it's still a bit error-prone)
-- Each Wordform should be linked to a Lemma (I think!?). But the Lemma takes time to generate, and so sometimes it's incomplete (see `Lemma.is_complete` field).
-  - If the Lemma is incomplete, show what we have, e.g. probably we at least have the Wordform translation, and probably even the incomplete Lemma has the `Lemma.lemma` field in the target language.
-  - If the Lemma is incomplete, send a request from the client in the background to `backend/api/lemma_api.py` `get_lemma_metadata_api()`, because that will call `load_or_generate_lemma_metadata()`, which will generate the rest of the Lemma (so that if we hover again later, it'll be there).
+- Each Wordform can be linked to a Lemma (nullable FK). But the Lemma takes time to generate, and so sometimes it's incomplete (see `Lemma.is_complete` field). If the Lemma is incomplete:
+  - Show what we have in the tooltip, e.g. probably we at least have the Wordform translation, and probably even the incomplete Lemma has the `Lemma.lemma` field in the target language.
+  - If the Lemma is incomplete, send a request from the client in the background to `backend/views/lemma_api.py` `get_lemma_metadata_api()`, because that will call `load_or_generate_lemma_metadata()`, which will generate the rest of the Lemma (so that if we hover again later, it'll be there).
 
-All the API stuff lives in `backend/api/*_api.py`.
+All the API stuff lives in `backend/views/*_api.py`.
 
 
 ## Technical Implementation
@@ -74,7 +74,7 @@ Enhanced text (simplified):
 </p>
 ```
 
-## Data Flow
+## Data Flow for a sentence
 
 1. The `get_detailed_sentence_data` function in `sentence_utils.py` extracts tokens from sentences
 2. These tokens are matched against known wordforms in the database
@@ -100,7 +100,7 @@ In the SvelteKit implementation, enhanced text is:
 
 1. Fetched from the API in `+page.server.ts` files
 2. Passed to the page component as a prop
-3. Rendered in the Sentence component using `{@html enhanced_sentence_text}`
+3. Rendered in the Sentence component using `{@html enhanced_sentence_text}` (TODO maybe this should be `EnhancedText.svelte`)
 4. Styled with appropriate CSS to match the original application's appearance
 
 ## Technical Considerations
@@ -109,12 +109,10 @@ In the SvelteKit implementation, enhanced text is:
 - Proper HTML sanitization is important when using `{@html}` to prevent XSS attacks
 - The CSS for links in enhanced text should be styled consistently with the application
 
-## Future Enhancements
+## Next steps
 
-Possible improvements to the enhanced text feature:
+Right now, the hovering is broken. It shows a tooltip, but it's always either "Loading..." or "Error loading preview".
 
-1. Client-side highlighting of words based on difficulty level
-2. Hoverable tooltips with quick translations
-3. Color-coding words by part of speech or frequency
-4. Support for multiple languages beyond Greek
-5. Remembering which words a user has clicked for personalized learning
+This all used to work before with Jinja/vanilla JS, but we need to rewrite/fix it since moving to SvelteKit. So probably most of the Python API is right or nearly right.
+
+Let's start by getting it to work for a single case where we know we have the full Lemma information for the Wordform, and then gradually handle more complex edgecases (e.g. loading/generating/incomplete).
