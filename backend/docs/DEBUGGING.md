@@ -43,10 +43,14 @@ tail -f logs/vite_dev.log
 
 ## Vercel Logs
 
-Access production logs programmatically using the `VERCEL_PROD_DEPLOYMENT_ID` from `.env.prod`:
+Access production logs programmatically using the deployment IDs from `.env.prod`:
 
-```
-vercel logs $VERCEL_PROD_DEPLOYMENT_ID
+```bash
+# Backend logs
+vercel logs $VERCEL_PROD_BACKEND_DEPLOYMENT_ID
+
+# Frontend logs
+vercel logs $VERCEL_PROD_FRONTEND_DEPLOYMENT_ID
 ```
 
 You can filter them with `--json | jq 'select(.level == "warning")'`

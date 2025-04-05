@@ -30,9 +30,9 @@ if ! vercel whoami &> /dev/null; then
 fi
 
 # Get API project ID from .env.prod
-API_PROJECT_ID=$(grep "VERCEL_PROD_API_DEPLOYMENT_ID" .env.prod | cut -d'=' -f2)
+API_PROJECT_ID=$(grep "VERCEL_PROD_BACKEND_DEPLOYMENT_ID" .env.prod | cut -d'=' -f2)
 if [ -z "$API_PROJECT_ID" ]; then
-    echo_error "VERCEL_PROD_API_DEPLOYMENT_ID not found in .env.prod"
+    echo_error "VERCEL_PROD_BACKEND_DEPLOYMENT_ID not found in .env.prod"
     exit 1
 fi
 
