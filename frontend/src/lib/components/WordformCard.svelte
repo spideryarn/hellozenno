@@ -38,7 +38,7 @@
         {#if lemma && lemma !== wordform}
             <div class="mt-2">
                 <small class="text-muted">
-                    Lemma: <span class="hz-lemma-link" on:click|preventDefault={navigateToLemma}>{lemma}</span>
+                    Lemma: <button type="button" class="hz-lemma-link" on:click|preventDefault={navigateToLemma} on:keydown={(e) => e.key === 'Enter' && navigateToLemma()}>{lemma}</button>
                 </small>
             </div>
         {/if}
@@ -75,6 +75,11 @@
         color: var(--bs-primary, #4CAD53);
         cursor: pointer;
         transition: color 0.2s ease;
+        background: none;
+        border: none;
+        padding: 0;
+        font: inherit;
+        display: inline;
     }
     
     .hz-lemma-link:hover {

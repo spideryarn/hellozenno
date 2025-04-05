@@ -1,4 +1,9 @@
 <script lang="ts">
+  // Tell Svelte to ignore unused export warnings for sourcedir and stats
+  /**
+   * @svelte-ignore unused-export-let
+   */
+
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
