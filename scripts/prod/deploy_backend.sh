@@ -72,9 +72,8 @@ if [[ "$PREVIEW" == "true" ]]; then
     echo "Note: Skipping health check for preview deployment"
 else
     # Run database migrations for production deployment
-    echo "Skipping database migrations..."
-    # echo "Running database migrations..."
-    # ../scripts/prod/migrate.sh
+    echo "Running database migrations..."
+    ../scripts/prod/migrate.sh
 
     echo "Deploying API to Vercel production..."
     DEPLOY_CMD="vercel --prod $ENV_ARGS"

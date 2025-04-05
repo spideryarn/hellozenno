@@ -12,7 +12,8 @@ source "$PROJECT_ROOT/scripts/utils/common.sh"
 # Source environment variables from .env.prod
 if [ -f "$PROJECT_ROOT/.env.prod" ]; then
     echo "Loading environment variables from .env.prod..."
-    source "$PROJECT_ROOT/scripts/utils/export_envs.sh" "$PROJECT_ROOT/.env.prod"
+    # Use export to ensure variables are available to subprocesses
+    export $(grep -v '^#' "$PROJECT_ROOT/.env.prod" | xargs)
 else
     echo_error "Missing .env.prod file"
     exit 1
@@ -20,15 +21,10 @@ fi
 
 echo "Running migrations on Vercel database..."
 
-# Run migrations with the proper Python path
-# Check if we're in the api directory
-if [ "$(basename "$(pwd)")" = "api" ]; then
-    # If we're in the api directory, run the module directly
-    VERCEL=1 python -m utils.migrate migrate
-else
-    # If we're in the project root or somewhere else, run it from the api directory
-    cd "$PROJECT_ROOT/backend/api"
+# Always run from the backend directory where utils/migrate.py is located
+cd "$PROJECT_ROOT/backend"
+
+# Run migrations with environment variables properly set
 VERCEL=1 python -m utils.migrate migrate
-fi
 
 echo_success "Migrations completed successfully!" 
