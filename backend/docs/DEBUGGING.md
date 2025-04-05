@@ -19,40 +19,37 @@ tail -f logs/flask_app.log
 grep -i error logs/flask_app.log
 ```
 
-### Frontend Logs
-Vite development server logs are saved to `logs/vite_dev.log` when running frontend with `scripts/local/run_frontend_dev.sh`.
+### Frontend debugging
+
+see `frontend/docs/FRONTEND_DEBUGGING.md`
+
+
+## Running Flask dev server
+
+(The user will run this for you in a separate terminal)
 
 ```bash
-# View latest Vite logs
-tail -f logs/vite_dev.log
-
-# Both logs are limited to 200 lines by default
-```
-
-## Running in Different Modes
-
-(uses Flask port 3000)
-
-```bash
-# Development mode (default)
 ./scripts/local/run_backend.sh
-
-# Production frontend testing locally
-./scripts/local/run_backend.sh --prod-frontend
 ```
 
 ## Vercel Logs
 
-Access production logs programmatically using the deployment IDs from `.env.prod`:
+Annoyingly, there doesn't seem to be a good way to access production logs programmatically.
+
+The `vercel logs` command will trap you in a shell that updates live, but you can't exit it. So the best approach for now is to `cd frontend_OR_backend && vercel ls | tail`  ask the user to run it for you.
 
 ```bash
-# Backend logs
-vercel logs $VERCEL_PROD_BACKEND_DEPLOYMENT_ID
-
-# Frontend logs
-vercel logs $VERCEL_PROD_FRONTEND_DEPLOYMENT_ID
+cd backend
+vercel ls | tail
+# pick the most recent deployment, `xxx_latest_backend_deployment_id`
+vercel logs xxx_latest_backend_deployment_id --json
 ```
 
-You can filter them with `--json | jq 'select(.level == "warning")'`
+```bash
+cd frontend
+# pick the most recent deployment, `xxx_latest_frontend_deployment_id`
+vercel logs xxx_latest_frontend_deployment_id --json
+```
 
-Experiment with ways to avoid getting trapped in a shell.
+You can filter them with e.g. `--json | jq 'select(.level == "warning")'`
+

@@ -137,7 +137,7 @@ For local development with production database:
 ### Logging
 - Flask API logs: `logs/flask_app.log` (limited to 200 lines)
 - SvelteKit dev server logs: `logs/sveltekit_dev.log`
-- Production logs: use `vercel logs --json`
+- Production logs: see DEBUGGING.md for the issues with `vercel logs --json`
 
 ## API Integration
 
