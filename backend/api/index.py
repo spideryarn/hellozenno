@@ -72,7 +72,7 @@ def create_app():
     # Register blueprints
     from views.system_views import system_views_bp
     from views.auth_views import auth_views_bp
-    from .auth_api import auth_api_bp
+    from backend.api.auth_api import auth_api_bp
     from views.core_views import core_views_bp
     from views.wordform_views import wordform_views_bp
     from views.lemma_views import lemma_views_bp
@@ -104,15 +104,15 @@ def create_app():
     app.register_blueprint(flashcard_views_bp)
 
     # Register the new API blueprints
-    from .sourcedir_api import sourcedir_api_bp
-    from .wordform_api import wordform_api_bp
-    from .lemma_api import lemma_api_bp
-    from .phrase_api import phrase_api_bp
-    from .sourcefile_api import sourcefile_api_bp
-    from .sentence_api import sentence_api_bp
-    from .languages_api import languages_api_bp
-    from .flashcard_api import flashcard_api_bp
-    from .search_api import search_api_bp
+    from backend.api.sourcedir_api import sourcedir_api_bp
+    from backend.api.wordform_api import wordform_api_bp
+    from backend.api.lemma_api import lemma_api_bp
+    from backend.api.phrase_api import phrase_api_bp
+    from backend.api.sourcefile_api import sourcefile_api_bp
+    from backend.api.sentence_api import sentence_api_bp
+    from backend.api.languages_api import languages_api_bp
+    from backend.api.flashcard_api import flashcard_api_bp
+    from backend.api.search_api import search_api_bp
 
     app.register_blueprint(sourcedir_api_bp)
     app.register_blueprint(wordform_api_bp)

@@ -25,7 +25,7 @@ from views.sourcedir_views import (
     sourcedirs_for_language_vw,
     sourcefiles_for_sourcedir_vw,
 )
-from .sourcedir_api import (
+from backend.api.sourcedir_api import (
     create_sourcedir_api,
     delete_sourcedir_api,
     upload_sourcedir_new_sourcefile_api,

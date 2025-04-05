@@ -9,7 +9,7 @@ import utils.audio_utils as audio_utils  # Import the module directly for mockin
 import json
 from tests.backend.utils_for_testing import build_url_with_query
 from views.sentence_views import sentences_list_vw, get_sentence_vw
-from .sentence_api import (
+from backend.api.sentence_api import (
     get_sentence_audio_api,
     get_random_sentence_api,
     delete_sentence_api,
