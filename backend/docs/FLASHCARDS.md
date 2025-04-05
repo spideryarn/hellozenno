@@ -50,7 +50,8 @@ The buttons should be really big and arranged so that it's really easy to press 
 
 ## Keyboard shortcuts
 - ENTER for "Start practice"
-- LEFT/RIGHT arrow to proceed backwards/forwards through stages within a sentence
+- LEFT arrow to proceed backwards through stages within a sentence (always plays audio)
+- RIGHT arrow to proceed forward through stages within a sentence
 - ENTER for "Next" (i.e. next random sentence flashcard)
 
 ## Relevant Files

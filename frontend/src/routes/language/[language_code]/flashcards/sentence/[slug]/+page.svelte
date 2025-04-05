@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Card from '$lib/components/Card.svelte';
+  import { KeyReturn } from 'phosphor-svelte';
   
   export let data;
   
@@ -12,10 +13,24 @@
     }
   }
   
+  function playAudio() {
+    const audioElement = document.getElementById('audio-player') as HTMLAudioElement;
+    if (audioElement) {
+      // Only restart if audio is not currently playing
+      if (audioElement.paused || audioElement.ended) {
+        audioElement.currentTime = 0; // Restart from beginning
+        audioElement.play().catch(err => {
+          console.error('Failed to play audio:', err);
+        });
+      }
+    }
+  }
+
   function prevStage() {
     if (currentStage > 1) {
       currentStage -= 1;
     }
+    playAudio();
   }
   
   function nextSentence() {
@@ -35,7 +50,11 @@
     if (event.key === 'ArrowRight') {
       nextStage();
     } else if (event.key === 'ArrowLeft') {
-      prevStage();
+      if (currentStage === 1) {
+        playAudio();
+      } else {
+        prevStage(); // This already plays audio via the prevStage function
+      }
     } else if (event.key === 'Enter') {
       nextSentence();
     }
@@ -103,8 +122,7 @@
           <div class="col-4">
             <button 
               class="btn btn-secondary w-100 py-3" 
-              on:click={prevStage}
-              disabled={currentStage === 1}>
+              on:click={currentStage === 1 ? playAudio : prevStage}>
               {currentStage === 1 ? 'Play audio (←)' : currentStage === 2 ? 'Play audio (←)' : 'Show sentence (←)'}
             </button>
           </div>
@@ -113,7 +131,7 @@
             <button 
               class="btn btn-primary w-100 py-3" 
               on:click={nextSentence}>
-              New sentence
+              New sentence <KeyReturn size={18} weight="bold" class="ms-1" />
             </button>
           </div>
           
