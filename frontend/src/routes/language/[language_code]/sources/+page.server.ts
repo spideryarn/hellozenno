@@ -3,13 +3,17 @@ import { error } from "@sveltejs/kit";
 import { getApiUrl } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
 
-export const load: PageServerLoad = async ({ params, fetch, url }) => {
+export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
+    // Register dependency on the query parameters (specifically the sort parameter)
+    depends('url:sort');
+    
     const { language_code } = params;
     const target_language_code = language_code;
 
     try {
         // Get sort parameter (default to 'date')
         const sort = url.searchParams.get("sort") || "date";
+        console.log('Server load - URL sort parameter:', sort);
 
         // Use the typed API utility for type-safe URL generation
         const apiUrl = getApiUrl(
@@ -19,9 +23,15 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
         
         // Add the sort parameter to the API URL
         const apiUrlWithParams = `${apiUrl}?sort=${sort}`;
+        console.log('Server load - API URL with params:', apiUrlWithParams);
 
         // Fetch sources data from our API endpoint
-        const sourcesResponse = await fetch(apiUrlWithParams);
+        const sourcesResponse = await fetch(apiUrlWithParams, {
+            // Ensure no caching
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
 
         if (!sourcesResponse.ok) {
             throw new Error(

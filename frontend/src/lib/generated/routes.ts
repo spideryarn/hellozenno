@@ -9,7 +9,6 @@ export enum RouteName {
   AUTH_API_GET_USER_API = "AUTH_API_GET_USER_API",
   CORE_VIEWS_HOME_VW = "CORE_VIEWS_HOME_VW",
   CORE_VIEWS_EXPERIM_VW = "CORE_VIEWS_EXPERIM_VW",
-  CORE_VIEWS_FAVICON_VW = "CORE_VIEWS_FAVICON_VW",
   LANGUAGES_VIEWS_LANGUAGES_LIST_VW = "LANGUAGES_VIEWS_LANGUAGES_LIST_VW",
   WORDFORM_VIEWS_WORDFORMS_LIST_VW = "WORDFORM_VIEWS_WORDFORMS_LIST_VW",
   WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW = "WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW",
@@ -101,7 +100,6 @@ export const ROUTES = {
   AUTH_API_GET_USER_API: "/api/auth/user",
   CORE_VIEWS_HOME_VW: "/",
   CORE_VIEWS_EXPERIM_VW: "/experim",
-  CORE_VIEWS_FAVICON_VW: "/favicon.ico",
   LANGUAGES_VIEWS_LANGUAGES_LIST_VW: "/languages",
   WORDFORM_VIEWS_WORDFORMS_LIST_VW: "/language/{target_language_code}/wordforms/",
   WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW: "/language/{target_language_code}/wordform/{wordform}",
@@ -193,7 +191,6 @@ export type RouteParams = {
   [RouteName.AUTH_API_GET_USER_API]: {};
   [RouteName.CORE_VIEWS_HOME_VW]: {};
   [RouteName.CORE_VIEWS_EXPERIM_VW]: {};
-  [RouteName.CORE_VIEWS_FAVICON_VW]: {};
   [RouteName.LANGUAGES_VIEWS_LANGUAGES_LIST_VW]: {};
   [RouteName.WORDFORM_VIEWS_WORDFORMS_LIST_VW]: { target_language_code: string };
   [RouteName.WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW]: { target_language_code: string; wordform: string };

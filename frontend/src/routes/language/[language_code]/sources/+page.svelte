@@ -3,10 +3,48 @@
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import SourceItem from '$lib/components/SourceItem.svelte';
+  import { onMount } from 'svelte';
   
   export let data: PageData;
   
-  const { languageCode, languageName, sources, currentSort } = data;
+  // Extract data with reactive declarations
+  $: ({ languageCode, languageName, sources: initialSources, currentSort: initialSort } = data);
+  
+  // Create local state that can be modified directly
+  let sources = initialSources;
+  let currentSort = initialSort;
+  
+  // Update state when props change
+  $: {
+    sources = initialSources;
+    currentSort = initialSort;
+  }
+  
+  // Manually handle sorting through UI without changing URL
+  function handleSort(sortBy) {
+    if (sortBy === 'alpha') {
+      // Sort alphabetically by name
+      sources = [...sources].sort((a, b) => 
+        a.name.localeCompare(b.name)
+      );
+      currentSort = 'alpha';
+    } else {
+      // Sort by most recently modified (assuming empty dirs first then by name)
+      sources = [...sources].sort((a, b) => {
+        // Put empty directories first
+        if (a.is_empty && !b.is_empty) return -1;
+        if (!a.is_empty && b.is_empty) return 1;
+        
+        // Fall back to name if all else equal
+        return a.name.localeCompare(b.name);
+      });
+      currentSort = 'date';
+    }
+  }
+  
+  onMount(() => {
+    console.log('Component mounted, sort type:', currentSort);
+  });
   
   // Function to create a new source directory
   async function createNewSourceDir() {
@@ -100,41 +138,57 @@
 <!-- Sort options -->
 <div class="mb-4 text-secondary">
   Sort by:
-  <a href="/language/{languageCode}/sources?sort=alpha" 
-     class="text-decoration-none ms-2 me-2 {currentSort === 'alpha' ? 'fw-bold text-primary' : ''}">
+  <button type="button" 
+    on:click={() => handleSort('alpha')}
+    class="btn btn-link text-decoration-none ms-2 me-2 p-0"
+    class:fw-bold={currentSort === 'alpha'} 
+    class:text-primary={currentSort === 'alpha'}>
     Alphabetical
-  </a> |
-  <a href="/language/{languageCode}/sources?sort=date"
-     class="text-decoration-none ms-2 {currentSort === 'date' ? 'fw-bold text-primary' : ''}">
+  </button> |
+  <button type="button" 
+    on:click={() => handleSort('date')}
+    class="btn btn-link text-decoration-none ms-2 p-0"
+    class:fw-bold={currentSort === 'date'} 
+    class:text-primary={currentSort === 'date'}>
     Recently Modified
-  </a>
+  </button>
 </div>
 
-{#if sources.length === 0}
-  <div class="alert alert-info">No sources available for {languageName} yet.</div>
-{:else}
-  <div class="list-group">
-    {#each sources as source}
-      <div class="d-flex align-items-center">
-        <SourceItem 
-          name={source.name}
-          displayName={source.display_name}
-          slug={source.slug}
-          {languageCode}
-          description={source.description}
-          statistics={source.statistics}
-          className="flex-grow-1"
-        />
-        {#if source.is_empty}
-          <button 
-            type="button" 
-            class="btn btn-danger btn-sm ms-2"
-            on:click={() => deleteSourceDir(source.slug)}
-          >
-            Delete
-          </button>
-        {/if}
-      </div>
-    {/each}
+<!-- Debug info (hidden in production) -->
+{#if typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production'}
+  <div class="d-none">
+    Current sort: {currentSort}
+    Sources count: {sources.length}
   </div>
-{/if} 
+{/if}
+
+{#key currentSort}
+  {#if sources.length === 0}
+    <div class="alert alert-info">No sources available for {languageName} yet.</div>
+  {:else}
+    <div class="list-group">
+      {#each sources as source}
+        <div class="d-flex align-items-center">
+          <SourceItem 
+            name={source.name}
+            displayName={source.display_name}
+            slug={source.slug}
+            {languageCode}
+            description={source.description}
+            statistics={source.statistics}
+            className="flex-grow-1"
+          />
+          {#if source.is_empty}
+            <button 
+              type="button" 
+              class="btn btn-danger btn-sm ms-2"
+              on:click={() => deleteSourceDir(source.slug)}
+            >
+              Delete
+            </button>
+          {/if}
+        </div>
+      {/each}
+    </div>
+  {/if}
+{/key} 
