@@ -15,46 +15,11 @@ from flask import Flask, render_template
 from flask_cors import CORS
 from whitenoise import WhiteNoise
 
-# Import the consolidated Vite helpers from utils/vite_helpers.py
-from utils.vite_helpers import (
-    register_vite_helpers,
-    get_vite_manifest,
-    vite_asset_url,
-    dump_manifest,
-)
+# We no longer need the Vite helpers import since we're using SvelteKit for frontend
 from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
 from utils.url_registry import generate_route_registry, generate_typescript_routes
-
-
-def setup_route_registry(app, static_folder):
-    """Set up route registry and generate TypeScript definitions.
-
-    Args:
-        app: The Flask application
-        static_folder: Path to the static files directory
-    """
-    with app.app_context():
-        # Generate route registry
-        route_registry = generate_route_registry(app)
-
-        # Make route registry available to templates
-        @app.context_processor
-        def inject_routes():
-            # even though this is marked as unused by the IDE, it is actually being injected into the template context processor
-            """Make route registry available to all templates."""
-            return {
-                "route_registry": route_registry,
-            }
-
-        # In development mode, generate TypeScript routes file
-        if not app.config["IS_PRODUCTION"]:
-            ts_output_path = generate_typescript_routes(app)
-            logger.info(f"Generated TypeScript routes at {ts_output_path}")
-
-    return route_registry
-
 
 # Configure logging with loguru
 setup_logging(log_to_file=True, max_lines=200)
@@ -64,23 +29,9 @@ def create_app():
     """Create and configure the Flask application."""
     logger.info("Creating Flask application")
 
-    # Set template_folder to point to the templates directory at the root level
+    # Simplified app initialization - we only need static_folder now
     app = Flask(
         __name__,
-        # template_folder=os.path.join(
-        #     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
-        # ),
-        # static_folder=os.path.join(
-        #     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
-        # ),
-    )
-
-    # Set template_folder to point to the templates directory in the backend
-    app = Flask(
-        __name__,
-        template_folder=os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "../templates"
-        ),
         static_folder=os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "../static"
         ),
@@ -111,19 +62,7 @@ def create_app():
         app.config["LOCAL_CHECK_OF_PROD_FRONTEND"] = True
         logger.info("Running in LOCAL_CHECK_OF_PROD_FRONTEND mode")
 
-    # First import the functions directly
-    from utils.vite_helpers import get_vite_manifest, vite_asset_url, dump_manifest
-
-    # Register Vite helper functions directly as Jinja globals
-    # This makes them available in all templates, including macros
-    app.jinja_env.globals.update(
-        vite_manifest=get_vite_manifest,
-        vite_asset_url=vite_asset_url,
-        dump_manifest=dump_manifest,
-    )
-
-    # Register the full vite helpers which adds a route for manifest viewing
-    register_vite_helpers(app)
+    # We no longer need to register Vite helpers as we're using SvelteKit
 
     # Initialize database
     from utils.db_connection import init_db
@@ -188,12 +127,9 @@ def create_app():
     # Add middleware to handle URL decoding for all routes - see planning/250316_vercel_url_encoding_fix.md
     app.before_request(decode_url_params)
 
-    # Configure WhiteNoise for static file serving
+    # Configure WhiteNoise for static file serving - still needed for audio, downloads, etc.
     static_folder = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "../static"
-    )
-    templates_folder = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "../templates"
     )
 
     # Wrap the WSGI app with WhiteNoise
@@ -211,62 +147,31 @@ def create_app():
     logger.info(f"WhiteNoise compression enabled: {app.wsgi_app.enable_compression}")  # type: ignore
 
     # Generate route registry and TypeScript definitions
-    setup_route_registry(app, static_folder)
+    with app.app_context():
+        # Generate route registry
+        route_registry = generate_route_registry(app)
+
+        # Make route registry available to templates
+        @app.context_processor
+        def inject_routes():
+            return {
+                "route_registry": route_registry,
+            }
+
+        # In development mode, generate TypeScript routes file
+        if not app.config["IS_PRODUCTION"]:
+            ts_output_path = generate_typescript_routes(app)
+            logger.info(f"Generated TypeScript routes at {ts_output_path}")
 
     # Register error handlers
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template("404.jinja"), 404
 
-    # Test route to verify vite_helpers are properly registered
-    @app.route("/dev/test-vite-helpers")
-    def test_vite_helpers():
-        from flask import current_app
-
-        try:
-            # Check context processors
-            ctx = {}
-            for processor in current_app.template_context_processors[None]:
-                ctx.update(processor())
-
-            # Check Jinja globals
-            jinja_globals = {k: True for k in current_app.jinja_env.globals.keys()}
-
-            # Return combined results
-            return {
-                "context_processor_functions": {
-                    "vite_asset_url_available": "vite_asset_url" in ctx,
-                    "vite_manifest_available": "vite_manifest" in ctx,
-                    "dump_manifest_available": "dump_manifest" in ctx,
-                    "available_context_functions": list(ctx.keys()),
-                },
-                "jinja_globals": {
-                    "vite_asset_url_available": "vite_asset_url" in jinja_globals,
-                    "vite_manifest_available": "vite_manifest" in jinja_globals,
-                    "dump_manifest_available": "dump_manifest" in jinja_globals,
-                    "available_global_functions": list(
-                        k
-                        for k in jinja_globals.keys()
-                        if not k.startswith("_")
-                        and callable(current_app.jinja_env.globals[k])
-                    ),
-                },
-                "app_config": {
-                    "IS_PRODUCTION": current_app.config.get("IS_PRODUCTION", False),
-                    "LOCAL_CHECK_OF_PROD_FRONTEND": current_app.config.get(
-                        "LOCAL_CHECK_OF_PROD_FRONTEND", False
-                    ),
-                },
-            }
-        except Exception as e:
-            return {"error": str(e)}, 500
-
     # Added CLI command to generate routes
     @app.cli.command("generate-routes-ts")
     def generate_routes_ts_command():
         """Generate TypeScript route definitions from Flask app.url_map."""
-        import os
-
         with app.app_context():
             ts_output_path = generate_typescript_routes(app)
         logger.info(f"Generated TypeScript routes at {ts_output_path}")
