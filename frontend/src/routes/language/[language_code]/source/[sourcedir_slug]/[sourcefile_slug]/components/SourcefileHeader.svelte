@@ -5,6 +5,7 @@
   import { RouteName } from '$lib/generated/routes';
   import { MetadataCard } from '$lib';
   import { goto } from '$app/navigation';
+  import { getPageUrl } from '$lib/navigation';
   import { 
     CaretDoubleLeft, 
     CaretDoubleRight, 
@@ -39,9 +40,10 @@
     isEditingDescription = true;
   }
   
-  // Helper function for navigation
+  // Helper function for navigation using Svelte's goto
   function navigateTo(url: string) {
-    window.location.href = url;
+    // Using SvelteKit's client-side routing with invalidation
+    goto(url, { invalidateAll: true });
   }
   
   async function saveDescription() {
@@ -142,7 +144,11 @@
       }
       
       // Navigate back to the sourcedir page
-      window.location.href = `/language/${language_code}/source/${sourcedir_slug}`;
+      const sourcedirUrl = getPageUrl('sourcedir', {
+        language_code,
+        sourcedir_slug
+      });
+      navigateTo(sourcedirUrl);
     } catch (error) {
       console.error('Error deleting file:', error);
       alert('Failed to delete file. Please try again.');
@@ -180,7 +186,12 @@
       const result = await response.json();
       
       // Redirect to the new URL with the updated slug
-      window.location.href = `/language/${language_code}/source/${sourcedir_slug}/${result.new_slug}`;
+      const sourcefileTextUrl = getPageUrl('sourcefile_text', {
+        language_code,
+        sourcedir_slug,
+        sourcefile_slug: result.new_slug
+      });
+      navigateTo(sourcefileTextUrl);
     } catch (error) {
       console.error('Error renaming file:', error);
       alert('Failed to rename file: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -202,7 +213,7 @@
     }
   }
 
-  // Generate URLs for view and download
+  // Generate URLs for view and download - these are actual API endpoints
   const viewUrl = getApiUrl(
     RouteName.SOURCEFILE_VIEWS_VIEW_SOURCEFILE_VW,
     {
@@ -220,6 +231,45 @@
       sourcefile_slug
     }
   );
+  
+  // Generate navigation URLs
+  const sourcedirUrl = getPageUrl('sourcedir', {
+    language_code,
+    sourcedir_slug
+  });
+  
+  // Prepare navigation URLs only if the corresponding slugs exist
+  const firstSourcefileUrl = navigation.first_slug ? 
+    getPageUrl('sourcefile_text', {
+      language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.first_slug
+    }) : undefined;
+    
+  const prevSourcefileUrl = navigation.prev_slug ? 
+    getPageUrl('sourcefile_text', {
+      language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.prev_slug
+    }) : undefined;
+    
+  const nextSourcefileUrl = navigation.next_slug ? 
+    getPageUrl('sourcefile_text', {
+      language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.next_slug
+    }) : undefined;
+    
+  const lastSourcefileUrl = navigation.last_slug ? 
+    getPageUrl('sourcefile_text', {
+      language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.last_slug
+    }) : undefined;
+    
+  const flashcardsUrl = getPageUrl('flashcards', {
+    language_code
+  }, { sourcefile: sourcefile_slug });
 </script>
 
 <div class="header-container">
@@ -299,7 +349,7 @@
     </li>
     {#if sourcefile.text_target}
       <li class="button-group">
-        <a href="/language/{language_code}/flashcards?sourcefile={sourcefile_slug}" class="button">
+        <a href={flashcardsUrl} class="button">
           Practice Flashcards
         </a>
       </li>
@@ -309,11 +359,11 @@
         <span class="button disabled">
           <CaretDoubleLeft size={16} weight="bold" />
         </span>
-      {:else}
+      {:else if firstSourcefileUrl}
         <a 
-          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.first_slug}" 
+          href={firstSourcefileUrl}
           class="button"
-          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.first_slug}/text`)}
+          data-sveltekit-reload
         >
           <CaretDoubleLeft size={16} weight="bold" />
         </a>
@@ -323,17 +373,21 @@
         <span class="button disabled">
           <CaretLeft size={16} weight="bold" />
         </span>
-      {:else}
+      {:else if prevSourcefileUrl}
         <a 
-          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.prev_slug}" 
+          href={prevSourcefileUrl}
           class="button"
-          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.prev_slug}/text`)}
+          data-sveltekit-reload
         >
           <CaretLeft size={16} weight="bold" />
         </a>
       {/if}
       
-      <a href="/language/{language_code}/source/{sourcedir_slug}" class="button">
+      <a 
+        href={sourcedirUrl}
+        class="button"
+        data-sveltekit-reload
+      >
         <ArrowUp size={16} weight="bold" />
       </a>
       
@@ -341,11 +395,11 @@
         <span class="button disabled">
           <CaretRight size={16} weight="bold" />
         </span>
-      {:else}
+      {:else if nextSourcefileUrl}
         <a 
-          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.next_slug}" 
+          href={nextSourcefileUrl}
           class="button"
-          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.next_slug}/text`)}
+          data-sveltekit-reload
         >
           <CaretRight size={16} weight="bold" />
         </a>
@@ -355,11 +409,11 @@
         <span class="button disabled">
           <CaretDoubleRight size={16} weight="bold" />
         </span>
-      {:else}
+      {:else if lastSourcefileUrl}
         <a 
-          href="/language/{language_code}/source/{sourcedir_slug}/{navigation.last_slug}" 
+          href={lastSourcefileUrl}
           class="button"
-          on:click|preventDefault={() => navigateTo(`/language/${language_code}/source/${sourcedir_slug}/${navigation.last_slug}/text`)}
+          data-sveltekit-reload
         >
           <CaretDoubleRight size={16} weight="bold" />
         </a>
