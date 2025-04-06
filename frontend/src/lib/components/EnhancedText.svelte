@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import tippy, { type Instance, hideAll } from 'tippy.js';
   import 'tippy.js/dist/tippy.css';
-  import 'tippy.js/themes/light.css';
+  // No need to import light theme as we'll use custom styling
   import { getApiUrl } from '../api';
   import { API_BASE_URL } from '../config';
   import { RouteName } from '../generated/routes';
@@ -145,9 +145,9 @@
         });
       
       const instance = tippy(wordElem, {
-        content: 'Loading...',
+        content: '<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>',
         allowHTML: true,
-        theme: 'light',
+        theme: 'hz-dark',
         placement: 'bottom',
         delay: [200, 0], // Delay before showing tooltip
         maxWidth: 300,
@@ -161,8 +161,8 @@
           
           console.log(`Showing tooltip for word: "${word}" in language: ${target_language_code}`);
           
-          // Set initial content
-          instance.setContent('Loading...');
+          // Set initial loading content with spinner
+          instance.setContent('<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>');
           
           // Use preloaded data if available, otherwise fetch
           if (preloadedData) {
@@ -203,7 +203,7 @@
             // Only add debug info in non-production environments
             if (import.meta.env.DEV) {
               const debugInfo = `
-                <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
+                <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
                   <strong>URL:</strong><br>
                   <span style="font-weight: bold;">${data._debug?.url || 'N/A'}</span><br>
                   <strong>Details:</strong><br>
@@ -232,7 +232,7 @@
             let errorContent = `
               <div class="tippy-content">
                 <h4>${word}</h4>
-                <p class="translation"><em>Error loading word information</em></p>
+                <p class="translation error"><em>Error loading word information</em></p>
             `;
             
             // Only add debug info in non-production environments
@@ -251,7 +251,7 @@
               // No need for this anymore as we're using the url variable directly
               
               errorContent += `
-                <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
+                <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
                   <strong>URL:</strong><br>
                   <span style="font-weight: bold;">${urlForDebug || url}</span><br>
                   <strong>Details:</strong><br>
@@ -303,15 +303,27 @@
     background-color: rgba(76, 173, 83, 0.1);
   }
   
-  /* Tippy custom styles */
+  /* Tippy custom styles - dark theme to match site */
+  :global(.tippy-box[data-theme~='hz-dark']) {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    color: #e9e9e9;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  }
+  
+  :global(.tippy-box[data-theme~='hz-dark'] .tippy-arrow) {
+    color: #1e1e1e;
+  }
+  
   :global(.tippy-content) {
-    padding: 8px 12px;
+    padding: 10px 14px;
   }
   
   :global(.tippy-content h4) {
     margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 600;
+    color: #4CAD53; /* Primary color from theme */
   }
   
   :global(.tippy-content p) {
@@ -320,13 +332,25 @@
   }
   
   :global(.tippy-content .translation) {
-    color: #333;
+    color: #e9e9e9; /* Light text color matching site */
   }
   
   :global(.tippy-content .etymology) {
-    color: #666;
+    color: #aaaaaa; /* Slightly muted color for secondary text */
     font-style: italic;
     font-size: 13px;
+  }
+  
+  :global(.hz-tooltip-loading) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+    color: #aaaaaa;
+  }
+  
+  :global(.tippy-content .translation.error) {
+    color: #d97a27; /* Secondary color from theme for errors */
   }
   
   /* Responsive styling for different screen sizes */

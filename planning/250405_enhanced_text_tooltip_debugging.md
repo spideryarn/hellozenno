@@ -410,5 +410,39 @@ Each step improved the component incrementally, resulting in a modern, maintaina
 
 ## Remaining next steps
 
-1. Creating a proper TypeScript interface for the word preview data
-2. Further cleanup of the debug info in tooltips
+1. Creating a proper TypeScript interface for the word preview data ✅
+2. Further cleanup of the debug info in tooltips ✅
+3. Update tooltip styling to match the site's dark theme ✅
+
+## Tooltip Styling Improvements (June 4, 2025)
+
+We further enhanced the tooltip user experience by implementing proper styling that matches the site's dark theme:
+
+1. **Dark Theme Implementation**
+   - Replaced the light theme with a custom dark theme using site colors:
+   - Background color: `#1e1e1e` (matching `--bs-card-bg`)
+   - Border: `1px solid #333` (matching `--bs-card-border-color`)
+   - Text color: `#e9e9e9` (matching `--bs-body-color`)
+   - Accent color: `#4CAD53` (primary green from theme)
+
+2. **Loading State Enhancement**
+   - Added a Bootstrap spinner during loading for better user feedback
+   - Implemented a consistent loading state style with proper spacing
+   - Created a dedicated CSS class for loading state styling
+
+3. **Error State Styling**
+   - Applied the secondary color `#d97a27` (orange) for error messages
+   - Made error messages visually distinct from normal content
+   - Maintained readability in the dark theme
+
+4. **Debug Info Styling**
+   - Updated debug info styling to match the dark theme
+   - Used muted colors (`#888`) for debug information
+   - Added proper separator with `border-top: 1px dotted #444`
+
+5. **Typography and Spacing**
+   - Improved padding and content spacing for better readability
+   - Set header color to match the site's primary color
+   - Adjusted font sizes and weights for visual hierarchy
+
+These styling changes create a more cohesive user experience by ensuring the tooltips feel like an integrated part of the application rather than an external component.
