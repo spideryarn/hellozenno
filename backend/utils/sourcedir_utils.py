@@ -93,6 +93,11 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
     - next_slug: slug of the next file (if any)
     - first_slug: slug of the first file
     - last_slug: slug of the last file
+    - sourcedir_path: the path of the sourcedir
+    - prev_filename: filename of the previous file (if any)
+    - next_filename: filename of the next file (if any)
+    - first_filename: filename of the first file
+    - last_filename: filename of the last file
     """
     # Get all sourcefiles ordered by filename (case-insensitive)
     sourcefiles = list(
@@ -111,25 +116,43 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
             "current_position": 0,
             "first_slug": None,
             "last_slug": None,
+            "sourcedir_path": sourcedir.path,
+            "prev_filename": None,
+            "next_filename": None,
+            "first_filename": None,
+            "last_filename": None,
         }
 
     try:
-        # Convert to slugs for easier manipulation
-        slugs = [sf.slug for sf in sourcefiles]
+        # Convert to dictionaries with slug and filename for easier manipulation
+        file_info = [{"slug": sf.slug, "filename": sf.filename} for sf in sourcefiles]
 
-        # Get first and last slugs
-        first_slug = slugs[0] if slugs else None
-        last_slug = slugs[-1] if slugs else None
+        # Get slugs for compatibility
+        slugs = [info["slug"] for info in file_info]
+
+        # Get first and last info
+        first_info = file_info[0] if file_info else None
+        last_info = file_info[-1] if file_info else None
+
+        first_slug = first_info["slug"] if first_info else None
+        last_slug = last_info["slug"] if last_info else None
+        first_filename = first_info["filename"] if first_info else None
+        last_filename = last_info["filename"] if last_info else None
 
         # Find the current file's position in the ordered list
         current_index = slugs.index(sourcefile_slug)
         current_position = current_index + 1
 
-        # Determine previous and next slugs
-        prev_slug = slugs[current_index - 1] if current_index > 0 else None
-        next_slug = (
-            slugs[current_index + 1] if current_index < total_files - 1 else None
+        # Determine previous and next info
+        prev_info = file_info[current_index - 1] if current_index > 0 else None
+        next_info = (
+            file_info[current_index + 1] if current_index < total_files - 1 else None
         )
+
+        prev_slug = prev_info["slug"] if prev_info else None
+        next_slug = next_info["slug"] if next_info else None
+        prev_filename = prev_info["filename"] if prev_info else None
+        next_filename = next_info["filename"] if next_info else None
 
         return {
             "is_first": current_position == 1,
@@ -140,6 +163,11 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
             "next_slug": next_slug,
             "first_slug": first_slug,
             "last_slug": last_slug,
+            "sourcedir_path": sourcedir.path,
+            "prev_filename": prev_filename,
+            "next_filename": next_filename,
+            "first_filename": first_filename,
+            "last_filename": last_filename,
         }
     except (ValueError, IndexError):
         # File not found
@@ -148,8 +176,11 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
             "is_last": True,
             "total_files": total_files,
             "current_position": 0,
+            "sourcedir_path": sourcedir.path,
             "first_slug": first_slug if "first_slug" in locals() else None,
             "last_slug": last_slug if "last_slug" in locals() else None,
+            "first_filename": first_filename if "first_filename" in locals() else None,
+            "last_filename": last_filename if "last_filename" in locals() else None,
         }
 
 

@@ -356,7 +356,7 @@
     {/if}
     <li class="navigation-buttons">
       {#if navigation.is_first}
-        <span class="button disabled">
+        <span class="button disabled" title="First file">
           <CaretDoubleLeft size={16} weight="bold" />
         </span>
       {:else if firstSourcefileUrl}
@@ -364,13 +364,14 @@
           href={firstSourcefileUrl}
           class="button"
           data-sveltekit-reload
+          title="First file: '{navigation.first_filename || 'Unknown'}'"
         >
           <CaretDoubleLeft size={16} weight="bold" />
         </a>
       {/if}
       
       {#if navigation.is_first}
-        <span class="button disabled">
+        <span class="button disabled" title="Previous file">
           <CaretLeft size={16} weight="bold" />
         </span>
       {:else if prevSourcefileUrl}
@@ -378,6 +379,7 @@
           href={prevSourcefileUrl}
           class="button"
           data-sveltekit-reload
+          title="Previous file: '{navigation.prev_filename || 'Unknown'}'"
         >
           <CaretLeft size={16} weight="bold" />
         </a>
@@ -387,12 +389,13 @@
         href={sourcedirUrl}
         class="button"
         data-sveltekit-reload
+        title="Up to directory: '{navigation.sourcedir_path || sourcedir_slug}'"
       >
         <ArrowUp size={16} weight="bold" />
       </a>
       
       {#if navigation.is_last}
-        <span class="button disabled">
+        <span class="button disabled" title="Next file">
           <CaretRight size={16} weight="bold" />
         </span>
       {:else if nextSourcefileUrl}
@@ -400,13 +403,14 @@
           href={nextSourcefileUrl}
           class="button"
           data-sveltekit-reload
+          title="Next file: '{navigation.next_filename || 'Unknown'}'"
         >
           <CaretRight size={16} weight="bold" />
         </a>
       {/if}
 
       {#if navigation.is_last}
-        <span class="button disabled">
+        <span class="button disabled" title="Last file">
           <CaretDoubleRight size={16} weight="bold" />
         </span>
       {:else if lastSourcefileUrl}
@@ -414,6 +418,7 @@
           href={lastSourcefileUrl}
           class="button"
           data-sveltekit-reload
+          title="Last file: '{navigation.last_filename || 'Unknown'}'"
         >
           <CaretDoubleRight size={16} weight="bold" />
         </a>

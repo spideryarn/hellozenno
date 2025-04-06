@@ -37,6 +37,11 @@ export interface Navigation {
     next_slug?: string;
     first_slug?: string;
     last_slug?: string;
+    sourcedir_path?: string;
+    prev_filename?: string;
+    next_filename?: string;
+    first_filename?: string;
+    last_filename?: string;
 }
 
 export interface Stats {
