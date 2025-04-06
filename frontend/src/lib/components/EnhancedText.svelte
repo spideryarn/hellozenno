@@ -21,146 +21,81 @@
     );
   }
   
-  // API fetch function with both direct URL and routes.ts machinery
+  // API fetch function using type-safe URL generation and async/await
   async function fetchWordData(word: string, lang: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      console.log(`EnhancedText Debug:`);
-      console.log(`- API_BASE_URL: ${API_BASE_URL}`);
-      console.log(`- Language Code: ${lang}`);
-      console.log(`- Word to fetch: "${word}"`);
-      
-      // IMPORTANT: Check if we have a valid language code
-      if (!lang) {
-        console.error(`- ERROR: Missing language code. This is required for API calls.`);
-        reject(new Error('Missing language code'));
-        return;
-      }
-      
-      // Create both URLs for comparison
-      const encodedWord = encodeURIComponent(word);
-      // 1. Direct manual URL (working approach)
-      const directUrl = `${API_BASE_URL}/api/lang/word/${lang}/${encodedWord}/preview`;
-      
-      // 2. Type-safe URL from routes.ts (for comparison)
-      let typeSafeUrl = "";
-      try {
-        typeSafeUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
-          target_language_code: lang, 
-          word: word
-        });
-        console.log(`- Type-safe URL: ${typeSafeUrl}`);
-      } catch (error) {
-        console.error(`- Error generating type-safe URL:`, error);
-      }
-      
-      // Use the type-safe URL from routes.ts since URLs match
-      const url = typeSafeUrl;
+    console.log(`EnhancedText Debug:`);
+    console.log(`- API_BASE_URL: ${API_BASE_URL}`);
+    console.log(`- Language Code: ${lang}`);
+    console.log(`- Word to fetch: "${word}"`);
+    
+    // IMPORTANT: Check if we have a valid language code
+    if (!lang) {
+      console.error(`- ERROR: Missing language code. This is required for API calls.`);
+      return {
+        lemma: word,
+        translation: "(translation not available - missing language code)",
+        etymology: null,
+        _debug: {
+          error: "Missing language code"
+        }
+      };
+    }
+    
+    // Generate the type-safe URL using routes.ts machinery
+    let url;
+    try {
+      url = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+        target_language_code: lang, 
+        word: word
+      });
       console.log(`- Using type-safe URL: ${url}`);
-      console.log(`- Direct URL would be: ${directUrl}`);
-      
-      // Verify we can actually access the API directly from the browser 
-      // by trying a direct API call with fetch
-      fetch(url, {
+    } catch (error) {
+      console.error(`- Error generating type-safe URL:`, error);
+      return {
+        lemma: word,
+        translation: "(translation not available - URL generation error)",
+        etymology: null,
+        _debug: {
+          error: `URL generation error: ${error.message}`
+        }
+      };
+    }
+    
+    try {
+      // Make the API request
+      const response = await fetch(url, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         mode: 'cors'
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error(`Fetch API test failed with status: ${response.status}`);
-        }
-      })
-      .then(data => {
-        console.log(`- Direct fetch API test succeeded:`, data);
-        // Add URLs to the data for debugging
-        data._debug = {
-          directUrl,
-          typeSafeUrl
-        };
-        resolve(data);
-      })
-      .catch(error => {
-        console.error(`- Direct fetch API test failed:`, error);
-        
-        // Fall back to XMLHttpRequest as a backup
-        console.log(`- Trying XMLHttpRequest as fallback`);
-        
-        // Use XMLHttpRequest for maximum compatibility
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.setRequestHeader('Accept', 'application/json');
-        xhr.withCredentials = false; // Don't send credentials for CORS
-        
-        xhr.onload = function() {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              console.log(`- Response data:`, data);
-              // Add URLs to the data for debugging
-              data._debug = {
-                directUrl,
-                typeSafeUrl
-              };
-              resolve(data);
-            } catch (e) {
-              console.error(`- Error parsing JSON:`, e);
-              console.log(`- Raw response:`, xhr.responseText);
-              reject(new Error('Invalid JSON response'));
-            }
-          } else {
-            console.error(`- Request failed: ${xhr.status} ${xhr.statusText}`);
-            console.log(`- Response text:`, xhr.responseText);
-            reject(new Error(`Request failed: ${xhr.status}`));
-          }
-        };
-        
-        xhr.onerror = function() {
-          console.error(`- Network error occurred`);
-          reject(new Error('Network error'));
-        };
-        
-        xhr.ontimeout = function() {
-          console.error(`- Request timed out`);
-          reject(new Error('Request timed out'));
-        };
-        
-        xhr.timeout = 5000; // 5 second timeout
-        
-        // Send the request
-        try {
-          xhr.send();
-        } catch (e) {
-          console.error(`- Error sending request:`, e);
-          reject(e);
-        }
       });
-    }).catch(error => {
-      console.error('Error in all fetch attempts:', error);
-      // Provide a fallback result with URLs for debugging
-      // Create fallback URLs for debugging
-      let typeSafeUrl = "";
-      try {
-        typeSafeUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
-          target_language_code: lang, 
-          word: word 
-        });
-      } catch (urlError) {
-        typeSafeUrl = `Error generating URL: ${urlError.message}`;
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status: ${response.status}`);
       }
-
+      
+      const data = await response.json();
+      console.log(`- API request succeeded:`, data);
+      
+      // Add URL to the data for debugging
+      data._debug = {
+        url,
+      };
+      
+      return data;
+    } catch (error) {
+      console.error(`- API request failed:`, error);
+      
+      // Return a fallback result
       return {
         lemma: word,
         translation: "(translation not available)",
         etymology: null,
         _debug: {
-          directUrl: `${API_BASE_URL}/api/lang/word/${lang}/${encodeURIComponent(word)}/preview`,
-          typeSafeUrl,
+          url,
           error: error.message
         }
       };
-    });
+    }
   }
 
   // Initialize tooltips after the component mounts
