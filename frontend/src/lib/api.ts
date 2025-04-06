@@ -193,10 +193,12 @@ export async function unifiedSearch(langCode: string, query: string): Promise<Se
     }
     
     try {
-        // Use API_BASE_URL for consistency with server-side rendering
-        const response = await fetch(
-            `${API_BASE_URL}/api/lang/${langCode}/unified_search?q=${encodeURIComponent(query)}`
-        );
+        // Use apiFetch for type-safe API access, but handle 'unified_search' specifically
+        // since it might not be in the routes yet
+        const API_URL = API_BASE_URL || "http://localhost:3000";
+        const url = `${API_URL}/api/lang/${langCode}/unified_search?q=${encodeURIComponent(query)}`;
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

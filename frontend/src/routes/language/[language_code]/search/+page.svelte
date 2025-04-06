@@ -3,12 +3,39 @@
   import { goto } from '$app/navigation';
   import { unifiedSearch } from '$lib/api';
   import type { SearchResult } from '$lib/types';
+  import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   
   export let data: PageData;
   
   let query = data.query || '';
   let result: SearchResult | null = data.initialResult || null;
   let loading = false;
+  
+  // Ensure query is properly set from URL on mount and perform search if needed
+  onMount(() => {
+    // Get the current query parameter from the URL
+    const urlQuery = $page.url.searchParams.get('q') || '';
+    
+    // Update query with the URL parameter
+    query = urlQuery;
+    
+    // If we have a query parameter but no valid search result, perform the search
+    if (urlQuery && (!result || result.status === 'empty_query')) {
+      handleSearch();
+    }
+    
+    // If no query and no result, show empty state
+    if (!urlQuery && !result) {
+      result = {
+        status: 'empty_query',
+        query: '',
+        target_language_code: data.language_code,
+        target_language_name: data.langName,
+        data: {}
+      };
+    }
+  });
   
   async function handleSearch() {
     if (!query.trim()) {
@@ -24,51 +51,52 @@
     
     loading = true;
     
-    // Update URL to reflect search
-    goto(`/language/${data.language_code}/search?q=${encodeURIComponent(query)}`, { 
-      replaceState: true,
-      keepFocus: true,
-      noScroll: true
-    });
-    
+    // Immediately perform the search without updating the URL first
     result = await unifiedSearch(data.language_code, query);
-    loading = false;
     
-    // Handle immediate redirects for exact matches
+    // Handle direct navigation for single matches without showing the search results first
     if (result.status === 'redirect') {
+      // Go directly to the wordform page for redirect status
       goto(`/language/${data.language_code}/wordform/${result.data.redirect_to}`);
+    } else if (result.status === 'found') {
+      // For exact matches, go directly to the appropriate page
+      const wordform = result.data.wordform_metadata.wordform;
+      const lemma = result.data.wordform_metadata.lemma;
+      
+      if (wordform === lemma) {
+        goto(`/language/${data.language_code}/lemma/${encodeURIComponent(lemma)}`);
+      } else {
+        goto(`/language/${data.language_code}/wordform/${encodeURIComponent(wordform)}`);
+      }
+    } else {
+      // For other statuses (multiple_matches, invalid, etc.), update URL and show results
+      goto(`/language/${data.language_code}/search?q=${encodeURIComponent(query)}`, { 
+        replaceState: true,
+        keepFocus: true,
+        noScroll: true
+      });
+      loading = false;
     }
-  }
-  
-  // If no result and no query, show empty state
-  if (!result && !query) {
-    result = {
-      status: 'empty_query',
-      query: '',
-      target_language_code: data.language_code,
-      target_language_name: data.langName,
-      data: {}
-    };
   }
 </script>
 
 <svelte:head>
   <title>
     {query 
-      ? `Search results for "${query}" - ${data.langName}`
-      : `Search ${data.langName}`}
+      ? `Search results for "${query}" - ${data.langName || 'Language'}`
+      : `Search ${data.langName || 'Language'}`}
   </title>
 </svelte:head>
 
 <div class="container">
-  <h1>Search {data.langName} Words</h1>
+  <h1>Search {data.langName || 'Language'} Words</h1>
   
   <form on:submit|preventDefault={handleSearch}>
     <div class="input-group mb-4">
       <input 
         type="text" 
         bind:value={query} 
-        placeholder="Enter a word to search..."
+        placeholder={`Enter a ${data.langName || ''} word to search...`}
         aria-label="Search term"
         class="form-control"
       />
@@ -90,11 +118,11 @@
       {#if result.status === 'empty_query'}
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Search {data.langName} Words</h5>
+            <h5 class="card-title">Search {data.langName || 'Language'} Words</h5>
             <p>Enter a word to search. You can search for:</p>
             <ul>
-              <li>Words in {data.langName}</li>
-              <li>English words to find {data.langName} translations</li>
+              <li>Words in {data.langName || 'this language'}</li>
+              <li>English words to find {data.langName || 'foreign language'} translations</li>
               <li>Word forms and dictionary forms (lemmas)</li>
             </ul>
           </div>

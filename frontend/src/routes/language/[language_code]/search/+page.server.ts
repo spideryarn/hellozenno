@@ -5,19 +5,17 @@ import { API_BASE_URL } from "$lib/config";
 
 export const load: PageServerLoad = async ({ params, url, fetch }) => {
     const { language_code } = params;
-    const query = url.searchParams.get("q");
+    const query = url.searchParams.get("q") || "";
 
     try {
-        // Fetch landing page data from API
+        // Fetch landing page data from API first to get language name
         const data = await getSearchLandingData(language_code);
+        const langName = data.target_language_name;
         
-        // Only fetch initial search results if there's a query
-        let initialResult = null;
+        // If there's a query parameter, check if we should redirect directly
         if (query) {
             try {
-                // Use the fetch instance passed to the load function,
-                // using the passed fetch with a full URL ensures it works in both server and client contexts
-                // During SSR, this fetches the API endpoint
+                // Use the API base URL for consistency
                 const API_URL = API_BASE_URL || "http://localhost:3000";
                 
                 const response = await fetch(
@@ -25,28 +23,85 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
                 );
                 
                 if (response.ok) {
-                    initialResult = await response.json();
+                    const searchResult = await response.json();
                     
-                    // Handle redirect case at the server level
-                    if (initialResult.status === 'redirect') {
+                    // Handle navigation logic at the server level for direct searches
+                    if (searchResult.status === 'redirect') {
+                        // Handle explicit redirect status
                         return {
-                            redirect: `/language/${language_code}/wordform/${initialResult.data.redirect_to}`
+                            redirect: `/language/${language_code}/wordform/${searchResult.data.redirect_to}`
                         };
+                    } else if (searchResult.status === 'found') {
+                        // For exact matches:
+                        // - If wordform is the same as its lemma, go to lemma page
+                        // - Otherwise go to wordform page
+                        const wordform = searchResult.data.wordform_metadata.wordform;
+                        const lemma = searchResult.data.wordform_metadata.lemma;
+                        
+                        if (wordform === lemma) {
+                            return {
+                                redirect: `/language/${language_code}/lemma/${encodeURIComponent(lemma)}`
+                            };
+                        } else {
+                            return {
+                                redirect: `/language/${language_code}/wordform/${encodeURIComponent(wordform)}`
+                            };
+                        }
                     }
+                    
+                    // For any other status (multiple_matches, invalid, etc.), return the result
+                    // to show the search results page
+                    return {
+                        language_code,
+                        langName,
+                        query,
+                        initialResult: searchResult,
+                        has_query: true,
+                    };
                 } else {
                     console.error(`Server-side search error: ${response.status} ${response.statusText}`);
+                    // Return an error result
+                    return {
+                        language_code,
+                        langName,
+                        query,
+                        initialResult: { 
+                            status: 'error',
+                            query: query,
+                            target_language_code: language_code,
+                            target_language_name: langName,
+                            error: `Search error: ${response.status} ${response.statusText}`,
+                            data: {}
+                        },
+                        has_query: true,
+                    };
                 }
             } catch (err) {
                 console.error('Server-side search error:', err);
-                // Let the client handle the error case
+                // Return an error result
+                return {
+                    language_code,
+                    langName,
+                    query,
+                    initialResult: { 
+                        status: 'error',
+                        query: query,
+                        target_language_code: language_code,
+                        target_language_name: langName,
+                        error: err instanceof Error ? err.message : 'Unknown error',
+                        data: {}
+                    },
+                    has_query: true,
+                };
             }
         }
 
+        // If we got here, either there was no query or there was an error
         return {
             language_code,
-            langName: data.target_language_name,
-            query: query || "",
-            initialResult,
+            langName,
+            query,
+            initialResult: null,
             has_query: !!query,
         };
     } catch (err) {

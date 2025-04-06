@@ -14,13 +14,14 @@
         
         {#if page.data.language_code && page.data.language_name}
             <div class="search-box">
-                <form method="GET" action="/language/{page.data.language_code}/search" class="d-flex">
+                <form method="GET" action="/language/{page.data.language_code}/search" class="d-flex" id="top-search-form">
                     <input 
                         type="text" 
                         name="q" 
                         placeholder="Search {page.data.language_name} words..." 
                         required
                         class="form-control me-2"
+                        id="top-search-input"
                     >
                     <button type="submit" class="btn btn-primary">Search</button>
                 </form>
