@@ -78,8 +78,8 @@
 <main class="container">
   <div class="hero-section">
     <div class="hero-content">
-      <h1>Explore Languages</h1>
-      <p class="subtitle">Discover and learn new languages with Hello Zenno's interactive tools</p>
+      <h1>Pick the language you are learning</h1>
+      <!-- <p class="subtitle">Discover and learn new languages with Hello Zenno's interactive tools</p> -->
       
       <div class="search-container">
         <form on:submit|preventDefault={handleSearch}>
@@ -99,7 +99,7 @@
         </form>
       </div>
       
-      <div class="stats">
+      <!-- <div class="stats">
         <div class="stat-item">
           <span class="stat-number">{languages.length}</span>
           <span class="stat-label">Languages</span>
@@ -112,7 +112,7 @@
           <span class="stat-number">24/7</span>
           <span class="stat-label">Learning</span>
         </div>
-      </div>
+      </div> -->
     </div>
     <div class="hero-bg"></div>
   </div>
@@ -165,11 +165,11 @@
   .hero-section {
     text-align: center;
     margin-bottom: 3rem;
-    padding: 3rem 2rem;
+    padding: 2rem 2rem;
     border-radius: 16px;
     position: relative;
     overflow: hidden;
-    min-height: 300px;
+    min-height: 150px;
   }
   
   .hero-content {
@@ -212,9 +212,9 @@
   }
   
   .hero-section h1 {
-    font-size: 3.5rem;
+    font-size: 2.2rem;
     font-weight: bold;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.6rem;
     position: relative;
     z-index: 1;
     background: linear-gradient(135deg, #4CAD53 0%, #D97A27 100%);
@@ -237,7 +237,7 @@
   }
   
   .search-container {
-    margin-bottom: 2rem;
+    margin-bottom: 0.8rem;
     position: relative;
     z-index: 1;
     max-width: 500px;
@@ -436,11 +436,12 @@
   
   @media (max-width: 768px) {
     .hero-section {
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem;
     }
     
     .hero-section h1 {
-      font-size: 2.5rem;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
     }
     
     .subtitle {
