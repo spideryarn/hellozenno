@@ -436,7 +436,7 @@
 
 <style>
   .enhanced-text {
-    line-height: 1.6;
+    line-height: 1.4; /* Reduced from 1.6 to tighten line spacing */
     max-width: 65ch; /* Ensure maximum of ~65 characters per line for readability */
     white-space: normal; /* Don't preserve literal whitespace */
   }
@@ -444,7 +444,7 @@
   /* Ensure paragraphs have proper spacing */
   .enhanced-text :global(p), 
   .enhanced-text p {
-    margin-bottom: 1rem;
+    margin-bottom: 0.7rem; /* Reduced from 1rem to tighten paragraph spacing */
   }
   
   /* Ensure <br> elements create appropriate line breaks */
@@ -452,7 +452,7 @@
   .enhanced-text br {
     display: block;
     content: "";
-    margin-top: 0.5rem;
+    margin-top: 0.3rem; /* Reduced from 0.5rem to tighten line break spacing */
   }
   
   .enhanced-text :global(a.word-link),
