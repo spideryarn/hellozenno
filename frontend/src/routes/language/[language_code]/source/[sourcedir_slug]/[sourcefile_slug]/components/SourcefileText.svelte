@@ -6,6 +6,7 @@
   export let enhanced_text: string | null = null;
   export let text_target: string | null = null;
   export const text_english: string | null = null;
+  // VERY IMPORTANT: language_code is required by EnhancedText for generating API URLs
   export let language_code: string;
 </script>
 

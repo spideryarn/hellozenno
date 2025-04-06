@@ -4,6 +4,7 @@
   import 'tippy.js/dist/tippy.css';
   import 'tippy.js/themes/light.css';
   import { getApiUrl } from '../api';
+  import { API_BASE_URL } from '../config';
   import { RouteName } from '../generated/routes';
 
   export let html: string | null = null;
@@ -18,6 +19,107 @@
       'ontouchstart' in window ||
       navigator.maxTouchPoints > 0
     );
+  }
+  
+  // Direct API fetch function to avoid URL encoding issues
+  // Simplest possible approach using XMLHttpRequest
+  // This avoids any potential issues with fetch API and CORS handling
+  async function fetchWordData(word: string, lang: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      console.log(`EnhancedText Debug:`);
+      console.log(`- API_BASE_URL: ${API_BASE_URL}`);
+      console.log(`- Language Code: ${lang}`);
+      console.log(`- Word to fetch: "${word}"`);
+      
+      // IMPORTANT: Check if we have a valid language code
+      if (!lang) {
+        console.error(`- ERROR: Missing language code. This is required for API calls.`);
+        reject(new Error('Missing language code'));
+        return;
+      }
+      
+      // Use the direct manual URL that we know works in the browser
+      const encodedWord = encodeURIComponent(word);
+      const url = `${API_BASE_URL}/api/lang/word/${lang}/${encodedWord}/preview`;
+      console.log(`- Using URL: ${url}`);
+      
+      // Verify we can actually access the API directly from the browser 
+      // by trying a direct API call with fetch
+      fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        mode: 'cors'
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error(`Fetch API test failed with status: ${response.status}`);
+        }
+      })
+      .then(data => {
+        console.log(`- Direct fetch API test succeeded:`, data);
+        resolve(data);
+      })
+      .catch(error => {
+        console.error(`- Direct fetch API test failed:`, error);
+        
+        // Fall back to XMLHttpRequest as a backup
+        console.log(`- Trying XMLHttpRequest as fallback`);
+        
+        // Use XMLHttpRequest for maximum compatibility
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.withCredentials = false; // Don't send credentials for CORS
+        
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              console.log(`- Response data:`, data);
+              resolve(data);
+            } catch (e) {
+              console.error(`- Error parsing JSON:`, e);
+              console.log(`- Raw response:`, xhr.responseText);
+              reject(new Error('Invalid JSON response'));
+            }
+          } else {
+            console.error(`- Request failed: ${xhr.status} ${xhr.statusText}`);
+            console.log(`- Response text:`, xhr.responseText);
+            reject(new Error(`Request failed: ${xhr.status}`));
+          }
+        };
+        
+        xhr.onerror = function() {
+          console.error(`- Network error occurred`);
+          reject(new Error('Network error'));
+        };
+        
+        xhr.ontimeout = function() {
+          console.error(`- Request timed out`);
+          reject(new Error('Request timed out'));
+        };
+        
+        xhr.timeout = 5000; // 5 second timeout
+        
+        // Send the request
+        try {
+          xhr.send();
+        } catch (e) {
+          console.error(`- Error sending request:`, e);
+          reject(e);
+        }
+      });
+    }).catch(error => {
+      console.error('Error in all fetch attempts:', error);
+      // Provide a fallback result
+      return {
+        lemma: word,
+        translation: "(translation not available)",
+        etymology: null
+      };
+    });
   }
 
   // Initialize tooltips after the component mounts
@@ -43,6 +145,22 @@
         });
       }
       
+      // URL is constructed in fetchWordData and in the debug sections
+      // Preload the data before showing tooltip - much more reliable
+      let preloadedData = null;
+      let preloadError = null;
+      
+      // Start the data fetch immediately (not waiting for hover)
+      fetchWordData(word, language_code)
+        .then(data => {
+          preloadedData = data;
+          console.log(`Preloaded data for "${word}":`, data);
+        })
+        .catch(error => {
+          preloadError = error;
+          console.error(`Error preloading data for "${word}":`, error);
+        });
+      
       const instance = tippy(wordElem, {
         content: 'Loading...',
         allowHTML: true,
@@ -58,53 +176,91 @@
           // Hide all other tooltips
           hideAll({ exclude: instance });
           
-          console.log(`Fetching preview for word: "${word}" in language: ${language_code}`);
+          console.log(`Showing tooltip for word: "${word}" in language: ${language_code}`);
           
-          // Use type-safe API URL generation
-          const apiUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, {
-            target_language_code: language_code,
-            word: word
-          });
+          // Set initial content
+          instance.setContent('Loading...');
           
-          // Fetch preview data from API
-          fetch(apiUrl)
-            .then(response => {
-              if (!response.ok) {
-                console.error(`API request failed: ${response.status}`);
-                return Promise.reject(`API request failed: ${response.status}`);
-              }
-              return response.json();
-            })
-            .then(data => {
-              console.log(`Preview data for "${word}":`, data);
-              
-              if (data && data.lemma) {
-                let content = `
-                  <div class="tippy-content">
-                    <h4>${data.lemma || word}</h4>
-                `;
-                
-                if (data.translations && data.translations.length > 0) {
-                  content += `<p class="translation">${data.translations.join('; ')}</p>`;
-                } else if (data.translation) {
-                  content += `<p class="translation">${data.translation}</p>`;
-                }
-                
-                if (data.etymology) {
-                  content += `<p class="etymology">${data.etymology}</p>`;
-                }
-                
-                content += '</div>';
-                
-                instance.setContent(content);
-              } else {
-                instance.setContent('No data available');
-              }
-            })
-            .catch(error => {
-              console.error(`Error fetching preview for "${word}":`, error);
-              instance.setContent('Error loading preview');
-            });
+          // Use preloaded data if available, otherwise fetch
+          if (preloadedData) {
+            console.log(`Using preloaded data for "${word}"`);
+            renderTooltipContent(preloadedData);
+          } else if (preloadError) {
+            console.log(`Using preloaded error for "${word}"`);
+            renderErrorContent();
+          } else {
+            console.log(`Fetching data on-demand for "${word}"`);
+            // No preloaded data yet, fetch it now
+            fetchWordData(word, language_code)
+              .then(data => renderTooltipContent(data))
+              .catch(error => renderErrorContent(error));
+          }
+          
+          // Helper function to render tooltip content
+          function renderTooltipContent(data: any) {
+            // Always create a tooltip, even if data is minimal or missing
+            let content = `
+              <div class="tippy-content">
+                <h4>${data?.lemma || word}</h4>
+            `;
+            
+            if (data?.translations && data.translations.length > 0) {
+              content += `<p class="translation">${data.translations.join('; ')}</p>`;
+            } else if (data?.translation) {
+              content += `<p class="translation">${data.translation}</p>`;
+            } else {
+              // Show a default message if no translation available
+              content += `<p class="translation"><em>(translation not available)</em></p>`;
+            }
+            
+            if (data?.etymology) {
+              content += `<p class="etymology">${data.etymology}</p>`;
+            }
+            
+            // Only add debug info in non-production environments
+            if (import.meta.env.DEV) {
+              const debugInfo = `
+                <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
+                  API: ${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview
+                </div>
+              `;
+              content += debugInfo;
+            }
+            
+            content += '</div>';
+            
+            instance.setContent(content);
+            
+            // If we got a response but it's incomplete, log this
+            if (data && (!data.lemma || !data.translation)) {
+              console.log(`Incomplete word data for "${word}":`, data);
+            }
+          }
+          
+          // Helper function to render error content
+          function renderErrorContent(error?: any) {
+            console.error(`Error fetching preview for "${word}":`, error);
+            
+            // Show a more helpful error message with the word itself
+            let errorContent = `
+              <div class="tippy-content">
+                <h4>${word}</h4>
+                <p class="translation"><em>Error loading word information</em></p>
+            `;
+            
+            // Only add debug info in non-production environments
+            if (import.meta.env.DEV) {
+              errorContent += `
+                <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
+                  API: ${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview
+                  ${error ? `<br>Error: ${error.message}` : ''}
+                </div>
+              `;
+            }
+            
+            errorContent += `</div>`;
+            instance.setContent(errorContent);
+          }
         }
       });
       

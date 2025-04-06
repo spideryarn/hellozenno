@@ -36,5 +36,6 @@
     enhanced_text={sourcefile.enhanced_text}
     text_target={sourcefile.text_target}
     text_english={sourcefile.text_english}
+    {language_code}
   />
 </SourcefileLayout> 
