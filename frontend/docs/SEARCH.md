@@ -1,5 +1,7 @@
 # Search Functionality
 
+[THIS DOCUMENT MAY BE A LITTLE OUT OF DATE]
+
 This document provides a comprehensive overview of the search functionality in HelloZenno, comparing the legacy Flask/Jinja implementation with the new SvelteKit port. It outlines current functionality, implementation details, and remaining work to achieve feature parity.
 
 ## Search Behavior Overview
@@ -204,110 +206,3 @@ To perform these tests, you would:
 3. Enter different search terms and verify the behavior
 4. Use browser developer tools to monitor network requests and responses
 5. Verify the UI properly displays all search result categories
-
-### Recent Progress
-
-We've recently enhanced the search functionality with several important improvements:
-
-1. **Integration Between Wordform and Search**:
-   - ✅ Updated wordform page to handle enhanced search responses
-   - ✅ Fixed direct wordform access for English translation searches 
-   - ✅ Added proper redirection logic between search and wordform pages
-   - ✅ Implemented robust error handling for invalid words
-
-2. **Learned Lessons**:
-   - The enhanced search API needs to be used consistently across the application
-   - Special care must be taken with URL encoding for non-Latin scripts
-   - Status-based response handling provides a consistent way to manage different search results
-   - Error handling should redirect to appropriate pages rather than showing generic errors
-
-### Remaining Work
-
-The following items still need to be completed:
-
-1. **Lemma Priority**:
-   - [ ] Update search logic to check if search term is a lemma
-   - [ ] Redirect to lemma page instead of wordform page when appropriate
-   - [ ] Update TypeScript types for lemma redirect responses
-
-2. **Error Handling Improvements**:
-   - [x] Add more detailed error messages for specific error cases
-   - [x] Redirect to search page instead of showing generic errors
-   - [ ] Improve handling of timeout scenarios
-   - [ ] Add retry logic for intermittent connection issues
-
-3. **UI Enhancements**:
-   - [x] Add loading indicators for search in progress
-   - [ ] Further improve styling of search result categories
-   - [ ] Add visual grouping for related results
-   - [ ] Make sure all texts are i18n ready
-
-4. **Performance Optimizations**:
-   - [ ] Add caching for common search terms
-   - [ ] Optimize API response size
-   - [ ] Add debouncing for rapid searches
-   - [ ] Consider implementing local search index for basic matches
-
-5. **Accessibility**:
-   - [ ] Ensure proper keyboard navigation for search results
-   - [ ] Add proper ARIA labels and roles
-   - [ ] Test with screen readers
-
-6. **Testing**:
-   - [ ] Add comprehensive tests for various search scenarios
-   - [ ] Test with multiple languages and character sets
-   - [ ] Test English translation search thoroughly
-
-### Implementation Notes
-
-The current implementation follows these key architectural patterns:
-
-1. **Status-based Response Handling**:
-   - Backend returns responses with a `status` field indicating the type of result:
-     - `"found"`: Direct match found
-     - `"multiple_matches"`: Multiple possible matches
-     - `"redirect"`: Should redirect to another word
-     - `"invalid"`: Invalid word or no matches
-
-2. **Type-Safe API Integration**:
-   - Uses the `getApiUrl()` function with route enum values
-   - Example: 
-     ```typescript
-     const url = getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, { 
-       target_language_code, wordform 
-     });
-     ```
-
-3. **Component Composition**:
-   - Main search page delegates to `SearchResults.svelte` for result display
-   - Separation of server-side logic in `+page.server.ts` and client rendering in `+page.svelte`
-
-4. **Error Handling Strategy**:
-   - 404 errors for invalid words are processed specially, returning structured data
-   - Network errors are properly propagated to display user-friendly messages
-
-## How to Continue Development
-
-To continue developing the search functionality:
-
-1. Focus on implementing the remaining items from the "Remaining Work" section
-2. Start with the lemma priority feature, as it provides the most direct user benefit
-3. Test each change thoroughly against both common and edge cases
-4. Ensure backward compatibility with existing URLs and behaviors
-
-If you encounter edge cases or API inconsistencies during development:
-1. First, check the behavior in the legacy Flask/Jinja implementation
-2. Consider updating the common utility function in `utils/word_utils.py`
-3. Update both the API and view functions to maintain consistency
-4. Update the SvelteKit implementation to handle the new behavior
-
-Remember to test with real language data, especially:
-- Languages with non-Latin scripts (Greek, Arabic, etc.)
-- Words with diacritics and special characters
-- Languages with distinct case rules
-
-## Conclusion
-
-The search functionality is a critical part of the HelloZenno application, providing users with a flexible way to discover and learn language content. The current implementation has made significant progress toward feature parity with the legacy system while leveraging modern SvelteKit patterns.
-
-By following the specified remaining work items and testing strategy, the SvelteKit implementation can achieve complete feature parity while improving the user experience through faster client-side navigation and more responsive interactions.

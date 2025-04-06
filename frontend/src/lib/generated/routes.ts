@@ -87,6 +87,7 @@ export enum RouteName {
   FLASHCARD_API_FLASHCARD_LANDING_API = "FLASHCARD_API_FLASHCARD_LANDING_API",
   SEARCH_API_SEARCH_LANDING_API = "SEARCH_API_SEARCH_LANDING_API",
   SEARCH_API_SEARCH_WORD_API = "SEARCH_API_SEARCH_WORD_API",
+  SEARCH_API_UNIFIED_SEARCH_API = "SEARCH_API_UNIFIED_SEARCH_API",
 }
 
 
@@ -178,6 +179,7 @@ export const ROUTES = {
   FLASHCARD_API_FLASHCARD_LANDING_API: "/api/lang/{language_code}/flashcards/landing",
   SEARCH_API_SEARCH_LANDING_API: "/api/lang/{target_language_code}/search",
   SEARCH_API_SEARCH_WORD_API: "/api/lang/{target_language_code}/search/{wordform}",
+  SEARCH_API_UNIFIED_SEARCH_API: "/api/lang/{target_language_code}/unified_search",
 } as const;
 
 
@@ -269,6 +271,7 @@ export type RouteParams = {
   [RouteName.FLASHCARD_API_FLASHCARD_LANDING_API]: { language_code: string };
   [RouteName.SEARCH_API_SEARCH_LANDING_API]: { target_language_code: string };
   [RouteName.SEARCH_API_SEARCH_WORD_API]: { target_language_code: string; wordform: string };
+  [RouteName.SEARCH_API_UNIFIED_SEARCH_API]: { target_language_code: string };
 };
 
 

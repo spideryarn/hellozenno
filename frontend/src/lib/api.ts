@@ -9,6 +9,7 @@ import type {
     Sentence,
     SentenceMetadata,
     Wordform,
+    SearchResult,
 } from "./types";
 import { resolveRoute, RouteName, type RouteParams } from "./generated/routes";
 import { API_BASE_URL } from "./config";
@@ -156,7 +157,7 @@ export async function getSearchLandingData(
 
 /**
  * Search for a word in a language using the search API
- * (Simple redirect method)
+ * (Simple redirect method - DEPRECATED, use unifiedSearch instead)
  */
 export async function searchWord(
     target_language_code: string,
@@ -171,6 +172,47 @@ export async function searchWord(
             headers: { "Content-Type": "application/json" },
         },
     );
+}
+
+/**
+ * Search for a word using the unified search API
+ * 
+ * @param langCode Language code (e.g. 'el')
+ * @param query Search query
+ * @returns Search results
+ */
+export async function unifiedSearch(langCode: string, query: string): Promise<SearchResult> {
+    if (!query.trim()) {
+        return { 
+            status: 'empty_query',
+            query: '',
+            target_language_code: langCode,
+            target_language_name: '',
+            data: {}
+        };
+    }
+    
+    try {
+        const response = await fetch(
+            `/api/lang/${langCode}/unified_search?q=${encodeURIComponent(query)}`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Search error:', error);
+        return {
+            status: 'error',
+            query,
+            target_language_code: langCode,
+            target_language_name: '',
+            error: error instanceof Error ? error.message : 'Unknown error',
+            data: {}
+        };
+    }
 }
 
 /**

@@ -86,16 +86,12 @@ export interface SearchResultCategory {
     possible_misspellings?: string[];
 }
 
-export interface SearchResults {
-    status: 'found' | 'multiple_matches' | 'redirect' | 'invalid';
+export interface SearchResult {
+    status: 'found' | 'multiple_matches' | 'redirect' | 'invalid' | 'empty_query' | 'error';
+    query: string;
     target_language_code: string;
     target_language_name: string;
-    search_term: string;
-    target_language_results?: SearchResultCategory;
-    english_results?: SearchResultCategory;
-    redirect_to?: string;
-    wordform_metadata?: Wordform;
-    possible_misspellings?: string[];
+    data: any; // This will contain different data based on the status
     error?: string;
 }
 
