@@ -433,7 +433,8 @@
               <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" on:change={handleFileSelect}>
               
               <button class="btn btn-outline-primary me-2" on:click={() => showCreateTextModal = true}>Create From Text</button>
-              <button class="btn btn-outline-primary" on:click={() => showYoutubeModal = true}>Upload YouTube Video</button>
+              <!-- Leave this commented. We've disabled it for now, but might want to try it again in the future. -->
+              <!-- <button class="btn btn-outline-primary" on:click={() => showYoutubeModal = true}>Upload YouTube Video</button> -->
             </div>
           </div>
           
