@@ -98,3 +98,25 @@ export interface SearchResults {
     possible_misspellings?: string[];
     error?: string;
 }
+
+/**
+ * Word preview data for tooltips
+ * 
+ * Response from /api/lang/word/{target_language_code}/{word}/preview
+ * Used in EnhancedText component for displaying word information in tooltips
+ */
+export interface WordPreview {
+    // Required fields from the API
+    lemma: string;
+    translation: string;
+    
+    // Optional fields that may be present
+    etymology?: string | null;
+    translations?: string[]; // Some responses use array format
+    
+    // Debug information (only in development)
+    _debug?: {
+        url?: string;
+        error?: string;
+    };
+}

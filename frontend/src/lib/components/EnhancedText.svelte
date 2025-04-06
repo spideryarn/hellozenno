@@ -6,6 +6,7 @@
   import { getApiUrl } from '../api';
   import { API_BASE_URL } from '../config';
   import { RouteName } from '../generated/routes';
+  import type { WordPreview } from '../types';
 
   export let html: string | null = null;
   export let target_language_code: string;
@@ -22,7 +23,7 @@
   }
   
   // API fetch function using type-safe URL generation and async/await
-  async function fetchWordData(word: string, lang: string): Promise<any> {
+  async function fetchWordData(word: string, lang: string): Promise<WordPreview> {
     console.log(`EnhancedText Debug:`);
     console.log(`- API_BASE_URL: ${API_BASE_URL}`);
     console.log(`- Language Code: ${lang}`);
@@ -38,7 +39,7 @@
         _debug: {
           error: "Missing language code"
         }
-      };
+      } as WordPreview;
     }
     
     // Generate the type-safe URL using routes.ts machinery
@@ -58,7 +59,7 @@
         _debug: {
           error: `URL generation error: ${error.message}`
         }
-      };
+      } as WordPreview;
     }
     
     try {
@@ -94,7 +95,7 @@
           url,
           error: error.message
         }
-      };
+      } as WordPreview;
     }
   }
 
@@ -179,7 +180,7 @@
           }
           
           // Helper function to render tooltip content
-          function renderTooltipContent(data: any) {
+          function renderTooltipContent(data: WordPreview) {
             // Always create a tooltip, even if data is minimal or missing
             let content = `
               <div class="tippy-content">

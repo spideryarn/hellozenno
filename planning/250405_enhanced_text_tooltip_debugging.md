@@ -406,3 +406,9 @@ This implementation not only resolves the immediate issue but also improves main
 6. **Simplification**: Removed unused code paths and unnecessary fallbacks
 
 Each step improved the component incrementally, resulting in a modern, maintainable implementation that robustly handles the language tooltips functionality.
+
+
+## Remaining next steps
+
+1. Creating a proper TypeScript interface for the word preview data
+2. Further cleanup of the debug info in tooltips
