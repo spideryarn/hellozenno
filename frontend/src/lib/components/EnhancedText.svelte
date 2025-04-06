@@ -21,9 +21,7 @@
     );
   }
   
-  // Direct API fetch function to avoid URL encoding issues
-  // Simplest possible approach using XMLHttpRequest
-  // This avoids any potential issues with fetch API and CORS handling
+  // API fetch function with both direct URL and routes.ts machinery
   async function fetchWordData(word: string, lang: string): Promise<any> {
     return new Promise((resolve, reject) => {
       console.log(`EnhancedText Debug:`);
@@ -38,10 +36,27 @@
         return;
       }
       
-      // Use the direct manual URL that we know works in the browser
+      // Create both URLs for comparison
       const encodedWord = encodeURIComponent(word);
-      const url = `${API_BASE_URL}/api/lang/word/${lang}/${encodedWord}/preview`;
-      console.log(`- Using URL: ${url}`);
+      // 1. Direct manual URL (working approach)
+      const directUrl = `${API_BASE_URL}/api/lang/word/${lang}/${encodedWord}/preview`;
+      
+      // 2. Type-safe URL from routes.ts (for comparison)
+      let typeSafeUrl = "";
+      try {
+        typeSafeUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+          target_language_code: lang, 
+          word: word
+        });
+        console.log(`- Type-safe URL: ${typeSafeUrl}`);
+      } catch (error) {
+        console.error(`- Error generating type-safe URL:`, error);
+      }
+      
+      // Use the type-safe URL from routes.ts since URLs match
+      const url = typeSafeUrl;
+      console.log(`- Using type-safe URL: ${url}`);
+      console.log(`- Direct URL would be: ${directUrl}`);
       
       // Verify we can actually access the API directly from the browser 
       // by trying a direct API call with fetch
@@ -59,6 +74,11 @@
       })
       .then(data => {
         console.log(`- Direct fetch API test succeeded:`, data);
+        // Add URLs to the data for debugging
+        data._debug = {
+          directUrl,
+          typeSafeUrl
+        };
         resolve(data);
       })
       .catch(error => {
@@ -78,6 +98,11 @@
             try {
               const data = JSON.parse(xhr.responseText);
               console.log(`- Response data:`, data);
+              // Add URLs to the data for debugging
+              data._debug = {
+                directUrl,
+                typeSafeUrl
+              };
               resolve(data);
             } catch (e) {
               console.error(`- Error parsing JSON:`, e);
@@ -113,21 +138,43 @@
       });
     }).catch(error => {
       console.error('Error in all fetch attempts:', error);
-      // Provide a fallback result
+      // Provide a fallback result with URLs for debugging
+      // Create fallback URLs for debugging
+      let typeSafeUrl = "";
+      try {
+        typeSafeUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+          target_language_code: lang, 
+          word: word 
+        });
+      } catch (urlError) {
+        typeSafeUrl = `Error generating URL: ${urlError.message}`;
+      }
+
       return {
         lemma: word,
         translation: "(translation not available)",
-        etymology: null
+        etymology: null,
+        _debug: {
+          directUrl: `${API_BASE_URL}/api/lang/word/${lang}/${encodeURIComponent(word)}/preview`,
+          typeSafeUrl,
+          error: error.message
+        }
       };
     });
   }
 
   // Initialize tooltips after the component mounts
   onMount(() => {
-    if (!container) return;
+    console.log(`EnhancedText component mounted with language_code: ${language_code}`);
+    
+    if (!container) {
+      console.error("Container element not found");
+      return;
+    }
     
     // Find all word links in the enhanced text
     const wordLinks = container.querySelectorAll('.word-link');
+    console.log(`Found ${wordLinks.length} word links in enhanced text`);
     
     // Create Tippy instances for each word link
     wordLinks.forEach((link) => {
@@ -221,7 +268,13 @@
             if (import.meta.env.DEV) {
               const debugInfo = `
                 <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
-                  API: ${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview
+                  <strong>URLs:</strong><br>
+                  <span style="opacity: 0.7;">Direct: ${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview</span><br>
+                  <span style="font-weight: bold;">Type-safe: ${data._debug?.typeSafeUrl || 'N/A'}</span> ← Using this<br>
+                  <strong>URL Match:</strong> ${data._debug?.directUrl === data._debug?.typeSafeUrl ? 'Yes ✓' : 'No ✗'}<br>
+                  <strong>Details:</strong><br>
+                  Language code: ${language_code}<br>
+                  Word: ${word}
                 </div>
               `;
               content += debugInfo;
@@ -250,9 +303,28 @@
             
             // Only add debug info in non-production environments
             if (import.meta.env.DEV) {
+              // Try to get the type-safe URL for comparison
+              let typeSafeUrl = "";
+              try {
+                typeSafeUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+                  target_language_code: language_code, 
+                  word: word 
+                });
+              } catch (urlError) {
+                typeSafeUrl = `Error: ${urlError.message}`;
+              }
+              
+              const directUrl = `${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview`;
+              
               errorContent += `
                 <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
-                  API: ${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview
+                  <strong>URLs:</strong><br>
+                  <span style="opacity: 0.7;">Direct: ${directUrl}</span><br>
+                  <span style="font-weight: bold;">Type-safe: ${typeSafeUrl}</span> ← Using this<br>
+                  <strong>URL Match:</strong> ${directUrl === typeSafeUrl ? 'Yes ✓' : 'No ✗'}<br>
+                  <strong>Details:</strong><br>
+                  Language code: ${language_code}<br>
+                  Word: ${word}
                   ${error ? `<br>Error: ${error.message}` : ''}
                 </div>
               `;
