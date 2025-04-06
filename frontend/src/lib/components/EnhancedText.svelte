@@ -8,7 +8,7 @@
   import { RouteName } from '../generated/routes';
 
   export let html: string | null = null;
-  export let language_code: string;
+  export let target_language_code: string;
 
   let tippyInstances: Instance[] = [];
   let container: HTMLElement;
@@ -100,7 +100,7 @@
 
   // Initialize tooltips after the component mounts
   onMount(() => {
-    console.log(`EnhancedText component mounted with language_code: ${language_code}`);
+    console.log(`EnhancedText component mounted with target_language_code: ${target_language_code}`);
     
     if (!container) {
       console.error("Container element not found");
@@ -133,7 +133,7 @@
       let preloadError = null;
       
       // Start the data fetch immediately (not waiting for hover)
-      fetchWordData(word, language_code)
+      fetchWordData(word, target_language_code)
         .then(data => {
           preloadedData = data;
           console.log(`Preloaded data for "${word}":`, data);
@@ -158,7 +158,7 @@
           // Hide all other tooltips
           hideAll({ exclude: instance });
           
-          console.log(`Showing tooltip for word: "${word}" in language: ${language_code}`);
+          console.log(`Showing tooltip for word: "${word}" in language: ${target_language_code}`);
           
           // Set initial content
           instance.setContent('Loading...');
@@ -173,7 +173,7 @@
           } else {
             console.log(`Fetching data on-demand for "${word}"`);
             // No preloaded data yet, fetch it now
-            fetchWordData(word, language_code)
+            fetchWordData(word, target_language_code)
               .then(data => renderTooltipContent(data))
               .catch(error => renderErrorContent(error));
           }
@@ -203,12 +203,10 @@
             if (import.meta.env.DEV) {
               const debugInfo = `
                 <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
-                  <strong>URLs:</strong><br>
-                  <span style="opacity: 0.7;">Direct: ${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview</span><br>
-                  <span style="font-weight: bold;">Type-safe: ${data._debug?.typeSafeUrl || 'N/A'}</span> ← Using this<br>
-                  <strong>URL Match:</strong> ${data._debug?.directUrl === data._debug?.typeSafeUrl ? 'Yes ✓' : 'No ✗'}<br>
+                  <strong>URL:</strong><br>
+                  <span style="font-weight: bold;">${data._debug?.url || 'N/A'}</span><br>
                   <strong>Details:</strong><br>
-                  Language code: ${language_code}<br>
+                  Language code: ${target_language_code}<br>
                   Word: ${word}
                 </div>
               `;
@@ -238,27 +236,25 @@
             
             // Only add debug info in non-production environments
             if (import.meta.env.DEV) {
-              // Try to get the type-safe URL for comparison
-              let typeSafeUrl = "";
+              // Try to regenerate the URL for the debug info
+              let urlForDebug = "";
               try {
-                typeSafeUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
-                  target_language_code: language_code, 
+                urlForDebug = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+                  target_language_code: target_language_code, 
                   word: word 
                 });
               } catch (urlError) {
-                typeSafeUrl = `Error: ${urlError.message}`;
+                urlForDebug = `Error: ${urlError.message}`;
               }
               
-              const directUrl = `${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview`;
+              // No need for this anymore as we're using the url variable directly
               
               errorContent += `
                 <div class="debug-info" style="font-size: 9px; color: #999; margin-top: 8px; border-top: 1px dotted #ddd; padding-top: 4px;">
-                  <strong>URLs:</strong><br>
-                  <span style="opacity: 0.7;">Direct: ${directUrl}</span><br>
-                  <span style="font-weight: bold;">Type-safe: ${typeSafeUrl}</span> ← Using this<br>
-                  <strong>URL Match:</strong> ${directUrl === typeSafeUrl ? 'Yes ✓' : 'No ✗'}<br>
+                  <strong>URL:</strong><br>
+                  <span style="font-weight: bold;">${urlForDebug || url}</span><br>
                   <strong>Details:</strong><br>
-                  Language code: ${language_code}<br>
+                  Language code: ${target_language_code}<br>
                   Word: ${word}
                   ${error ? `<br>Error: ${error.message}` : ''}
                 </div>

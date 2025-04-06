@@ -97,62 +97,168 @@ We added detailed logging to the `EnhancedText.svelte` component to understand w
 
 ## Solution Implemented
 
-We simplified the word data fetching process by creating a dedicated `fetchWordData` function that:
+### Initial Debugging and First Fix
+
+Our initial diagnosis revealed several issues:
+
+1. Missing `language_code` propagation through component hierarchy
+2. References to undefined variables (`lang` instead of `language_code`)
+3. Potential issues with URL construction and encoding
+4. Limited error handling and debugging information
+
+We implemented a more robust word data fetching process with dedicated `fetchWordData` function that:
 
 1. Constructs the URL manually to ensure proper encoding of Greek characters
 2. Uses specific fetch options to ensure proper CORS handling
 3. Provides better error handling for failed requests
+4. Adds detailed logging for debugging
 
-The updated code in `EnhancedText.svelte`:
+The initial fixed version:
 
 ```typescript
 // Function to fetch word data directly from the API
 async function fetchWordData(word: string, lang: string): Promise<any> {
-  try {
-    // Use a manual URL construction as a fallback
-    const directUrl = `${API_BASE_URL}/api/lang/word/${lang}/${encodeURIComponent(word)}/preview`;
-    console.log(`Direct fetch from URL: ${directUrl}`);
+  return new Promise((resolve, reject) => {
+    console.log(`EnhancedText Debug:`);
+    console.log(`- API_BASE_URL: ${API_BASE_URL}`);
+    console.log(`- Language Code: ${lang}`);
+    console.log(`- Word to fetch: "${word}"`);
     
-    const response = await fetch(directUrl, { 
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      },
-      mode: 'cors' 
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Direct API request failed: ${response.status}`);
+    // IMPORTANT: Check if we have a valid language code
+    if (!lang) {
+      console.error(`- ERROR: Missing language code. This is required for API calls.`);
+      reject(new Error('Missing language code'));
+      return;
     }
     
-    return await response.json();
-  } catch (error) {
-    console.error('Error in direct fetch:', error);
-    return null;
-  }
+    // Use the direct manual URL that we know works in the browser
+    const encodedWord = encodeURIComponent(word);
+    const url = `${API_BASE_URL}/api/lang/word/${lang}/${encodedWord}/preview`;
+    console.log(`- Using URL: ${url}`);
+    
+    // Try direct fetch with appropriate CORS settings
+    fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      mode: 'cors'
+    })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error(`Fetch API test failed with status: ${response.status}`);
+      }
+    })
+    .then(data => {
+      console.log(`- Direct fetch API test succeeded:`, data);
+      resolve(data);
+    })
+    .catch(error => {
+      console.error(`- Direct fetch API test failed:`, error);
+      // Fallback mechanism with XMLHttpRequest if needed
+      // ...
+    });
+  }).catch(error => {
+    console.error('Error in all fetch attempts:', error);
+    // Provide a fallback result
+    return {
+      lemma: word,
+      translation: "(translation not available)",
+      etymology: null
+    };
+  });
 }
 ```
 
-This function is then used in the `onShow` handler of the tooltip:
+### Critical Bug Fix: Reference Error
+
+After deploying the initial fix, we encountered a `ReferenceError: lang is not defined` error. This occurred because there were still references to the undefined variable `lang` in the tooltip rendering code:
 
 ```typescript
-// Use direct fetch method to avoid any encoding issues
-fetchWordData(word, language_code)
-  .then(data => {
-    console.log(`Preview data for "${word}":`, data);
-    
-    if (data && data.lemma) {
-      // Build tooltip content from data
-      // ...
-      instance.setContent(content);
-    } else {
-      instance.setContent('No data available');
+// Error locations:
+const wordApiUrl = `${API_BASE_URL}/api/lang/word/${lang}/${encodeURIComponent(word)}/preview`;
+
+// In debug info sections:
+API: ${API_BASE_URL}/api/lang/word/${lang}/${encodeURIComponent(word)}/preview
+```
+
+We fixed these references by replacing all instances of `lang` with the correct `language_code` prop, and added detailed logging to track the component lifecycle.
+
+### Type-Safe URL Integration
+
+After fixing the immediate issues, we enhanced the component to use the type-safe URL generation machinery from `routes.ts`. This approach:
+
+1. Aligns with the app's URL management strategy
+2. Provides type safety for API endpoints
+3. Centralizes URL structure definitions
+4. Ensures consistent parameter encoding
+
+The updated implementation now:
+- Generates both direct and type-safe URLs for comparison
+- Displays both URLs in debug tooltips
+- Shows whether the URLs match
+- Uses the type-safe URL approach for all API calls
+
+```typescript
+// Generate a type-safe URL using the routes.ts machinery
+const typeSafeUrl = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+  target_language_code: language_code, 
+  word: word
+});
+
+// Sample debug output in tooltips:
+<div class="debug-info">
+  <strong>URLs:</strong><br>
+  <span style="opacity: 0.7;">Direct: ${API_BASE_URL}/api/lang/word/${language_code}/${encodeURIComponent(word)}/preview</span><br>
+  <span style="font-weight: bold;">Type-safe: ${data._debug?.typeSafeUrl || 'N/A'}</span> ← Using this<br>
+  <strong>URL Match:</strong> ${data._debug?.directUrl === data._debug?.typeSafeUrl ? 'Yes ✓' : 'No ✗'}<br>
+  <strong>Details:</strong><br>
+  Language code: ${language_code}<br>
+  Word: ${word}
+</div>
+```
+
+Our testing confirmed that both URL construction methods produce identical results, giving us confidence to standardize on the type-safe approach.
+
+### Comprehensive Error Handling
+
+The final implementation includes robust error handling at multiple levels:
+
+1. **Input Validation**: Checks for missing or invalid language code
+2. **API Request Errors**: Handles network failures, timeouts, and HTTP errors
+3. **Parsing Errors**: Properly catches and reports JSON parsing issues
+4. **Fallback Content**: Provides meaningful fallback content when data can't be loaded
+5. **Debug Information**: Includes extensive debug info in development mode
+
+### Mobile Experience Improvements
+
+For mobile users, we improved the touch interaction by:
+
+1. Detecting touch devices with feature detection
+2. Using 'click' trigger on touch devices instead of hover
+3. Preventing default click behavior to show tooltip instead
+4. Allowing Ctrl/Cmd+click to open in new tab if desired
+5. Making tooltips interactive and dismissible
+
+```typescript
+// For touch devices, prevent the default click behavior to allow tooltip to show
+if (isTouchDevice()) {
+  wordElem.addEventListener('click', (e) => {
+    // Only prevent default if modifier keys aren't pressed
+    // This allows opening in new tab with Ctrl/Cmd+click
+    if (!e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
     }
-  })
-  .catch(error => {
-    console.error(`Error fetching preview for "${word}":`, error);
-    instance.setContent('Error loading preview');
   });
+}
+
+// Configure tooltips differently for touch devices
+const instance = tippy(wordElem, {
+  // ...other options
+  interactive: true,
+  touch: true,
+  trigger: isTouchDevice() ? 'click' : 'mouseenter focus', // Use click on touch devices
+});
 ```
 
 ## Next Steps
@@ -183,12 +289,78 @@ While the initial issue is fixed, there are still several improvements that coul
 
 ## Lessons Learned
 
-1. **URL Encoding Matters**: Special care must be taken when encoding non-Latin characters in URLs, especially in a context where multiple systems might perform URL encoding/decoding.
+1. **Component Prop Validation**: Always validate required props early and provide clear error messages. The `language_code` prop was critical for API calls but wasn't being properly validated, leading to silent failures.
 
-2. **Direct Testing is Essential**: Always test API endpoints directly in the browser when diagnosing frontend-backend integration issues.
+2. **Variable References Matter**: The `ReferenceError: lang is not defined` highlighted the importance of consistent variable naming. This type of error is particularly critical as it can break the entire component rendering.
 
-3. **Fallback Strategies**: Having a simpler, manual approach as a fallback can help work around complex issues in type-safe API integration.
+3. **Type-Safe URL Generation**: The type-safe URL generation from `routes.ts` provides significant advantages:
+   - Centralizes URL structure definitions
+   - Provides automatic type checking for parameters
+   - Handles encoding consistently
+   - Creates a maintainable API surface
 
-4. **Frontend-Backend Communication**: When working with a SvelteKit frontend calling a Flask backend, use explicit headers and CORS options to ensure reliable communication.
+4. **Debug Information in Development**: Adding detailed debug information to tooltips in development mode was invaluable for diagnosing issues. This approach allows developers to see exactly what's happening without needing to open browser dev tools.
 
-This fix maintains the original behavior and user experience while making the tooltips work correctly. The simplified approach avoids potential issues with double encoding or mismatches in how different systems handle URL encoding.
+5. **Progressive Enhancement**: We implemented a layered approach that tries multiple strategies and degrades gracefully:
+   - Try fetch API first with appropriate CORS settings
+   - Fall back to XMLHttpRequest if needed
+   - Provide fallback content if all API calls fail
+   - Show helpful debug info in development mode
+
+6. **URL Parameter Encoding**: Special care must be taken when encoding non-Latin characters (like Greek) in URLs. The `encodeURIComponent()` function was essential for handling these characters correctly.
+
+7. **Component Design for Multiple Devices**: The EnhancedText component now has specific adaptations for mobile:
+   - Different trigger events (click vs. hover)
+   - Custom event handling to prevent default link behavior
+   - Interactive tooltips that are touch-friendly
+
+8. **Debugging with Both Approaches**: By implementing both direct and type-safe URL construction and comparing them, we were able to confirm they produced identical results, giving us confidence to standardize on the type-safe approach.
+
+## Technical Details for Future Reference
+
+### Parameter Names in Routes
+
+The type-safe URL generation required using `target_language_code` rather than `language_code` due to how the route parameters are defined in the generated `routes.ts`:
+
+```typescript
+[RouteName.WORDFORM_API_WORD_PREVIEW_API]: { target_language_code: string; word: string };
+```
+
+This parameter naming must match exactly what the backend API expects.
+
+### URL Construction Comparison
+
+Direct URL:
+```
+http://localhost:3000/api/lang/word/el/βράχια/preview
+```
+
+Type-safe URL:
+```
+getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+  target_language_code: 'el', 
+  word: 'βράχια' 
+});
+// Results in: http://localhost:3000/api/lang/word/el/βράχια/preview
+```
+
+Both approaches properly encode the Greek characters, which was verified by the debug output showing "URL Match: Yes ✓" in the tooltip.
+
+### Browser Compatibility
+
+The solution works across browsers due to:
+1. Feature detection for touch devices
+2. Fallback to XMLHttpRequest if fetch fails
+3. Appropriate CORS settings for cross-origin requests
+4. Conservative use of modern JS features
+
+### Final Implementation
+
+The final implementation in EnhancedText.svelte combines:
+1. Type-safe URL generation from routes.ts
+2. Comprehensive error handling and fallbacks
+3. Detailed debug information during development
+4. Device-specific adaptations for touch vs. mouse
+5. Proper parameter validation and encoding
+
+This fix not only resolves the immediate issue but also improves maintainability, robustness, and the overall user experience.

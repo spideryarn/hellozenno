@@ -6,14 +6,15 @@
   export let enhanced_text: string | null = null;
   export let text_target: string | null = null;
   export const text_english: string | null = null;
-  // VERY IMPORTANT: language_code is required by EnhancedText for generating API URLs
+  // VERY IMPORTANT: target_language_code is required by EnhancedText for generating API URLs
+  // Previously named language_code, renamed for consistency with API
   export let language_code: string;
 </script>
 
 <div class="text-content">
   <h2>Text</h2>
   {#if enhanced_text}
-    <EnhancedText html={enhanced_text} {language_code} />
+    <EnhancedText html={enhanced_text} target_language_code={language_code} />
   {:else if text_target}
     <div class="plain-text">
       {#each text_target.split('\n\n') as paragraph}
