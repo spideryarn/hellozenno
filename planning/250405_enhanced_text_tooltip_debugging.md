@@ -289,32 +289,40 @@ While the initial issue is fixed, there are still several improvements that coul
 
 ## Lessons Learned
 
-1. **Component Prop Validation**: Always validate required props early and provide clear error messages. The `language_code` prop was critical for API calls but wasn't being properly validated, leading to silent failures.
+1. **Component Prop Validation**: Always validate required props early and provide clear error messages. The `target_language_code` prop (previously named `language_code`) is critical for API calls and needs proper validation to prevent silent failures.
 
 2. **Variable References Matter**: The `ReferenceError: lang is not defined` highlighted the importance of consistent variable naming. This type of error is particularly critical as it can break the entire component rendering.
 
-3. **Type-Safe URL Generation**: The type-safe URL generation from `routes.ts` provides significant advantages:
+3. **Consistent Parameter Naming**: Using consistent parameter names between frontend components and backend APIs is essential. Our change from `language_code` to `target_language_code` in the EnhancedText component aligned with the API's expected parameters and made the code more consistent.
+
+4. **Type-Safe URL Generation**: The type-safe URL generation from `routes.ts` provides significant advantages:
    - Centralizes URL structure definitions
    - Provides automatic type checking for parameters
    - Handles encoding consistently
    - Creates a maintainable API surface
 
-4. **Debug Information in Development**: Adding detailed debug information to tooltips in development mode was invaluable for diagnosing issues. This approach allows developers to see exactly what's happening without needing to open browser dev tools.
+5. **Debug Information in Development**: Adding detailed debug information to tooltips in development mode was invaluable for diagnosing issues. This approach allows developers to see exactly what's happening without needing to open browser dev tools.
 
-5. **Progressive Enhancement**: We implemented a layered approach that tries multiple strategies and degrades gracefully:
+6. **Progressive Enhancement**: We implemented a layered approach that tries multiple strategies and degrades gracefully:
    - Try fetch API first with appropriate CORS settings
-   - Fall back to XMLHttpRequest if needed
-   - Provide fallback content if all API calls fail
+   - Provide fallback content if API calls fail
    - Show helpful debug info in development mode
+   - Use async/await for cleaner, more maintainable code
+   
+7. **Modern JavaScript Practices**: Switching from promise chains to async/await made the code:
+   - Significantly more readable
+   - Easier to maintain
+   - Better organized with clear error handling
+   - Less prone to nesting issues ("callback hell")
 
-6. **URL Parameter Encoding**: Special care must be taken when encoding non-Latin characters (like Greek) in URLs. The `encodeURIComponent()` function was essential for handling these characters correctly.
+8. **URL Parameter Encoding**: Special care must be taken when encoding non-Latin characters (like Greek) in URLs. The `encodeURIComponent()` function was essential for handling these characters correctly.
 
-7. **Component Design for Multiple Devices**: The EnhancedText component now has specific adaptations for mobile:
+9. **Component Design for Multiple Devices**: The EnhancedText component now has specific adaptations for mobile:
    - Different trigger events (click vs. hover)
    - Custom event handling to prevent default link behavior
    - Interactive tooltips that are touch-friendly
 
-8. **Debugging with Both Approaches**: By implementing both direct and type-safe URL construction and comparing them, we were able to confirm they produced identical results, giving us confidence to standardize on the type-safe approach.
+10. **Cleanup of Legacy Code**: Removing the XMLHttpRequest fallback simplified the codebase substantially. Modern browsers all support fetch, making this legacy approach unnecessary.
 
 ## Technical Details for Future Reference
 
@@ -327,6 +335,26 @@ The type-safe URL generation required using `target_language_code` rather than `
 ```
 
 This parameter naming must match exactly what the backend API expects.
+
+### Parameter Naming Standardization (June 4, 2025)
+
+To address the naming inconsistency between the frontend and backend, we standardized the parameter naming:
+
+1. Renamed the EnhancedText component's prop from `language_code` to `target_language_code`
+2. Updated all internal references within the component
+3. Modified SourcefileText.svelte to pass the route's `language_code` as `target_language_code` to EnhancedText
+
+This change improved consistency with:
+- Backend API parameter names (`target_language_code`)
+- Type-safe route generation in routes.ts
+- API URL construction
+
+The refactoring was part of a larger cleanup that included:
+- Simplifying the debug info in tooltips
+- Removing direct URL construction logic
+- Documenting parameter name changes for future developers
+
+We kept the SvelteKit route parameter as `language_code` to minimize changes to the broader application while ensuring the API-facing component uses the standardized name.
 
 ### URL Construction Comparison
 
@@ -358,9 +386,23 @@ The solution works across browsers due to:
 
 The final implementation in EnhancedText.svelte combines:
 1. Type-safe URL generation from routes.ts
-2. Comprehensive error handling and fallbacks
-3. Detailed debug information during development
-4. Device-specific adaptations for touch vs. mouse
-5. Proper parameter validation and encoding
+2. Consistent parameter naming with the API (`target_language_code`)
+3. Modern async/await syntax for cleaner code
+4. Comprehensive error handling and fallbacks
+5. Simplified debug information during development
+6. Device-specific adaptations for touch vs. mouse
+7. Proper parameter validation and encoding
+8. Removal of unnecessary legacy code (XMLHttpRequest fallback)
 
-This fix not only resolves the immediate issue but also improves maintainability, robustness, and the overall user experience.
+This implementation not only resolves the immediate issue but also improves maintainability, robustness, and the overall user experience. The code is now better aligned with modern JavaScript best practices and more consistent with the backend API naming conventions.
+
+### Code Evolution Summary
+
+1. **Initial Fix**: Fixed basic functionality with manual URL construction
+2. **Error Handling**: Added proper error handling for `ReferenceError: lang is not defined`
+3. **Type-Safe URLs**: Integrated with generated routes.ts for URL construction
+4. **Modernization**: Refactored to async/await syntax for cleaner code
+5. **Naming Standardization**: Aligned parameter names with backend API
+6. **Simplification**: Removed unused code paths and unnecessary fallbacks
+
+Each step improved the component incrementally, resulting in a modern, maintainable implementation that robustly handles the language tooltips functionality.
