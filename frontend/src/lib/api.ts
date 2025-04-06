@@ -193,8 +193,9 @@ export async function unifiedSearch(langCode: string, query: string): Promise<Se
     }
     
     try {
+        // Use API_BASE_URL for consistency with server-side rendering
         const response = await fetch(
-            `/api/lang/${langCode}/unified_search?q=${encodeURIComponent(query)}`
+            `${API_BASE_URL}/api/lang/${langCode}/unified_search?q=${encodeURIComponent(query)}`
         );
         
         if (!response.ok) {

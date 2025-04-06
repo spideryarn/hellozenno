@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { getSearchLandingData } from "$lib/api";
+import { API_BASE_URL } from "$lib/config";
 
 export const load: PageServerLoad = async ({ params, url, fetch }) => {
     const { language_code } = params;
@@ -14,8 +15,13 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
         let initialResult = null;
         if (query) {
             try {
+                // Use the fetch instance passed to the load function,
+                // using the passed fetch with a full URL ensures it works in both server and client contexts
+                // During SSR, this fetches the API endpoint
+                const API_URL = API_BASE_URL || "http://localhost:3000";
+                
                 const response = await fetch(
-                    `http://localhost:3000/api/lang/${language_code}/unified_search?q=${encodeURIComponent(query)}`
+                    `${API_URL}/api/lang/${language_code}/unified_search?q=${encodeURIComponent(query)}`
                 );
                 
                 if (response.ok) {
@@ -27,6 +33,8 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
                             redirect: `/language/${language_code}/wordform/${initialResult.data.redirect_to}`
                         };
                     }
+                } else {
+                    console.error(`Server-side search error: ${response.status} ${response.statusText}`);
                 }
             } catch (err) {
                 console.error('Server-side search error:', err);

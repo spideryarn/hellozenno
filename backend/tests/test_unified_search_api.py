@@ -66,6 +66,8 @@ def main():
         ("Misspelled Greek", "γειαα"),    # Typo of "γεια"
         ("English word", "hello"),
         ("Invalid word", "asdf"),
+        ("Problem word: αόριστα", "αόριστα"),  # Word that's causing issues
+        ("Problem word: αόριστος", "αόριστος"), # Lemma version of problem word
         # Add more test cases as needed
     ]
     
