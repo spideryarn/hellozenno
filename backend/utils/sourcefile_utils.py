@@ -494,7 +494,7 @@ def get_sourcefile_details(
 
     # Generate enhanced text only for text tab (requires wordforms)
     if purpose == "text" and sourcefile_entry.text_target:
-        from utils.vocab_llm_utils import create_interactive_word_links
+        from utils.vocab_llm_utils import create_interactive_word_links, create_interactive_word_data
         from db_models import Wordform
 
         # Get minimal wordform data needed for links
@@ -504,13 +504,30 @@ def get_sourcefile_details(
             include_junction_data=True,
         )
 
-        enhanced_text, found_wordforms = create_interactive_word_links(
+        # DEPRECATED: Generate backward-compatible HTML for old components
+        # This approach mixes content with presentation and should be removed once
+        # all frontend components have been updated to use the structured data approach
+        enhanced_text, found_wordforms_html = create_interactive_word_links(
+            text=str(sourcefile_entry.text_target),
+            wordforms=wordforms_for_links,
+            target_language_code=target_language_code,
+        )
+        
+        # Generate new structured data format for the updated component
+        recognized_words, found_wordforms_data = create_interactive_word_data(
             text=str(sourcefile_entry.text_target),
             wordforms=wordforms_for_links,
             target_language_code=target_language_code,
         )
 
-        result["enhanced_text"] = enhanced_text
+        # Include both formats in the response
+        result["enhanced_text"] = enhanced_text  # Legacy format (HTML)
+        result["recognized_words"] = recognized_words  # New format (structured data)
+        result["text_data"] = {
+            "text": str(sourcefile_entry.text_target),  # Original plain text
+            "recognized_words": recognized_words  # Words with positions and metadata
+        }
+        
         # Include wordforms in the result so the frontend can use them
         result["wordforms"] = wordforms_for_links
 

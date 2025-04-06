@@ -429,6 +429,129 @@ def extract_phrases_from_text(
     return out, extra
 
 
+def create_interactive_word_data(
+    text: str,
+    wordforms: list[dict],
+    target_language_code: str,
+) -> tuple[list[dict], set[str]]:
+    """Analyze the input text and return structured data about recognized words.
+    
+    Instead of generating HTML, this function returns structured data that can be
+    used by the frontend to render the text with interactive elements.
+    
+    Returns:
+        Tuple of (recognized_words, found_wordforms) where:
+        - recognized_words is a list of dictionaries, each containing information about a recognized word:
+          {
+            "word": str,             # The exact word as it appears in the text
+            "start": int,            # Character position where the word starts
+            "end": int,              # Character position where the word ends
+            "lemma": str,            # The dictionary form of the word
+            "translations": list,    # List of English translations
+            "part_of_speech": str,   # Part of speech (noun, verb, etc.)
+            "inflection_type": str,  # Grammatical form (e.g., "past tense")
+          }
+        - found_wordforms is a set of wordforms that were found in the text
+    """
+    from utils.store_utils import load_or_generate_lemma_metadata
+    from utils.word_utils import ensure_nfc, normalize_text
+    
+    # Track which wordforms we actually find in the text
+    found_wordforms = set()
+    recognized_words = []
+    
+    # Sort wordforms by length in descending order to handle overlapping words
+    sorted_wordforms = sorted(
+        wordforms, key=lambda wf: len(wf["wordform"]), reverse=True
+    )
+
+    # First, normalize the input text to NFC for consistent pattern matching
+    text_nfc = ensure_nfc(text)
+    
+    # Create a regex pattern that matches both original and normalized forms
+    pattern_parts = []
+    wordform_variations = {}  # Map normalized forms to their variations
+    
+    for wf in sorted_wordforms:
+        # Ensure wordform is in NFC form for consistent pattern matching
+        nfc_wordform = ensure_nfc(wf["wordform"])
+        normalized_form = normalize_text(nfc_wordform)
+        
+        # Initialize the variations set if we haven't seen this normalized form before
+        if normalized_form not in wordform_variations:
+            wordform_variations[normalized_form] = {
+                "original_wordform": wf["wordform"],
+                "variations": set(),
+                "metadata": wf
+            }
+        
+        # Add the original form to the variations
+        wordform_variations[normalized_form]["variations"].add(nfc_wordform)
+        pattern_parts.append(re.escape(nfc_wordform))
+        
+        # Add any case variations found in the text
+        text_words = re.findall(r"\b\w+\b", text_nfc, re.UNICODE)
+        for word in text_words:
+            # Ensure word is in NFC form before comparison
+            nfc_word = ensure_nfc(word)
+            if normalize_text(nfc_word) == normalized_form:
+                wordform_variations[normalized_form]["variations"].add(nfc_word)
+                pattern_parts.append(re.escape(nfc_word))
+    
+    # If no pattern parts, return empty results
+    if not pattern_parts:
+        return [], set()
+    
+    # Create the pattern with all unique variations
+    pattern = re.compile(
+        r"\b(" + "|".join(set(pattern_parts)) + r")\b",
+        re.UNICODE,
+    )
+    
+    # Find all matches in the text
+    for match in pattern.finditer(text_nfc):
+        word = match.group(0)  # Original word with case and accents preserved
+        start_pos = match.start()
+        end_pos = match.end()
+        
+        # First ensure the word is in NFC form for consistent matching
+        word_nfc = ensure_nfc(word)
+        normalized_word = normalize_text(word_nfc)
+        
+        # Find which wordform this matches
+        for norm_form, data in wordform_variations.items():
+            if any(normalize_text(var) == normalized_word for var in data["variations"]):
+                wf = data["metadata"]
+                found_wordforms.add(wf["wordform"])  # Track that we found this wordform
+                
+                # Gather word data
+                lemma = wf["lemma"]
+                translations = wf.get("translations", [])
+                if not translations and wf.get("translated_word"):
+                    translations = [wf.get("translated_word")]
+                
+                # Add this word occurrence to our results
+                recognized_words.append({
+                    "word": word,                             # Original word from text
+                    "start": start_pos,                       # Position in text
+                    "end": end_pos,                           # End position in text
+                    "lemma": lemma,                           # Dictionary form
+                    "translations": translations,             # English meanings
+                    "part_of_speech": wf.get("part_of_speech", "unknown"),  # Noun, verb, etc
+                    "inflection_type": wf.get("inflection_type", "unknown") # Grammatical form
+                })
+                break
+    
+    # Sort recognized words by their position in the text
+    recognized_words.sort(key=lambda w: w["start"])
+    
+    return recognized_words, found_wordforms
+
+
+# DEPRECATED: This function is maintained only for backward compatibility.
+# New code should use create_interactive_word_data() instead which returns structured
+# data rather than HTML. This provides better separation of concerns between
+# backend (data processing) and frontend (rendering).
 def create_interactive_word_links(
     text: str,
     wordforms: list[dict],

@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     const { language_code, sourcedir_slug, sourcefile_slug } = params;
 
     try {
-        // Fetch text data with a single API call (which now includes the enhanced text)
+        // Fetch text data with a single API call (which now includes both enhanced text formats)
         const textResponse = await fetch(
             getApiUrl(
                 RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
@@ -31,6 +31,10 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         const wordsData = { wordforms: [] };
         const phrasesData = { phrases: [] };
 
+        // Extract the new structured data format if available
+        const recognizedWords = textData.recognized_words || [];
+        const enhanced_text = textData.enhanced_text || null; // Legacy HTML format
+
         return {
             sourcefileData: textData, // Use textData for sourcefileData too
             textData,
@@ -40,6 +44,9 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             language_name: textData.language_name || "",
             sourcedir_slug,
             sourcefile_slug,
+            // Add the new structured data format
+            recognizedWords: recognizedWords,
+            enhanced_text, // Keep legacy format for backwards compatibility
         };
     } catch (err: unknown) {
         console.error("Error loading sourcefile:", err);

@@ -8,7 +8,18 @@
   import { RouteName } from '../generated/routes';
   import type { WordPreview } from '../types';
 
+  // Support different input modes - either HTML string or structured data
   export let html: string | null = null;
+  export let text: string | null = null;
+  export let recognizedWords: Array<{
+    word: string;
+    start: number;
+    end: number;
+    lemma: string;
+    translations: string[];
+    part_of_speech?: string;
+    inflection_type?: string;
+  }> = [];
   export let target_language_code: string;
 
   let tippyInstances: Instance[] = [];
@@ -99,10 +110,153 @@
     }
   }
 
-  // Initialize tooltips after the component mounts
-  onMount(() => {
-    console.log(`EnhancedText component mounted with target_language_code: ${target_language_code}`);
+  // Helper to create tooltip content
+  function createTooltipContent(data: WordPreview, word: string) {
+    // Always create a tooltip, even if data is minimal or missing
+    let content = `
+      <div class="tippy-content">
+        <h4>${data?.lemma || word}</h4>
+    `;
     
+    if (data?.translations && data.translations.length > 0) {
+      content += `<p class="translation">${data.translations.join('; ')}</p>`;
+    } else if (data?.translation) {
+      content += `<p class="translation">${data.translation}</p>`;
+    } else {
+      // Show a default message if no translation available
+      content += `<p class="translation"><em>(translation not available)</em></p>`;
+    }
+    
+    if (data?.etymology) {
+      content += `<p class="etymology">${data.etymology}</p>`;
+    }
+    
+    // Only add debug info in non-production environments
+    if (import.meta.env.DEV) {
+      const debugInfo = `
+        <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
+          <strong>URL:</strong><br>
+          <span style="font-weight: bold;">${data._debug?.url || 'N/A'}</span><br>
+          <strong>Details:</strong><br>
+          Language code: ${target_language_code}<br>
+          Word: ${word}
+        </div>
+      `;
+      content += debugInfo;
+    }
+    
+    content += '</div>';
+    return content;
+  }
+
+  // Helper to create error tooltip content  
+  function createErrorContent(word: string, error?: any) {
+    // Show a more helpful error message with the word itself
+    let errorContent = `
+      <div class="tippy-content">
+        <h4>${word}</h4>
+        <p class="translation error"><em>Error loading word information</em></p>
+    `;
+    
+    // Only add debug info in non-production environments
+    if (import.meta.env.DEV) {
+      // Try to regenerate the URL for the debug info
+      let urlForDebug = "";
+      try {
+        urlForDebug = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
+          target_language_code: target_language_code, 
+          word: word 
+        });
+      } catch (urlError) {
+        urlForDebug = `Error: ${urlError.message}`;
+      }
+      
+      errorContent += `
+        <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
+          <strong>URL:</strong><br>
+          <span style="font-weight: bold;">${urlForDebug}</span><br>
+          <strong>Details:</strong><br>
+          Language code: ${target_language_code}<br>
+          Word: ${word}
+          ${error ? `<br>Error: ${error.message}` : ''}
+        </div>
+      `;
+    }
+    
+    errorContent += `</div>`;
+    return errorContent;
+  }
+
+  // Function to attach tippy to an element  
+  function attachTippy(element: HTMLElement, word: string) {
+    // For touch devices, prevent the default click behavior to allow tooltip to show
+    if (isTouchDevice()) {
+      element.addEventListener('click', (e) => {
+        // Only prevent default if modifier keys aren't pressed
+        // This allows opening in new tab with Ctrl/Cmd+click
+        if (!e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+        }
+      });
+    }
+    
+    // Preload the data before showing tooltip
+    let preloadedData = null;
+    let preloadError = null;
+    
+    // Start the data fetch immediately (not waiting for hover)
+    fetchWordData(word, target_language_code)
+      .then(data => {
+        preloadedData = data;
+        console.log(`Preloaded data for "${word}":`, data);
+      })
+      .catch(error => {
+        preloadError = error;
+        console.error(`Error preloading data for "${word}":`, error);
+      });
+    
+    const instance = tippy(element, {
+      content: '<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>',
+      allowHTML: true,
+      theme: 'hz-dark',
+      placement: 'bottom',
+      delay: [200, 0], // Delay before showing tooltip
+      maxWidth: 300,
+      interactive: true,
+      appendTo: document.body,
+      touch: true,
+      trigger: isTouchDevice() ? 'click' : 'mouseenter focus', // Use click on touch devices
+      onShow(instance) {
+        // Hide all other tooltips
+        hideAll({ exclude: instance });
+        
+        console.log(`Showing tooltip for word: "${word}" in language: ${target_language_code}`);
+        
+        // Set initial loading content with spinner
+        instance.setContent('<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>');
+        
+        // Use preloaded data if available, otherwise fetch
+        if (preloadedData) {
+          console.log(`Using preloaded data for "${word}"`);
+          instance.setContent(createTooltipContent(preloadedData, word));
+        } else if (preloadError) {
+          console.log(`Using preloaded error for "${word}"`);
+          instance.setContent(createErrorContent(word, preloadError));
+        } else {
+          console.log(`Fetching data on-demand for "${word}"`);
+          // No preloaded data yet, fetch it now
+          fetchWordData(word, target_language_code)
+            .then(data => instance.setContent(createTooltipContent(data, word)))
+            .catch(error => instance.setContent(createErrorContent(word, error)));
+        }
+      }
+    });
+    
+    return instance;
+  }
+
+  // Initialize HTML-based tooltips (legacy mode)
+  function initializeHTMLBasedTooltips() {
     if (!container) {
       console.error("Container element not found");
       return;
@@ -110,166 +264,55 @@
     
     // Find all word links in the enhanced text
     const wordLinks = container.querySelectorAll('.word-link');
-    console.log(`Found ${wordLinks.length} word links in enhanced text`);
+    console.log(`Found ${wordLinks.length} word links in enhanced text (HTML mode)`);
     
     // Create Tippy instances for each word link
     wordLinks.forEach((link) => {
       const wordElem = link as HTMLElement;
       const word = wordElem.textContent?.trim() || '';
-      
-      // For touch devices, prevent the default click behavior to allow tooltip to show
-      if (isTouchDevice()) {
-        wordElem.addEventListener('click', (e) => {
-          // Only prevent default if modifier keys aren't pressed
-          // This allows opening in new tab with Ctrl/Cmd+click
-          if (!e.ctrlKey && !e.metaKey) {
-            e.preventDefault();
-          }
-        });
-      }
-      
-      // URL is constructed in fetchWordData and in the debug sections
-      // Preload the data before showing tooltip - much more reliable
-      let preloadedData = null;
-      let preloadError = null;
-      
-      // Start the data fetch immediately (not waiting for hover)
-      fetchWordData(word, target_language_code)
-        .then(data => {
-          preloadedData = data;
-          console.log(`Preloaded data for "${word}":`, data);
-        })
-        .catch(error => {
-          preloadError = error;
-          console.error(`Error preloading data for "${word}":`, error);
-        });
-      
-      const instance = tippy(wordElem, {
-        content: '<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>',
-        allowHTML: true,
-        theme: 'hz-dark',
-        placement: 'bottom',
-        delay: [200, 0], // Delay before showing tooltip
-        maxWidth: 300,
-        interactive: true,
-        appendTo: document.body,
-        touch: true,
-        trigger: isTouchDevice() ? 'click' : 'mouseenter focus', // Use click on touch devices
-        onShow(instance) {
-          // Hide all other tooltips
-          hideAll({ exclude: instance });
-          
-          console.log(`Showing tooltip for word: "${word}" in language: ${target_language_code}`);
-          
-          // Set initial loading content with spinner
-          instance.setContent('<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>');
-          
-          // Use preloaded data if available, otherwise fetch
-          if (preloadedData) {
-            console.log(`Using preloaded data for "${word}"`);
-            renderTooltipContent(preloadedData);
-          } else if (preloadError) {
-            console.log(`Using preloaded error for "${word}"`);
-            renderErrorContent();
-          } else {
-            console.log(`Fetching data on-demand for "${word}"`);
-            // No preloaded data yet, fetch it now
-            fetchWordData(word, target_language_code)
-              .then(data => renderTooltipContent(data))
-              .catch(error => renderErrorContent(error));
-          }
-          
-          // Helper function to render tooltip content
-          function renderTooltipContent(data: WordPreview) {
-            // Always create a tooltip, even if data is minimal or missing
-            let content = `
-              <div class="tippy-content">
-                <h4>${data?.lemma || word}</h4>
-            `;
-            
-            if (data?.translations && data.translations.length > 0) {
-              content += `<p class="translation">${data.translations.join('; ')}</p>`;
-            } else if (data?.translation) {
-              content += `<p class="translation">${data.translation}</p>`;
-            } else {
-              // Show a default message if no translation available
-              content += `<p class="translation"><em>(translation not available)</em></p>`;
-            }
-            
-            if (data?.etymology) {
-              content += `<p class="etymology">${data.etymology}</p>`;
-            }
-            
-            // Only add debug info in non-production environments
-            if (import.meta.env.DEV) {
-              const debugInfo = `
-                <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
-                  <strong>URL:</strong><br>
-                  <span style="font-weight: bold;">${data._debug?.url || 'N/A'}</span><br>
-                  <strong>Details:</strong><br>
-                  Language code: ${target_language_code}<br>
-                  Word: ${word}
-                </div>
-              `;
-              content += debugInfo;
-            }
-            
-            content += '</div>';
-            
-            instance.setContent(content);
-            
-            // If we got a response but it's incomplete, log this
-            if (data && (!data.lemma || !data.translation)) {
-              console.log(`Incomplete word data for "${word}":`, data);
-            }
-          }
-          
-          // Helper function to render error content
-          function renderErrorContent(error?: any) {
-            console.error(`Error fetching preview for "${word}":`, error);
-            
-            // Show a more helpful error message with the word itself
-            let errorContent = `
-              <div class="tippy-content">
-                <h4>${word}</h4>
-                <p class="translation error"><em>Error loading word information</em></p>
-            `;
-            
-            // Only add debug info in non-production environments
-            if (import.meta.env.DEV) {
-              // Try to regenerate the URL for the debug info
-              let urlForDebug = "";
-              try {
-                urlForDebug = getApiUrl(RouteName.WORDFORM_API_WORD_PREVIEW_API, { 
-                  target_language_code: target_language_code, 
-                  word: word 
-                });
-              } catch (urlError) {
-                urlForDebug = `Error: ${urlError.message}`;
-              }
-              
-              // No need for this anymore as we're using the url variable directly
-              
-              errorContent += `
-                <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
-                  <strong>URL:</strong><br>
-                  <span style="font-weight: bold;">${urlForDebug || url}</span><br>
-                  <strong>Details:</strong><br>
-                  Language code: ${target_language_code}<br>
-                  Word: ${word}
-                  ${error ? `<br>Error: ${error.message}` : ''}
-                </div>
-              `;
-            }
-            
-            errorContent += `</div>`;
-            instance.setContent(errorContent);
-          }
-        }
-      });
-      
+      const instance = attachTippy(wordElem, word);
       tippyInstances.push(instance);
     });
+  }
+
+  // Initialize structured-data-based tooltips (new mode)
+  function initializeStructuredDataTooltips() {
+    if (!container || !text || recognizedWords.length === 0) {
+      console.log("Skipping structured data tooltip initialization: missing data");
+      return;
+    }
+    
+    // Get the container's text nodes and create a map to track spans we've inserted
+    const wordSpans = new Map<string, HTMLElement>();
+    
+    // Find all the word spans we created
+    const spans = container.querySelectorAll('.word-link');
+    spans.forEach(span => {
+      const wordElem = span as HTMLElement;
+      const word = wordElem.textContent?.trim() || '';
+      wordSpans.set(word, wordElem);
+    });
+    
+    console.log(`Found ${spans.length} interactive words in structured data mode`);
+    
+    // Create Tippy instances for each word span
+    for (const [word, element] of wordSpans.entries()) {
+      const instance = attachTippy(element, word);
+      tippyInstances.push(instance);
+    }
+  }
+
+  // Initialize tooltips after the component mounts
+  onMount(() => {
+    console.log(`EnhancedText component mounted with target_language_code: ${target_language_code}`);
+    
+    if (html) {
+      // Legacy HTML mode - the HTML already has links embedded
+      initializeHTMLBasedTooltips();
+    } else if (text && recognizedWords.length > 0) {
+      // Structured data mode - we rendered spans in the template
+      initializeStructuredDataTooltips();
+    }
   });
   
   // Clean up Tippy instances when the component is destroyed
@@ -277,12 +320,116 @@
     tippyInstances.forEach((instance) => instance.destroy());
     tippyInstances = [];
   });
+
+  /**
+   * Process the text with recognized words to segment it for rendering
+   * This allows us to split the text into spans and plain text segments
+   * Handles line breaks: single newlines become <br/>, double newlines become paragraph breaks
+   */
+  function processTextWithWords() {
+    if (!text || !recognizedWords || recognizedWords.length === 0) {
+      return [];
+    }
+    
+    const segments = [];
+    let lastPos = 0;
+    
+    // Sort recognized words by position
+    const sortedWords = [...recognizedWords].sort((a, b) => a.start - b.start);
+    
+    // Process each word
+    for (const word of sortedWords) {
+      // Add text segment before this word, if any
+      if (word.start > lastPos) {
+        const beforeText = text.substring(lastPos, word.start);
+        
+        // Process line breaks in the text segment
+        const processedText = processLineBreaks(beforeText);
+        segments.push({
+          type: 'text',
+          text: processedText
+        });
+      }
+      
+      // Add the word segment
+      segments.push({
+        type: 'word',
+        text: text.substring(word.start, word.end),
+        word: word.word,
+        lemma: word.lemma,
+        translations: word.translations || [],
+      });
+      
+      // Update lastPos
+      lastPos = word.end;
+    }
+    
+    // Add any remaining text after the last word
+    if (lastPos < text.length) {
+      const afterText = text.substring(lastPos);
+      
+      // Process line breaks in the remaining text
+      const processedText = processLineBreaks(afterText);
+      segments.push({
+        type: 'text',
+        text: processedText
+      });
+    }
+    
+    return segments;
+  }
+  
+  /**
+   * Process line breaks in text: 
+   * - Convert double newlines to paragraph breaks (<p>)
+   * - Convert single newlines to line breaks (<br>)
+   */
+  function processLineBreaks(text: string): string {
+    // Split text by double or more newlines to create paragraphs
+    const paragraphs = text.split(/\n\n+/);
+    
+    // Process each paragraph: replace single newlines with <br> tags
+    const processedParagraphs = paragraphs.map(para => {
+      // Replace single newlines with <br> tags
+      return para.trim().replace(/\n/g, '<br>');
+    });
+    
+    // Join paragraphs with paragraph tags
+    if (processedParagraphs.length === 1) {
+      // If there's only one paragraph, just return it with proper line breaks
+      return processedParagraphs[0];
+    } else {
+      // Wrap multiple paragraphs in <p> tags
+      return processedParagraphs
+        .filter(para => para.trim().length > 0) // Skip empty paragraphs
+        .map(para => `<p>${para}</p>`)
+        .join('');
+    }
+  }
 </script>
 
 <div class="enhanced-text" bind:this={container}>
   {#if html}
+    <!-- Legacy Mode: Using HTML with pre-generated links -->
     {@html html}
+  {:else if text && recognizedWords?.length > 0}
+    <!-- New Structured Mode: Using text and recognized words data -->
+    {#each processTextWithWords() as segment}
+      {#if segment.type === 'word'}
+        <a
+          href={`/language/${target_language_code}/wordform/${encodeURIComponent(segment.word)}`}
+          class="word-link"
+          data-word={segment.word}
+          data-lemma={segment.lemma}
+        >
+          {segment.text}
+        </a>
+      {:else}
+        {@html segment.text}
+      {/if}
+    {/each}
   {:else}
+    <!-- Fallback for no content -->
     <slot />
   {/if}
 </div>
@@ -291,15 +438,32 @@
   .enhanced-text {
     line-height: 1.6;
     max-width: 65ch; /* Ensure maximum of ~65 characters per line for readability */
+    white-space: normal; /* Don't preserve literal whitespace */
   }
   
-  .enhanced-text :global(a.word-link) {
+  /* Ensure paragraphs have proper spacing */
+  .enhanced-text :global(p), 
+  .enhanced-text p {
+    margin-bottom: 1rem;
+  }
+  
+  /* Ensure <br> elements create appropriate line breaks */
+  .enhanced-text :global(br), 
+  .enhanced-text br {
+    display: block;
+    content: "";
+    margin-top: 0.5rem;
+  }
+  
+  .enhanced-text :global(a.word-link),
+  .enhanced-text a.word-link {
     color: #4CAD53;
     text-decoration: none;
     border-bottom: 1px dotted #4CAD53;
   }
   
-  .enhanced-text :global(a.word-link:hover) {
+  .enhanced-text :global(a.word-link:hover),
+  .enhanced-text a.word-link:hover {
     background-color: rgba(76, 173, 83, 0.1);
   }
   
