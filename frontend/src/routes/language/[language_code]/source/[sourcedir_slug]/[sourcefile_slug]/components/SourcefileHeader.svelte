@@ -143,12 +143,12 @@
         throw new Error(`Failed to delete file: ${response.statusText}`);
       }
       
-      // Navigate back to the sourcedir page
+      // Navigate back to the sourcedir page using hard reload
       const sourcedirUrl = getPageUrl('sourcedir', {
         language_code,
         sourcedir_slug
       });
-      navigateTo(sourcedirUrl);
+      window.location.href = sourcedirUrl;
     } catch (error) {
       console.error('Error deleting file:', error);
       alert('Failed to delete file. Please try again.');
@@ -188,13 +188,16 @@
       // Update the local state to reflect the filename change
       sourcefile.filename = newName;
       
-      // Redirect to the new URL with the updated slug
+      // Get the new URL with the updated slug
       const sourcefileTextUrl = getPageUrl('sourcefile_text', {
         language_code,
         sourcedir_slug,
         sourcefile_slug: result.new_slug
       });
-      navigateTo(sourcefileTextUrl);
+      
+      // Use window.location.href instead of SvelteKit navigation
+      // This forces a full page reload to ensure all components are fresh
+      window.location.href = sourcefileTextUrl;
     } catch (error) {
       console.error('Error renaming file:', error);
       alert('Failed to rename file: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -217,7 +220,8 @@
   }
 
   // Generate URLs for view and download - these are actual API endpoints
-  const viewUrl = getApiUrl(
+  // Use reactive statements to ensure these update when sourcefile_slug changes
+  $: viewUrl = getApiUrl(
     RouteName.SOURCEFILE_VIEWS_VIEW_SOURCEFILE_VW,
     {
       target_language_code: language_code,
@@ -226,7 +230,7 @@
     }
   );
 
-  const downloadUrl = getApiUrl(
+  $: downloadUrl = getApiUrl(
     RouteName.SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW,
     {
       target_language_code: language_code,
@@ -235,42 +239,42 @@
     }
   );
   
-  // Generate navigation URLs
-  const sourcedirUrl = getPageUrl('sourcedir', {
+  // Generate navigation URLs - make reactive to ensure updates if parameters change
+  $: sourcedirUrl = getPageUrl('sourcedir', {
     language_code,
     sourcedir_slug
   });
   
   // Prepare navigation URLs only if the corresponding slugs exist
-  const firstSourcefileUrl = navigation.first_slug ? 
+  $: firstSourcefileUrl = navigation.first_slug ? 
     getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.first_slug
     }) : undefined;
     
-  const prevSourcefileUrl = navigation.prev_slug ? 
+  $: prevSourcefileUrl = navigation.prev_slug ? 
     getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.prev_slug
     }) : undefined;
     
-  const nextSourcefileUrl = navigation.next_slug ? 
+  $: nextSourcefileUrl = navigation.next_slug ? 
     getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.next_slug
     }) : undefined;
     
-  const lastSourcefileUrl = navigation.last_slug ? 
+  $: lastSourcefileUrl = navigation.last_slug ? 
     getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.last_slug
     }) : undefined;
     
-  const flashcardsUrl = getPageUrl('flashcards', {
+  $: flashcardsUrl = getPageUrl('flashcards', {
     language_code
   }, { sourcefile: sourcefile_slug });
 </script>
