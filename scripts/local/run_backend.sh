@@ -111,5 +111,11 @@ fi
 # Add the parent directory to PYTHONPATH to ensure all imports work correctly
 export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/api
 
-# Run Flask with the appropriate settings
-FLASK_DEBUG=$DEBUG_MODE FLASK_ENV=$FLASK_MODE FLASK_APP=backend/api/index.py flask run --host=localhost --port $FLASK_PORT
+# Ensure logs directory exists
+mkdir -p logs
+
+# Clear the log file
+> logs/flask.log
+
+# Run Flask with the appropriate settings and redirect output to log file
+FLASK_DEBUG=$DEBUG_MODE FLASK_ENV=$FLASK_MODE FLASK_APP=backend/api/index.py flask run --host=localhost --port $FLASK_PORT > logs/flask.log 2>&1
