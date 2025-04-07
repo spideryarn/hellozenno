@@ -16,10 +16,8 @@ export const load: PageServerLoad = async ({ params, url, fetch }) => {
         if (query) {
             try {
                 // Use the API base URL for consistency
-                const API_URL = API_BASE_URL || "http://localhost:3000";
-                
                 const response = await fetch(
-                    `${API_URL}/api/lang/${language_code}/unified_search?q=${encodeURIComponent(query)}`
+                    `${API_BASE_URL}/api/lang/${language_code}/unified_search?q=${encodeURIComponent(query)}`
                 );
                 
                 if (response.ok) {
