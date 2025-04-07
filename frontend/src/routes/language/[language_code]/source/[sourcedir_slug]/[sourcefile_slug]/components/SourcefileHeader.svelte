@@ -3,7 +3,7 @@
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import { MetadataCard } from '$lib';
+  import { MetadataCard, DescriptionFormatted } from '$lib';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
   import { route } from '$lib/ROUTES';
@@ -315,21 +315,11 @@
     </div>
   {:else}
     <div class="description-content" id="description-display">
-      {#if sourcefile.description}
-        <!-- Parse description and handle line breaks -->
-        {#each sourcefile.description.split(/\n\n+/).map(para => para.trim()) as paragraph, i}
-          <p class={i === sourcefile.description.split(/\n\n+/).length - 1 ? "mb-0" : "mb-2"}>
-            {#each paragraph.split(/\n/).map(line => line.trim()) as line, j}
-              {line}
-              {#if j < paragraph.split(/\n/).length - 1}
-                <br>
-              {/if}
-            {/each}
-          </p>
-        {/each}
-      {:else}
-        <p class="no-description"><em>No description available</em></p>
-      {/if}
+      <DescriptionFormatted 
+        description={sourcefile.description} 
+        placeholder="No description available"
+        cssClass="" 
+      />
     </div>
     <button on:click={editDescription} class="button small-button">
       <PencilSimple size={16} weight="bold" /> Edit
