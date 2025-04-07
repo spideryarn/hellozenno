@@ -33,7 +33,8 @@
     </div>
     {#if description}
       <div class="small source-description">
-        {description}
+        <!-- Keep descriptions short in listing pages to avoid overwhelming the UI -->
+        {description.length > 100 ? description.substring(0, 100) + '...' : description}
       </div>
     {/if}
   </div>

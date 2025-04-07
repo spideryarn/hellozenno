@@ -6,6 +6,7 @@
   import { MetadataCard } from '$lib';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
+  import { route } from '$lib/ROUTES';
   import { 
     CaretDoubleLeft, 
     CaretDoubleRight, 
@@ -239,42 +240,42 @@
     }
   );
   
-  // Generate navigation URLs - make reactive to ensure updates if parameters change
-  $: sourcedirUrl = getPageUrl('sourcedir', {
+  // Generate navigation URLs using the new route function
+  $: sourcedirUrl = route('/language/[language_code]/source/[sourcedir_slug]', {
     language_code,
     sourcedir_slug
   });
   
   // Prepare navigation URLs only if the corresponding slugs exist
   $: firstSourcefileUrl = navigation.first_slug ? 
-    getPageUrl('sourcefile_text', {
+    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.first_slug
     }) : undefined;
     
   $: prevSourcefileUrl = navigation.prev_slug ? 
-    getPageUrl('sourcefile_text', {
+    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.prev_slug
     }) : undefined;
     
   $: nextSourcefileUrl = navigation.next_slug ? 
-    getPageUrl('sourcefile_text', {
+    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.next_slug
     }) : undefined;
     
   $: lastSourcefileUrl = navigation.last_slug ? 
-    getPageUrl('sourcefile_text', {
+    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.last_slug
     }) : undefined;
     
-  $: flashcardsUrl = getPageUrl('flashcards', {
+  $: flashcardsUrl = route('/language/[language_code]/flashcards', {
     language_code
   }, { sourcefile: sourcefile_slug });
 </script>
@@ -315,7 +316,17 @@
   {:else}
     <div class="description-content" id="description-display">
       {#if sourcefile.description}
-        <p>{sourcefile.description}</p>
+        <!-- Parse description and handle line breaks -->
+        {#each sourcefile.description.split(/\n\n+/).map(para => para.trim()) as paragraph, i}
+          <p class={i === sourcefile.description.split(/\n\n+/).length - 1 ? "mb-0" : "mb-2"}>
+            {#each paragraph.split(/\n/).map(line => line.trim()) as line, j}
+              {line}
+              {#if j < paragraph.split(/\n/).length - 1}
+                <br>
+              {/if}
+            {/each}
+          </p>
+        {/each}
       {:else}
         <p class="no-description"><em>No description available</em></p>
       {/if}

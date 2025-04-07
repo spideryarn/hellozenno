@@ -368,9 +368,19 @@
           </div>
         {:else}
           <div class="d-flex justify-content-between align-items-start">
-            <div>
+            <div class="description-content">
               {#if sourcedir.description}
-                <p class="mb-0">{sourcedir.description}</p>
+                <!-- Parse description and handle line breaks -->
+                {#each sourcedir.description.split(/\n\n+/).map(para => para.trim()) as paragraph, i}
+                  <p class={i === sourcedir.description.split(/\n\n+/).length - 1 ? "mb-0" : "mb-2"}>
+                    {#each paragraph.split(/\n/).map(line => line.trim()) as line, j}
+                      {line}
+                      {#if j < paragraph.split(/\n/).length - 1}
+                        <br>
+                      {/if}
+                    {/each}
+                  </p>
+                {/each}
               {:else}
                 <p class="text-muted fst-italic mb-0">No description available</p>
               {/if}
