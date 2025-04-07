@@ -13,7 +13,6 @@
     CaretLeft, 
     CaretRight, 
     ArrowUp, 
-    PencilSimple, 
     Trash, 
     Image, 
     Download,
@@ -31,53 +30,14 @@
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;
   
-  // For description editing
-  let isEditingDescription = false;
-  let descriptionText = sourcefile.description || '';
+  // Variables for processing state
   let isProcessing = false;
   let processingError = '';
-  
-  function editDescription() {
-    isEditingDescription = true;
-  }
   
   // Helper function for navigation using Svelte's goto
   function navigateTo(url: string) {
     // Using SvelteKit's client-side routing with invalidation
     goto(url, { invalidateAll: true });
-  }
-  
-  async function saveDescription() {
-    try {
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API,
-          {
-            target_language_code: language_code,
-            sourcedir_slug,
-            sourcefile_slug
-          }
-        ),
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ description: descriptionText }),
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to update description: ${response.statusText}`);
-      }
-      
-      // Update the local state to reflect the change
-      sourcefile.description = descriptionText;
-      isEditingDescription = false;
-    } catch (error) {
-      console.error('Error updating description:', error);
-      alert('Failed to update description. Please try again.');
-    }
   }
   
   async function processSourcefile() {
@@ -304,27 +264,44 @@
   </div>
 </div>
 
-<div class="description-container">
-  {#if isEditingDescription}
-    <div class="description-edit">
-      <textarea bind:value={descriptionText}></textarea>
-      <div class="description-buttons">
-        <button on:click={saveDescription} class="button small-button">Save</button>
-        <button on:click={() => isEditingDescription = false} class="button small-button">Cancel</button>
-      </div>
-    </div>
-  {:else}
-    <div class="description-content" id="description-display">
-      <DescriptionFormatted 
-        description={sourcefile.description} 
-        placeholder="No description available"
-        cssClass="" 
-      />
-    </div>
-    <button on:click={editDescription} class="button small-button">
-      <PencilSimple size={16} weight="bold" /> Edit
-    </button>
-  {/if}
+<div class="description-wrapper">
+  <DescriptionFormatted 
+    description={sourcefile.description} 
+    placeholder="No description available for this file"
+    cssClass=""
+    onSave={async (text) => {
+      try {
+        const response = await fetch(
+          getApiUrl(
+            RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API,
+            {
+              target_language_code: language_code,
+              sourcedir_slug,
+              sourcefile_slug
+            }
+          ),
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ description: text }),
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error(`Failed to update description: ${response.statusText}`);
+        }
+        
+        // Update the local state to reflect the change
+        sourcefile.description = text;
+      } catch (error) {
+        console.error('Error updating description:', error);
+        alert('Failed to update description. Please try again.');
+        throw error; // Propagate error to component
+      }
+    }}
+  />
 </div>
 
 <div class="actions">
@@ -498,34 +475,8 @@
     background-color: #d9534f;
   }
   
-  .description-container {
-    display: flex;
-    align-items: flex-start;
+  .description-wrapper {
     margin-bottom: 1.5rem;
-  }
-  
-  .description-content {
-    flex: 1;
-  }
-  
-  .no-description {
-    color: #666;
-  }
-  
-  .description-edit {
-    flex: 1;
-  }
-  
-  textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 0.5rem;
-  }
-  
-  .description-buttons {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
   }
   
   .actions ul {

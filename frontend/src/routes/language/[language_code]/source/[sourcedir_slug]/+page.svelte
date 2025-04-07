@@ -25,46 +25,11 @@
   let textTitle = '';
   let textContent = '';
   let youtubeUrl = '';
-  let isEditingDescription = false;
-  let editedDescription = sourcedir.description || '';
   let uploadProgress = false;
   let uploadProgressValue = 0;
   let isCreatingText = false;
   let isDownloadingYoutube = false;
   let isRenamingDir = false;
-  
-  // API functions
-  async function editSourcedirDescription() {
-    isEditingDescription = true;
-  }
-  
-  async function saveSourcedirDescription() {
-    try {
-      const response = await fetch(
-        getApiUrl(RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API, {
-          target_language_code: language_code,
-          sourcedir_slug: sourcedir.slug
-        }),
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ description: editedDescription.trim() })
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to update description');
-      }
-      
-      // Update local state
-      sourcedir.description = editedDescription.trim();
-      isEditingDescription = false;
-    } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
   
   async function renameSourcedir() {
     if (isRenamingDir) return;
@@ -354,30 +319,37 @@
       <h1 class="card-title">{sourcedir.path}</h1>
       
       <!-- Description section -->
-      <div class="mb-3 p-3 border rounded">
-        {#if isEditingDescription}
-          <div class="mb-3">
-            <textarea 
-              class="form-control" 
-              rows="3" 
-              bind:value={editedDescription} 
-              placeholder="Enter description for this directory..."></textarea>
-          </div>
-          <div class="d-flex justify-content-end">
-            <button class="btn btn-outline-secondary me-2" on:click={() => isEditingDescription = false}>Cancel</button>
-            <button class="btn btn-success" on:click={saveSourcedirDescription}>Save</button>
-          </div>
-        {:else}
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="description-content">
-              <DescriptionFormatted description={sourcedir.description} />
-            </div>
-            <button class="btn btn-sm btn-outline-secondary" on:click={editSourcedirDescription}>
-              <i class="bi bi-pencil"></i> Edit Description
-            </button>
-          </div>
-        {/if}
-      </div>
+      <DescriptionFormatted 
+        description={sourcedir.description} 
+        placeholder="No description available for this directory"
+        onSave={async (text) => {
+          try {
+            const response = await fetch(
+              getApiUrl(RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API, {
+                target_language_code: language_code,
+                sourcedir_slug: sourcedir.slug
+              }),
+              {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ description: text })
+              }
+            );
+            
+            if (!response.ok) {
+              throw new Error('Failed to update description');
+            }
+            
+            // Update local state
+            sourcedir.description = text;
+          } catch (error) {
+            alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+            throw error; // Propagate error to component
+          }
+        }}
+      />
       
       <!-- Top controls -->
       <div class="d-flex justify-content-between align-items-center mb-3">
