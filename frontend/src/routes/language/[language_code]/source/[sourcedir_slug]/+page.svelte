@@ -533,7 +533,7 @@
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label for="textTitle" class="form-label">Title:</label>
+            <label for="textTitle" class="form-label">Title (will be used as the actual filename):</label>
             <input type="text" class="form-control" id="textTitle" bind:value={textTitle} 
                    placeholder="Enter title for the text" autocomplete="off"
                    use:focusOnMount>

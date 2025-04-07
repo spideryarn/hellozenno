@@ -585,8 +585,8 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         if not text_target:
             return jsonify({"error": "Text content is required"}), 400
 
-        # Use the slugified title as filename (with .txt extension)
-        filename = f"{slugify(title)}.txt"
+        # Use the title directly as filename (with .txt extension)
+        filename = f"{title}.txt"
 
         # Check if file already exists
         if (
