@@ -18,7 +18,8 @@
     Download,
     FileText,
     SpeakerHigh,
-    MusicNotes
+    MusicNotes,
+    PencilSimple
   } from 'phosphor-svelte';
   
   export let sourcefile: Sourcefile;
