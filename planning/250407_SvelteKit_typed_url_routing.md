@@ -55,104 +55,9 @@ We want a solution that:
 4. Requires minimal configuration
 5. Follows "single source of truth" principle (similar to our API URL registry)
 
-## Options Evaluated
+## Selected Solution: vite-plugin-kit-routes
 
-### Option 1: Custom Typed Implementation
-
-A simple enhancement to the current approach with proper TypeScript typing:
-
-```typescript
-// Define page params by type
-type PageParams = {
-  'languages': {};
-  'wordforms': { language_code: string };
-  'lemmas': { language_code: string };
-  // ...other routes
-};
-
-export type PageType = keyof PageParams;
-
-export function getPageUrl<T extends PageType>(
-  page: T,
-  params: PageParams[T],
-  query?: Record<string, string>
-): string {
-  // Same implementation as before, but now params are type-checked
-}
-```
-
-**Pros:**
-- Simple enhancement to existing code
-- Type-safe parameters
-- No additional dependencies
-
-**Cons:**
-- Manual maintenance still required
-- No auto-generation from file structure
-- Not connected to actual routes in the filesystem
-
-### Option 2: skRoutes
-
-A dedicated library for SvelteKit route management:
-
-```typescript
-import { skRoutes } from 'skRoutes';
-import { z } from 'zod';
-
-export const { pageInfo, urlGenerator } = skRoutes({
-  config: {
-    '/[id]': {
-      paramsValidation: z.object({ id: z.string() }).parse
-    },
-    // ...other routes
-  },
-  errorURL: '/error'
-});
-
-// Usage
-const url = urlGenerator({ 
-  address: '/[id]', 
-  paramsValue: { id: 'Horse' } 
-}).url;
-```
-
-**Pros:**
-- Strong typing with Zod validation
-- Error handling built-in
-- Active maintenance
-- Additional features like search params handling
-
-**Cons:**
-- Configuration-based, not auto-generated
-- Manual route definition required
-- More complex API
-
-### Option 3: roullector
-
-A route collector that generates from file structure:
-
-```typescript
-// Generated output example
-import { AppRoutes, route } from '$generated/routing';
-
-// Usage
-const path = route(AppRoutes.admin.users.$id.posts.s$slug, 'user-id-123', 'slug');
-// path = '/admin/users/user-id-123/posts/s-slug'
-```
-
-**Pros:**
-- Auto-generates from file structure
-- Simple API
-- Minimal configuration
-
-**Cons:**
-- Less active maintenance
-- No built-in validation
-- Fewer features overall
-
-### Option 4: vite-plugin-kit-routes (Recommended)
-
-A Vite plugin that automatically generates route references from SvelteKit file structure:
+After evaluating several options, we've selected **vite-plugin-kit-routes** as our solution:
 
 ```typescript
 // vite.config.js
@@ -170,16 +75,16 @@ export default {
 import { route } from '$lib/ROUTES'
 
 // Simple route
-<a href={route('/terms-and-conditions')}>Terms</a>
+<a href={route('/')}>Home</a>
 
 // With route parameters
-<a href={route('/site/[id]', { id: 123 })}>Go to site</a>
+<a href={route('/language/[language_code]/wordforms', { language_code: 'el' })}>Greek Wordforms</a>
 
-// With query parameters
-<a href={route('/site/[id]', { id: 123, limit: 3 })}>Go to site</a>
+// With query parameters (third parameter)
+<a href={route('/language/[language_code]/flashcards', { language_code: 'el' }, { sourcefile: 'myfile' })}>Flashcards</a>
 ```
 
-**Pros:**
+**Key Advantages:**
 - Zero configuration required
 - Auto-generates from SvelteKit file structure
 - Type-safe route parameters
@@ -188,105 +93,133 @@ import { route } from '$lib/ROUTES'
 - Support for both route and query parameters
 - Tracks changes to route files automatically
 
-**Cons:**
-- Requires TypeScript (not a problem for us)
+## Implementation Experience
 
-## Recommendation
+We've performed a partial implementation to evaluate the plugin's functionality:
 
-We recommend implementing **vite-plugin-kit-routes** because:
+### Installation and Setup
 
-1. It provides the most seamless auto-generation from SvelteKit file structure
-2. It requires zero configuration to get started
-3. The API is simple and intuitive
-4. It handles both route parameters and query parameters in a type-safe way
-5. It stays in sync with file changes automatically
-6. It follows the same "single source of truth" principle we use for API routes
-
-## Experimentation Strategy
-
-Before fully committing to a new routing approach, we recommend a gradual implementation strategy:
-
-### Recommended: Partial Implementation in Existing Project
-
-1. Install the plugin but don't immediately update all route references:
+1. We installed the plugin in the frontend directory:
    ```bash
-   npm install -D vite-plugin-kit-routes
+   cd frontend && npm install -D vite-plugin-kit-routes
    ```
 
-2. Add it to the Vite config file:
-   ```javascript
-   // vite.config.js
-   import { sveltekit } from '@sveltejs/kit/vite'
-   import { kitRoutes } from 'vite-plugin-kit-routes'
-
-   export default {
-     plugins: [
-       sveltekit(),
-       kitRoutes()
-     ]
-   }
-   ```
-
-3. Let the plugin generate the `$lib/ROUTES.ts` file when you start your dev server
-
-4. Keep your existing `getPageUrl` function but start using the new `route` function in:
-   - New components you create
-   - A few existing components as a test
-   - Areas undergoing active development
-
-5. Evaluate the developer experience and any issues that arise
-
-6. If the experience is positive, gradually migrate more components over time
-
-This approach has several advantages:
-- Minimizes risk by allowing both systems to coexist
-- Provides real-world testing in your actual project
-- Avoids a large refactoring effort upfront
-- Allows developers to get comfortable with the new approach
-- Makes it easy to revert if unexpected issues arise
-
-### When Routes Change
-
-When a route file is moved or renamed:
-1. The plugin will automatically regenerate the `$lib/ROUTES.ts` file
-2. TypeScript will show errors in components using the old route path
-3. You'll need to update those references manually
-4. This ensures all references are kept in sync with the actual file structure
-
-## Implementation Plan
-
-1. Install the plugin:
-   ```bash
-   npm install -D vite-plugin-kit-routes
-   ```
-
-2. Add to Vite config:
-   ```javascript
-   // vite.config.js
-   import { sveltekit } from '@sveltejs/kit/vite'
-   import { kitRoutes } from 'vite-plugin-kit-routes'
-
-   export default {
-     plugins: [
-       sveltekit(),
-       kitRoutes()
-     ]
-   }
-   ```
-
-3. Start the dev server, which will generate `$lib/ROUTES.ts`
-
-4. Replace usages of `getPageUrl` with the new `route` function:
+2. We added it to the Vite config file (frontend/vite.config.ts):
    ```typescript
-   // Before
-   const url = getPageUrl('wordforms', { language_code: 'el' });
-   
-   // After
-   import { route } from '$lib/ROUTES';
-   const url = route('/language/[language_code]/wordforms', { language_code: 'el' });
+   import { sveltekit } from '@sveltejs/kit/vite';
+   import { defineConfig } from 'vite';
+   import { kitRoutes } from 'vite-plugin-kit-routes';
+
+   export default defineConfig({
+     plugins: [sveltekit(), kitRoutes()],
+     // ... other config
+   });
    ```
 
-5. Update the URL Registry documentation to include information about both API routes and page routes
+3. Starting the dev server generated a comprehensive `$lib/ROUTES.ts` file that includes:
+   - All SvelteKit routes with typed parameters
+   - Support for query parameters
+   - Helper functions for route manipulation
+
+### Test Implementation
+
+We modified two components to test the functionality:
+
+1. **Error Page Component**: 
+   Updated `/language/[language_code]/+error.svelte` to use the new `route` function:
+
+   ```svelte
+   <script lang="ts">
+     import { route } from '$lib/ROUTES';
+     // ... other imports
+   </script>
+
+   <!-- Example of usage in links -->
+   <a href={route('/')} class="btn btn-primary">Go to the homepage</a>
+   <a href={route('/languages')} class="btn btn-secondary">View available languages</a>
+   <a href={route('/language/[language_code]/sources', { language_code: page.params.language_code })} class="btn btn-info">
+     Back to language page
+   </a>
+   ```
+
+2. **SourcefileHeader Component**:
+   Updated complex navigation links in `SourcefileHeader.svelte`:
+
+   ```typescript
+   // Generate navigation URLs using the new route function
+   $: sourcedirUrl = route('/language/[language_code]/source/[sourcedir_slug]', {
+     language_code,
+     sourcedir_slug
+   });
+   
+   // With query parameters (third parameter)
+   $: flashcardsUrl = route('/language/[language_code]/flashcards', {
+     language_code
+   }, { sourcefile: sourcefile_slug });
+   ```
+
+### Observations
+
+1. **Type Safety**: The plugin provides excellent type checking for route parameters.
+2. **Developer Experience**: Excellent autocomplete support in the IDE.
+3. **Generated Code Quality**: The generated ROUTES.ts file is well-structured and includes helpful documentation.
+4. **Coexistence**: Both the old `getPageUrl` and new `route` functions can coexist during migration.
+5. **Performance**: No noticeable impact on build or runtime performance.
+6. **Query Parameters**: Well-supported with type checking.
+
+### Minor Issues Encountered
+
+1. There was a TypeScript error with the query parameter overload in our `SourcefileHeader.svelte` component that needs investigation:
+   ```
+   Expected 2 arguments, but got 3.
+   ```
+
+2. Some linting errors in the error page related to unrelated properties (`page.error.stack`).
+
+## Implementation Plan for Full Adoption
+
+Based on our successful test, here's our plan for full implementation:
+
+1. **Gradual Migration**:
+   - Keep the existing `getPageUrl` function during transition
+   - Update components during normal development work
+   - Focus on heavily modified areas first
+
+2. **Documentation**:
+   - Update internal documentation on URL handling
+   - Create usage examples for developers
+
+3. **Helper Functions**:
+   - Consider creating bridge functions to ease transition
+   - Add custom utility functions if needed for special cases
+
+4. **Testing**:
+   - Add specific tests for route generation
+   - Ensure all routes work correctly with parameters
+
+## Next Steps
+
+1. **Resolve Query Parameter Type Issue**:
+   - Investigate and fix TypeScript error with the third parameter in `route` function
+
+2. **File Naming Disambiguation**:
+   - Disambiguate file naming between frontend-generated `ROUTES.ts` and backend-generated `routes.ts`
+   - Options include:
+     - Rename backend-generated file to something like `API_ROUTES.ts` or `BACKEND_ROUTES.ts`
+     - Configure vite-plugin-kit-routes to use a different output filename if possible
+   - See `URL_REGISTRY.md` for context on the backend route generation
+
+3. **Migration Strategy**:
+   - Identify high-priority components for migration
+   - Create a timeline for gradual adoption
+   - Consider a utility function to bridge `getPageUrl` and `route` during transition
+
+4. **Update Documentation**:
+   - Complete integration with existing documentation
+   - Create examples for common use cases
+
+5. **Template Creation**:
+   - Create standard templates for new components with the new routing pattern
 
 ## Benefits
 
