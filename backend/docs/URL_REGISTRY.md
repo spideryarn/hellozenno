@@ -26,20 +26,31 @@ When the Flask app starts in development mode, it auto-generates TypeScript defi
 
 ## SvelteKit Frontend Integration
 
-### Basic Usage with getApiUrl
+### Basic Usage with getApiUrl and getPageUrl
 
 ```typescript
 // Import the necessary types and functions
 import { getApiUrl, apiFetch } from '$lib/api';
 import { RouteName } from '$lib/generated/routes';
+import { getPageUrl } from '$lib/navigation';
 
-// Get a URL with type-safe parameters
-const url = getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, {
+// Get an API URL with type-safe parameters
+const apiUrl = getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, {
   target_language_code: 'el',
   wordform: 'γεια'
 });
 
-// Or use apiFetch for a complete request with error handling
+// Get a frontend page URL with type-safe parameters
+const pageUrl = getPageUrl('wordforms', { language_code: 'el' });
+
+// Or with query parameters
+const searchPageUrl = getPageUrl(
+  'search', 
+  { language_code: 'el' }, 
+  { query: 'hello', filter: 'all' }
+);
+
+// Or use apiFetch for a complete API request with error handling
 const wordformData = await apiFetch(
   RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, 
   { target_language_code: 'el', wordform: 'γεια' }
@@ -184,11 +195,12 @@ API routes typically have names ending with `_API` to distinguish them from lega
 
 ## Best Practices
 
-1. **Always use getApiUrl/apiFetch instead of hardcoding URLs** in SvelteKit
-2. **Use endpoint_for() with url_for() in API code** to make it refactoring-proof
-3. **Use route constants (RouteName)** in TypeScript to benefit from type checking
-4. **Remember that URL parameters are automatically encoded** by the utility functions
-5. **If you change a route in Flask, restart to update TypeScript definitions**
+1. **Always use getApiUrl/apiFetch instead of hardcoding URLs** for API requests
+2. **Always use getPageUrl instead of hardcoding URLs** for frontend navigation
+3. **Use endpoint_for() with url_for() in API code** to make it refactoring-proof
+4. **Use route constants (RouteName)** in TypeScript to benefit from type checking
+5. **Remember that URL parameters are automatically encoded** by the utility functions
+6. **If you change a route in Flask, restart to update TypeScript definitions**
 
 ## Common Issues and Solutions
 

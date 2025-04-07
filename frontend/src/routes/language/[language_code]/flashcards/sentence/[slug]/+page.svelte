@@ -2,8 +2,10 @@
   import { onMount } from 'svelte';
   import Card from '$lib/components/Card.svelte';
   import { KeyReturn } from 'phosphor-svelte';
+  import { getPageUrl } from '$lib/navigation';
   
   export let data;
+  
   
   let currentStage = 1; // 1: Audio only, 2: Show sentence, 3: Show translation
   
@@ -89,10 +91,21 @@
         <div class="text-center mb-4">
           <h2>{data.metadata.language_name} Flashcard</h2>
           
-          {#if data.metadata.sourcefile}
-            <p class="text-muted">From sourcefile: {data.metadata.sourcefile}</p>
-          {:else if data.metadata.sourcedir}
-            <p class="text-muted">From sourcedir: {data.metadata.sourcedir}</p>
+          {#if data.sourcefile}
+            <p class="text-muted">
+              From sourcefile: <a href={getPageUrl('sourcefile', {
+                language_code: data.metadata.language_code,
+                sourcedir_slug: data.sourcefile.sourcedir_slug,
+                sourcefile_slug: data.sourcefile.slug
+              })}>{data.sourcefile.name}</a>
+            </p>
+          {:else if data.sourcedir}
+            <p class="text-muted">
+              From sourcedir: <a href={getPageUrl('sourcedir', {
+                language_code: data.metadata.language_code,
+                sourcedir_slug: data.sourcedir.slug
+              })}>{data.sourcedir.name}</a>
+            </p>
           {/if}
         </div>
         

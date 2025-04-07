@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Card from '$lib/components/Card.svelte';
+  import { getPageUrl } from '$lib/navigation';
   
   export let data;
   
@@ -82,7 +83,22 @@
             <div>
               <p class="mb-1">
                 Filtered by {sourcedir ? 'directory' : 'file'}: 
-                <strong>{sourcedir ? sourcedir.name : sourcefile.name}</strong>
+                {#if sourcedir}
+                  <strong>
+                    <a href={getPageUrl('sourcedir', {
+                      language_code: language_code,
+                      sourcedir_slug: sourcedir.slug
+                    })} class="text-light">{sourcedir.name}</a>
+                  </strong>
+                {:else if sourcefile}
+                  <strong>
+                    <a href={getPageUrl('sourcefile', {
+                      language_code: language_code,
+                      sourcedir_slug: sourcefile.sourcedir_slug,
+                      sourcefile_slug: sourcefile.slug
+                    })} class="text-light">{sourcefile.name}</a>
+                  </strong>
+                {/if}
               </p>
               {#if lemma_count !== null}
                 <p class="mb-0 small text-muted">({lemma_count} unique words)</p>
