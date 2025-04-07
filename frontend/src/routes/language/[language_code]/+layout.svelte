@@ -1,5 +1,21 @@
 <script lang="ts">
     import { page } from '$app/state';
+    import { goto } from '$app/navigation';
+    
+    let searchQuery = '';
+    
+    function handleSearch(event: MouseEvent) {
+        if (!searchQuery.trim()) return;
+        
+        const url = `/language/${page.data.language_code}/search?q=${encodeURIComponent(searchQuery)}`;
+        
+        // Open in new tab when Cmd (Mac) or Ctrl (Windows/Linux) is pressed
+        if (event.metaKey || event.ctrlKey) {
+            window.open(url, '_blank');
+        } else {
+            goto(url);
+        }
+    }
 </script>
 
 <div class="container mt-2 mb-3">
@@ -14,17 +30,26 @@
         
         {#if page.data.language_code && page.data.language_name}
             <div class="search-box">
-                <form method="GET" action="/language/{page.data.language_code}/search" class="d-flex" id="top-search-form">
+                <div class="d-flex" id="top-search-form">
                     <input 
                         type="text" 
-                        name="q" 
                         placeholder="Search {page.data.language_name} words..." 
                         required
                         class="form-control me-2"
                         id="top-search-input"
+                        bind:value={searchQuery}
+                        on:keydown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleSearch(e);
+                            }
+                        }}
                     >
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </form>
+                    <button 
+                        class="btn btn-primary"
+                        on:click={(event) => handleSearch(event)}
+                    >Search</button>
+                </div>
             </div>
         {/if}
     </div>
