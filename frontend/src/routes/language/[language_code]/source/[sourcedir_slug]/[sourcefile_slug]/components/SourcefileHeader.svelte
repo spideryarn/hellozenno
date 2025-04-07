@@ -185,6 +185,9 @@
       
       const result = await response.json();
       
+      // Update the local state to reflect the filename change
+      sourcefile.filename = newName;
+      
       // Redirect to the new URL with the updated slug
       const sourcefileTextUrl = getPageUrl('sourcefile_text', {
         language_code,
