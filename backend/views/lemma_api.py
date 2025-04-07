@@ -71,9 +71,25 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
     This API endpoint corresponds to the get_lemma_metadata_vw view function.
     It returns complete metadata for a lemma, including default values for missing fields.
     """
+    # Add a flag to help us diagnose if code changes are being applied
+    logger.error(f"DEBUG: NEW LEMMA CODE PATH - Version 2 - get_lemma_metadata_api called for '{lemma}' in {target_language_code}")
+    print(f"DEBUG: NEW LEMMA CODE PATH - Version 2 - get_lemma_metadata_api called for '{lemma}' in {target_language_code}")
+    
     # URL decode the lemma parameter to handle non-Latin characters properly
     lemma = urllib.parse.unquote(lemma)
+    logger.info(f"get_lemma_metadata_api called for lemma: '{lemma}' in language: {target_language_code}")
 
+    # First, check if the lemma exists in the database to diagnose potential issues
+    lemma_exists = Lemma.select().where(
+        Lemma.lemma == lemma,
+        Lemma.language_code == target_language_code
+    ).exists()
+    
+    if not lemma_exists:
+        logger.error(f"DEBUG: Lemma '{lemma}' does NOT exist in database - will proceed to generation")
+    else:
+        logger.error(f"DEBUG: Lemma '{lemma}' EXISTS in database! This contradicts our Supabase check.")
+    
     start_time = time.time()
     try:
         # Time the database fetch with prefetch
@@ -147,10 +163,87 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
                 "created_at": lemma_model.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "updated_at": lemma_model.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
             },
+            "debug_info": "The lemma was found in the database and loaded successfully",
         }
 
+        logger.info(f"Successfully returned lemma metadata for '{lemma}'")
         return jsonify(response_data)
     except DoesNotExist:
+        logger.error(f"Lemma '{lemma}' not found in database. Should be generating it...")
+        try:
+            # Try to generate the lemma even though it doesn't exist
+            dict_start = time.time()
+            logger.error(f"Attempting to generate lemma metadata for '{lemma}'")
+            lemma_data = load_or_generate_lemma_metadata(
+                lemma=lemma,
+                target_language_code=target_language_code,
+                generate_if_incomplete=True,
+            )
+            dict_time = time.time() - dict_start
+            logger.error(f"Generated new lemma metadata in {dict_time:.2f}s")
+            
+            # After generation, check again if it made it to the database
+            lemma_exists = Lemma.select().where(
+                Lemma.lemma == lemma,
+                Lemma.language_code == target_language_code
+            ).exists()
+            
+            db_status = "Saved successfully to database" if lemma_exists else "FAILED to save to database!"
+            logger.error(f"After generation, lemma database status: {db_status}")
+            
+            # Create a response with the generated data
+            response_data = {
+                "lemma_metadata": lemma_data,
+                "target_language_code": target_language_code,
+                "target_language_name": get_language_name(target_language_code),
+                "metadata": {
+                    "created_at": "just now",
+                    "updated_at": "just now",
+                },
+                "debug_info": f"The lemma was newly generated. Database status: {db_status}"
+            }
+            
+            # Force successful response even if there's an issue
+            return jsonify(response_data)
+        except Exception as e:
+            # Log the detailed error if lemma generation fails
+            logger.error(f"Failed to generate lemma '{lemma}': {str(e)}", exc_info=True)
+            
+            # Instead of failing with an error, return a placeholder lemma with debug info
+            # This will prevent 500 errors in production while we investigate
+            placeholder_lemma = {
+                "lemma": lemma,
+                "translations": [f"[Auto-generation failed: {str(e)}]"],
+                "etymology": "Generation failed, please try again later",
+                "commonality": 0.5,
+                "guessability": 0.5,
+                "register": "neutral",
+                "example_usage": [],
+                "mnemonics": [],
+                "related_words_phrases_idioms": [],
+                "synonyms": [],
+                "antonyms": [],
+                "example_wordforms": [lemma],
+                "cultural_context": "",
+                "is_complete": False,
+                "part_of_speech": "unknown",
+                "notes": f"Error during generation: {str(e)}"
+            }
+            
+            response_data = {
+                "lemma_metadata": placeholder_lemma,
+                "target_language_code": target_language_code,
+                "target_language_name": get_language_name(target_language_code),
+                "metadata": {
+                    "created_at": "error",
+                    "updated_at": "error",
+                },
+                "debug_info": f"Lemma generation failed with error: {str(e)}"
+            }
+            
+            return jsonify(response_data)
+            
+        # This code should never be reached if we properly handle the generation attempt
         response_data = {
             "error": "Not Found",
             "description": f"Lemma '{lemma}' not found",

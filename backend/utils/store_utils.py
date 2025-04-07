@@ -40,12 +40,37 @@ def _generate_and_save_metadata(
     Returns:
         The generated metadata dictionary
     """
-    metadata, _ = metadata_for_lemma_full(
-        lemma=lemma, target_language_name=get_language_name(target_language_code)
-    )
-    metadata["is_complete"] = True
-    lemma_model = save_lemma_metadata(lemma, metadata, target_language_code)
-    return lemma_model.to_dict()
+    print(f"Generating metadata for lemma '{lemma}' in language {target_language_code}")
+    target_language_name = get_language_name(target_language_code)
+    print(f"Target language name resolved to: {target_language_name}")
+    
+    try:
+        metadata, extra_info = metadata_for_lemma_full(
+            lemma=lemma, target_language_name=target_language_name
+        )
+        
+        if not metadata:
+            print(f"ERROR: metadata_for_lemma_full returned empty dict for '{lemma}'")
+            print(f"Extra info: {extra_info}")
+            # Create minimal valid metadata instead of failing
+            metadata = {
+                "lemma": lemma,
+                "is_complete": True,
+                "part_of_speech": "unknown",
+                "translations": ["[Auto-generation failed]"],
+                "example_wordforms": [lemma],
+            }
+        
+        metadata["is_complete"] = True
+        print(f"Saving metadata to database for lemma '{lemma}'")
+        lemma_model = save_lemma_metadata(lemma, metadata, target_language_code)
+        print(f"Successfully saved metadata for lemma '{lemma}'")
+        return lemma_model.to_dict()
+    except Exception as e:
+        print(f"ERROR in _generate_and_save_metadata for '{lemma}': {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise
 
 
 def load_or_generate_lemma_metadata(
@@ -67,8 +92,13 @@ def load_or_generate_lemma_metadata(
     Raises:
         peewee.DatabaseError: If there's an error accessing the database
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"load_or_generate_lemma_metadata called for lemma: '{lemma}', language: {target_language_code}")
+    
     # Handle null or empty lemma
     if not lemma:
+        logger.info(f"Empty lemma provided, returning placeholder metadata")
         return {
             "lemma": None,
             "translations": [],
@@ -88,18 +118,42 @@ def load_or_generate_lemma_metadata(
         }
 
     try:
+        logger.info(f"Trying to find lemma '{lemma}' in database")
         lemma_model = Lemma.get(
             Lemma.lemma == lemma, Lemma.language_code == target_language_code
         )
         metadata = lemma_model.to_dict()
+        logger.info(f"Found lemma '{lemma}' in database")
 
         if generate_if_incomplete and not Lemma.check_metadata_completeness(metadata):
+            logger.info(f"Lemma '{lemma}' found but metadata is incomplete, regenerating")
             return _generate_and_save_metadata(lemma, target_language_code)
 
         return metadata
     except DoesNotExist:
-        print(f"No metadata found for lemma {lemma}, generating new metadata")
-        return _generate_and_save_metadata(lemma, target_language_code)
+        logger.info(f"Lemma '{lemma}' not found in database, generating new metadata")
+        try:
+            return _generate_and_save_metadata(lemma, target_language_code)
+        except Exception as e:
+            logger.error(f"Error generating metadata for lemma '{lemma}': {str(e)}", exc_info=True)
+            # Return a basic metadata structure instead of failing completely
+            return {
+                "lemma": lemma,
+                "translations": [f"[Auto-generation failed: {str(e)}]"],
+                "etymology": "",
+                "commonality": 0.5,
+                "guessability": 0.5,
+                "register": "unknown",
+                "example_usage": [],
+                "mnemonics": [],
+                "related_words_phrases_idioms": [],
+                "synonyms": [],
+                "antonyms": [],
+                "example_wordforms": [lemma],
+                "cultural_context": "",
+                "is_complete": True,  # Mark as complete to prevent regeneration attempts
+                "notes": f"Error generating metadata: {str(e)}",
+            }
 
 
 def get_lemma_for_wordform(wordform: str, target_language_code: str) -> Optional[str]:

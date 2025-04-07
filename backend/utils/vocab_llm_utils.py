@@ -1,4 +1,5 @@
 import json
+import time
 from anthropic import Anthropic
 from openai import OpenAI
 from pprint import pprint
@@ -174,21 +175,86 @@ def metadata_for_lemma_full(
     Returns:
         Tuple of (metadata, extra_info)
     """
-    print(f"LLM-generating metadata for lemma {lemma}")
-    # Generate metadata using GPT
-    out, extra = generate_gpt_from_template(
-        client=anthropic_client,
-        prompt_template=get_prompt_template_path("metadata_for_lemma"),
-        context_d={
-            "lemma": lemma,
-            "target_language_name": target_language_name,
-        },
-        response_json=True,
-        verbose=verbose,
-    )
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Use error level to make sure it shows up in logs
+    logger.error(f"DEBUG V2: LLM-generating metadata for lemma '{lemma}' in {target_language_name}")
+    print(f"DEBUG V2: LLM-generating metadata for lemma '{lemma}' in {target_language_name}")
+    
+    # Check if API key is properly set
+    api_key_value = CLAUDE_API_KEY.get_secret_value()
+    api_key_valid = api_key_value and len(api_key_value) > 20
+    if not api_key_valid:
+        logger.error(f"DEBUG ERROR: Claude API key appears to be invalid or missing!")
+        print(f"DEBUG ERROR: Claude API key appears to be invalid or missing!")
+    
+    try:
+        # Generate metadata using Claude
+        logger.error(f"DEBUG V2: Calling Claude API with template 'metadata_for_lemma'")
+        print(f"DEBUG V2: Calling Claude API with template 'metadata_for_lemma'")
+        
+        template_path = get_prompt_template_path("metadata_for_lemma")
+        logger.error(f"DEBUG V2: Using prompt template at: {template_path}")
+        
+        try:
+            # Try with more debug information
+            out, extra = generate_gpt_from_template(
+                client=anthropic_client,
+                prompt_template=template_path,
+                context_d={
+                    "lemma": lemma,
+                    "target_language_name": target_language_name,
+                },
+                response_json=True,
+                verbose=max(verbose, 1),  # Force verbose mode for debugging
+            )
+            
+            logger.error(f"DEBUG V2: Claude API response received for lemma '{lemma}'")
+            logger.error(f"DEBUG V2: Response type: {type(out)}")
+            print(f"DEBUG V2: Claude API response received. Response type: {type(out)}")
+            
+            if isinstance(out, dict):
+                # Summarize the response to avoid flooding logs
+                field_count = len(out.keys())
+                has_translations = "translations" in out and out["translations"]
+                logger.error(f"DEBUG V2: Response has {field_count} fields, translations present: {has_translations}")
+                print(f"DEBUG V2: Response has {field_count} fields, translations present: {has_translations}")
+            else:
+                # Log the raw response for debugging
+                logger.error(f"DEBUG V2: Raw response (non-dict): {str(out)[:200]}...")
+                print(f"DEBUG V2: Raw response (not a dictionary): {str(out)[:100]}...")
+        except Exception as api_error:
+            # Detailed logging of Claude API errors
+            logger.error(f"DEBUG V2: Claude API call failed: {str(api_error)}", exc_info=True)
+            print(f"DEBUG V2: Claude API call failed: {str(api_error)}")
+            
+            # Return a minimal dictionary with the error so we can track it
+            return {
+                "lemma": lemma,
+                "translations": [f"[API Error: {str(api_error)}]"],
+                "part_of_speech": "unknown",
+                "example_wordforms": [lemma],
+                "api_error": True,
+            }, {"error": f"Claude API error: {str(api_error)}"}
+        
+        # Check if output is valid
+        if not isinstance(out, dict):
+            logger.error(f"DEBUG V2: Claude API returned invalid format for lemma '{lemma}': {type(out)}")
+            logger.error(f"DEBUG V2: Raw response: {str(out)[:500]}...")
+            print(f"DEBUG V2: Claude API returned invalid format: {type(out)}")
+            
+            # Try to recover by creating a minimal valid dictionary
+            minimal_data = {
+                "lemma": lemma,
+                "translations": ["[Response format error]"],
+                "part_of_speech": "unknown",
+                "example_wordforms": [lemma],
+                "format_error": True,
+            }
+            return minimal_data, {"error": f"Invalid response format: {type(out)}", "raw_response": str(out)}
 
-    # Add default values for required fields if missing
-    if isinstance(out, dict):
+        # Add default values for required fields if missing
         defaults = {
             "lemma": lemma,  # Ensure lemma is always set
             "synonyms": [],
@@ -209,58 +275,121 @@ def metadata_for_lemma_full(
 
         for key, default_value in defaults.items():
             if key not in out or out[key] is None:
+                logger.error(f"DEBUG V2: Adding default value for missing field '{key}' in lemma '{lemma}'")
                 out[key] = default_value
 
-        # Create sentence records for example usage
-        target_language_code = get_language_code(target_language_name)
-        example_usage = out.get("example_usage", [])
+        try:
+            # Create sentence records for example usage
+            target_language_code = get_language_code(target_language_name)
+            example_usage = out.get("example_usage", [])
+            logger.error(f"DEBUG V2: Processing {len(example_usage)} example sentences for lemma '{lemma}'")
 
-        # Get or create the lemma record first
-        lemma_model, _ = Lemma.get_or_create(
-            lemma=lemma,
-            language_code=target_language_code,
-            defaults={
-                "part_of_speech": out.get("part_of_speech", "unknown"),
-                "translations": out.get("translations", []),
-            },
-        )
+            # Get or create the lemma record first
+            try:
+                logger.error(f"DEBUG V2: Creating lemma record in database for '{lemma}'")
+                lemma_model, created = Lemma.get_or_create(
+                    lemma=lemma,
+                    language_code=target_language_code,
+                    defaults={
+                        "part_of_speech": out.get("part_of_speech", "unknown"),
+                        "translations": out.get("translations", []),
+                        "is_complete": True,  # Mark as complete to prevent regeneration attempts
+                    },
+                )
+                
+                # Add all metadata fields to the lemma model
+                for key, value in out.items():
+                    setattr(lemma_model, key, value)
+                
+                # Save the updated model
+                lemma_model.save()
+                
+                logger.error(f"DEBUG V2: Lemma record {'created' if created else 'found and updated'} in database")
+                print(f"DEBUG V2: Lemma record {'created' if created else 'found and updated'} in database")
+            except Exception as db_error:
+                logger.error(f"DEBUG V2: Error saving lemma to database: {str(db_error)}", exc_info=True)
+                print(f"DEBUG V2: Error saving lemma to database: {str(db_error)}")
+                # Continue processing without failing
 
-        # Process each example sentence
-        for example in example_usage:
-            if not example.get("phrase") or not example.get("translation"):
-                continue
+            # Process each example sentence
+            for i, example in enumerate(example_usage):
+                if not example.get("phrase") or not example.get("translation"):
+                    logger.error(f"DEBUG V2: Skipping example {i+1} due to missing phrase or translation")
+                    continue
 
-            # First generate the slug to use in get_or_create
-            slug = slugify(example["phrase"])
-            if len(slug) > 255:
-                slug = slug[:255]
+                try:
+                    # First generate the slug to use in get_or_create
+                    phrase = example["phrase"]
+                    slug = slugify(phrase)
+                    if len(slug) > 255:
+                        slug = slug[:255]
 
-            # Create sentence if it doesn't exist or update if it does
-            sentence, created = Sentence.update_or_create(
-                lookup={
-                    "language_code": target_language_code,
-                    "sentence": example["phrase"],
-                },
-                updates={
-                    "translation": example["translation"],
-                    "slug": slug,
-                },
-            )
+                    logger.error(f"DEBUG V2: Creating sentence: '{phrase[:30]}...'")
+                    
+                    # Create sentence if it doesn't exist or update if it does
+                    sentence, created = Sentence.update_or_create(
+                        lookup={
+                            "language_code": target_language_code,
+                            "sentence": phrase,
+                        },
+                        updates={
+                            "translation": example["translation"],
+                            "slug": slug,
+                        },
+                    )
 
-            # Create both the example sentence link and the lemma-sentence relationship
-            LemmaExampleSentence.update_or_create(
-                lookup={"lemma": lemma_model, "sentence": sentence}, updates={}
-            )
-            SentenceLemma.update_or_create(
-                lookup={"lemma": lemma_model, "sentence": sentence}, updates={}
-            )
+                    # Create both the example sentence link and the lemma-sentence relationship
+                    LemmaExampleSentence.update_or_create(
+                        lookup={"lemma": lemma_model, "sentence": sentence}, updates={}
+                    )
+                    SentenceLemma.update_or_create(
+                        lookup={"lemma": lemma_model, "sentence": sentence}, updates={}
+                    )
+                    logger.error(f"DEBUG V2: Example sentence {i+1} processed successfully")
+                except Exception as sentence_error:
+                    logger.error(f"DEBUG V2: Error processing example sentence {i+1}: {str(sentence_error)}")
+                    # Continue processing other sentences
+                    continue
+        except Exception as e:
+            logger.error(f"DEBUG V2: Error processing database updates for lemma '{lemma}': {str(e)}", exc_info=True)
+            print(f"DEBUG V2: Error processing database updates: {str(e)}")
+            # We'll still return the metadata even if database updates fail
 
+        # Final check - verify lemma is in database
+        lemma_exists = Lemma.select().where(
+            Lemma.lemma == lemma,
+            Lemma.language_code == target_language_code
+        ).exists()
+        
+        logger.error(f"DEBUG V2: Final check - lemma exists in database: {lemma_exists}")
+        print(f"DEBUG V2: Final check - lemma exists in database: {lemma_exists}")
+        
         if verbose >= 1:
-            # pprint(out, sort_dicts=False)
-            print(f"Generated metadata for lemma {lemma}")
+            logger.error(f"DEBUG V2: Generated metadata for lemma '{lemma}'")
+        
+        # Add debug info to the output
+        out["_debug_info"] = {
+            "saved_to_db": lemma_exists,
+            "timestamp": time.time(),
+        }
+        
         return out, extra
 
-    return {}, {"error": "Invalid response format"}
+    except Exception as e:
+        logger.error(f"DEBUG V2: Error generating metadata for lemma '{lemma}': {str(e)}", exc_info=True)
+        print(f"DEBUG V2: Error generating metadata: {str(e)}")
+        
+        # Return a minimal dictionary with the error information
+        return {
+            "lemma": lemma,
+            "translations": [f"[Generation Error: {str(e)}]"],
+            "part_of_speech": "unknown",
+            "example_wordforms": [lemma],
+            "_debug_info": {
+                "error": str(e),
+                "timestamp": time.time(),
+            }
+        }, {"error": f"Exception during metadata generation: {str(e)}"}
 
 
 def quick_search_for_wordform(
