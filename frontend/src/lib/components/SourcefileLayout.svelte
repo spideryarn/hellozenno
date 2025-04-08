@@ -42,16 +42,18 @@
 </script>
 
 <div class="container py-4">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
-      <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
-      <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
-      <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</li>
-    </ol>
-  </nav>
+  <div class="d-flex flex-column flex-md-row justify-content-start align-items-md-center gap-2 mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
+        <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
+        <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
+        <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</li>
+      </ol>
+    </nav>
+  </div>
   
   <SourcefileHeader 
     {sourcefile}
@@ -74,7 +76,6 @@
     background-color: rgba(0, 0, 0, 0.05);
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
-    margin-bottom: 1.5rem;
   }
   
   .container {
