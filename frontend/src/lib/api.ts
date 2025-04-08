@@ -35,15 +35,26 @@ export function getApiUrl<T extends RouteName>(
  * @param routeName Name of the route from RouteName enum
  * @param params Parameters required for the route
  * @param options Fetch options
+ * @param timeoutMs Optional timeout in milliseconds (default: 30000)
  * @returns The JSON response
  */
 export async function apiFetch<T extends RouteName, R = any>(
     routeName: T,
     params: RouteParams[T],
     options: RequestInit = {},
+    timeoutMs: number = 30000, // Default 30 second timeout
 ): Promise<R> {
     const url = getApiUrl(routeName, params);
-    const response = await fetch(url, options);
+    
+    // Use a timeout to ensure we wait long enough for operations like wordform generation
+    const fetchPromise = fetch(url, options);
+    
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('API request timed out')), timeoutMs);
+    });
+    
+    // Race the fetch against the timeout
+    const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -231,19 +242,26 @@ export async function getWordformWithSearch(
     wordform: string,
 ) {
     try {
-        // Use the type-safe API fetch to get wordform metadata
-        return await apiFetch(
+        console.log(`API: Fetching wordform ${wordform} in ${target_language_code}`);
+        // Use the type-safe API fetch to get wordform metadata with a longer timeout
+        // since wordform generation can take time
+        const result = await apiFetch(
             RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
             { target_language_code, wordform },
             {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             },
+            90000, // 90 second timeout to allow for synchronous wordform generation
         );
+        console.log(`API: Received result for ${wordform}:`, result);
+        return result;
     } catch (error) {
+        console.error(`API: Error fetching wordform ${wordform}:`, error);
         // For 404 errors, return the error response
         // This allows us to handle "invalid word" cases with proper data
         if (error instanceof Error && error.message.includes('404')) {
+            console.log(`API: Got 404 for ${wordform}, trying again to get error details`);
             const response = await fetch(
                 getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, 
                     { target_language_code, wordform }
@@ -253,7 +271,9 @@ export async function getWordformWithSearch(
                     headers: { "Content-Type": "application/json" },
                 }
             );
-            return await response.json();
+            const errorData = await response.json();
+            console.log(`API: Received error data for ${wordform}:`, errorData);
+            return errorData;
         }
         throw error;
     }

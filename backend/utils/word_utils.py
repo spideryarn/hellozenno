@@ -217,7 +217,10 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
     Find or create a wordform, handling common search behavior.
 
     This shared utility function handles the common logic used by both
-    get_wordform_metadata_vw and get_wordform_metadata_
+    get_wordform_metadata_vw and get_wordform_metadata_api.
+    
+    This function now synchronously waits for wordform generation to complete
+    when a new wordform needs to be created.
 
     Args:
         target_language_code: The language code (e.g. 'el' for Greek)
@@ -232,6 +235,7 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
     """
     from utils.vocab_llm_utils import quick_search_for_wordform
     from peewee import DoesNotExist
+    from loguru import logger
 
     # Ensure wordform is properly handled
     wordform = ensure_nfc(wordform)
@@ -242,6 +246,7 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
         return {"status": "found", "data": result}
     except DoesNotExist:
         # If not found, use quick search to get metadata
+        logger.info(f"Wordform '{wordform}' not found, generating with AI...")
         search_result, _ = quick_search_for_wordform(wordform, target_language_code, 1)
 
         # Count total matches from both result types
@@ -257,6 +262,7 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
 
         # If there are multiple matches or misspellings, return search results
         if total_matches > 1 or target_misspellings or english_misspellings:
+            logger.info(f"Multiple matches or misspellings found for '{wordform}'")
             return {
                 "status": "multiple_matches",
                 "data": {
@@ -268,13 +274,14 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
                 },
             }
 
-        # If there's exactly one match, create that wordform and return redirect info
+        # If there's exactly one match, create that wordform and return the data
         elif total_matches == 1:
             # Get the single match (either from target or english results)
             match = target_matches[0] if target_matches else english_matches[0]
             match_wordform = match.get("target_language_wordform")
 
             if match_wordform:
+                logger.info(f"Creating wordform '{match_wordform}' in database")
                 # Convert from new response format to metadata format
                 metadata = {
                     "wordform": match_wordform,
@@ -291,17 +298,27 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
                     language_code=target_language_code,
                     metadata=metadata,
                 )
-
-                return {
-                    "status": "redirect",
-                    "data": {
-                        "target_language_code": target_language_code,
-                        "target_language_name": get_language_name(target_language_code),
-                        "redirect_to": match_wordform,
-                    },
-                }
+                
+                # Now that the wordform is created, fetch the complete metadata
+                try:
+                    # Directly return the complete data instead of redirecting
+                    result = get_wordform_metadata(target_language_code, match_wordform)
+                    logger.info(f"Wordform '{match_wordform}' created successfully")
+                    return {"status": "found", "data": result}
+                except Exception as e:
+                    logger.error(f"Error after creating wordform: {e}")
+                    # Fallback to redirect if there's an error getting the complete data
+                    return {
+                        "status": "redirect",
+                        "data": {
+                            "target_language_code": target_language_code,
+                            "target_language_name": get_language_name(target_language_code),
+                            "redirect_to": match_wordform,
+                        },
+                    }
 
         # If no matches or misspellings, return invalid word data
+        logger.info(f"No valid matches found for '{wordform}'")
         return {
             "status": "invalid",
             "data": {

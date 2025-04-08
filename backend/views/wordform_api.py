@@ -73,23 +73,34 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
     This API endpoint corresponds to the get_wordform_metadata_vw view function.
     It returns complete metadata for a wordform, including its lemma if available.
     If the wordform doesn't exist, it will search for possible matches.
+    
+    The find_or_create_wordform function now synchronously waits for wordform 
+    generation to complete, so this endpoint may take a few seconds to respond
+    when a new wordform is being created.
     """
     # URL decode the wordform parameter to handle non-Latin characters properly
     wordform = urllib.parse.unquote(wordform)
 
     # Use the shared utility function to find or create the wordform
     from utils.word_utils import find_or_create_wordform
-
+    from loguru import logger
+    
+    logger.info(f"API request for wordform '{wordform}' in language '{target_language_code}'")
     result = find_or_create_wordform(target_language_code, wordform)
+    logger.info(f"Wordform processing complete with status: {result['status']}")
 
     # Handle different status responses
     if result["status"] == "found":
+        # For both existing and newly created wordforms
         return jsonify(result["data"])
     elif result["status"] == "multiple_matches":
+        # For multiple potential matches
         return jsonify(result["data"])
     elif result["status"] == "redirect":
+        # Only used as a fallback now
         return jsonify(result["data"])
     else:  # invalid
+        # For invalid wordforms
         response = jsonify(result["data"])
         response.status_code = 404
         return response

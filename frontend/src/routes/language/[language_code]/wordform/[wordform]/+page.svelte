@@ -33,11 +33,16 @@
 
 <div class="container py-4">
   {#if !isValidData}
-    <div class="alert alert-warning" role="alert">
-      <h4 class="alert-heading">Loading Wordform Data...</h4>
-      <p>Please wait while we load the wordform information. If this message persists, the wordform may not exist.</p>
-      <hr>
-      <p class="mb-0">You will be redirected to search results if this wordform cannot be found directly.</p>
+    <div class="alert alert-info" role="alert">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-3" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <div>
+          <h4 class="alert-heading mb-1">Loading Wordform Data...</h4>
+          <p class="mb-0">Please wait while we load or generate the wordform information.</p>
+        </div>
+      </div>
     </div>
   {:else}
     <div class="row mb-4">
