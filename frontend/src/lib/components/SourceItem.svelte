@@ -1,3 +1,5 @@
+<!-- I think this component is the list of Sourcedirs for a given language -->
+
 <script lang="ts">
   import { RouteName, resolveRoute } from '$lib/generated/routes';
   
