@@ -442,14 +442,12 @@
   }
   
   /* Ensure paragraphs have proper spacing */
-  .enhanced-text :global(p), 
-  .enhanced-text p {
+  .enhanced-text :global(p) {
     margin-bottom: 0.7rem; /* Reduced from 1rem to tighten paragraph spacing */
   }
   
   /* Ensure <br> elements create appropriate line breaks */
-  .enhanced-text :global(br), 
-  .enhanced-text br {
+  .enhanced-text :global(br) {
     display: block;
     content: "";
     margin-top: 0.3rem; /* Reduced from 0.5rem to tighten line break spacing */

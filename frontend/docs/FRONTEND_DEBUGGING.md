@@ -60,6 +60,10 @@ cursor-tools browser act "Click the login button" --url="http://localhost:5173"
 - DO NOT ask browser act to "wait" for anything, the wait command is currently disabled in Stagehand.
 ```
 
+## Common SvelteKit Build Issues
+
+- We're using `SVELTE_WARNINGS_STRICT=true` in development to catch these early - updated now in `run_frontend.sh`
+
 ## Additional Resources
 
 - See `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` for details on our SvelteKit architecture

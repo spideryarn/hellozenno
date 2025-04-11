@@ -6,7 +6,6 @@
   import { MetadataCard, DescriptionFormatted } from '$lib';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
-  import { route } from '$lib/ROUTES';
   import { 
     CaretDoubleLeft, 
     CaretDoubleRight, 
@@ -201,42 +200,42 @@
     }
   );
   
-  // Generate navigation URLs using the new route function
-  $: sourcedirUrl = route('/language/[language_code]/source/[sourcedir_slug]', {
+  // Generate navigation URLs using getPageUrl
+  $: sourcedirUrl = getPageUrl('sourcedir', {
     language_code,
     sourcedir_slug
   });
   
   // Prepare navigation URLs only if the corresponding slugs exist
   $: firstSourcefileUrl = navigation.first_slug ? 
-    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
+    getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.first_slug
     }) : undefined;
     
   $: prevSourcefileUrl = navigation.prev_slug ? 
-    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
+    getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.prev_slug
     }) : undefined;
     
   $: nextSourcefileUrl = navigation.next_slug ? 
-    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
+    getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.next_slug
     }) : undefined;
     
   $: lastSourcefileUrl = navigation.last_slug ? 
-    route('/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text', {
+    getPageUrl('sourcefile_text', {
       language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.last_slug
     }) : undefined;
     
-  $: flashcardsUrl = route('/language/[language_code]/flashcards', {
+  $: flashcardsUrl = getPageUrl('flashcards', {
     language_code
   }, { sourcefile: sourcefile_slug });
 </script>
