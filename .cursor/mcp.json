@@ -8,6 +8,15 @@
                 "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
             ]
         },
+        "Supabase_prod": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@supabase/mcp-server-supabase@latest",
+                "--access-token",
+                "sbp_c8c70bb5ca00e36c1cc7ec1170d0f477f48ff907"
+            ]
+        },
         "Git": {
             "command": "uvx",
             "args": [
