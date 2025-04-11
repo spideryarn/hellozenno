@@ -25,14 +25,14 @@
                 "/Users/greg/Dropbox/dev/experim/hellozenno"
             ]
         },
-        "sequential_thinking": {
+        "Sequential_thinking": {
             "command": "npx",
             "args": [
                 "-y",
                 "@modelcontextprotocol/server-sequential-thinking"
             ]
         },
-        "playwright": {
+        "Playwright": {
             "command": "npx",
             "args": [
                 "@playwright/mcp@latest"
