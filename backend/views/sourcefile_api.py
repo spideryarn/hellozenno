@@ -225,7 +225,8 @@ def inspect_sourcefile_translation_api(
 def process_sourcefile_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
-    """Process a source file to transcribe, translate, and extract wordforms and phrases."""
+    """Process a source file to transcribe, translate, and extract wordforms and phrases.
+    This is now a synchronous operation - the request will complete after all processing is done."""
     try:
         # Get the sourcefile entry using helper
         sourcefile_entry = _get_sourcefile_entry(
@@ -260,7 +261,7 @@ def process_sourcefile_api(
             LanguageLevel
         ), f"Invalid language level: {language_level}"
 
-        # Process the sourcefile
+        # Process the sourcefile synchronously
         process_sourcefile(
             sourcefile_entry,
             language_level=language_level,  # type: ignore
@@ -272,7 +273,7 @@ def process_sourcefile_api(
         return jsonify(
             {
                 "success": True,
-                "message": "Sourcefile processing started",
+                "message": "Sourcefile processing completed",
                 "params": {
                     "max_new_words": max_new_words,
                     "max_new_phrases": max_new_phrases,

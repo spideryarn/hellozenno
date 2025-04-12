@@ -27,7 +27,8 @@ from gjdutils.dt import dt_str
 from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
 from utils.misc_utils import pop_multi
-from utils.parallelisation_utils import run_async
+# Removed - no longer using asynchronous processing
+# from utils.parallelisation_utils import run_async
 from utils.sourcedir_utils import _get_sourcedir_entry, _get_navigation_info
 from utils.lang_utils import get_language_name
 from utils.store_utils import load_or_generate_lemma_metadata
@@ -217,8 +218,8 @@ def process_uploaded_file(
         # Process text file according to format
         try:
             # Decode the content as text
-            text_content = file_content.decode('utf-8')
-            
+            text_content = file_content.decode("utf-8")
+
             # Check if there's a separator for description
             separator = "----"
             if separator in text_content:
@@ -228,14 +229,14 @@ def process_uploaded_file(
                 text = parts[1].strip()
                 metadata["description"] = description
                 # Return only the text part as file content (description stored in metadata)
-                file_content = text.encode('utf-8')
+                file_content = text.encode("utf-8")
             else:
                 # No separator, treat the entire content as text
                 metadata["description"] = None
-                
+
             # Add file format info to metadata
             metadata["text_format"] = "markdown" if ext == ".md" else "plain"
-            
+
         except UnicodeDecodeError:
             raise ValueError(f"The file {filename} is not a valid text file")
 
@@ -352,7 +353,6 @@ def ensure_tricky_wordforms(
     sourcefile_entry: Sourcefile,
     language_level: LanguageLevel,
     max_new_words: Optional[int],
-    run_again_after: bool = False,
 ):
     """Extract vocabulary to reach specified count.
 
@@ -402,13 +402,6 @@ def ensure_tricky_wordforms(
     #         delay=delay,
     #     )
     extra.update({"tricky_d": tricky_d, "tricky_extra": tricky_extra})
-    if run_again_after:
-        run_async(
-            ensure_tricky_wordforms,
-            sourcefile_entry,
-            language_level=language_level,
-            max_new_words=DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
-        )
     return sourcefile_entry, extra
 
 
@@ -416,7 +409,6 @@ def ensure_tricky_phrases(
     sourcefile_entry: Sourcefile,
     language_level: LanguageLevel,
     max_new_phrases: Optional[int],
-    run_again_after: bool = False,
 ):
     """Extract tricky phrases from text."""
     extra = locals()
@@ -435,13 +427,6 @@ def ensure_tricky_phrases(
         sourcefile_entry=sourcefile_entry,
     )
     extra.update({"phrases_extra": phrases_extra})
-    if run_again_after:
-        run_async(
-            ensure_tricky_phrases,
-            sourcefile_entry,
-            language_level=language_level,
-            max_new_phrases=DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
-        )
     return sourcefile_entry, extra
 
 
@@ -608,27 +593,27 @@ def process_sourcefile(
 ):
     """
     If MAX_NEW_WORDS or MAX_NEW_PHRASES is 0, skip. If None, then there is no max.
+
+    Now runs synchronously (blocking) instead of asynchronously.
     """
     already_text = bool(sourcefile_entry.text_target)
     sourcefile_entry = ensure_text_extracted(sourcefile_entry)
 
-    # Fire and forget the translation
-    run_async(ensure_translation, sourcefile_entry)
+    # Run translation synchronously
+    sourcefile_entry = ensure_translation(sourcefile_entry)
 
-    run_async(
-        ensure_tricky_wordforms,
+    # Run wordform extraction synchronously
+    ensure_tricky_wordforms(
         sourcefile_entry,
         language_level=language_level,
         max_new_words=max_new_words,
-        run_again_after=True,
     )
 
-    run_async(
-        ensure_tricky_phrases,
+    # Run phrase extraction synchronously
+    ensure_tricky_phrases(
         sourcefile_entry,
         language_level=language_level,
         max_new_phrases=max_new_phrases,
-        run_again_after=True,
     )
 
     return sourcefile_entry
