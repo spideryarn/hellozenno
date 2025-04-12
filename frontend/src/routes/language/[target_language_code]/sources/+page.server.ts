@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
             // Ensure no caching
             headers: {
                 'Cache-Control': 'no-cache'
-            }
+        }
         });
 
         if (!sourcesResponse.ok) {

@@ -201,6 +201,10 @@ def get_random_flashcard_data(
 
     Returns:
         Dictionary with random sentence data or error information
+
+    Raises:
+        AttributeError: If there's a database field mismatch
+        Exception: For other unexpected errors
     """
     lemmas = None
 
@@ -210,7 +214,7 @@ def get_random_flashcard_data(
             sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
             lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
         except DoesNotExist:
-            return {"error": "Sourcedir not found"}
+            return {"error": "Sourcedir not found", "status_code": 404}
     # If sourcefile is provided, get its lemmas for filtering
     elif sourcefile_slug:
         try:
@@ -224,7 +228,7 @@ def get_random_flashcard_data(
                 target_language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
             )
         except DoesNotExist:
-            return {"error": "Sourcefile not found"}
+            return {"error": "Sourcefile not found", "status_code": 404}
 
     # Get random sentence
     sentence_data = get_random_sentence(
@@ -233,6 +237,7 @@ def get_random_flashcard_data(
     )
 
     if not sentence_data:
-        return {"error": "No matching sentences found"}
+        # Return 204 (No Content) to distinguish between "no data" and actual errors
+        return {"error": "No matching sentences found", "status_code": 204}
 
     return sentence_data

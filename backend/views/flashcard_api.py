@@ -47,8 +47,14 @@ def flashcard_sentence_api(target_language_code: str, slug: str):
 @flashcard_api_bp.route("/<target_language_code>/flashcards/random", methods=["GET"])
 def random_flashcard_api(target_language_code: str):
     """JSON API endpoint for a random sentence."""
+    from loguru import logger
+
     sourcefile_slug = request.args.get("sourcefile")
     sourcedir_slug = request.args.get("sourcedir")
+
+    logger.info(
+        f"Fetching random flashcard: language={target_language_code}, sourcefile={sourcefile_slug}, sourcedir={sourcedir_slug}"
+    )
 
     # Use the shared utility function
     data = get_random_flashcard_data(
@@ -57,8 +63,18 @@ def random_flashcard_api(target_language_code: str):
         sourcedir_slug=sourcedir_slug,
     )
 
+    # Handle error responses with proper status codes
     if "error" in data:
-        return jsonify({"error": data["error"]}), 404
+        status_code = data.get("status_code", 404)
+        # Log the error with appropriate level based on status code
+        if status_code >= 500:
+            logger.error(f"Error getting random flashcard: {data['error']}")
+        elif status_code == 204:
+            logger.info(f"No matching sentences found: {data['error']}")
+        else:
+            logger.warning(f"Issue getting random flashcard: {data['error']}")
+
+        return jsonify({"error": data["error"]}), status_code
 
     # Get the full sentence object to include more information
     try:
@@ -67,7 +83,13 @@ def random_flashcard_api(target_language_code: str):
             & (Sentence.id == data["id"])  # type: ignore
         )
     except DoesNotExist:
+        logger.error(
+            f"Sentence not found with ID {data['id']} for language {target_language_code}"
+        )
         return jsonify({"error": "Sentence not found"}), 404
+    except Exception as e:
+        logger.exception(f"Error getting random flashcard: {str(e)}")
+        return jsonify({"error": "Error getting random flashcard"}), 500
 
     # Pre-generate audio if needed
     if not sentence.audio_data:
@@ -78,8 +100,8 @@ def random_flashcard_api(target_language_code: str):
                 verbose=1,
             )
         except Exception as e:
-            # Log error but continue - audio can be generated on demand
-            print(f"Error pre-generating audio: {e}")
+            # Log error properly but continue - audio can be generated on demand
+            logger.error(f"Error pre-generating audio: {str(e)}")
 
     # Prepare response data
     response_data = {
@@ -105,6 +127,9 @@ def random_flashcard_api(target_language_code: str):
     if sourcedir_slug:
         response_data["metadata"]["sourcedir"] = sourcedir_slug
 
+    logger.info(
+        f"Successfully retrieved random flashcard with sentence ID {sentence.id}"
+    )
     return jsonify(response_data)
 
 
