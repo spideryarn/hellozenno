@@ -18,19 +18,23 @@
       
       <div class="card p-4 mt-4 bg-dark border-secondary">
         <section>
-          <h3 class="hz-section-header mb-4">SvelteKit Port Status</h3>
+          <h3 class="hz-section-header mb-4">Key Benefits</h3>
           <ul class="list-group list-group-flush text-start">
             <li class="list-group-item bg-transparent border-secondary d-flex align-items-center">
-              <span class="text-success me-2">✅</span> 
-              <span>Languages list page</span>
+              <span class="text-success me-2">✓</span> 
+              <span>AI-generated dictionary entries with rich metadata</span>
             </li>
             <li class="list-group-item bg-transparent border-secondary d-flex align-items-center">
-              <span class="text-success me-2">✅</span> 
-              <span>Sentence viewer component</span>
+              <span class="text-success me-2">✓</span> 
+              <span>Interactive hover explanations for unfamiliar words</span>
             </li>
             <li class="list-group-item bg-transparent border-secondary d-flex align-items-center">
-              <span class="text-warning me-2">⏳</span> 
-              <span>More components coming soon</span>
+              <span class="text-success me-2">✓</span> 
+              <span>Audio dictation exercises with words in different contexts</span>
+            </li>
+            <li class="list-group-item bg-transparent border-secondary d-flex align-items-center">
+              <span class="text-success me-2">✓</span> 
+              <span>Support for vocabulary acquisition through contextual learning</span>
             </li>
           </ul>
         </section>
