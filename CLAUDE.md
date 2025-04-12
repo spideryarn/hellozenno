@@ -63,8 +63,8 @@ see `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` for a good high-level int
 - see `MIGRATIONS.md` before creating or running migrations
 
 ### Logging
-- **Backend logs**: `/logs/flask_app.log` (managed by Loguru via LimitingFileWriter)
-- **SvelteKit logs**: `/logs/sveltekit_dev.log` (captured from SvelteKit development server)
+- **Backend logs**: `/logs/backend.log` (managed by Loguru via LimitingFileWriter)
+- **SvelteKit logs**: `/logs/frontend.log` (captured from SvelteKit development server)
 - Use the `loguru` library for Python logging: `from loguru import logger`
 - Configuration in `utils/logging_utils.py` (backend) and `scripts/local/run_sveltekit.sh` (SvelteKit frontend)
 - Look at logs for debugging backend and frontend issues

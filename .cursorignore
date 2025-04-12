@@ -9,5 +9,5 @@ __pycache__/
 
 .cursor/browser-tools/
 !logs/
-!logs/flask_app.logs
+!logs/backend.log
 !logs/vite_dev.log

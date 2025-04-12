@@ -25,14 +25,14 @@ export FLASK_PORT=3000  # Required environment variable
 ./scripts/local/run_backend.sh
 ```
 
-The Flask API runs on port 3000 and generates logs in `logs/flask_app.log`.
+The Flask API runs on port 3000 and generates logs in `logs/backend.log`.
 
 #### Running the Frontend
 ```bash
 ./scripts/local/run_frontend.sh
 ```
 
-The SvelteKit frontend runs on port 5173 and generates logs in `logs/sveltekit_dev.log`.
+The SvelteKit frontend runs on port 5173 and generates logs in `logs/frontend.log`.
 
 ### Testing
 ```bash
@@ -135,8 +135,8 @@ For local development with production database:
 - Database: Monitor via Supabase dashboard
 
 ### Logging
-- Flask API logs: `logs/flask_app.log` (limited to 200 lines)
-- SvelteKit dev server logs: `logs/sveltekit_dev.log`
+- Flask API logs: `logs/backend.log` (limited to 200 lines)
+- SvelteKit dev server logs: `logs/frontend.log`
 - Production logs: see DEBUGGING.md for the issues with `vercel logs --json`
 
 ## API Integration

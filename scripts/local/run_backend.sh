@@ -115,7 +115,7 @@ export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/api
 mkdir -p logs
 
 # Clear the log file
-> logs/flask.log
+> logs/backend.log
 
 # Run Flask with the appropriate settings and log to both file and screen using tee
-FLASK_DEBUG=$DEBUG_MODE FLASK_ENV=$FLASK_MODE FLASK_APP=backend/api/index.py flask run --host=localhost --port $FLASK_PORT 2>&1 | tee logs/flask.log
+FLASK_DEBUG=$DEBUG_MODE FLASK_ENV=$FLASK_MODE FLASK_APP=backend/api/index.py flask run --host=localhost --port $FLASK_PORT 2>&1 | tee logs/backend.log

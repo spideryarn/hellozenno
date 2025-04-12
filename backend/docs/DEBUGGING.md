@@ -9,14 +9,14 @@ see `.cursor/rules/cursor-tools.mdc` for browser automation (i.e. `cursor-tools 
 ## Local Development Logs
 
 ### Flask Logs
-Flask application logs are stored in `logs/flask_app.log` when running the app with `scripts/local/run_backend.sh`.
+Flask application logs are stored in `logs/backend.log` when running the app with `scripts/local/run_backend.sh`.
 
 ```bash
 # View latest Flask logs
-tail -f logs/flask_app.log
+tail -f logs/backend.log
 
 # Search for errors
-grep -i error logs/flask_app.log
+grep -i error logs/backend.log
 ```
 
 ### Frontend debugging

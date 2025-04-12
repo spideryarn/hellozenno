@@ -11,7 +11,7 @@ PROJECT_ROOT="$( cd "$SCRIPT_DIR/../.." &> /dev/null && pwd )"
 mkdir -p "$PROJECT_ROOT/logs"
 
 # Define log file location using absolute path
-LOG_FILE="$PROJECT_ROOT/logs/sveltekit_dev.log"
+LOG_FILE="$PROJECT_ROOT/logs/frontend.log"
 rm -f "$LOG_FILE"
 touch "$LOG_FILE"
 

@@ -2,7 +2,7 @@
 
 This document covers debugging techniques for the SvelteKit frontend architecture. For a detailed overview of the SvelteKit structure, see [Frontend SvelteKit Architecture](./FRONTEND_SVELTEKIT_ARCHITECTURE.md).
 
-see `logs/sveltekit_dev.log` for logging output from SvelteKit.
+see `logs/frontend.log` for logging output from SvelteKit.
 
 see `DEBUGGING.md` for general debugging information.
 

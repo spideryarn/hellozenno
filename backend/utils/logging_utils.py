@@ -105,7 +105,9 @@ def setup_logging(
 
     # Add console output with improved format including exception details
     log_format = "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} - {message}"
-    logger.add(sys.stderr, format=log_format, level="INFO", backtrace=True, diagnose=True)
+    logger.add(
+        sys.stderr, format=log_format, level="INFO", backtrace=True, diagnose=True
+    )
 
     # Add file logging if requested
     if log_to_file:
@@ -119,13 +121,15 @@ def setup_logging(
             )
 
         os.makedirs(logs_dir, exist_ok=True)
-        log_file_path = os.path.join(logs_dir, "flask_app.log")
+        log_file_path = os.path.join(logs_dir, "backend.log")
 
         # Set up line-limited file logging with full traceback and diagnostic information
         file_writer = LimitingFileWriter(log_file_path, max_lines)
         # Add backtrace=True to show traceback frames
         # Add diagnose=True to enable variables inspection in tracebacks
-        logger.add(file_writer, format=log_format, level="INFO", backtrace=True, diagnose=True)
+        logger.add(
+            file_writer, format=log_format, level="INFO", backtrace=True, diagnose=True
+        )
 
     # Configure standard library logging to use loguru
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
