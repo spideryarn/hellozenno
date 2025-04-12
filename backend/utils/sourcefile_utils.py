@@ -12,6 +12,7 @@ from config import (
     MAX_IMAGE_SIZE_FOR_STORAGE,
     MAX_AUDIO_SIZE_FOR_STORAGE,
     SOURCE_IMAGE_EXTENSIONS,
+    TEXT_SOURCE_EXTENSIONS,
 )
 from db_models import (
     Lemma,
@@ -211,6 +212,32 @@ def process_uploaded_file(
                 metadata["image_processing"] = resize_metadata
         except (ValueError, IOError) as e:
             raise ValueError(f"Error processing {filename}: {str(e)}")
+
+    elif ext in TEXT_SOURCE_EXTENSIONS:
+        # Process text file according to format
+        try:
+            # Decode the content as text
+            text_content = file_content.decode('utf-8')
+            
+            # Check if there's a separator for description
+            separator = "----"
+            if separator in text_content:
+                # Split at the first occurrence of the separator
+                parts = text_content.split(separator, 1)
+                description = parts[0].strip()
+                text = parts[1].strip()
+                metadata["description"] = description
+                # Return only the text part as file content (description stored in metadata)
+                file_content = text.encode('utf-8')
+            else:
+                # No separator, treat the entire content as text
+                metadata["description"] = None
+                
+            # Add file format info to metadata
+            metadata["text_format"] = "markdown" if ext == ".md" else "plain"
+            
+        except UnicodeDecodeError:
+            raise ValueError(f"The file {filename} is not a valid text file")
 
     elif ext == ".mp3":
         # For audio, just verify it's a valid MP3 file

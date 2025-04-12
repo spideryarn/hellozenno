@@ -62,7 +62,6 @@ LANGUAGE_NAME_OVERRIDES = {
 # Supported file extensions for source files
 SOURCE_IMAGE_EXTENSIONS = {
     # ".pdf",
-    # ".txt",
     ".jpg",
     ".jpeg",
     ".png",
@@ -70,14 +69,24 @@ SOURCE_IMAGE_EXTENSIONS = {
     ".bmp",
 }
 
+# Add text extensions
+TEXT_SOURCE_EXTENSIONS = {".txt", ".md"}
+
 # Add audio extensions
 AUDIO_SOURCE_EXTENSIONS = {".mp3"}
+
+# Combine all extensions
 SOURCE_EXTENSIONS = SOURCE_IMAGE_EXTENSIONS.copy()
 SOURCE_EXTENSIONS.update(AUDIO_SOURCE_EXTENSIONS)
+SOURCE_EXTENSIONS.update(TEXT_SOURCE_EXTENSIONS)
 
 # Maximum file sizes (in bytes)
 MAX_IMAGE_SIZE_UPLOAD_ALLOWED = 20 * 1024 * 1024  # 20MB
 MAX_IMAGE_SIZE_FOR_STORAGE = 4 * 1024 * 1024  # 4MB
+
+# Text-specific size limits
+# ~10k words with formatting in any language should be under 1MB
+MAX_TEXT_SIZE_UPLOAD_ALLOWED = 1 * 1024 * 1024  # 1MB
 
 # Audio-specific size limits
 # 60 min medium quality MP3 @ 128kbps = ~54MB

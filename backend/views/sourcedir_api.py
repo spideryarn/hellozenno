@@ -12,8 +12,10 @@ from peewee import DoesNotExist
 from config import (
     MAX_AUDIO_SIZE_UPLOAD_ALLOWED,
     MAX_IMAGE_SIZE_UPLOAD_ALLOWED,
+    MAX_TEXT_SIZE_UPLOAD_ALLOWED,
     MAX_NUMBER_UPLOAD_FILES,
     SOURCE_EXTENSIONS,
+    TEXT_SOURCE_EXTENSIONS,
 )
 from db_models import Sourcedir, Sourcefile
 from utils.lang_utils import VALID_target_language_codeS
@@ -253,11 +255,13 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
             file_content = file.read()
 
             # Check file size against upload limit
-            size_limit = (
-                MAX_AUDIO_SIZE_UPLOAD_ALLOWED
-                if file.filename.endswith(".mp3")
-                else MAX_IMAGE_SIZE_UPLOAD_ALLOWED
-            )
+            if file.filename.endswith(".mp3"):
+                size_limit = MAX_AUDIO_SIZE_UPLOAD_ALLOWED
+            elif any(file.filename.endswith(ext) for ext in TEXT_SOURCE_EXTENSIONS):
+                size_limit = MAX_TEXT_SIZE_UPLOAD_ALLOWED
+            else:
+                size_limit = MAX_IMAGE_SIZE_UPLOAD_ALLOWED
+                
             if len(file_content) > size_limit:
                 flash(
                     f"File {file.filename} too large (max {size_limit // (1024*1024)}MB)"
@@ -290,17 +294,42 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
 
                 # Create sourcefile entry without processing
                 print(f"DEBUG: Creating sourcefile with filename {filename}")
+                
+                # Determine file type and set appropriate fields
+                if filename.endswith(".mp3"):
+                    sourcefile_type = "audio"
+                    image_data = None
+                    audio_data = file_content
+                    text_target = ""  # Will be populated during processing
+                elif any(filename.endswith(ext) for ext in TEXT_SOURCE_EXTENSIONS):
+                    sourcefile_type = "text"
+                    image_data = None
+                    audio_data = None
+                    # For text files, we use the file content directly as text_target
+                    text_target = file_content.decode('utf-8').strip()
+                    
+                    # If there's a description in metadata, set it on the sourcefile
+                    if "description" in metadata and metadata["description"] is not None:
+                        description = metadata["description"]
+                    else:
+                        description = None
+                else:
+                    sourcefile_type = "image"
+                    image_data = file_content
+                    audio_data = None
+                    text_target = ""  # Will be populated during processing
+                    description = None
+                
                 sourcefile = Sourcefile.create(
                     sourcedir=sourcedir_entry,
                     filename=filename,
-                    image_data=None if filename.endswith(".mp3") else file_content,
-                    audio_data=file_content if filename.endswith(".mp3") else None,
-                    text_target="",  # Will be populated during processing
+                    image_data=image_data,
+                    audio_data=audio_data,
+                    text_target=text_target,
                     text_english="",  # Will be populated during processing
                     metadata=metadata,
-                    sourcefile_type=(
-                        "audio" if filename.endswith(".mp3") else "image"
-                    ),  # Set type based on extension
+                    sourcefile_type=sourcefile_type,
+                    description=description
                 )
                 print(f"DEBUG: Created sourcefile with ID {sourcefile.id}")
                 uploaded_count += 1

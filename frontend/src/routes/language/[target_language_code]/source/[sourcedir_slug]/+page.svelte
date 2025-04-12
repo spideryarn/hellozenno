@@ -8,6 +8,24 @@
   
   export let data: PageData;
   
+  // Initialize tooltips when the component is mounted
+  onMount(() => {
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].map(tooltipTriggerEl => {
+      try {
+        // @ts-ignore - Bootstrap global isn't recognized by TypeScript
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+          trigger: 'hover focus',
+          html: true
+        });
+      } catch (e) {
+        console.error('Error initializing tooltip:', e);
+        return null;
+      }
+    });
+  });
+  
   // Custom action to focus an element when mounted
   function focusOnMount(node: HTMLElement) {
     // Focus the element after a small delay to ensure DOM is ready
@@ -400,6 +418,16 @@
               
               <label for="audioInput" class="btn btn-outline-primary me-2">Upload Audio Files</label>
               <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" on:change={handleFileSelect}>
+              
+              <div class="d-inline-block position-relative me-2">
+                <label for="textInput" class="btn btn-outline-primary" 
+                       data-bs-toggle="tooltip" 
+                       data-bs-html="true"
+                       title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">
+                  Upload Text Files
+                </label>
+                <input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" on:change={handleFileSelect}>
+              </div>
               
               <button class="btn btn-outline-primary me-2" on:click={() => showCreateTextModal = true}>Create From Text</button>
               <!-- Leave this commented. We've disabled it for now, but might want to try it again in the future. -->
