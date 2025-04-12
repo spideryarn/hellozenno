@@ -10,6 +10,7 @@
   } from '$lib';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
+  import { onMount } from 'svelte';
   import { 
     CaretDoubleLeft, 
     CaretDoubleRight, 
@@ -43,12 +44,58 @@
   // Collapsible header state - default to collapsed
   let isHeaderExpanded = false;
   
+  // Auto-processing settings
+  let autoProcessEnabled = true; // Default to enabled, could be user-configurable
+  let showAutoProcessNotification = false;
+  let autoProcessNotificationMessage = '';
+  
+  // Multi-processing settings
+  let processingIterations = 1; // Default to 1 iteration
+  
   // Create a reactive variable for the processing queue
   $: processingQueue = new SourcefileProcessingQueue(
     target_language_code,
     sourcedir_slug,
     sourcefile_slug
   );
+  
+  // Check if sourcefile needs processing
+  function shouldAutoProcess(sourcefile: Sourcefile): boolean {
+    // Case 1: No text extracted yet for image or audio
+    if (!sourcefile.text_target && (sourcefile.has_image || sourcefile.has_audio)) {
+      autoProcessNotificationMessage = 'Automatically extracting text from this file...';
+      return true;
+    }
+    
+    // Case 2: Has text but no translation
+    if (sourcefile.text_target && !sourcefile.text_english) {
+      autoProcessNotificationMessage = 'Automatically translating text...';
+      return true;
+    }
+    
+    // Case 3: Has text with content but no wordforms extracted
+    const hasContent = sourcefile.text_target && sourcefile.text_target !== '-';
+    const hasNoWordforms = hasContent && (!metadata.wordforms_count || metadata.wordforms_count === 0);
+    if (hasContent && hasNoWordforms) {
+      autoProcessNotificationMessage = 'Automatically extracting vocabulary from this text...';
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // Trigger auto-processing if needed when component mounts
+  onMount(() => {
+    if (autoProcessEnabled && shouldAutoProcess(sourcefile)) {
+      console.log('Auto-processing enabled and needed for this sourcefile');
+      showAutoProcessNotification = true;
+      
+      // Add a slight delay to allow the UI to render first
+      setTimeout(() => {
+        processSourcefile();
+      }, 500);
+    }
+  });
   
   async function moveSourcefile(newSourcedirSlug: string) {
     if (newSourcedirSlug === sourcedir_slug) {
@@ -108,6 +155,9 @@
     if ($processingState.isProcessing) return;
     
     try {
+      // Hide auto-process notification if showing
+      showAutoProcessNotification = false;
+      
       // Initialize the queue based on what needs to be processed
       const hasSteps = processingQueue.initializeQueue(sourcefile);
       
@@ -117,8 +167,11 @@
         return;
       }
       
-      // Start processing
-      await processingQueue.processAll();
+      // Ensure we have a valid number of iterations (minimum 1)
+      const iterations = Math.max(1, processingIterations);
+      
+      // Start processing with the specified number of iterations
+      await processingQueue.processAll(iterations);
       
       // When done, reload the page to see the processed results
       window.location.reload();
@@ -348,14 +401,35 @@
 <div class="actions">
   <div class="action-row">
     <div class="section process-section">
-      <button on:click={processSourcefile} class="button" disabled={$processingState.isProcessing}>
-        {#if $processingState.isProcessing}
-          {$processingState.description || 'Processing...'}
-          ({$processingState.progress}/{$processingState.totalSteps})
-        {:else}
-          Process this text
-        {/if}
-      </button>
+      <div class="process-controls">
+        <div class="iterations-control">
+          <div class="iteration-label">Times to process:</div>
+          <div class="iteration-counter">
+            <button 
+              class="counter-button" 
+              on:click={() => processingIterations = Math.max(1, processingIterations - 1)}
+              disabled={$processingState.isProcessing || processingIterations <= 1}
+            >-</button>
+            <span class="counter-value">{processingIterations}</span>
+            <button 
+              class="counter-button" 
+              on:click={() => processingIterations = Math.min(10, processingIterations + 1)}
+              disabled={$processingState.isProcessing || processingIterations >= 10}
+            >+</button>
+          </div>
+        </div>
+        <button on:click={processSourcefile} class="button" disabled={$processingState.isProcessing}>
+          {#if $processingState.isProcessing}
+            {$processingState.description || 'Processing...'}
+            {#if $processingState.totalIterations > 1}
+              (Run {$processingState.currentIteration}/{$processingState.totalIterations})
+            {/if}
+            ({$processingState.progress}/{$processingState.totalSteps})
+          {:else}
+            Process this text
+          {/if}
+        </button>
+      </div>
       {#if $processingState.error}
         <span class="error-message">{$processingState.error}</span>
       {/if}
@@ -449,12 +523,23 @@
 </div>
 
 <!-- Add a progress bar if processing -->
+{#if showAutoProcessNotification && !$processingState.isProcessing}
+  <div class="auto-process-notification">
+    <div class="notification-text">{autoProcessNotificationMessage}</div>
+  </div>
+{/if}
+
 {#if $processingState.isProcessing && $processingState.totalSteps > 0}
   <div class="processing-status">
     <div class="progress-container">
       <div class="progress-bar" style="width: {($processingState.progress / $processingState.totalSteps) * 100}%"></div>
     </div>
     <div class="progress-text">
+      {#if $processingState.totalIterations > 1}
+        <div class="iteration-indicator">
+          Run {$processingState.currentIteration} of {$processingState.totalIterations}
+        </div>
+      {/if}
       {#if $processingState.currentStep === 'text_extraction'}
         <span>Transcribing content... ({$processingState.progress}/{$processingState.totalSteps})</span>
       {:else if $processingState.currentStep === 'translation'}
@@ -491,6 +576,54 @@
   .section {
     display: flex;
     align-items: center;
+  }
+  
+  .process-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .iterations-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .iteration-label {
+    white-space: nowrap;
+  }
+  
+  .iteration-counter {
+    display: flex;
+    align-items: center;
+  }
+  
+  .counter-button {
+    width: 24px;
+    height: 24px;
+    background-color: #4CAD53;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0;
+  }
+  
+  .counter-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .counter-value {
+    margin: 0 0.5rem;
+    min-width: 1.5rem;
+    text-align: center;
   }
   
   .section-divider {
@@ -569,6 +702,37 @@
     color: #4CAD53;
   }
   
+  .iteration-indicator {
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+    color: #3c8c41;
+    background-color: rgba(76, 173, 83, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  
+  .auto-process-notification {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: rgba(76, 173, 83, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #4CAD53;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .notification-text {
+    color: #4CAD53;
+    font-size: 0.9rem;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .action-row {
@@ -583,6 +747,19 @@
     .section {
       width: 100%;
       margin-bottom: 0.5rem;
+    }
+    
+    .process-controls {
+      width: 100%;
+    }
+    
+    .iterations-control {
+      margin-bottom: 0.3rem;
+    }
+    
+    .button {
+      width: 100%;
+      justify-content: center;
     }
   }
 </style>

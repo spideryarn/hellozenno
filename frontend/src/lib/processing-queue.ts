@@ -25,7 +25,9 @@ export const processingState = writable({
   progress: 0,
   totalSteps: 0,
   error: null as string | null,
-  description: ''
+  description: '',
+  currentIteration: 0,
+  totalIterations: 1
 });
 
 export class SourcefileProcessingQueue {
@@ -175,17 +177,37 @@ export class SourcefileProcessingQueue {
   }
 
   // Start processing the entire queue
-  public async processAll() {
+  public async processAll(iterations: number = 1) {
     processingState.update(state => ({
       ...state,
       isProcessing: true,
       progress: 0,
       error: null,
+      currentIteration: 1,
+      totalIterations: iterations
     }));
 
-    while (this.queue.length > 0) {
-      const success = await this.processNextStep();
-      if (!success) {
+    // Run the requested number of iterations
+    for (let i = 0; i < iterations; i++) {
+      // Update iteration counter in the state
+      processingState.update(state => ({
+        ...state,
+        currentIteration: i + 1
+      }));
+      
+      // Initialize the queue for this iteration
+      this.initializeQueue(await this.getSourcefileData());
+      
+      // Process all steps in the queue
+      while (this.queue.length > 0) {
+        const success = await this.processNextStep();
+        if (!success) {
+          break;
+        }
+      }
+      
+      // If we couldn't process the queue successfully, stop iterations
+      if (this.queue.length > 0) {
         break;
       }
     }
@@ -196,5 +218,47 @@ export class SourcefileProcessingQueue {
     }));
 
     return this.queue.length === 0;
+  }
+  
+  // Helper method to get current sourcefile data for subsequent iterations
+  private async getSourcefileData(): Promise<any> {
+    try {
+      // Get the current status of the sourcefile
+      const response = await fetch(
+        getApiUrl(
+          RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
+          {
+            target_language_code: this.sourcefileData.target_language_code,
+            sourcedir_slug: this.sourcefileData.sourcedir_slug,
+            sourcefile_slug: this.sourcefileData.sourcefile_slug
+          }
+        ),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to get sourcefile status');
+      }
+      
+      const data = await response.json();
+      
+      // Return a simplified sourcefile object with the data we need
+      return {
+        text_target: data.status.has_text,
+        text_english: data.status.has_translation,
+        has_image: false, // These don't change during processing
+        has_audio: false, // These don't change during processing
+        wordforms_count: data.status.wordforms_count,
+        phrases_count: data.status.phrases_count
+      };
+    } catch (error) {
+      console.error('Error getting sourcefile data:', error);
+      throw error;
+    }
   }
 }
