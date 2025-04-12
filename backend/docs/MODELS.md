@@ -14,13 +14,15 @@ Based on the full model declaration in `backend/db_models.py`
 Dictionary form entries for words
 - `lemma`: The dictionary form of the word
 - `target_language_code`: Language code (e.g., "el" for Greek)
-- `part_of_speech`: Grammatical category (verb, noun, etc.)
+- `is_complete`: boolean for whether we have populated only the essential fields, or all of them
 - `translations`: List of English translations (JSONField)
+- `part_of_speech`: Grammatical category (verb, noun, etc.)
 - `commonality`: How common the word is (0-1 scale)
 - `guessability`: How easy to guess for English speakers (0-1 scale)
 - Relationships:
   - `wordforms`: Different forms of this lemma
   - `example_sentences`: Example sentences containing this lemma
+- ...
 
 ### Wordform
 Individual word forms and inflections

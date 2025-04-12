@@ -22,3 +22,4 @@ export { default as NavTabs } from "./components/NavTabs.svelte";
 export * from "./utils";
 export * from "./api";
 export * from "./types";
+export * from "./processing-queue";

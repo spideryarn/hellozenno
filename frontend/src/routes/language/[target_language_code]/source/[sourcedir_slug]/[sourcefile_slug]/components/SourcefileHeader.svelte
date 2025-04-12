@@ -25,6 +25,7 @@
     PencilSimple,
     FolderOpen
   } from 'phosphor-svelte';
+  import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
   
   export let sourcefile: Sourcefile;
   export const sourcedir: Sourcedir = undefined as unknown as Sourcedir;
@@ -36,15 +37,18 @@
   export let sourcefile_slug: string;
   export let available_sourcedirs: any[] = [];
   
-  // Variables for processing state
-  let isProcessing = false;
-  let processingError = '';
+  // Variables for sourcedir dropdown
+  let moveError = '';
   
   // Collapsible header state - default to collapsed
   let isHeaderExpanded = false;
   
-  // Variables for sourcedir dropdown
-  let moveError = '';
+  // Create a reactive variable for the processing queue
+  $: processingQueue = new SourcefileProcessingQueue(
+    target_language_code,
+    sourcedir_slug,
+    sourcefile_slug
+  );
   
   async function moveSourcefile(newSourcedirSlug: string) {
     if (newSourcedirSlug === sourcedir_slug) {
@@ -101,42 +105,25 @@
   }
   
   async function processSourcefile() {
-    if (isProcessing) return;
+    if ($processingState.isProcessing) return;
     
     try {
-      isProcessing = true;
-      processingError = '';
+      // Initialize the queue based on what needs to be processed
+      const hasSteps = processingQueue.initializeQueue(sourcefile);
       
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_PROCESS_SOURCEFILE_API,
-          {
-            target_language_code: target_language_code,
-            sourcedir_slug,
-            sourcefile_slug
-          }
-        ),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}), // Add empty JSON object as body
-        }
-      );
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || `Failed to process file: ${response.statusText}`);
+      if (!hasSteps) {
+        // Nothing to process
+        alert('No processing steps needed.');
+        return;
       }
       
-      // Reload the page to see the processed results
+      // Start processing
+      await processingQueue.processAll();
+      
+      // When done, reload the page to see the processed results
       window.location.reload();
     } catch (error) {
       console.error('Error processing file:', error);
-      processingError = error instanceof Error ? error.message : 'Unknown error';
-    } finally {
-      isProcessing = false;
     }
   }
   
@@ -361,15 +348,16 @@
 <div class="actions">
   <div class="action-row">
     <div class="section process-section">
-      <button on:click={processSourcefile} class="button" disabled={isProcessing}>
-        {#if isProcessing}
-          Processing...
+      <button on:click={processSourcefile} class="button" disabled={$processingState.isProcessing}>
+        {#if $processingState.isProcessing}
+          {$processingState.description || 'Processing...'}
+          ({$processingState.progress}/{$processingState.totalSteps})
         {:else}
           Process this text
         {/if}
       </button>
-      {#if processingError}
-        <span class="error-message">{processingError}</span>
+      {#if $processingState.error}
+        <span class="error-message">{$processingState.error}</span>
       {/if}
     </div>
     
@@ -460,6 +448,28 @@
   </div>
 </div>
 
+<!-- Add a progress bar if processing -->
+{#if $processingState.isProcessing && $processingState.totalSteps > 0}
+  <div class="processing-status">
+    <div class="progress-container">
+      <div class="progress-bar" style="width: {($processingState.progress / $processingState.totalSteps) * 100}%"></div>
+    </div>
+    <div class="progress-text">
+      {#if $processingState.currentStep === 'text_extraction'}
+        <span>Transcribing content... ({$processingState.progress}/{$processingState.totalSteps})</span>
+      {:else if $processingState.currentStep === 'translation'}
+        <span>Translating to English... ({$processingState.progress}/{$processingState.totalSteps})</span>
+      {:else if $processingState.currentStep === 'wordforms'}
+        <span>Extracting vocabulary... ({$processingState.progress}/{$processingState.totalSteps})</span>
+      {:else if $processingState.currentStep === 'phrases'}
+        <span>Finding useful phrases... ({$processingState.progress}/{$processingState.totalSteps})</span>
+      {:else}
+        <span>Processing... ({$processingState.progress}/{$processingState.totalSteps})</span>
+      {/if}
+    </div>
+  </div>
+{/if}
+
 <style>
   .collapsible-sections {
     display: flex;
@@ -468,7 +478,7 @@
   }
   
   .actions {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
   
   .action-row {
@@ -529,6 +539,34 @@
   .button.disabled {
     background-color: #ccc;
     cursor: not-allowed;
+  }
+  
+  .processing-status {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+    background-color: rgba(76, 173, 83, 0.1);
+    border-radius: 4px;
+  }
+  
+  .progress-container {
+    width: 100%;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background-color: #4CAD53;
+    transition: width 0.3s ease;
+  }
+  
+  .progress-text {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #4CAD53;
   }
   
   /* Responsive adjustments */

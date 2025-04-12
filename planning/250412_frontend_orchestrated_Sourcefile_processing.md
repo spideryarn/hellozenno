@@ -21,40 +21,45 @@ This document outlines a plan to improve the sourcefile processing experience by
 
 ## Implementation Stages
 
-- [ ] Stage: Basic Queue Implementation
-  - [ ] Install queue-typescript library
-  - [ ] Create a ProcessingQueue class in a new file: frontend/src/lib/processing-queue.ts
-  - [ ] Define the different processing steps (transcription, translation, wordforms, phrases)
-  - [ ] Implement basic queue initialization and processing
-  - [ ] Update SourcefileHeader.svelte to use the queue for the "Process" button
+- [x] Stage: Basic Queue Implementation
+  - [x] Install queue-typescript library
+  - [x] Create a ProcessingQueue class in a new file: frontend/src/lib/processing-queue.ts
+  - [x] Define the different processing steps (transcription, translation, wordforms, phrases)
+  - [x] Implement basic queue initialization and processing
+  - [x] Update SourcefileHeader.svelte to use the queue for the "Process" button
 
-- [ ] Stage: Progress UI
-  - [ ] Add a progress bar to show which step is currently being processed
-  - [ ] Create a Svelte store to track processing state
-  - [ ] Show status messages for the current processing step
-  - [ ] Ensure the UI is responsive during processing
+- [x] Stage: Progress UI
+  - [x] Add a progress bar to show which step is currently being processed
+  - [x] Create a Svelte store to track processing state
+  - [x] Show status messages for the current processing step
+  - [x] Ensure the UI is responsive during processing
 
-- [ ] Stage: Backend API Extensions
-  - [ ] Add a status endpoint to check what processing has been completed for a sourcefile
-  - [ ] Ensure each processing step has its own API endpoint
-  - [ ] Make sure all endpoints work synchronously and return appropriate status codes
+- [x] Stage: Backend API Extensions
+  - [x] Add a status endpoint to check what processing has been completed for a sourcefile
+  - [x] Ensure each processing step has its own API endpoint
+  - [x] Make sure all endpoints work synchronously and return appropriate status codes
+  - [ ] Make sure to restart Flask webserver after making any API route changes to update `routes.ts`
 
-- [ ] Stage: Error Handling and Resilience
-  - [ ] Implement error handling for each processing step
-  - [ ] Show error messages to the user
+- [x] Stage: Error Handling and Resilience
+  - [x] Implement error handling for each processing step
+  - [x] Show error messages to the user
 
 - [ ] Stage: Enhanced Queue Features
-  - [ ] Add intelligent skipping of already completed steps
-  - [ ] Add a counter so that the user can press the "Process" button multiple times, to tell it to run processing multiple times in sequence
-  - [ ] Prioritize processing steps in order of importance (transcription → translation → extract wordforms → extract phrases -> individual lemma full metadata)
-  - [ ] Show a detailed progress breakdown of completed and pending steps (maybe this is a tooltip on the progress bar to keep the UI tidy)
+  - [x] Add intelligent skipping of already completed steps
+  - [x] Prioritize processing steps in order of importance (transcription → translation → extract wordforms → extract phrases -> individual lemma full metadata)
+  - [x] Show a detailed progress breakdown of completed and pending steps (maybe this is a tooltip on the progress bar to keep the UI tidy)
 
-- [ ] Stage: API Modifications
-  - [ ] Update the backend to handle individual processing steps
-  - [ ] Ensure each step can run independently
-  - [ ] Add parameters to control the number of words/phrases to extract
-  - [ ] Optimize API responses for frontend consumption
+- [x] Stage: API Modifications
+  - [x] Update the backend to handle individual processing steps
+  - [x] Ensure each step can run independently
+  - [x] Add parameters to control the number of words/phrases to extract
+  - [x] Optimize API responses for frontend consumption
 
+- [ ] Stage: Improving user experience
+  - [ ] As a convenience for the user, automatically click the "Process" button when we open a Sourcefile page if a) there's no text_target, b) there's no translation, or c) There is a text_target with more than just "-" but no wordforms highlighted for the user to hover over - see ENHANCED_TEXT.md
+  - [ ] Add a counter so that the user can press the "Process" button multiple times, to tell it to run processing multiple times in sequence (and each time it'll get as many words/phrases as allowed in `backend/config.py`). Note: completing individual Lemma metadata should happen as a final stage, after extracting tricky wordforms/phrases as many times as requested.
+  - [ ] Complete the metadata for individual Lemmas. The `extract_tricky_words()` function only gets the most essential fields for the Lemmas corresponding to the Wordforms it extracts. So at the end of each processing run, we need to completely process each Lemma with `metadata_for_lemma_full()`. Ideally there'd be a way to determine en masse which Lemmas are complete (they have an `is_complete` field). see `backend/docs/MODELS.md` .
+  
 - [ ] Stage: Parallel Processing
   - [ ] Implement parallel processing for independent steps (especially extracting the full lemma metadata)
   - [ ] Use Promise.all to manage multiple concurrent API calls
@@ -555,15 +560,26 @@ For a better user experience, we can enhance the UI to show more detailed progre
 </style>
 ```
 
+## Implementation Status
+
+The initial implementation has been completed:
+
+1. ✅ Created a `processing-queue.ts` module with the `SourcefileProcessingQueue` class
+2. ✅ Implemented a Svelte store to track processing state
+3. ✅ Updated `SourcefileHeader.svelte` to use the new queue
+4. ✅ Added backend API endpoints for individual processing steps
+5. ✅ Added progress UI with detailed step information
+6. ✅ Implemented error handling for each processing step
+
 ## Next Steps
 
-Future stages would focus on:
+Future enhancements should focus on:
 
 1. Adding the counter functionality to track how many times the user has processed a file
-2. Implementing localStorage persistence for queue state
-3. Adding parallel processing for independent steps
-4. Building a more detailed and interactive processing UI
-5. Adding user preferences for processing behavior
+2. Implementing localStorage persistence for queue state (to resume after page refresh)
+3. Adding parallel processing for independent steps (especially lemma metadata generation)
+4. Adding user preferences for processing behavior (like controlling max words/phrases count)
+5. Implementing an option to retry specific failed steps
 
-This modular approach will allow us to start with a basic implementation and progressively enhance it with more features as needed.
+This modular approach has allowed us to implement a basic version and will enable us to progressively enhance it with more features as needed.
 

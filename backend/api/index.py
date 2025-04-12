@@ -110,6 +110,7 @@ def create_app():
     from views.lemma_api import lemma_api_bp
     from views.phrase_api import phrase_api_bp
     from views.sourcefile_api import sourcefile_api_bp
+    from views.sourcefile_api_processing import sourcefile_processing_api_bp
     from views.sentence_api import sentence_api_bp
     from views.languages_api import languages_api_bp
     from views.flashcard_api import flashcard_api_bp
@@ -120,6 +121,7 @@ def create_app():
     app.register_blueprint(lemma_api_bp)
     app.register_blueprint(phrase_api_bp)
     app.register_blueprint(sourcefile_api_bp)
+    app.register_blueprint(sourcefile_processing_api_bp)
     app.register_blueprint(sentence_api_bp)
     app.register_blueprint(languages_api_bp)
     app.register_blueprint(flashcard_api_bp)
