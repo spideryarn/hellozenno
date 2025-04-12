@@ -1,5 +1,9 @@
 # Enhanced Text in Hello Zenno
 
+THIS PAGE IS OUT OF DATE. The user experience is still the same, but we are shifting to using `create_interactive_word_data()` throughout, instead of `create_interactive_word_links()`. In other words, the backend returns structured data instead of HTML.
+
+see `planning/250412_enhanced_text_transition.md`
+
 ## Overview
 
 Enhanced text is a key feature of Hello Zenno that transforms plain sentences into interactive language learning experiences. It uses HTML formatting and augments sentences with hoverable & clickable word links that provide additional learning context.

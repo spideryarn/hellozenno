@@ -58,10 +58,10 @@ This document outlines a plan to improve the sourcefile processing experience by
 - [ ] Stage: Improving user experience
   - [x] As a convenience for the user, automatically click the "Process" button when we open a Sourcefile page if a) there's no text_target, b) there's no translation, or c) There is a text_target with more than just "-" but no wordforms highlighted for the user to hover over - see ENHANCED_TEXT.md
   - [x] Add a counter so that the user can press the "Process" button multiple times, to tell it to run processing multiple times in sequence (and each time it'll get as many words/phrases as allowed in `backend/config.py`).
-  - [ ] Complete the metadata for individual Lemmas. The `extract_tricky_words()` function only gets the most essential fields for the Lemmas corresponding to the Wordforms it extracts. So at the end of each processing run, we need to completely process each Lemma with `metadata_for_lemma_full()`. Ideally there'd be a way to determine en masse which Lemmas are complete (they have an `is_complete` field). see `backend/docs/MODELS.md`.
-  - [ ] After we have extracted tricky wordforms, we want to ideally update the hover-hyperlinks (see ENHANCED_TEXT.md) so that the newly-extracted wordforms become new hover-hyperlinks. Ideally do this without having to reload the whole page. But I care more about keeping things simple than being over-clever.
-
-Don’t make changes.
+  - [x] After we have extracted tricky wordforms, we want to ideally update the hover-hyperlinks (see `create_interactive_word_data()`) so that the newly-extracted wordforms become new hover-hyperlinks. Ideally do this without having to reload the whole page. But I care more about keeping things simple than being over-clever.
+  - [ ] Complete the metadata for individual Lemmas. The `extract_tricky_words()` function only gets the most essential fields for the Lemmas corresponding to the Wordforms it extracts. So at the end of each processing run, we need to completely process each Lemma with `metadata_for_lemma_full()`. Ideally there'd be a way to determine en masse which Lemmas are complete (they have an `is_complete` field - see `backend/docs/MODELS.md`). It takes a few seconds to complete each Lemma's metadata, so let's add each Lemma-completion as an individual step at the very end of our queue.
+  - [ ] Add as much information as possible to the progress bar as a toolip
+  - [ ] Don't flash up an alert when you've finished processing
   
 - [ ] Stage: Parallel Processing
   - [ ] Implement parallel processing for independent steps (especially extracting the full lemma metadata)
@@ -93,7 +93,13 @@ Based on our current progress, the next features to implement are:
    - ✅ Modified the processing queue to handle multiple iterations
    - ✅ Added iteration progress tracking in the UI
 
-3. **Lemma Metadata Completion**:
+3. ✅ **Enhanced Text Update**: Implemented dynamic hover-hyperlink updates after processing
+   - ✅ Added mechanism to fetch updated sourcefile data after processing
+   - ✅ Created custom event system to notify components of data changes
+   - ✅ Updated EnhancedText component to refresh tooltips without a page reload
+   - ✅ Used Svelte's reactive declarations to watch for data changes
+
+4. **Lemma Metadata Completion**:
    - Add a final step to complete metadata for all extracted lemmas
    - Create a backend endpoint for batch processing lemma metadata
    - Show progress for lemma metadata completion

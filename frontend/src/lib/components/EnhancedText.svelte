@@ -302,6 +302,30 @@
     }
   }
 
+  // Function to reinitialize tooltips
+  export function refreshTooltips() {
+    console.log('Refreshing tooltips in EnhancedText component');
+    
+    // First, clean up any existing tooltips
+    tippyInstances.forEach((instance) => instance.destroy());
+    tippyInstances = [];
+    
+    // Then reinitialize based on current content mode
+    if (html) {
+      initializeHTMLBasedTooltips();
+    } else if (text && recognizedWords.length > 0) {
+      initializeStructuredDataTooltips();
+    }
+  }
+  
+  // Watch for changes to recognized words and refresh tooltips when they change
+  $: if (recognizedWords) {
+    // Use setTimeout to ensure the DOM has been updated before refreshing tooltips
+    if (typeof document !== 'undefined' && container) {
+      setTimeout(() => refreshTooltips(), 0);
+    }
+  }
+  
   // Initialize tooltips after the component mounts
   onMount(() => {
     console.log(`EnhancedText component mounted with target_language_code: ${target_language_code}`);

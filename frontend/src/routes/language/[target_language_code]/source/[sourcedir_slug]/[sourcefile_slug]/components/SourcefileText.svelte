@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import type { Sourcefile } from '$lib/types/sourcefile';
   import EnhancedText from '$lib/components/EnhancedText.svelte';
   
@@ -21,6 +22,56 @@
 
   // Debug flag - set to true to see what data is available
   const debug = import.meta.env.DEV && false;
+  
+  // Reference to the EnhancedText component instance
+  let enhancedTextComponent: EnhancedText;
+  
+  // Function to handle the processing complete event
+  function handleProcessingComplete(event: CustomEvent) {
+    console.log('Received processingComplete event in SourcefileText', event);
+    const newData = event.detail;
+    
+    if (newData) {
+      let dataUpdated = false;
+      
+      // Update the recognized words and text data
+      if (newData.recognized_words && newData.recognized_words.length > 0) {
+        recognized_words = newData.recognized_words;
+        console.log(`Updated recognized_words with ${recognized_words.length} items`);
+        dataUpdated = true;
+      }
+      
+      // Update the text content if needed
+      if (newData.text_target) {
+        text_target = newData.text_target;
+        dataUpdated = true;
+      }
+      
+      // Update enhanced_text for legacy mode if needed
+      if (newData.enhanced_text) {
+        enhanced_text = newData.enhanced_text;
+        dataUpdated = true;
+      }
+      
+      // If data was updated, manually refresh tooltips after a short delay
+      // to ensure the DOM has updated with the new content
+      if (dataUpdated && enhancedTextComponent) {
+        setTimeout(() => {
+          console.log('Manually refreshing tooltips after data update');
+          enhancedTextComponent.refreshTooltips();
+        }, 200);
+      }
+    }
+  }
+  
+  // Add and remove event listeners for the custom event
+  onMount(() => {
+    document.addEventListener('processingComplete', handleProcessingComplete as EventListener);
+  });
+  
+  onDestroy(() => {
+    document.removeEventListener('processingComplete', handleProcessingComplete as EventListener);
+  });
 </script>
 
 <div class="text-content">
@@ -40,6 +91,7 @@
   {#if recognized_words?.length && text_target}
     <!-- Preferred mode: Using the structured data approach for better separation of concerns -->
     <EnhancedText 
+      bind:this={enhancedTextComponent}
       text={text_target} 
       recognizedWords={recognized_words} 
       target_language_code={target_language_code} 
@@ -49,6 +101,7 @@
          which mixes content with presentation. It should eventually be removed once all
          components are updated to use the structured data approach. -->
     <EnhancedText 
+      bind:this={enhancedTextComponent}
       html={enhanced_text} 
       target_language_code={target_language_code} 
     />

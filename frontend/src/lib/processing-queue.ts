@@ -27,7 +27,8 @@ export const processingState = writable({
   error: null as string | null,
   description: '',
   currentIteration: 0,
-  totalIterations: 1
+  totalIterations: 1,
+  processedSourcefileData: null as any // Will contain the updated sourcefile data after processing
 });
 
 export class SourcefileProcessingQueue {
@@ -184,7 +185,8 @@ export class SourcefileProcessingQueue {
       progress: 0,
       error: null,
       currentIteration: 1,
-      totalIterations: iterations
+      totalIterations: iterations,
+      processedSourcefileData: null
     }));
 
     // Run the requested number of iterations
@@ -212,10 +214,22 @@ export class SourcefileProcessingQueue {
       }
     }
 
-    processingState.update(state => ({
-      ...state,
-      isProcessing: this.queue.length > 0,
-    }));
+    // Get the final sourcefile data after all processing is complete
+    try {
+      const finalSourcefileData = await this.getFullSourcefileData();
+      processingState.update(state => ({
+        ...state,
+        isProcessing: this.queue.length > 0,
+        processedSourcefileData: finalSourcefileData
+      }));
+    } catch (error) {
+      console.error('Error fetching final sourcefile data:', error);
+      processingState.update(state => ({
+        ...state,
+        isProcessing: this.queue.length > 0,
+        processedSourcefileData: null
+      }));
+    }
 
     return this.queue.length === 0;
   }
@@ -258,6 +272,40 @@ export class SourcefileProcessingQueue {
       };
     } catch (error) {
       console.error('Error getting sourcefile data:', error);
+      throw error;
+    }
+  }
+  
+  // Get the full sourcefile data including recognized words for updating the UI
+  private async getFullSourcefileData(): Promise<any> {
+    try {
+      // Fetch the complete sourcefile text data to get updated recognized words
+      const response = await fetch(
+        getApiUrl(
+          RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
+          {
+            target_language_code: this.sourcefileData.target_language_code,
+            sourcedir_slug: this.sourcefileData.sourcedir_slug,
+            sourcefile_slug: this.sourcefileData.sourcefile_slug
+          }
+        ),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Bypass cache to ensure we get fresh data
+          cache: 'no-cache'
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to get complete sourcefile data');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting full sourcefile data:', error);
       throw error;
     }
   }

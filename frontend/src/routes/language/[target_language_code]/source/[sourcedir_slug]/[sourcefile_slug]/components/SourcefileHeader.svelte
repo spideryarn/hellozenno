@@ -59,28 +59,49 @@
     sourcefile_slug
   );
   
-  // Check if sourcefile needs processing
+  // Check if sourcefile needs INITIAL processing - only trigger for files that 
+  // haven't been processed at all for a specific step
   function shouldAutoProcess(sourcefile: Sourcefile): boolean {
-    // Case 1: No text extracted yet for image or audio
-    if (!sourcefile.text_target && (sourcefile.has_image || sourcefile.has_audio)) {
-      autoProcessNotificationMessage = 'Automatically extracting text from this file...';
+    console.log('Auto-process check - Sourcefile state:', {
+      text_target: !!sourcefile.text_target,
+      text_english: !!sourcefile.text_english,
+      has_image: sourcefile.has_image,
+      has_audio: sourcefile.has_audio,
+      wordforms_count: metadata.wordforms_count || 0,
+      stats: stats
+    });
+    
+    // Case 1: No text extracted yet for image or audio files
+    // Only trigger if the file has image/audio but NO text at all
+    if (sourcefile.has_image || sourcefile.has_audio) {
+      if (!sourcefile.text_target || sourcefile.text_target === '') {
+        autoProcessNotificationMessage = 'Automatically extracting text from this file...';
+        console.log('Auto-process: Triggering text extraction for image/audio');
+        return true;
+      }
+    }
+    
+    // Case 2: Has text but COMPLETELY missing translation
+    // Only trigger if there's content but NO translation at all
+    if (sourcefile.text_target && sourcefile.text_target.trim() !== '' && sourcefile.text_target !== '-') {
+      if (!sourcefile.text_english || sourcefile.text_english === '') {
+        autoProcessNotificationMessage = 'Automatically translating text...';
+        console.log('Auto-process: Triggering translation');
+        return true;
+      }
+    }
+    
+    // Case 3: Has text with content but ZERO wordforms extracted
+    // Only trigger if there's text content but NO wordforms at all
+    const hasContent = sourcefile.text_target && sourcefile.text_target.trim() !== '' && sourcefile.text_target !== '-';
+    const hasAbsolutelyNoWordforms = hasContent && (metadata.wordforms_count === 0);
+    if (hasContent && hasAbsolutelyNoWordforms) {
+      autoProcessNotificationMessage = 'Automatically extracting initial vocabulary from this text...';
+      console.log('Auto-process: Triggering wordform extraction');
       return true;
     }
     
-    // Case 2: Has text but no translation
-    if (sourcefile.text_target && !sourcefile.text_english) {
-      autoProcessNotificationMessage = 'Automatically translating text...';
-      return true;
-    }
-    
-    // Case 3: Has text with content but no wordforms extracted
-    const hasContent = sourcefile.text_target && sourcefile.text_target !== '-';
-    const hasNoWordforms = hasContent && (!metadata.wordforms_count || metadata.wordforms_count === 0);
-    if (hasContent && hasNoWordforms) {
-      autoProcessNotificationMessage = 'Automatically extracting vocabulary from this text...';
-      return true;
-    }
-    
+    console.log('Auto-process: No processing needed');
     return false;
   }
   
@@ -151,6 +172,19 @@
     goto(url, { invalidateAll: true });
   }
   
+  // Create a custom event to signal data updates
+  const dispatchProcessingComplete = (detail: any) => {
+    // Use a custom event to notify parent components about the updated data
+    const event = new CustomEvent('processingComplete', {
+      detail,
+      bubbles: true, // Allow event to bubble up the DOM tree
+    });
+    // Dispatch the event from this component
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(event);
+    }
+  };
+
   async function processSourcefile() {
     if ($processingState.isProcessing) return;
     
@@ -173,8 +207,20 @@
       // Start processing with the specified number of iterations
       await processingQueue.processAll(iterations);
       
-      // When done, reload the page to see the processed results
-      window.location.reload();
+      // Check if we have processed data
+      if ($processingState.processedSourcefileData) {
+        // Dispatch the event with the updated data
+        dispatchProcessingComplete($processingState.processedSourcefileData);
+        
+        // Show success notification briefly
+        const successMessage = iterations > 1 
+          ? `Successfully processed text ${iterations} times.` 
+          : 'Successfully processed text.';
+        alert(successMessage);
+      } else {
+        // Fall back to page reload if no data returned
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Error processing file:', error);
     }
