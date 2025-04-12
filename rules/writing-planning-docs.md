@@ -1,8 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: false
----
 # Project Management Practices
 
 This is a guide for writing planning/project management `.md` files, e.g. `planning/yyMMdd_complex_project.md`.

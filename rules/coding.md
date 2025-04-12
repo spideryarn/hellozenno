@@ -1,8 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: true
----
 By default, raise errors early, clearly & fatally. Prefer not to wrap in try/except.
 
 Prioritise simplicity, debuggability, and readability. Try to keep things concise, don't over-comment, over-log, or over-engineer.

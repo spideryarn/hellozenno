@@ -1,12 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: false
----
-# Architect mode
-
-<!-- from https://x.com/tedx_ai/status/1893146624743895137 -->
-
 When asked to enter "Architecture Mode" deeply reflect upon the changes being asked and analyze existing code to map the full scope of changes needed.
 
 Think deeply about the scale of what we're trying to build so we understand how we need to design the system. Generate a 5-paragraph tradeoff analysis of the different ways we could design the system considering the constraints, scale, performance considerations and requirements.
@@ -20,3 +11,6 @@ Once approved, work on a plan to implement the architecture based on the provide
 If feedback is provided, revise the plan and ask for approval again. Once approved, implement all steps in that plan.
 
 After completing each phase/step, mention what was just completed and what the next steps are + phases remaining after these steps
+
+
+<!-- from https://x.com/tedx_ai/status/1893146624743895137 -->

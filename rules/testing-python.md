@@ -1,10 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: false
----
-# Automated testing
-
 Always run tests with `pytest` (rather than `python -m blah`). Most of the time it's better to just run relevant tests, and only occasionally run all of them (e.g. after making major/wide-ranging changes).
 
 If you've run the tests recently, use the `-x` and `--lf` flags, so that we zero in on the failing tests and avoid too much output.
