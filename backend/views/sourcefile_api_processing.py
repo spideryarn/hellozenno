@@ -13,8 +13,8 @@ from peewee import DoesNotExist
 
 from config import (
     DEFAULT_LANGUAGE_LEVEL,
-    DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
-    DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING,
+    DEFAULT_MAX_NEW_WORDS_PER_PROCESSING,
 )
 from db_models import (
     SourcefilePhrase,
@@ -112,7 +112,7 @@ def process_wordforms_api(
         # Get processing parameters from request or use defaults
         data = request.get_json() or {}
 
-        max_new_words = int(data.get("max_new_words", DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE))
+        max_new_words = int(data.get("max_new_words", DEFAULT_MAX_NEW_WORDS_PER_PROCESSING))
         language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
         assert language_level in get_args(LanguageLevel), f"Invalid language level: {language_level}"
 
@@ -159,7 +159,7 @@ def process_phrases_api(
         # Get processing parameters from request or use defaults
         data = request.get_json() or {}
 
-        max_new_phrases = int(data.get("max_new_phrases", DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE))
+        max_new_phrases = int(data.get("max_new_phrases", DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING))
         language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
         assert language_level in get_args(LanguageLevel), f"Invalid language level: {language_level}"
 

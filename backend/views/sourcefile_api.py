@@ -27,10 +27,8 @@ from utils.audio_utils import add_delays, ensure_model_audio_data
 from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
     DEFAULT_LANGUAGE_LEVEL,
-    DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE,
-    DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE,
-    DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE,
-    DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE,
+    DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING,
+    DEFAULT_MAX_NEW_WORDS_PER_PROCESSING,
 )
 from db_models import (
     Lemma,
@@ -240,22 +238,16 @@ def process_sourcefile_api(
         def already_processed(sourcefile_entry: Sourcefile):
             return bool(sourcefile_entry.text_target)
 
-        # Set default parameters based on whether the file has been processed before
+        # Get parameters from request or use defaults
         if "max_new_words" in data:
             max_new_words = int(data["max_new_words"])
         else:
-            if already_processed(sourcefile_entry):
-                max_new_words = DEFAULT_MAX_NEW_WORDS_FOR_PROCESSED_SOURCEFILE
-            else:
-                max_new_words = DEFAULT_MAX_NEW_WORDS_FOR_UNPROCESSED_SOURCEFILE
+            max_new_words = DEFAULT_MAX_NEW_WORDS_PER_PROCESSING
 
         if "max_new_phrases" in data:
             max_new_phrases = int(data["max_new_phrases"])
         else:
-            if already_processed(sourcefile_entry):
-                max_new_phrases = DEFAULT_MAX_NEW_PHRASES_FOR_PROCESSED_SOURCEFILE
-            else:
-                max_new_phrases = DEFAULT_MAX_NEW_PHRASES_FOR_UNPROCESSED_SOURCEFILE
+            max_new_phrases = DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING
 
         language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
         assert language_level in get_args(
