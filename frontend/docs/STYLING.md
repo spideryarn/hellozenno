@@ -42,7 +42,42 @@ We provide reusable Svelte components to maintain consistent styling:
 - `PhraseCard.svelte`: For displaying phrases
 - `SentenceCard.svelte`: For displaying sentence cards
 - `MetadataCard.svelte`: For displaying metadata information
+- `CollapsibleHeader.svelte`: Expandable header component with toggle functionality
 - ...
+
+## Icons
+
+The application uses Phosphor icons for a consistent iconography system. 
+
+### Using Phosphor Icons
+
+We use the `phosphor-svelte` package (version 3.0.1) for icons. 
+
+**Important Note for Svelte 5**: For best compatibility with Svelte 5, import icons using the path import syntax rather than named imports:
+
+```svelte
+<!-- RECOMMENDED: Use direct path imports like this -->
+import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
+
+<!-- AVOID: Named imports can cause issues with Svelte 5 -->
+import { PencilSimple } from 'phosphor-svelte';
+```
+
+Common icons used throughout the application:
+- `PencilSimple`: For edit operations
+- `Trash`: For delete operations
+- `Download`: For download actions
+- `FolderOpen`: For folder/directory operations
+- `ChevronUp`/`ChevronDown`: For expand/collapse UI elements
+
+### Icon Properties
+
+```svelte
+<PencilSimple size={16} weight="bold" />
+```
+
+- `size`: Controls the icon size (typically 16px for small icons, 24px for navigation icons)
+- `weight`: Icon style variants: "regular" (default), "bold", "fill", "duotone", "thin", "light"
 
 ## CSS Classes
 

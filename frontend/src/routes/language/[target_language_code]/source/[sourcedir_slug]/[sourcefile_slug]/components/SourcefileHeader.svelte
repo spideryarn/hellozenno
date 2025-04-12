@@ -1,12 +1,15 @@
 <script lang="ts">
-
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import { MetadataCard, DescriptionFormatted } from '$lib';
+  import { 
+    CollapsibleHeader, 
+    MetadataSection, 
+    DescriptionSection, 
+    FileOperationsSection 
+  } from '$lib';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
-  import { onMount } from 'svelte';
   import { 
     CaretDoubleLeft, 
     CaretDoubleRight, 
@@ -37,46 +40,16 @@
   let isProcessing = false;
   let processingError = '';
   
+  // Collapsible header state - default to collapsed
+  let isHeaderExpanded = false;
+  
   // Variables for sourcedir dropdown
   let moveError = '';
-  let isDropdownOpen = false;
-  
-  // Toggle dropdown visibility
-  function toggleDropdown() {
-    isDropdownOpen = !isDropdownOpen;
-  }
-  
-  // Close dropdown when clicking outside
-  function handleClickOutside(event) {
-    const dropdown = document.querySelector('.sourcedir-dropdown');
-    
-    if (isDropdownOpen && dropdown && !dropdown.contains(event.target)) {
-      isDropdownOpen = false;
-    }
-  }
-  
-  // Setup dropdown handling on component mount
-  onMount(() => {
-    // Add event listener to close dropdown when clicking outside
-    if (typeof document !== 'undefined') {
-      document.addEventListener('click', handleClickOutside);
-    }
-    
-    // Cleanup when component is destroyed
-    return () => {
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('click', handleClickOutside);
-      }
-    };
-  });
   
   async function moveSourcefile(newSourcedirSlug: string) {
     if (newSourcedirSlug === sourcedir_slug) {
       return; // No need to move if it's the same directory
     }
-    
-    // Close the dropdown
-    isDropdownOpen = false;
     
     // Find the directory name for the confirmation message
     const targetDir = available_sourcedirs.find(dir => dir.slug === newSourcedirSlug);
@@ -267,6 +240,40 @@
     }
   }
 
+  // Handle description save
+  async function saveDescription(text: string) {
+    try {
+      const response = await fetch(
+        getApiUrl(
+          RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API,
+          {
+            target_language_code: target_language_code,
+            sourcedir_slug,
+            sourcefile_slug
+          }
+        ),
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ description: text }),
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update description: ${response.statusText}`);
+      }
+      
+      // Update the local state to reflect the change
+      sourcefile.description = text;
+    } catch (error) {
+      console.error('Error updating description:', error);
+      alert('Failed to update description. Please try again.');
+      throw error; // Propagate error to component
+    }
+  }
+
   // Generate URLs for view and download - these are actual API endpoints
   // Use reactive statements to ensure these update when sourcefile_slug changes
   $: viewUrl = getApiUrl(
@@ -327,87 +334,33 @@
   }, { sourcefile: sourcefile_slug });
 </script>
 
-<div class="header-container">
-  <div class="header-content">
-    <h1>
-      <span class="file-icon">
-        {#if typeof getSourcefileTypeIcon(sourcefile.sourcefile_type) === 'string'}
-          {getSourcefileTypeIcon(sourcefile.sourcefile_type)}
-        {:else}
-          <svelte:component this={getSourcefileTypeIcon(sourcefile.sourcefile_type)} size={24} />
-        {/if}
-      </span>
-      {sourcefile.filename}
-      <button on:click={renameSourcefile} class="button small-button">
-        <PencilSimple size={16} weight="bold" /> Rename
-      </button>
-      <button on:click={deleteSourcefile} class="button delete-button small-button">
-        <Trash size={16} weight="bold" /> Delete
-      </button>
-    </h1>
+<CollapsibleHeader
+  bind:isExpanded={isHeaderExpanded}
+  title={sourcefile.filename}
+  icon={getSourcefileTypeIcon(sourcefile.sourcefile_type)}
+  iconSize={24}
+>
+  <!-- Content inside the collapsible section -->
+  <div class="collapsible-sections">
+    <MetadataSection {metadata} />
+    
+    <DescriptionSection 
+      description={sourcefile.description}
+      onSave={saveDescription}
+    />
+    
+    <FileOperationsSection
+      onRename={renameSourcefile}
+      onDelete={deleteSourcefile}
+      onMove={moveSourcefile}
+      {available_sourcedirs}
+    />
   </div>
-  <div class="metadata-container">
-    <MetadataCard {metadata} />
-  </div>
-</div>
-
-<div class="description-wrapper">
-  <DescriptionFormatted 
-    description={sourcefile.description} 
-    placeholder="No description available for this file"
-    cssClass=""
-    onSave={async (text) => {
-      try {
-        const response = await fetch(
-          getApiUrl(
-            RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API,
-            {
-              target_language_code: target_language_code,
-              sourcedir_slug,
-              sourcefile_slug
-            }
-          ),
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ description: text }),
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error(`Failed to update description: ${response.statusText}`);
-        }
-        
-        // Update the local state to reflect the change
-        sourcefile.description = text;
-      } catch (error) {
-        console.error('Error updating description:', error);
-        alert('Failed to update description. Please try again.');
-        throw error; // Propagate error to component
-      }
-    }}
-  />
-</div>
+</CollapsibleHeader>
 
 <div class="actions">
-  <ul>
-    <li class="button-group">
-      {#if sourcefile.sourcefile_type === "image"}
-        <a href={viewUrl} class="button">
-          <Image size={16} weight="bold" /> View image
-        </a>
-        <a href={downloadUrl} class="button">
-          <Download size={16} weight="bold" /> Download image
-        </a>
-      {:else if sourcefile.sourcefile_type === "audio" || sourcefile.sourcefile_type === "youtube_audio"}
-        <a href={downloadUrl} class="button">
-          <Download size={16} weight="bold" /> Download audio
-        </a>
-      {/if}
-    </li>
-    <li class="button-group">
+  <div class="action-row">
+    <div class="section process-section">
       <button on:click={processSourcefile} class="button" disabled={isProcessing}>
         {#if isProcessing}
           Processing...
@@ -418,151 +371,140 @@
       {#if processingError}
         <span class="error-message">{processingError}</span>
       {/if}
-    </li>
-    <li class="button-group">
-      <div class="dropdown sourcedir-dropdown">
-        <button 
-          class="button" 
-          type="button"
-          on:click|preventDefault|stopPropagation={toggleDropdown}
-        >
-          <FolderOpen size={16} weight="bold" /> Move to folder
-        </button>
-        
-        {#if isDropdownOpen}
-          <ul class="dropdown-menu dropdown-menu-end show">
-            {#if available_sourcedirs.length === 0}
-              <li><span class="dropdown-item">No other folders available</span></li>
-            {:else}
-              {#each available_sourcedirs as dir}
-                <li>
-                  <button 
-                    class="dropdown-item" 
-                    type="button" 
-                    on:click={() => moveSourcefile(dir.slug)}
-                  >
-                    {dir.display_name} 
-                    {#if dir.is_empty}<span class="text-muted">(empty)</span>{/if}
-                  </button>
-                </li>
-              {/each}
-            {/if}
-          </ul>
-        {/if}
-      </div>
-      {#if moveError}
-        <span class="error-message">{moveError}</span>
-      {/if}
-    </li>
+    </div>
+    
     {#if sourcefile.text_target}
-      <li class="button-group">
+      <div class="section flashcards-section">
+        <div class="section-divider"></div>
         <a href={flashcardsUrl} class="button">
           Practice Flashcards
         </a>
-      </li>
+      </div>
     {/if}
-    <li class="navigation-buttons">
-      {#if navigation.is_first}
-        <span class="button disabled" title="First file">
-          <CaretDoubleLeft size={16} weight="bold" />
-        </span>
-      {:else if firstSourcefileUrl}
+    
+    <div class="section navigation-section">
+      <div class="section-divider"></div>
+      <div class="navigation-buttons">
+        {#if navigation.is_first}
+          <span class="button disabled" title="First file">
+            <CaretDoubleLeft size={16} weight="bold" />
+          </span>
+        {:else if firstSourcefileUrl}
+          <a 
+            href={firstSourcefileUrl}
+            class="button"
+            data-sveltekit-reload
+            title="First file: '{navigation.first_filename || 'Unknown'}'"
+          >
+            <CaretDoubleLeft size={16} weight="bold" />
+          </a>
+        {/if}
+        
+        {#if navigation.is_first}
+          <span class="button disabled" title="Previous file">
+            <CaretLeft size={16} weight="bold" />
+          </span>
+        {:else if prevSourcefileUrl}
+          <a 
+            href={prevSourcefileUrl}
+            class="button"
+            data-sveltekit-reload
+            title="Previous file: '{navigation.prev_filename || 'Unknown'}'"
+          >
+            <CaretLeft size={16} weight="bold" />
+          </a>
+        {/if}
+        
         <a 
-          href={firstSourcefileUrl}
+          href={sourcedirUrl}
           class="button"
           data-sveltekit-reload
-          title="First file: '{navigation.first_filename || 'Unknown'}'"
+          title="Up to directory: '{navigation.sourcedir_path || sourcedir_slug}'"
         >
-          <CaretDoubleLeft size={16} weight="bold" />
+          <ArrowUp size={16} weight="bold" />
         </a>
-      {/if}
-      
-      {#if navigation.is_first}
-        <span class="button disabled" title="Previous file">
-          <CaretLeft size={16} weight="bold" />
-        </span>
-      {:else if prevSourcefileUrl}
-        <a 
-          href={prevSourcefileUrl}
-          class="button"
-          data-sveltekit-reload
-          title="Previous file: '{navigation.prev_filename || 'Unknown'}'"
-        >
-          <CaretLeft size={16} weight="bold" />
-        </a>
-      {/if}
-      
-      <a 
-        href={sourcedirUrl}
-        class="button"
-        data-sveltekit-reload
-        title="Up to directory: '{navigation.sourcedir_path || sourcedir_slug}'"
-      >
-        <ArrowUp size={16} weight="bold" />
-      </a>
-      
-      {#if navigation.is_last}
-        <span class="button disabled" title="Next file">
-          <CaretRight size={16} weight="bold" />
-        </span>
-      {:else if nextSourcefileUrl}
-        <a 
-          href={nextSourcefileUrl}
-          class="button"
-          data-sveltekit-reload
-          title="Next file: '{navigation.next_filename || 'Unknown'}'"
-        >
-          <CaretRight size={16} weight="bold" />
-        </a>
-      {/if}
+        
+        {#if navigation.is_last}
+          <span class="button disabled" title="Next file">
+            <CaretRight size={16} weight="bold" />
+          </span>
+        {:else if nextSourcefileUrl}
+          <a 
+            href={nextSourcefileUrl}
+            class="button"
+            data-sveltekit-reload
+            title="Next file: '{navigation.next_filename || 'Unknown'}'"
+          >
+            <CaretRight size={16} weight="bold" />
+          </a>
+        {/if}
 
-      {#if navigation.is_last}
-        <span class="button disabled" title="Last file">
-          <CaretDoubleRight size={16} weight="bold" />
-        </span>
-      {:else if lastSourcefileUrl}
-        <a 
-          href={lastSourcefileUrl}
-          class="button"
-          data-sveltekit-reload
-          title="Last file: '{navigation.last_filename || 'Unknown'}'"
-        >
-          <CaretDoubleRight size={16} weight="bold" />
-        </a>
-      {/if}
-      
-      <span class="file-position">({navigation.current_position}/{navigation.total_files})</span>
-    </li>
-  </ul>
+        {#if navigation.is_last}
+          <span class="button disabled" title="Last file">
+            <CaretDoubleRight size={16} weight="bold" />
+          </span>
+        {:else if lastSourcefileUrl}
+          <a 
+            href={lastSourcefileUrl}
+            class="button"
+            data-sveltekit-reload
+            title="Last file: '{navigation.last_filename || 'Unknown'}'"
+          >
+            <CaretDoubleRight size={16} weight="bold" />
+          </a>
+        {/if}
+        
+        <span class="file-position">({navigation.current_position}/{navigation.total_files})</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>
-  .header-container {
+  .collapsible-sections {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-  }
-  
-  .header-content {
-    flex: 1;
-  }
-  
-  .metadata-container {
-    margin-left: 1rem;
-  }
-  
-  h1 {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
+    flex-direction: column;
     gap: 0.5rem;
   }
   
-  .file-icon {
-    font-size: 1.5rem;
+  .actions {
+    margin-bottom: 2rem;
+  }
+  
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+  
+  .section {
     display: flex;
     align-items: center;
+  }
+  
+  .section-divider {
+    height: 24px;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 0 0.5rem;
+  }
+  
+  .navigation-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .file-position {
+    margin-left: 0.5rem;
+    white-space: nowrap;
+  }
+  
+  .error-message {
+    color: #d9534f;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
   }
   
   .button {
@@ -576,6 +518,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
+    white-space: nowrap;
   }
   
   .button:disabled {
@@ -583,108 +526,25 @@
     cursor: not-allowed;
   }
   
-  .small-button {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-  }
-  
   .button.disabled {
     background-color: #ccc;
     cursor: not-allowed;
   }
   
-  .delete-button {
-    background-color: #d9534f;
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .action-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .section-divider {
+      display: none;
+    }
+    
+    .section {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
   }
-  
-  .description-wrapper {
-    margin-bottom: 1.5rem;
-  }
-  
-  .actions ul {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .button-group {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-  
-  .navigation-buttons {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .file-position {
-    margin-left: 0.5rem;
-  }
-  
-  .error-message {
-    color: #d9534f;
-    font-size: 0.9rem;
-  }
-  
-  /* Dropdown styling */
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .dropdown-menu {
-    position: absolute;
-    z-index: 1000;
-    display: none;
-    min-width: 10rem;
-    padding: 0.5rem 0;
-    margin: 0;
-    font-size: 0.9rem;
-    color: #e9e9e9;
-    text-align: left;
-    list-style: none;
-    background-color: #1e1e1e;
-    background-clip: padding-box;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-  }
-  
-  .dropdown-menu-end {
-    --bs-position: end;
-    right: 0;
-    left: auto;
-  }
-  
-  .dropdown-menu.show {
-    display: block;
-  }
-  
-  .dropdown-item {
-    display: block;
-    width: 100%;
-    padding: 0.25rem 1rem;
-    clear: both;
-    font-weight: 400;
-    color: #e9e9e9;
-    text-align: inherit;
-    text-decoration: none;
-    white-space: nowrap;
-    background-color: transparent;
-    border: 0;
-    cursor: pointer;
-  }
-  
-  .dropdown-item:hover, .dropdown-item:focus {
-    color: #fff;
-    background-color: #4CAD53;
-  }
-  
-  .text-muted {
-    color: #6c757d;
-    font-style: italic;
-  }
-</style> 
+</style>
