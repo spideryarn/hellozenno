@@ -50,3 +50,10 @@ The Flask development server (`scripts/local/run_backend.sh`):
 ## SvelteKit 
 
 For more information on SvelteKit, see `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`
+
+## Database Models
+
+The Flask API is built around a set of core database models in PostgreSQL using the Peewee ORM:
+
+- See [MODELS.md](../../backend/docs/MODELS.md) for a comprehensive overview of all database models
+- Understanding these models is essential for working with the API endpoints

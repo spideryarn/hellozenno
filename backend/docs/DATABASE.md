@@ -2,6 +2,7 @@ This document describes the database setup and management scripts for the applic
 
 see also:
 - MIGRATIONS.md
+- [MODELS.md](./MODELS.md) - Detailed overview of database models
 
 ## Environment Tiers
 
@@ -74,6 +75,8 @@ Main database models (`db_models.py`):
 - `Phrase`: Multi-word expressions
 - `Sourcedir`/`Sourcefile`: Source content management
 - Various relationship models (e.g., `LemmaExampleSentence`, `SourcefileWordform`)
+
+See [MODELS.md](./MODELS.md) for a comprehensive overview of all models, their fields, and relationships.
 
 ## Connection Management
 

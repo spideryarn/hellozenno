@@ -65,22 +65,22 @@ frontend/src/routes/
 ### Lemmas (`/language/[target_language_code]/lemmas/`)
 - Dictionary form of words (root forms)
 - Contains detailed linguistic information about each lemma
-- See `Lemma` model in `backend/db_models.py`
+- See `Lemma` model in `backend/docs/MODELS.md`
 
 ### Wordforms (`/language/[target_language_code]/wordforms/`)
 - Different inflections and variants of lemmas
 - Links to parent lemmas when available
-- See `Wordform` model in `backend/db_models.py`
+- See `Wordform` model in `backend/docs/MODELS.md`
 
 ### Sentences (`/language/[target_language_code]/sentences/`)
 - Example sentences in the target language
 - Includes translations and audio when available
-- See `Sentence` model in `backend/db_models.py`
+- See `Sentence` model in `backend/docs/MODELS.md`
 
 ### Phrases (`/language/[target_language_code]/phrases/`)
 - Multi-word expressions and idioms
 - Includes linguistic and cultural context
-- See `Phrase` model in `backend/db_models.py`
+- See `Phrase` model in `backend/docs/MODELS.md`
 
 ### Search (`/language/[target_language_code]/search/`)
 - Language-specific search interface
@@ -123,6 +123,8 @@ For detailed API integration information, see [Flask API Integration](./BACKEND_
 - [Setup and Development](./SETUP.md) - Development instructions
 - [UI and Styling](./STYLING.md) - Component styling information
 - [Sourcefile Pages](./SOURCEFILE_PAGES.md) - Detailed structure of sourcefile pages and tabs
+- [Database Models](../../backend/docs/MODELS.md) - Comprehensive overview of database models
+- [Flask API Integration](./BACKEND_FLASK_API_INTEGRATION.md) - API integration details
 
 ## URL Structure
 
