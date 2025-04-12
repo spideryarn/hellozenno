@@ -29,6 +29,9 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
         // Empty placeholders as needed
         const phrasesData = { phrases: [] };
+        
+        // Extract available sourcedirs
+        const available_sourcedirs = wordsData.available_sourcedirs || [];
 
         return {
             sourcefileData: wordsData, // Use wordsData for sourcefileData too
@@ -39,6 +42,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             language_name: wordsData.language_name || "",
             sourcedir_slug,
             sourcefile_slug,
+            available_sourcedirs, // Add available sourcedirs for dropdown
         };
     } catch (err: unknown) {
         console.error("Error loading words data:", err);

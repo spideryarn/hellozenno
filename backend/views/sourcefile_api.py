@@ -44,6 +44,7 @@ from utils.sourcedir_utils import (
     _get_sourcedir_entry,
     get_sourcedir_or_404,
     _get_navigation_info,
+    get_sourcedirs_for_language,
 )
 from utils.sourcefile_utils import (
     _get_sourcefile_entry,
@@ -100,6 +101,33 @@ def _inspect_sourcefile_core(
             "navigation": details["navigation"],
             "stats": details["stats"],
         }
+
+        # Get available sourcedirs for this language (for the dropdown)
+        # Use the utility function to get sourcedirs
+        sourcedirs_result = get_sourcedirs_for_language(target_language_code, "date")
+
+        # Format sources in the expected structure for SvelteKit
+        available_sourcedirs = []
+        for sourcedir in sourcedirs_result["sourcedirs"]:
+            # Skip the current sourcedir
+            if sourcedir["slug"] == sourcedir_slug:
+                continue
+
+            stats = sourcedirs_result["sourcedir_stats"].get(sourcedir["slug"], {})
+            source = {
+                "name": sourcedir["path"],
+                "display_name": sourcedir["path"],
+                "slug": sourcedir["slug"],
+                "description": sourcedir.get("description", ""),
+                "statistics": {
+                    "file_count": stats.get("file_count", 0),
+                    "sentence_count": stats.get("phrase_count", 0),
+                },
+                "is_empty": sourcedir["slug"] in sourcedirs_result["empty_sourcedirs"],
+            }
+            available_sourcedirs.append(source)
+
+        response_data["available_sourcedirs"] = available_sourcedirs
 
         # Add purpose-specific data
         if purpose == "text" and "enhanced_text" in details:
@@ -607,11 +635,9 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
             .exists()
         ):
             return jsonify({"error": f"File {filename} already exists"}), 409
-            
+
         # Create metadata with text format
-        metadata = {
-            "text_format": "plain"
-        }
+        metadata = {"text_format": "plain"}
 
         # Create sourcefile entry
         sourcefile = Sourcefile.create(

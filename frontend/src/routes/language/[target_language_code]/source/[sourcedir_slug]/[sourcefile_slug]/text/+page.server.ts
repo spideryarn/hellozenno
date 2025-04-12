@@ -34,6 +34,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Extract the new structured data format if available
         const recognizedWords = textData.recognized_words || [];
         const enhanced_text = textData.enhanced_text || null; // Legacy HTML format
+        const available_sourcedirs = textData.available_sourcedirs || [];
 
         return {
             sourcefileData: textData, // Use textData for sourcefileData too
@@ -47,6 +48,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             // Add the new structured data format
             recognizedWords: recognizedWords,
             enhanced_text, // Keep legacy format for backwards compatibility
+            available_sourcedirs, // Add the available sourcedirs for the dropdown
         };
     } catch (err: unknown) {
         console.error("Error loading sourcefile:", err);

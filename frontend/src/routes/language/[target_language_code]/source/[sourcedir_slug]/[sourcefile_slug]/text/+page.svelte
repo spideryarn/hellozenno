@@ -15,7 +15,8 @@
     sourcefile_slug, 
     language_name,
     recognizedWords,  // New structured data
-    enhanced_text     // Legacy HTML data
+    enhanced_text,    // Legacy HTML data
+    available_sourcedirs // Available sourcedirs for dropdown
   } = data;
   
   // Extract needed data
@@ -51,6 +52,7 @@
   {sourcedir_slug}
   {sourcefile_slug}
   {language_name}
+  {available_sourcedirs}
   activeTab="text"
 >
   <SourcefileText 

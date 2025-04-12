@@ -12,6 +12,7 @@
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;
   export let language_name: string;
+  export let available_sourcedirs: any[] = [];
   export let activeTab: 'text' | 'words' | 'phrases' | 'translation';
   
   // Set up tabs for navigation
@@ -64,6 +65,7 @@
     {target_language_code}
     {sourcedir_slug}
     {sourcefile_slug}
+    {available_sourcedirs}
   />
   
   <NavTabs {tabs} />

@@ -30,6 +30,9 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         // Empty placeholders for TypeScript - these aren't needed but kept for compatibility
         const wordsData = { wordforms: [] };
         const phrasesData = { phrases: [] };
+        
+        // Extract available sourcedirs
+        const available_sourcedirs = translationData.available_sourcedirs || [];
 
         // Use translationData for everything since it contains all the necessary info
         return {
@@ -41,6 +44,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             language_name: translationData.language_name,
             sourcedir_slug,
             sourcefile_slug,
+            available_sourcedirs, // Add available sourcedirs for dropdown
         };
     } catch (err: unknown) {
         console.error("Error loading sourcefile:", err);

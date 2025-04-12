@@ -5,7 +5,7 @@
   
   export let data: PageData;
   
-  const { sourcefileData, textData, wordsData, phrasesData, target_language_code, sourcedir_slug, sourcefile_slug, language_name } = data;
+  const { sourcefileData, textData, wordsData, phrasesData, target_language_code, sourcedir_slug, sourcefile_slug, language_name, available_sourcedirs } = data;
   
   // Extract needed data
   const sourcefile = textData.sourcefile;
@@ -29,6 +29,7 @@
   {sourcedir_slug}
   {sourcefile_slug}
   {language_name}
+  {available_sourcedirs}
   activeTab="translation"
 >
   <SourcefileTranslation 

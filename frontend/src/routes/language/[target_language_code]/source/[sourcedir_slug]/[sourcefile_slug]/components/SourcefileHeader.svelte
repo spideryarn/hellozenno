@@ -6,6 +6,7 @@
   import { MetadataCard, DescriptionFormatted } from '$lib';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
+  import { onMount } from 'svelte';
   import { 
     CaretDoubleLeft, 
     CaretDoubleRight, 
@@ -18,7 +19,8 @@
     FileText,
     SpeakerHigh,
     MusicNotes,
-    PencilSimple
+    PencilSimple,
+    FolderOpen
   } from 'phosphor-svelte';
   
   export let sourcefile: Sourcefile;
@@ -29,10 +31,95 @@
   export let target_language_code: string;
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;
+  export let available_sourcedirs: any[] = [];
   
   // Variables for processing state
   let isProcessing = false;
   let processingError = '';
+  
+  // Variables for sourcedir dropdown
+  let moveError = '';
+  let isDropdownOpen = false;
+  
+  // Toggle dropdown visibility
+  function toggleDropdown() {
+    isDropdownOpen = !isDropdownOpen;
+  }
+  
+  // Close dropdown when clicking outside
+  function handleClickOutside(event) {
+    const dropdown = document.querySelector('.sourcedir-dropdown');
+    
+    if (isDropdownOpen && dropdown && !dropdown.contains(event.target)) {
+      isDropdownOpen = false;
+    }
+  }
+  
+  // Setup dropdown handling on component mount
+  onMount(() => {
+    // Add event listener to close dropdown when clicking outside
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', handleClickOutside);
+    }
+    
+    // Cleanup when component is destroyed
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('click', handleClickOutside);
+      }
+    };
+  });
+  
+  async function moveSourcefile(newSourcedirSlug: string) {
+    if (newSourcedirSlug === sourcedir_slug) {
+      return; // No need to move if it's the same directory
+    }
+    
+    // Close the dropdown
+    isDropdownOpen = false;
+    
+    // Find the directory name for the confirmation message
+    const targetDir = available_sourcedirs.find(dir => dir.slug === newSourcedirSlug);
+    const targetDirName = targetDir ? targetDir.display_name : newSourcedirSlug;
+    
+    // Confirm before moving
+    if (!confirm(`Move "${sourcefile.filename}" to "${targetDirName}"?`)) {
+      return;
+    }
+    
+    try {
+      moveError = '';
+      const response = await fetch(
+        getApiUrl(
+          RouteName.SOURCEFILE_API_MOVE_SOURCEFILE_API,
+          {
+            target_language_code,
+            sourcedir_slug,
+            sourcefile_slug
+          }
+        ),
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_sourcedir_slug: newSourcedirSlug }),
+        }
+      );
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to move file');
+      }
+      
+      const result = await response.json();
+      
+      // After successful move, navigate to the file in its new location
+      window.location.href = `/language/${target_language_code}/source/${newSourcedirSlug}/${result.new_sourcefile_slug}/text`;
+      
+    } catch (error) {
+      console.error('Error moving file:', error);
+      moveError = error instanceof Error ? error.message : 'Unknown error';
+    }
+  }
   
   // Helper function for navigation using Svelte's goto
   function navigateTo(url: string) {
@@ -332,6 +419,41 @@
         <span class="error-message">{processingError}</span>
       {/if}
     </li>
+    <li class="button-group">
+      <div class="dropdown sourcedir-dropdown">
+        <button 
+          class="button" 
+          type="button"
+          on:click|preventDefault|stopPropagation={toggleDropdown}
+        >
+          <FolderOpen size={16} weight="bold" /> Move to folder
+        </button>
+        
+        {#if isDropdownOpen}
+          <ul class="dropdown-menu dropdown-menu-end show">
+            {#if available_sourcedirs.length === 0}
+              <li><span class="dropdown-item">No other folders available</span></li>
+            {:else}
+              {#each available_sourcedirs as dir}
+                <li>
+                  <button 
+                    class="dropdown-item" 
+                    type="button" 
+                    on:click={() => moveSourcefile(dir.slug)}
+                  >
+                    {dir.display_name} 
+                    {#if dir.is_empty}<span class="text-muted">(empty)</span>{/if}
+                  </button>
+                </li>
+              {/each}
+            {/if}
+          </ul>
+        {/if}
+      </div>
+      {#if moveError}
+        <span class="error-message">{moveError}</span>
+      {/if}
+    </li>
     {#if sourcefile.text_target}
       <li class="button-group">
         <a href={flashcardsUrl} class="button">
@@ -506,5 +628,63 @@
   .error-message {
     color: #d9534f;
     font-size: 0.9rem;
+  }
+  
+  /* Dropdown styling */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0;
+    font-size: 0.9rem;
+    color: #e9e9e9;
+    text-align: left;
+    list-style: none;
+    background-color: #1e1e1e;
+    background-clip: padding-box;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+  
+  .dropdown-menu-end {
+    --bs-position: end;
+    right: 0;
+    left: auto;
+  }
+  
+  .dropdown-menu.show {
+    display: block;
+  }
+  
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.25rem 1rem;
+    clear: both;
+    font-weight: 400;
+    color: #e9e9e9;
+    text-align: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+  
+  .dropdown-item:hover, .dropdown-item:focus {
+    color: #fff;
+    background-color: #4CAD53;
+  }
+  
+  .text-muted {
+    color: #6c757d;
+    font-style: italic;
   }
 </style> 
