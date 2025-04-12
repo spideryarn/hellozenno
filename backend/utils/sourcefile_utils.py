@@ -39,6 +39,7 @@ from utils.vocab_llm_utils import (
     extract_tricky_words,
     process_phrases_from_text,
     create_interactive_word_links,
+    metadata_for_lemma_full,
 )
 
 """
@@ -615,5 +616,76 @@ def process_sourcefile(
         language_level=language_level,
         max_new_phrases=max_new_phrases,
     )
+
+
+def get_incomplete_lemmas_for_sourcefile(sourcefile_entry):
+    """Get all incomplete lemmas associated with a sourcefile.
+    
+    Returns a list of lemma objects that need their metadata completed.
+    
+    Args:
+        sourcefile_entry: Sourcefile object to find lemmas for
+        
+    Returns:
+        List of lemma objects that are incomplete and need metadata
+    """
+    # Find all wordforms associated with this sourcefile
+    sourcefile_wordforms = (
+        SourcefileWordform.select(SourcefileWordform.wordform)
+        .where(SourcefileWordform.sourcefile == sourcefile_entry)
+    )
+    
+    # Get unique wordform IDs
+    wordform_ids = [sw.wordform.id for sw in sourcefile_wordforms]
+    
+    if not wordform_ids:
+        return []
+    
+    # Get the lemmas from these wordforms that are incomplete
+    incomplete_lemmas = (
+        Lemma.select(Lemma)
+        .join(Wordform)
+        .where(
+            (Wordform.id.in_(wordform_ids)) &
+            (Lemma.is_complete == False)
+        )
+        .distinct()
+    )
+    
+    return list(incomplete_lemmas)
+
+
+def complete_lemma_metadata(lemma):
+    """Complete metadata for a lemma.
+    
+    Args:
+        lemma: Lemma object to complete metadata for
+        
+    Returns:
+        Updated lemma object with complete metadata
+    """
+    if lemma.is_complete:
+        return lemma
+    
+    target_language_name = get_language_name(lemma.target_language_code)
+    
+    # Generate full metadata
+    try:
+        metadata, _ = metadata_for_lemma_full(
+            lemma=lemma.lemma, 
+            target_language_name=target_language_name
+        )
+        
+        # Update lemma with new metadata
+        for key, value in metadata.items():
+            setattr(lemma, key, value)
+        
+        # Mark as complete
+        lemma.is_complete = True
+        lemma.save()
+        
+        return lemma
+    except Exception as e:
+        raise
 
     return sourcefile_entry

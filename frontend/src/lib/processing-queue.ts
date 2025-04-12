@@ -8,7 +8,8 @@ export type ProcessingStep =
   | 'text_extraction'
   | 'translation'
   | 'wordforms'
-  | 'phrases';
+  | 'phrases'
+  | 'lemma_metadata';
 
 // Define a step with its API endpoint and parameters
 export interface QueuedStep {
@@ -49,7 +50,7 @@ export class SourcefileProcessingQueue {
   }
 
   // Add the necessary steps based on what's needed
-  public initializeQueue(sourcefile: any) {
+  public async initializeQueue(sourcefile: any) {
     // Clear the existing queue
     this.queue = new Queue<QueuedStep>();
 
@@ -115,6 +116,50 @@ export class SourcefileProcessingQueue {
       params: {},
       description: 'Extracting phrases'
     });
+
+    // Check for incomplete lemmas and add them to the queue
+    try {
+      // Get the sourcefile status to check for incomplete lemmas
+      const response = await fetch(
+        getApiUrl(
+          RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
+          {
+            target_language_code: this.sourcefileData.target_language_code,
+            sourcedir_slug: this.sourcefileData.sourcedir_slug,
+            sourcefile_slug: this.sourcefileData.sourcefile_slug
+          }
+        ),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        const incompleteLemmas = data.status?.incomplete_lemmas || [];
+        
+        // Add each incomplete lemma as a separate step
+        for (const lemma of incompleteLemmas) {
+          this.queue.enqueue({
+            type: 'lemma_metadata',
+            apiEndpoint: getApiUrl(
+              RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API,
+              {
+                target_language_code: this.sourcefileData.target_language_code,
+                lemma: lemma.lemma
+              }
+            ),
+            params: {},
+            description: `Completing metadata for "${lemma.lemma}"`
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for incomplete lemmas:', error);
+    }
 
     // Update the store with the total steps
     processingState.update(state => ({

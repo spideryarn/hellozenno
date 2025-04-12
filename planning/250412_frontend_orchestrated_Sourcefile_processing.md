@@ -59,11 +59,13 @@ This document outlines a plan to improve the sourcefile processing experience by
   - [x] As a convenience for the user, automatically click the "Process" button when we open a Sourcefile page if a) there's no text_target, b) there's no translation, or c) There is a text_target with more than just "-" but no wordforms highlighted for the user to hover over - see ENHANCED_TEXT.md
   - [x] Add a counter so that the user can press the "Process" button multiple times, to tell it to run processing multiple times in sequence (and each time it'll get as many words/phrases as allowed in `backend/config.py`).
   - [x] After we have extracted tricky wordforms, we want to ideally update the hover-hyperlinks (see `create_interactive_word_data()`) so that the newly-extracted wordforms become new hover-hyperlinks. Ideally do this without having to reload the whole page. But I care more about keeping things simple than being over-clever.
-  - [ ] Complete the metadata for individual Lemmas. The `extract_tricky_words()` function only gets the most essential fields for the Lemmas corresponding to the Wordforms it extracts. So at the end of each processing run, we need to completely process each Lemma with `metadata_for_lemma_full()`. Ideally there'd be a way to determine en masse which Lemmas are complete (they have an `is_complete` field - see `backend/docs/MODELS.md`). It takes a few seconds to complete each Lemma's metadata, so let's add each Lemma-completion as an individual step at the very end of our queue.
+  - [x] Complete the metadata for individual Lemmas. Added an API endpoint for processing individual lemmas and enhanced the queue to add each incomplete lemma as a separate processing step.
   - [ ] Add as much information as possible to the progress bar as a toolip
   - [ ] Don't flash up an annoying modal alert when you've finished processing. Instead, just display a nice message at the top (perhaps with a tooltip with extra details)
   - [ ] Sometimes I'm seeing a duplicate key error message, e.g. "duplicate key value violates unique constraint "phrase_slug_language_code" DETAIL: Key (slug, target_language_code)=(sto-kato-kato, el) already exists.". I assume this isn't a big deal, so let's ignore/mask these. Is it a sign we should be more aggressively skipping words we've already processed?
-  
+  - [ ] After we have extracted more tricky wordforms, update the "Words (xxx)" and "Phrases (xxx)" counts in the tab bar above the text.
+  - [ ] Should we move any of the existing functions in sourcefile_api.py over into sourcefile_api_processing.py?
+
 - [ ] Stage: Parallel Processing
   - [ ] Implement parallel processing for independent steps (especially extracting the full lemma metadata)
   - [ ] Use Promise.all to manage multiple concurrent API calls
@@ -72,38 +74,61 @@ This document outlines a plan to improve the sourcefile processing experience by
 
 ## Implementation Status
 
-The initial implementation has been completed:
+The implementation has been completed with the following major components:
 
 1. ✅ Created a `processing-queue.ts` module with the `SourcefileProcessingQueue` class that uses the proper API routes
 2. ✅ Implemented a Svelte store to track processing state with progress information
 3. ✅ Updated `SourcefileHeader.svelte` to use the new queue with visual feedback
 4. ✅ Implemented error handling for each processing step with user feedback
 5. ✅ Added detailed progress UI with step-specific messages
+6. ✅ Added queueing for multiple processing requests
+7. ✅ Implemented dynamic updates to EnhancedText without page reloads
+8. ✅ Added lemma metadata completion functionality
+   - ✅ Created backend API endpoint for completing individual lemma metadata
+   - ✅ Added function to find incomplete lemmas for a sourcefile
+   - ✅ Enhanced the queue to process each lemma as a separate step
 
 ## Next Steps
 
-Based on our current progress, the next features to implement are:
+All planned major features have been implemented successfully, including:
 
-1. ✅ **Auto-Process Feature**: Implemented auto-processing when a sourcefile is opened and meets certain criteria
+1. ✅ **Auto-Process Feature**: Auto-processing when a sourcefile is opened and meets certain criteria
    - ✅ Detect when a sourcefile needs processing (no text, no translation, or no highlighted words)
    - ✅ Add auto-processing logic that runs on component mount
    - ✅ Show a notification when auto-processing starts
 
-2. ✅ **Multi-Processing Counter**: Implemented multiple processing iterations for extracting more vocabulary
+2. ✅ **Multi-Processing Counter**: Multiple processing iterations for extracting more vocabulary
    - ✅ Added a counter UI to specify how many times to process a file sequentially
    - ✅ Modified the processing queue to handle multiple iterations
    - ✅ Added iteration progress tracking in the UI
 
-3. ✅ **Enhanced Text Update**: Implemented dynamic hover-hyperlink updates after processing
+3. ✅ **Enhanced Text Update**: Dynamic hover-hyperlink updates after processing
    - ✅ Added mechanism to fetch updated sourcefile data after processing
    - ✅ Created custom event system to notify components of data changes
    - ✅ Updated EnhancedText component to refresh tooltips without a page reload
    - ✅ Used Svelte's reactive declarations to watch for data changes
 
-4. **Lemma Metadata Completion**:
-   - Add a final step to complete metadata for all extracted lemmas
-   - Create a backend endpoint for batch processing lemma metadata
-   - Show progress for lemma metadata completion
+4. ✅ **Lemma Metadata Completion**: Individual processing of incomplete lemmas
+   - ✅ Added function to identify incomplete lemmas for a sourcefile
+   - ✅ Created API endpoint for processing individual lemma metadata
+   - ✅ Added each lemma as a separate processing step in the queue
+   - ✅ Enhanced status endpoint to report incomplete lemmas
 
-The most immediate next step should be implementing the Lemma metadata completion feature, which would ensure that all extracted vocabulary has complete and accurate linguistic information.
+The system now provides a complete, resilient solution for frontend-orchestrated Sourcefile processing with the following features:
+- Step-by-step processing with detailed progress feedback
+- Multiple processing iterations via queueing
+- Real-time UI updates without page reloads
+- Intelligent handling of incomplete lemmas
+- Resilience against timeouts and errors
+
+For future enhancements, consider adding:
+- More detailed progress tooltips
+- Non-modal completion notifications
+- Improved error handling for duplicate entries
+- Parallel processing for lemma metadata completion
+- Ordering lemma metadata completion by text appearance:
+  - Modify `get_incomplete_lemmas_for_sourcefile()` to return lemmas ordered by their first appearance in the text
+  - Join with `SourcefileWordform` and order by position/offset in the original text
+  - Handle cases where a lemma has multiple wordforms in the text by using the first occurrence
+  - This would prioritize completing metadata for words the user encounters first when reading
 

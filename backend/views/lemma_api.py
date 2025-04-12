@@ -14,6 +14,7 @@ import urllib.parse
 from utils.lang_utils import get_language_name
 from db_models import Lemma, LemmaExampleSentence
 from utils.store_utils import load_or_generate_lemma_metadata
+from utils.sourcefile_utils import complete_lemma_metadata
 
 # Create a blueprint with standardized prefix
 lemma_api_bp = Blueprint("lemma_api", __name__, url_prefix="/api/lang/lemma")
@@ -152,3 +153,46 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
             response = jsonify(error_data)
             response.status_code = 500
             return response
+
+
+@lemma_api_bp.route("/<target_language_code>/<lemma>/complete_metadata", methods=["POST"])
+def complete_lemma_metadata_api(target_language_code: str, lemma: str):
+    """Complete the metadata for a specific lemma.
+    
+    This API endpoint processes an individual lemma to generate full metadata.
+    It is designed to be called as part of the frontend-orchestrated processing queue.
+    """
+    # URL decode the lemma parameter to handle non-Latin characters properly
+    lemma = urllib.parse.unquote(lemma)
+    
+    try:
+        # Get the lemma model
+        lemma_model = Lemma.get(
+            (Lemma.lemma == lemma)
+            & (Lemma.target_language_code == target_language_code)
+        )
+        
+        # Complete the metadata
+        lemma_model = complete_lemma_metadata(lemma_model)
+        
+        # Return the completed lemma data
+        return jsonify({
+            "success": True,
+            "lemma": lemma_model.to_dict(),
+        })
+        
+    except DoesNotExist:
+        response = jsonify({
+            "error": "Not Found",
+            "description": f"Lemma '{lemma}' not found"
+        })
+        response.status_code = 404
+        return response
+        
+    except Exception as e:
+        response = jsonify({
+            "error": "Failed to complete lemma metadata",
+            "description": str(e)
+        })
+        response.status_code = 500
+        return response

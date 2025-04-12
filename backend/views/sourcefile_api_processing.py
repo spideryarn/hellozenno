@@ -26,6 +26,7 @@ from utils.sourcefile_utils import (
     ensure_translation,
     ensure_tricky_wordforms,
     ensure_tricky_phrases,
+    get_incomplete_lemmas_for_sourcefile,
 )
 from utils.types import LanguageLevel
 from typing import get_args
@@ -214,6 +215,21 @@ def sourcefile_status_api(
                 SourcefilePhrase.sourcefile == sourcefile_entry
             ).count(),
         }
+        
+        # Get information about incomplete lemmas
+        incomplete_lemmas = get_incomplete_lemmas_for_sourcefile(sourcefile_entry)
+        lemma_data = []
+        
+        # Include basic lemma information for each incomplete lemma
+        for lemma in incomplete_lemmas:
+            lemma_data.append({
+                "lemma": lemma.lemma,
+                "part_of_speech": lemma.part_of_speech,
+                "translations": lemma.translations
+            })
+            
+        status["incomplete_lemmas"] = lemma_data
+        status["incomplete_lemmas_count"] = len(lemma_data)
 
         return jsonify({
             "success": True,
