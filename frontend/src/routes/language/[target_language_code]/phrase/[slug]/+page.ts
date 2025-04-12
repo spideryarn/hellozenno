@@ -4,9 +4,8 @@ import { getApiUrl } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
 
 export const load: PageLoad = async ({ params, fetch }) => {
-    // Use target_language_code for API calls, mapping from the route parameter target_language_code
+    // Use target_language_code for API calls, mapping from the route parameter
     const { target_language_code, slug } = params;
-    const target_language_code = target_language_code;
 
     try {
         // Use the typed API utility for better type safety and refactoring support
