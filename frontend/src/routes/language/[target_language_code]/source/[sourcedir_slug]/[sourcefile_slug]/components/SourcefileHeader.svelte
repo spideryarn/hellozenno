@@ -449,21 +449,28 @@
   <div class="collapsible-sections">
     <MetadataSection {metadata} />
     
-    <DescriptionSection 
-      description={sourcefile.description}
-      onSave={saveDescription}
-    />
-    
     <FileOperationsSection
       onRename={renameSourcefile}
       onDelete={deleteSourcefile}
       onMove={moveSourcefile}
       {available_sourcedirs}
     />
+    
+    <DescriptionSection 
+      description={sourcefile.description}
+      onSave={saveDescription}
+    />
   </div>
 </CollapsibleHeader>
 
 <div class="actions">
+  <!-- Show divider for expanded operations when header is expanded -->
+  {#if isHeaderExpanded}
+    <div class="expanded-operations-divider">
+      <span>Learning Operations</span>
+    </div>
+  {/if}
+
   <div class="action-row">
     <div class="section process-section">
       <div class="process-controls">
@@ -620,6 +627,25 @@
   
   .actions {
     margin-bottom: 1rem;
+  }
+  
+  .expanded-operations-divider {
+    position: relative;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  .expanded-operations-divider span {
+    position: relative;
+    top: 0.7em;
+    background-color: var(--bs-body-bg, #212529);
+    padding: 0 0.75rem;
+    font-size: 0.85rem;
+    color: #adb5bd;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   
   .action-row {
@@ -787,6 +813,16 @@
     .button {
       width: 100%;
       justify-content: center;
+    }
+    
+    .expanded-operations-divider {
+      margin-top: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .expanded-operations-divider span {
+      font-size: 0.8rem;
+      padding: 0 0.5rem;
     }
   }
 </style>

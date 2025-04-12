@@ -12,9 +12,7 @@
 
 <style>
   .metadata-section {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 0.5rem;
   }
   
   h3 {
