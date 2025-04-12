@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
-    TEST_LANGUAGE_CODE,
+    TEST_TARGET_LANGUAGE_CODE,
     create_test_lemma,
     create_test_wordform,
 )
@@ -27,7 +27,7 @@ def test_wordform_details(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform=wordform.wordform,
     )
     response = client.get(url)
@@ -46,7 +46,7 @@ def test_nonexistent_wordform(mock_search, client):
     url = build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="nonexistent",
     )
     response = client.get(url)
@@ -60,7 +60,9 @@ def test_nonexistent_wordform(mock_search, client):
 def test_sourcedir_view_smoke_test(client):
     """Test that sourcedir views return 200 OK."""
     url = build_url_with_query(
-        client, sourcedirs_for_language_vw, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        sourcedirs_for_language_vw,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -77,7 +79,7 @@ def test_search_functionality(client):
     """Test search functionality."""
     # Test search landing page
     url = build_url_with_query(
-        client, search_landing_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, search_landing_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -86,7 +88,7 @@ def test_search_functionality(client):
     url = build_url_with_query(
         client,
         search_landing_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         query_params={"q": "test"},
     )
     response = client.get(url)  # Using test data from fixture

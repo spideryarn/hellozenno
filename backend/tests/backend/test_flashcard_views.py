@@ -10,7 +10,7 @@ from db_models import (
     Wordform,
     Sentence,
 )
-from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
+from tests.fixtures_for_tests import TEST_TARGET_LANGUAGE_CODE, create_test_sentence
 from views.flashcard_views import (
     flashcard_landing_vw,
     random_flashcard_vw,
@@ -24,7 +24,7 @@ def test_sourcefile(fixture_for_testing_db):
     """Create a test sourcefile with a test lemma."""
     sourcedir = Sourcedir.create(
         path="test_dir",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="test-dir",
     )
     sourcefile = Sourcefile.create(
@@ -47,7 +47,7 @@ def test_sentence_with_sourcefile(fixture_for_testing_db, test_sourcefile):
     # Create test lemma and associate it with the sentence
     lemma = Lemma.create(
         lemma="test",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         translations=["test"],
         part_of_speech="noun",
     )
@@ -56,7 +56,7 @@ def test_sentence_with_sourcefile(fixture_for_testing_db, test_sourcefile):
     # Create wordform and associate with sourcefile
     wordform = Wordform.create(
         wordform="test",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma_entry=lemma,
     )
     SourcefileWordform.create(sourcefile=test_sourcefile, wordform=wordform)
@@ -68,7 +68,7 @@ def test_sentence_with_sourcefile(fixture_for_testing_db, test_sourcefile):
 def test_sourcedir_with_files(fixture_for_testing_db):
     """Create a test sourcedir with multiple sourcefiles containing wordforms."""
     sourcedir = Sourcedir.create(
-        path="test_dir", language_code=TEST_LANGUAGE_CODE, slug="test-dir"
+        path="test_dir", target_language_code=TEST_TARGET_LANGUAGE_CODE, slug="test-dir"
     )
 
     # Create two sourcefiles with different lemmas
@@ -94,23 +94,23 @@ def test_sourcedir_with_files(fixture_for_testing_db):
     # Create lemmas and wordforms for each sourcefile
     lemma1 = Lemma.create(
         lemma="lemma1",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         translations=["test1"],
     )
     lemma2 = Lemma.create(
         lemma="lemma2",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         translations=["test2"],
     )
 
     wordform1 = Wordform.create(
         wordform="wordform1",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma_entry=lemma1,
     )
     wordform2 = Wordform.create(
         wordform="wordform2",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma_entry=lemma2,
     )
 
@@ -130,7 +130,7 @@ def test_flashcard_landing(client, test_sentence_with_sourcefile, test_sourcefil
     """Test the flashcard landing page."""
     # Test the landing page loads
     url = build_url_with_query(
-        client, flashcard_landing_vw, language_code=TEST_LANGUAGE_CODE
+        client, flashcard_landing_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -141,7 +141,7 @@ def test_flashcard_landing(client, test_sentence_with_sourcefile, test_sourcefil
         client,
         flashcard_landing_vw,
         query_params={"sourcefile": test_sourcefile.slug},
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -157,7 +157,7 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
         client,
         flashcard_landing_vw,
         query_params={"sourcedir": test_sourcedir_with_files.slug},
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -169,7 +169,7 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
         client,
         flashcard_landing_vw,
         query_params={"sourcedir": "nonexistent"},
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 404
@@ -179,7 +179,7 @@ def test_sourcedir_flashcards(client, test_sourcedir_with_files):
         client,
         random_flashcard_vw,
         query_params={"sourcedir": test_sourcedir_with_files.slug},
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=True)
     assert response.status_code == 200
@@ -197,7 +197,7 @@ def test_flashcard_sentence(client, test_sentence_with_sourcefile):
     url = build_url_with_query(
         client,
         flashcard_sentence_vw,
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence_with_sourcefile.slug,
     )
     response = client.get(url)
@@ -208,7 +208,7 @@ def test_flashcard_sentence(client, test_sentence_with_sourcefile):
     url = build_url_with_query(
         client,
         flashcard_sentence_vw,
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="nonexistent-slug",
     )
     response = client.get(url)
@@ -219,7 +219,7 @@ def test_flashcard_sentence(client, test_sentence_with_sourcefile):
     url = build_url_with_query(
         client,
         flashcard_sentence_vw,
-        language_code="fr",
+        target_language_code="fr",
         slug=test_sentence_with_sourcefile.slug,
     )
     response = client.get(url)
@@ -230,7 +230,9 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     """Test the random flashcard redirect."""
     # Test basic redirect
     url = build_url_with_query(
-        client, random_flashcard_vw, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        random_flashcard_vw,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=False)
     assert response.status_code == 302
@@ -239,7 +241,7 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     expected_url = build_url_with_query(
         client,
         flashcard_sentence_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence_with_sourcefile.slug,
     )
     assert expected_url in response.location
@@ -249,7 +251,7 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
         client,
         random_flashcard_vw,
         query_params={"sourcefile": test_sourcefile.slug},
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=False)
     assert response.status_code == 302
@@ -258,7 +260,9 @@ def test_random_flashcard(client, test_sentence_with_sourcefile, test_sourcefile
     # Test when no sentences exist
     test_sentence_with_sourcefile.delete_instance()
     url = build_url_with_query(
-        client, random_flashcard_vw, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        random_flashcard_vw,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 404
@@ -284,12 +288,12 @@ def test_sourcedir_multiple_files(
     # Create new lemma and wordform
     lemma3 = Lemma.create(
         lemma="lemma3",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         translations=["test3"],
     )
     wordform3 = Wordform.create(
         wordform="wordform3",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma_entry=lemma3,
     )
     SourcefileWordform.create(sourcefile=sourcefile3, wordform=wordform3)
@@ -298,7 +302,7 @@ def test_sourcedir_multiple_files(
     sentence = Sentence.create(
         sentence="Test sentence with lemma3",
         translation="Test translation",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         audio_data=b"test audio data",
     )
     SentenceLemma.create(sentence=sentence, lemma=lemma3)
@@ -308,7 +312,7 @@ def test_sourcedir_multiple_files(
         client,
         flashcard_landing_vw,
         query_params={"sourcedir": test_sourcedir_with_files.slug},
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -319,7 +323,7 @@ def test_sourcedir_multiple_files(
         client,
         random_flashcard_vw,
         query_params={"sourcedir": test_sourcedir_with_files.slug},
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url, follow_redirects=True)
     assert response.status_code == 200

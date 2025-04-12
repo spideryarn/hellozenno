@@ -5,18 +5,18 @@
     export let translations: string[] = [];
     export let part_of_speech: string | undefined = undefined;
     export let lemma: string | undefined = undefined;
-    export let language_code: string;
+    export let target_language_code: string;
 
     // Generate typed routes for navigation
     const wordformUrl = resolveRoute(RouteName.WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW, {
-        target_language_code: language_code,
+        target_language_code: target_language_code,
         wordform
     });
     
     function navigateToLemma() {
         if (lemma) {
             const lemmaUrl = resolveRoute(RouteName.LEMMA_VIEWS_GET_LEMMA_METADATA_VW, {
-                target_language_code: language_code,
+                target_language_code: target_language_code,
                 lemma
             });
             window.location.href = lemmaUrl;

@@ -1,6 +1,6 @@
 import pytest
 from db_models import Lemma, Wordform
-from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
+from tests.fixtures_for_tests import TEST_TARGET_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
 from tests.backend.utils_for_testing import build_url_with_query
 
 
@@ -8,10 +8,12 @@ def test_word_preview(client, fixture_for_testing_db):
     """Test the word preview API endpoint."""
     # Create test data
     with fixture_for_testing_db.bind_ctx([Lemma, Wordform]):
-        lemma = Lemma.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_LEMMA_DATA)
+        lemma = Lemma.create(
+            target_language_code=TEST_TARGET_LANGUAGE_CODE, **SAMPLE_LEMMA_DATA
+        )
         wordform = Wordform.create(
             wordform="preview_testing",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma_entry=lemma,
             translations=["testing translation"],
         )
@@ -22,7 +24,7 @@ def test_word_preview(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             word_preview_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             word="preview_testing",
         )
         response = client.get(url)
@@ -40,7 +42,7 @@ def test_word_preview(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             word_preview_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             word="nonexistent",
         )
         response = client.get(url)

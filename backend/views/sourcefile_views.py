@@ -76,11 +76,11 @@ def inspect_sourcefile_vw(
 def _get_wordforms_data(sourcefile_entry):
     """Get wordforms data using the optimized query, including junction table data in one query."""
     # Use the enhanced version of get_all_wordforms_for that includes junction data
-    language_code = sourcefile_entry.sourcedir.language_code
+    target_language_code = sourcefile_entry.sourcedir.target_language_code
 
     # This avoids N+1 queries by including junction table data in a single query
     return Wordform.get_all_wordforms_for(
-        language_code=language_code,
+        target_language_code=target_language_code,
         sourcefile=sourcefile_entry,
         include_junction_data=True,  # This will return wordform dicts with centrality and ordering
     )
@@ -88,12 +88,12 @@ def _get_wordforms_data(sourcefile_entry):
 
 def _get_phrases_data(sourcefile_entry):
     """Get phrases data using the optimized query with included junction data."""
-    language_code = sourcefile_entry.sourcedir.language_code
+    target_language_code = sourcefile_entry.sourcedir.target_language_code
 
     # Use the enhanced get_all_phrases_for method with include_junction_data=True
     # This returns phrase dictionaries with centrality and ordering already included
     return Phrase.get_all_phrases_for(
-        language_code=language_code,
+        target_language_code=target_language_code,
         sourcefile=sourcefile_entry,
         include_junction_data=True,  # This will return phrase dicts with centrality and ordering
     )
@@ -133,7 +133,7 @@ def _get_available_sourcedirs(target_language_code):
     """Get all available sourcedirs for a language."""
     return (
         Sourcedir.select(Sourcedir.path, Sourcedir.slug)
-        .where(Sourcedir.language_code == target_language_code)
+        .where(Sourcedir.target_language_code == target_language_code)
         .order_by(Sourcedir.path)
     )
 
@@ -436,7 +436,10 @@ def view_sourcefile_vw(
 ):
     """View the source file."""
     return access_sourcefile(
-        target_language_code, sourcedir_slug, sourcefile_slug, as_attachment=False
+        target_language_code,
+        sourcedir_slug,
+        sourcefile_slug,
+        as_attachment=False,
     )
 
 
@@ -561,7 +564,7 @@ def sourcefile_sentences_vw(
         # Get sourcedir and sourcefile
         sourcedir = Sourcedir.get(
             Sourcedir.slug == sourcedir_slug,
-            Sourcedir.language_code == target_language_code,
+            Sourcedir.target_language_code == target_language_code,
         )
         sourcefile = Sourcefile.get(
             Sourcefile.slug == sourcefile_slug,

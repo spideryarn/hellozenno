@@ -24,7 +24,10 @@ def _get_sourcedir_entry(target_language_code: str, sourcedir_slug: str) -> Sour
 
 
 def _navigate_sourcefile(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str, increment: int
+    target_language_code: str,
+    sourcedir_slug: str,
+    sourcefile_slug: str,
+    increment: int,
 ):
     """Core navigation function that handles both next (+1) and previous (-1) navigation."""
     from views.sourcedir_views import sourcefiles_for_sourcedir_vw
@@ -214,7 +217,9 @@ def get_sourcedirs_for_language(target_language_code: str, sort_by: str = "date"
     supported_languages = get_all_languages()
 
     # Query sourcedirs from database - filtered by language
-    query = Sourcedir.select().where(Sourcedir.target_language_code == target_language_code)
+    query = Sourcedir.select().where(
+        Sourcedir.target_language_code == target_language_code
+    )
 
     if sort_by == "date":
         # Sort by modification time, newest first

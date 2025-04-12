@@ -48,7 +48,8 @@ def get_word_preview(target_language_code: str, word: str) -> WordPreview | None
     try:
         # First try exact match
         wordform = Wordform.get(
-            Wordform.wordform == word, Wordform.target_language_code == target_language_code
+            Wordform.wordform == word,
+            Wordform.target_language_code == target_language_code,
         )
     except DoesNotExist:
         # If not found, try case-insensitive match
@@ -80,13 +81,13 @@ def get_word_preview(target_language_code: str, word: str) -> WordPreview | None
     }
 
 
-def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
+def get_sourcedir_lemmas(target_language_code: str, sourcedir_slug: str) -> list[str]:
     """Get unique lemmas from all sourcefiles in a sourcedir."""
     try:
         sourcedir = (
             Sourcedir.select()
             .where(Sourcedir.slug == sourcedir_slug)
-            .where(Sourcedir.target_language_code == language_code)
+            .where(Sourcedir.target_language_code == target_language_code)
             .get()
         )
     except DoesNotExist:
@@ -101,7 +102,8 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
         .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
         .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
         .where(
-            (Lemma.target_language_code == language_code) & (Sourcefile.sourcedir == sourcedir)
+            (Lemma.target_language_code == target_language_code)
+            & (Sourcefile.sourcedir == sourcedir)
         )
         .order_by(Lemma.lemma)  # Simple ordering by column, not expression
     )
@@ -118,7 +120,7 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
 
 
 def get_sourcefile_lemmas(
-    language_code: str, sourcedir_slug: str, sourcefile_slug: str
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ) -> list[str]:
     """
     Return a sorted, deduplicated list of lemma strings for all wordforms
@@ -126,7 +128,9 @@ def get_sourcefile_lemmas(
     """
 
     # Get the sourcefile using _get_sourcefile_entry
-    sourcefile = _get_sourcefile_entry(language_code, sourcedir_slug, sourcefile_slug)
+    sourcefile = _get_sourcefile_entry(
+        target_language_code, sourcedir_slug, sourcefile_slug
+    )
 
     # Use a simple, direct query that will always work even in test environments
     # This query doesn't use any problematic SQL features (like ORDER BY on expressions not in SELECT)
@@ -137,7 +141,7 @@ def get_sourcefile_lemmas(
         .join(Wordform, on=(Wordform.lemma_entry == Lemma.id))
         .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
         .where(
-            (Lemma.target_language_code == language_code)
+            (Lemma.target_language_code == target_language_code)
             & (SourcefileWordform.sourcefile == sourcefile)
         )
         .order_by(Lemma.lemma)  # Simple ordering by column, not expression
@@ -218,7 +222,7 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
 
     This shared utility function handles the common logic used by both
     get_wordform_metadata_vw and get_wordform_metadata_api.
-    
+
     This function now synchronously waits for wordform generation to complete
     when a new wordform needs to be created.
 
@@ -295,10 +299,10 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
                 # Create the wordform in the database
                 Wordform.get_or_create_from_metadata(
                     wordform=match_wordform,
-                    language_code=target_language_code,
+                    target_language_code=target_language_code,
                     metadata=metadata,
                 )
-                
+
                 # Now that the wordform is created, fetch the complete metadata
                 try:
                     # Directly return the complete data instead of redirecting
@@ -312,7 +316,9 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
                         "status": "redirect",
                         "data": {
                             "target_language_code": target_language_code,
-                            "target_language_name": get_language_name(target_language_code),
+                            "target_language_name": get_language_name(
+                                target_language_code
+                            ),
                             "redirect_to": match_wordform,
                         },
                     }

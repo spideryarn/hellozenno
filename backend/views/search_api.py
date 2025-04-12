@@ -52,56 +52,58 @@ def unified_search_api(target_language_code: str):
     """
     Unified search endpoint that handles all search cases in one response.
     Returns a consistent JSON structure regardless of search outcome.
-    
+
     This endpoint replaces the traditional redirect-based search flow with a
     single API that returns all search results data, allowing the client to
     handle presentation decisions.
-    
+
     Status values:
     - empty_query: No search term provided
     - found: Exact wordform match found
     - multiple_matches: Multiple potential matches found
     - redirect: Single match found, but needs redirection (usually to create the wordform)
     - invalid: No matches found
-    
+
     Query params:
     - q: The search query text
     """
     # Get the search query from URL parameters
     query = request.args.get("q", "")
-    
+
     # Handle empty query case
     if not query:
-        return jsonify({
-            "status": "empty_query",
-            "query": "",
-            "target_language_code": target_language_code,
-            "target_language_name": get_language_name(target_language_code),
-            "data": {}
-        })
-    
+        return jsonify(
+            {
+                "status": "empty_query",
+                "query": "",
+                "target_language_code": target_language_code,
+                "target_language_name": get_language_name(target_language_code),
+                "data": {},
+            }
+        )
+
     # Normalize query (handle URL encoding)
     query = urllib.parse.unquote(query)
-    
+
     try:
         # Use the existing find_or_create_wordform function
         # This handles all the complex search logic and fallbacks
         result = find_or_create_wordform(target_language_code, query)
-        
+
         # Build a consistent response structure
         response = {
             "status": result["status"],
             "query": query,
             "target_language_code": target_language_code,
             "target_language_name": get_language_name(target_language_code),
-            "data": result["data"]
+            "data": result["data"],
         }
-        
+
         return jsonify(response)
     except Exception as e:
         # Log and return a clear error message
         logger.exception(f"Error in unified search: {e}")
-        
+
         # Return error with status code 500
         error_response = {
             "status": "error",
@@ -109,6 +111,6 @@ def unified_search_api(target_language_code: str):
             "target_language_code": target_language_code,
             "target_language_name": get_language_name(target_language_code),
             "error": str(e),
-            "data": {}
+            "data": {},
         }
         return jsonify(error_response), 500

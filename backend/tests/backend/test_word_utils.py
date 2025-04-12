@@ -26,7 +26,7 @@ def test_get_sourcedir_lemmas_happy_path(fixture_for_testing_db):
     """Test getting lemmas from sourcedir with multiple sourcefiles."""
     with fixture_for_testing_db.atomic():
         # Setup test data
-        sd = Sourcedir.create(path="/test", language_code="el", slug="test-dir")
+        sd = Sourcedir.create(path="/test", target_language_code="el", slug="test-dir")
 
         sf1 = Sourcefile.create(
             sourcedir=sd,
@@ -49,21 +49,25 @@ def test_get_sourcedir_lemmas_happy_path(fixture_for_testing_db):
 
         # Create lemmas and wordforms
         lemma_data = [("alpha", "el"), ("beta", "el"), ("gamma", "el")]
-        lemmas = [Lemma.create(lemma=l[0], language_code=l[1]) for l in lemma_data]
+        lemmas = [
+            Lemma.create(lemma=l[0], target_language_code=l[1]) for l in lemma_data
+        ]
 
         wordforms = [
             Wordform.create(
-                wordform="alpha", language_code="el", lemma_entry=lemmas[0]
-            ),
-            Wordform.create(wordform="beta", language_code="el", lemma_entry=lemmas[1]),
-            Wordform.create(
-                wordform="gamma", language_code="el", lemma_entry=lemmas[2]
+                wordform="alpha", target_language_code="el", lemma_entry=lemmas[0]
             ),
             Wordform.create(
-                wordform="beta2", language_code="el", lemma_entry=lemmas[1]
+                wordform="beta", target_language_code="el", lemma_entry=lemmas[1]
+            ),
+            Wordform.create(
+                wordform="gamma", target_language_code="el", lemma_entry=lemmas[2]
+            ),
+            Wordform.create(
+                wordform="beta2", target_language_code="el", lemma_entry=lemmas[1]
             ),  # Duplicate lemma
             Wordform.create(
-                wordform="delta", language_code="el", lemma_entry=None
+                wordform="delta", target_language_code="el", lemma_entry=None
             ),  # No lemma
         ]
 
@@ -90,7 +94,7 @@ def test_get_sourcedir_lemmas_error_cases(fixture_for_testing_db):
 
     # Sourcedir with no lemmas
     with fixture_for_testing_db.atomic():
-        Sourcedir.create(path="/empty", language_code="el", slug="empty-dir")
+        Sourcedir.create(path="/empty", target_language_code="el", slug="empty-dir")
 
         with pytest.raises(NotFound) as exc_info:
             get_sourcedir_lemmas("el", "empty-dir")
@@ -109,7 +113,9 @@ def test_get_sourcefile_lemmas_happy_path(fixture_for_testing_db):
         with pytest.raises(DoesNotExist):
             get_sourcefile_lemmas("el", sourcedir_slug, sourcefile_slug)
 
-        sd = Sourcedir.create(path="test_sf", language_code="el", slug=sourcedir_slug)
+        sd = Sourcedir.create(
+            path="test_sf", target_language_code="el", slug=sourcedir_slug
+        )
 
         # before we create the Sourcefile, what error should we get if we run get_sourcefile_lemmas?
         with pytest.raises(DoesNotExist):
@@ -134,12 +140,18 @@ def test_get_sourcefile_lemmas_happy_path(fixture_for_testing_db):
             get_sourcefile_lemmas("el", sourcedir_slug, sourcefile_slug)
 
         # Create lemmas and wordforms
-        lem_a = Lemma.create(lemma="alpha", language_code="el")
-        lem_b = Lemma.create(lemma="beta", language_code="el")
+        lem_a = Lemma.create(lemma="alpha", target_language_code="el")
+        lem_b = Lemma.create(lemma="beta", target_language_code="el")
 
-        wf_a = Wordform.create(wordform="alpha", language_code="el", lemma_entry=lem_a)
-        wf_b = Wordform.create(wordform="beta", language_code="el", lemma_entry=lem_b)
-        wf_b2 = Wordform.create(wordform="beta2", language_code="el", lemma_entry=lem_b)
+        wf_a = Wordform.create(
+            wordform="alpha", target_language_code="el", lemma_entry=lem_a
+        )
+        wf_b = Wordform.create(
+            wordform="beta", target_language_code="el", lemma_entry=lem_b
+        )
+        wf_b2 = Wordform.create(
+            wordform="beta2", target_language_code="el", lemma_entry=lem_b
+        )
 
         # Link wordforms to the sourcefile
         SourcefileWordform.create(sourcefile=sf, wordform=wf_a)
@@ -156,7 +168,7 @@ def test_unicode_normalization(fixture_for_testing_db):
     # Create Greek lemma
     lemma = Lemma.create(
         lemma="τροφή",
-        language_code="el",
+        target_language_code="el",
         part_of_speech="noun",
         etymology="From Ancient Greek τροφή (trophḗ, 'nourishment')",
     )
@@ -165,7 +177,7 @@ def test_unicode_normalization(fixture_for_testing_db):
     word_nfd = unicodedata.normalize("NFD", "τροφή")
     wordform_nfd = Wordform.create(
         wordform=word_nfd,
-        language_code="el",
+        target_language_code="el",
         lemma_entry=lemma,
         translations=["food", "nourishment"],
     )
@@ -174,7 +186,7 @@ def test_unicode_normalization(fixture_for_testing_db):
     word_nfc = unicodedata.normalize("NFC", "θυμό")
     wordform_nfc = Wordform.create(
         wordform=word_nfc,
-        language_code="el",
+        target_language_code="el",
         lemma_entry=lemma,
         translations=["anger", "wrath"],
     )

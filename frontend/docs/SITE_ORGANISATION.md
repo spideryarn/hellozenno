@@ -11,7 +11,7 @@ frontend/src/routes/
 ├── +layout.svelte                # Main app layout
 ├── +page.svelte                  # Home page
 ├── languages/                    # Languages list 
-└── language/[language_code]/     # Language-specific pages
+└── language/[target_language_code]/     # Language-specific pages
     ├── +layout.svelte            # Layout for all language pages
     ├── lemmas/                   # Lemma listing 
     ├── lemma/[lemma]/            # Individual lemma view
@@ -43,50 +43,50 @@ frontend/src/routes/
 - Alphabetically organized with search function
 - Each language links to its dedicated page
 
-### Language-specific Layout (`/language/[language_code]/`)
+### Language-specific Layout (`/language/[target_language_code]/`)
 - Common layout wrapper for all language-specific pages
 - Provides navigation and language context
 
-### Sources (`/language/[language_code]/sources/`)
+### Sources (`/language/[target_language_code]/sources/`)
 - Lists all source directories for language learning materials
 - Each directory contains various source files (text, images, audio)
 
-### Source Directory (`/language/[language_code]/source/[sourcedir_slug]/`)
+### Source Directory (`/language/[target_language_code]/source/[sourcedir_slug]/`)
 - Lists all source files in a specific directory
 - Provides source directory metadata and description
 
-### Source File (`/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/`)
+### Source File (`/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/`)
 - Displays individual source materials
 - Has tabs for:
   - Text view (`/text`)
   - Words view (`/words`) 
   - Phrases view (`/phrases`)
 
-### Lemmas (`/language/[language_code]/lemmas/`)
+### Lemmas (`/language/[target_language_code]/lemmas/`)
 - Dictionary form of words (root forms)
 - Contains detailed linguistic information about each lemma
 - See `Lemma` model in `backend/db_models.py`
 
-### Wordforms (`/language/[language_code]/wordforms/`)
+### Wordforms (`/language/[target_language_code]/wordforms/`)
 - Different inflections and variants of lemmas
 - Links to parent lemmas when available
 - See `Wordform` model in `backend/db_models.py`
 
-### Sentences (`/language/[language_code]/sentences/`)
+### Sentences (`/language/[target_language_code]/sentences/`)
 - Example sentences in the target language
 - Includes translations and audio when available
 - See `Sentence` model in `backend/db_models.py`
 
-### Phrases (`/language/[language_code]/phrases/`)
+### Phrases (`/language/[target_language_code]/phrases/`)
 - Multi-word expressions and idioms
 - Includes linguistic and cultural context
 - See `Phrase` model in `backend/db_models.py`
 
-### Search (`/language/[language_code]/search/`)
+### Search (`/language/[target_language_code]/search/`)
 - Language-specific search interface
 - Search results page at `/search/[wordform]`
 
-### Flashcards (`/language/[language_code]/flashcards/`)
+### Flashcards (`/language/[target_language_code]/flashcards/`)
 - Flashcard study feature
 - Individual sentence flashcards and random options
 
@@ -128,7 +128,7 @@ For detailed API integration information, see [Flask API Integration](./BACKEND_
 
 SvelteKit automatically maps file paths to URLs:
 
-- File: `src/routes/language/[language_code]/sources/+page.svelte`
+- File: `src/routes/language/[target_language_code]/sources/+page.svelte`
 - URL: `/language/el/sources` (where 'el' is the language code parameter)
 
-The routing parameters (`[language_code]`, `[slug]`, etc.) are used to fetch data from the Flask API. 
+The routing parameters (`[target_language_code]`, `[slug]`, etc.) are used to fetch data from the Flask API. 

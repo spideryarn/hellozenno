@@ -1,4 +1,4 @@
-from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_phrase
+from tests.fixtures_for_tests import TEST_TARGET_LANGUAGE_CODE, create_test_phrase
 
 from tests.backend.utils_for_testing import assert_html_response, build_url_with_query
 from views.phrase_views import phrases_list_vw, get_phrase_metadata_vw
@@ -34,7 +34,7 @@ def test_phrases_list_basic(client, fixture_for_testing_db):
 
     # Test accessing the phrases list view
     url = build_url_with_query(
-        client, phrases_list_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, phrases_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert_html_response(response)
@@ -56,7 +56,7 @@ def test_phrase_detail_view(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         get_phrase_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=phrase.slug,
     )
     response = client.get(url)
@@ -79,7 +79,7 @@ def test_nonexistent_phrase(client):
     url = build_url_with_query(
         client,
         get_phrase_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="nonexistent",
     )
     response = client.get(url)
@@ -115,7 +115,7 @@ def test_phrases_list_sorting(client, fixture_for_testing_db):
 
     # Test alphabetical sorting (default)
     url = build_url_with_query(
-        client, phrases_list_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, phrases_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert_html_response(response)
@@ -135,7 +135,7 @@ def test_phrases_list_sorting(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         phrases_list_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         query_params={"sort": "date"},
     )
     response = client.get(url)

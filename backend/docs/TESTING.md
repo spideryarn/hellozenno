@@ -25,7 +25,7 @@ Common test utilities are available in `tests/backend/utils_for_testing.py`:
 
 - `assert_html_response(response, status_code=200)`: Assert that a response is a valid HTML response with the expected status code
 - `extract_data_attribute(html, attribute_name)`: Extract a data attribute value from HTML
-- `get_sourcedir_and_file(client, language_code="el")`: Get a sourcedir and sourcefile for testing
+- `get_sourcedir_and_file(client, target_language_code="el")`: Get a sourcedir and sourcefile for testing
 - `with_wordform_search_mock(func)`: Decorator to patch the quick_search_for_wordform function
 
 ## Test Fixtures

@@ -40,7 +40,7 @@ def flashcard_landing_vw(target_language_code: str):
 
     # Use the shared utility function
     data = get_flashcard_landing_data(
-        language_code=target_language_code,
+        target_language_code=target_language_code,
         sourcefile_slug=sourcefile_slug,
         sourcedir_slug=sourcedir_slug,
     )
@@ -51,7 +51,7 @@ def flashcard_landing_vw(target_language_code: str):
     # Extract data for the template
     return render_template(
         "flashcard_landing.jinja",
-        target_language_code=data["language_code"],
+        target_language_code=data["target_language_code"],
         target_language_name=data["language_name"],
         sourcefile=data["sourcefile"],
         sourcedir=data["sourcedir"],
@@ -68,7 +68,7 @@ def flashcard_sentence_vw(target_language_code: str, slug: str):
 
     # Use the shared utility function
     result = get_flashcard_sentence_data(
-        language_code=target_language_code,
+        target_language_code=target_language_code,
         slug=slug,
         sourcefile_slug=sourcefile_slug,
         sourcedir_slug=sourcedir_slug,
@@ -101,7 +101,7 @@ def random_flashcard_vw(target_language_code: str):
 
     # Use the shared utility function
     data = get_random_flashcard_data(
-        language_code=target_language_code,
+        target_language_code=target_language_code,
         sourcefile_slug=sourcefile_slug,
         sourcedir_slug=sourcedir_slug,
     )

@@ -48,7 +48,7 @@ def generate_sentence(
 
     # Create or update sentence in database
     db_sentence, created = Sentence.get_or_create(
-        language_code=target_language_code,
+        target_language_code=target_language_code,
         sentence=sentence,
         defaults={
             "translation": translation,
@@ -129,7 +129,9 @@ def get_random_sentence(
     Returns:
         Optional[Dict]: Random sentence metadata or None if no matching sentences found
     """
-    query = Sentence.select().where(Sentence.target_language_code == target_language_code)
+    query = Sentence.select().where(
+        Sentence.target_language_code == target_language_code
+    )
 
     if required_lemmas:
         # Filter sentences using database JOIN to find those with matching lemmas
@@ -232,7 +234,8 @@ def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
         DoesNotExist: If the sentence is not found
     """
     sentence = Sentence.get(
-        (Sentence.target_language_code == target_language_code) & (Sentence.slug == slug)
+        (Sentence.target_language_code == target_language_code)
+        & (Sentence.slug == slug)
     )
 
     # Extract tokens from the sentence text
@@ -295,7 +298,7 @@ def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
         "sentence": str(sentence.sentence),
         "translation": str(sentence.translation) if sentence.translation else None,
         "slug": sentence.slug,
-        "language_code": sentence.language_code,
+        "target_language_code": sentence.target_language_code,
         "has_audio": bool(sentence.audio_data),
         "lemma_words": all_lemmas if all_lemmas else None,
     }

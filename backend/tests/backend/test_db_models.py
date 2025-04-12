@@ -7,7 +7,7 @@ def test_json_field_handling(fixture_for_testing_db):
     # Test Sourcefile metadata
     sourcedir = Sourcedir.create(
         path="test_dir",
-        language_code="el",
+        target_language_code="el",
     )
 
     test_metadata = {
@@ -37,7 +37,7 @@ def test_json_field_handling(fixture_for_testing_db):
 
     lemma = Lemma.create(
         lemma="test",
-        language_code="el",
+        target_language_code="el",
         translations=test_translations,
         synonyms=test_synonyms,
     )
@@ -54,7 +54,7 @@ def test_json_field_handling(fixture_for_testing_db):
     ]
 
     phrase = Phrase.create(
-        language_code="el",
+        target_language_code="el",
         canonical_form="test phrase",
         raw_forms=["test1", "test2"],
         translations=["test translation"],

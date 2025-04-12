@@ -20,7 +20,7 @@ Let's say I'm viewing the text of a Sourcefile, e.g.
 
 http://localhost:5173/language/el/source/250331-odyssea-2/1000011635-jpg/text
 
-see `frontend/src/routes/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileText.svelte`
+see `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileText.svelte`
 
 That text should include a bunch of hyperlinks for Wordforms that exist in our database (i.e. those that are linked to the Sourcefile with the `SourcefileWordform` model - see `backend/db_models.py`)
 
@@ -55,7 +55,7 @@ The function performs the following operations:
 
 1. Normalizes text for consistent pattern matching
 2. Identifies wordforms that appear in the text
-3. Wraps matched words with HTML links: `<a href="/lang/{language_code}/wordform/{wordform}" class="word-link">{word}</a>`
+3. Wraps matched words with HTML links: `<a href="/lang/{target_language_code}/wordform/{wordform}" class="word-link">{word}</a>`
 4. Formats paragraphs with `<p>` tags and proper indentation
 5. Wraps long lines at approximately 65 characters with `<br>` tags
 

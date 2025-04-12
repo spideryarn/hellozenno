@@ -164,7 +164,7 @@ When scraping the HTML response, you can extract the following data structure:
         "audio_url": "/lang/el/sentences/123/audio"
     },
     "metadata": {
-        "language_code": "el",
+        "target_language_code": "el",
         "language_name": "Greek",
         "sourcefile": "t3-jpg",  // only present if filtered by sourcefile
         "sourcedir": "250127"    // only present if filtered by sourcedir

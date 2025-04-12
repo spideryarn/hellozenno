@@ -22,7 +22,7 @@ Hello Zenno
     │   ├── routes/          # SvelteKit routes and pages
     │   │   ├── languages/   # Languages listing page
     │   │   └── language/    # Language-specific pages
-    │   │       ├── [language_code]/
+    │   │       ├── [target_language_code]/
     │   │       │   ├── sources/      # Source materials for a language
     │   │       │   └── sentence/     # Individual sentence view
     │   │       │       └── [slug]/   # Dynamic sentence route

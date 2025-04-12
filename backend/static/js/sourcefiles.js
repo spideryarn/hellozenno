@@ -160,7 +160,7 @@ function initLanguageSelector() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ language_code: newLanguage })
+            body: JSON.stringify({ target_language_code: newLanguage })
         }).then(response => {
             if (response.ok) {
                 window.location.href = resolveRoute('SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW', {

@@ -6,11 +6,11 @@
     export let slug: string;
     export let part_of_speech: string | null = null;
     export let notes: string | null = null;
-    export let language_code: string;
+    export let target_language_code: string;
     
     // Generate typed route for navigation
     const phraseUrl = resolveRoute(RouteName.PHRASE_VIEWS_GET_PHRASE_METADATA_VW, {
-        target_language_code: language_code,
+        target_language_code: target_language_code,
         slug
     });
 </script>

@@ -2,7 +2,7 @@ export interface Sourcedir {
     id: number;
     path: string;
     slug: string;
-    language_code: string; // This is kept as language_code for backward compatibility
+    target_language_code: string; // This is kept as target_language_code for backward compatibility
 }
 
 export interface Sourcefile {

@@ -5,11 +5,11 @@
     export let translation: string;
     export let slug: string;
     export let lemma_words: string[] = [];
-    export let language_code: string;
+    export let target_language_code: string;
     
     // Generate typed route for navigation
     const sentenceUrl = resolveRoute(RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW, {
-        target_language_code: language_code,
+        target_language_code: target_language_code,
         slug
     });
 </script>

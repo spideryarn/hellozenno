@@ -8,7 +8,7 @@ interface Sentence {
   sentence: string;
   translation: string | null;
   slug: string;
-  language_code: string;
+  target_language_code: string;
   has_audio: boolean;
   lemma_words?: string[];
 }

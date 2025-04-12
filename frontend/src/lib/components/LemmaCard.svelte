@@ -3,14 +3,14 @@
   import type { Lemma } from '$lib/types';
   
   export let lemma: Lemma;
-  export let language_code: string;
+  export let target_language_code: string;
   export let showDetails: boolean = false;
 </script>
 
 <Card>
   <div class="lemma-card">
     <h3 class="fs-5 mb-1">
-      <a href="/language/{language_code}/lemma/{lemma.lemma}" class="foreign-text text-decoration-none">
+      <a href="/language/{target_language_code}/lemma/{lemma.lemma}" class="foreign-text text-decoration-none">
         {lemma.lemma}
       </a>
     </h3>

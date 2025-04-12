@@ -18,15 +18,17 @@ from peewee import DoesNotExist
 flashcard_api_bp = Blueprint("flashcard_api", __name__, url_prefix="/api/lang")
 
 
-@flashcard_api_bp.route("/<language_code>/flashcards/sentence/<slug>", methods=["GET"])
-def flashcard_sentence_api(language_code: str, slug: str):
+@flashcard_api_bp.route(
+    "/<target_language_code>/flashcards/sentence/<slug>", methods=["GET"]
+)
+def flashcard_sentence_api(target_language_code: str, slug: str):
     """JSON API endpoint for a specific sentence."""
     sourcefile_slug = request.args.get("sourcefile")
     sourcedir_slug = request.args.get("sourcedir")
 
     # Use the shared utility function
     data = get_flashcard_sentence_data(
-        language_code=language_code,
+        target_language_code=target_language_code,
         slug=slug,
         sourcefile_slug=sourcefile_slug,
         sourcedir_slug=sourcedir_slug,
@@ -42,15 +44,15 @@ def flashcard_sentence_api(language_code: str, slug: str):
     return jsonify(data)
 
 
-@flashcard_api_bp.route("/<language_code>/flashcards/random", methods=["GET"])
-def random_flashcard_api(language_code: str):
+@flashcard_api_bp.route("/<target_language_code>/flashcards/random", methods=["GET"])
+def random_flashcard_api(target_language_code: str):
     """JSON API endpoint for a random sentence."""
     sourcefile_slug = request.args.get("sourcefile")
     sourcedir_slug = request.args.get("sourcedir")
 
     # Use the shared utility function
     data = get_random_flashcard_data(
-        language_code=language_code,
+        target_language_code=target_language_code,
         sourcefile_slug=sourcefile_slug,
         sourcedir_slug=sourcedir_slug,
     )
@@ -61,7 +63,7 @@ def random_flashcard_api(language_code: str):
     # Get the full sentence object to include more information
     try:
         sentence = Sentence.get(
-            (Sentence.language_code == language_code)
+            (Sentence.target_language_code == target_language_code)
             & (Sentence.id == data["id"])  # type: ignore
         )
     except DoesNotExist:
@@ -88,12 +90,12 @@ def random_flashcard_api(language_code: str):
         "lemma_words": sentence.lemma_words,
         "audio_url": url_for(
             "sentence_api.get_sentence_audio_api",
-            target_language_code=language_code,
+            target_language_code=target_language_code,
             sentence_id=sentence.id,
         ),
         "metadata": {
-            "language_code": language_code,
-            "language_name": get_language_name(language_code),
+            "target_language_code": target_language_code,
+            "language_name": get_language_name(target_language_code),
         },
     }
 
@@ -106,15 +108,15 @@ def random_flashcard_api(language_code: str):
     return jsonify(response_data)
 
 
-@flashcard_api_bp.route("/<language_code>/flashcards/landing", methods=["GET"])
-def flashcard_landing_api(language_code: str):
+@flashcard_api_bp.route("/<target_language_code>/flashcards/landing", methods=["GET"])
+def flashcard_landing_api(target_language_code: str):
     """JSON API endpoint for the flashcard landing page."""
     sourcefile_slug = request.args.get("sourcefile")
     sourcedir_slug = request.args.get("sourcedir")
 
     # Use the shared utility function
     data = get_flashcard_landing_data(
-        language_code=language_code,
+        target_language_code=target_language_code,
         sourcefile_slug=sourcefile_slug,
         sourcedir_slug=sourcedir_slug,
     )

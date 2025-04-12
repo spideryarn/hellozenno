@@ -21,7 +21,7 @@
   
   // Generate the audio URL using type-safe route resolution
   const audioUrl = getApiUrl(RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API, {
-    target_language_code: sentence.language_code,
+    target_language_code: sentence.target_language_code,
     sentence_id: String(sentence.id)
   });
 </script>

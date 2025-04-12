@@ -57,7 +57,7 @@ def wordforms_list_api(target_language_code: str):
 
     # Get all wordforms for this language
     wordforms = Wordform.get_all_wordforms_for(
-        language_code=target_language_code, sort_by=sort_by
+        target_language_code=target_language_code, sort_by=sort_by
     )
 
     # Convert to list of dictionaries for JSON serialization
@@ -73,8 +73,8 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
     This API endpoint corresponds to the get_wordform_metadata_vw view function.
     It returns complete metadata for a wordform, including its lemma if available.
     If the wordform doesn't exist, it will search for possible matches.
-    
-    The find_or_create_wordform function now synchronously waits for wordform 
+
+    The find_or_create_wordform function now synchronously waits for wordform
     generation to complete, so this endpoint may take a few seconds to respond
     when a new wordform is being created.
     """
@@ -84,8 +84,10 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
     # Use the shared utility function to find or create the wordform
     from utils.word_utils import find_or_create_wordform
     from loguru import logger
-    
-    logger.info(f"API request for wordform '{wordform}' in language '{target_language_code}'")
+
+    logger.info(
+        f"API request for wordform '{wordform}' in language '{target_language_code}'"
+    )
     result = find_or_create_wordform(target_language_code, wordform)
     logger.info(f"Wordform processing complete with status: {result['status']}")
 

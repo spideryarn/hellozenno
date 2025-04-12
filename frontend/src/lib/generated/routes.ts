@@ -173,10 +173,10 @@ export const ROUTES = {
   SENTENCE_API_GENERATE_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{slug}/generate_audio",
   SENTENCE_API_SENTENCES_LIST_API: "/api/lang/sentence/{target_language_code}/sentences",
   LANGUAGES_API_GET_LANGUAGES_API: "/api/lang/languages",
-  LANGUAGES_API_GET_LANGUAGE_NAME_API: "/api/lang/language_name/{language_code}",
-  FLASHCARD_API_FLASHCARD_SENTENCE_API: "/api/lang/{language_code}/flashcards/sentence/{slug}",
-  FLASHCARD_API_RANDOM_FLASHCARD_API: "/api/lang/{language_code}/flashcards/random",
-  FLASHCARD_API_FLASHCARD_LANDING_API: "/api/lang/{language_code}/flashcards/landing",
+  LANGUAGES_API_GET_LANGUAGE_NAME_API: "/api/lang/language_name/{target_language_code}",
+  FLASHCARD_API_FLASHCARD_SENTENCE_API: "/api/lang/{target_language_code}/flashcards/sentence/{slug}",
+  FLASHCARD_API_RANDOM_FLASHCARD_API: "/api/lang/{target_language_code}/flashcards/random",
+  FLASHCARD_API_FLASHCARD_LANDING_API: "/api/lang/{target_language_code}/flashcards/landing",
   SEARCH_API_SEARCH_LANDING_API: "/api/lang/{target_language_code}/search",
   SEARCH_API_SEARCH_WORD_API: "/api/lang/{target_language_code}/search/{wordform}",
   SEARCH_API_UNIFIED_SEARCH_API: "/api/lang/{target_language_code}/unified_search",
@@ -265,10 +265,10 @@ export type RouteParams = {
   [RouteName.SENTENCE_API_GENERATE_SENTENCE_AUDIO_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_SENTENCES_LIST_API]: { target_language_code: string };
   [RouteName.LANGUAGES_API_GET_LANGUAGES_API]: {};
-  [RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API]: { language_code: string };
-  [RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API]: { language_code: string; slug: string };
-  [RouteName.FLASHCARD_API_RANDOM_FLASHCARD_API]: { language_code: string };
-  [RouteName.FLASHCARD_API_FLASHCARD_LANDING_API]: { language_code: string };
+  [RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API]: { target_language_code: string };
+  [RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API]: { target_language_code: string; slug: string };
+  [RouteName.FLASHCARD_API_RANDOM_FLASHCARD_API]: { target_language_code: string };
+  [RouteName.FLASHCARD_API_FLASHCARD_LANDING_API]: { target_language_code: string };
   [RouteName.SEARCH_API_SEARCH_LANDING_API]: { target_language_code: string };
   [RouteName.SEARCH_API_SEARCH_WORD_API]: { target_language_code: string; wordform: string };
   [RouteName.SEARCH_API_UNIFIED_SEARCH_API]: { target_language_code: string };

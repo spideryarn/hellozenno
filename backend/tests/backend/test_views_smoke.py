@@ -1,7 +1,7 @@
 import pytest
 from tests.fixtures_for_tests import (
     SAMPLE_PHRASE_DATA,
-    TEST_LANGUAGE_CODE,
+    TEST_TARGET_LANGUAGE_CODE,
     create_complete_test_data,
     create_test_sentence,
 )
@@ -103,7 +103,10 @@ def test_lemma_detail_existing(client, fixture_for_testing_db):
     test_data = create_complete_test_data(fixture_for_testing_db)
     lemma = test_data["lemma"]
     url = build_url_with_query(
-        client, get_lemma_metadata_vw, target_language_code="el", lemma=lemma.lemma
+        client,
+        get_lemma_metadata_vw,
+        target_language_code="el",
+        lemma=lemma.lemma,
     )
     response = client.get(url)
     assert_html_response(response)
@@ -124,7 +127,10 @@ def test_lemma_detail_nonexistent(client):
 def test_lemmas_list_date_sort(client):
     """Test the lemmas list view with date sorting."""
     url = build_url_with_query(
-        client, lemmas_list_vw, query_params={"sort": "date"}, target_language_code="el"
+        client,
+        lemmas_list_vw,
+        query_params={"sort": "date"},
+        target_language_code="el",
     )
     response = client.get(url)
     assert_html_response(response)
@@ -270,13 +276,15 @@ def test_phrases_list(client, fixture_for_testing_db):
 def test_phrase_detail_existing(client, fixture_for_testing_db):
     """Test the phrase detail view with an existing phrase using slug."""
     # Create a test phrase with the sample data
-    phrase = Phrase.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA)
+    phrase = Phrase.create(
+        target_language_code=TEST_TARGET_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA
+    )
 
     # Test with the created phrase using its slug
     url = build_url_with_query(
         client,
         get_phrase_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=phrase.slug,
     )
     response = client.get(url)
@@ -415,7 +423,10 @@ def test_flashcard_sentence_vw(client, fixture_for_testing_db):
     sentence = create_test_sentence(fixture_for_testing_db)
 
     url = build_url_with_query(
-        client, flashcard_sentence_vw, target_language_code="el", slug=sentence.slug
+        client,
+        flashcard_sentence_vw,
+        target_language_code="el",
+        slug=sentence.slug,
     )
     response = client.get(url)
     assert_html_response(response)

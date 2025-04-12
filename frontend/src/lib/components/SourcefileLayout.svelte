@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
-  import SourcefileHeader from '../../routes/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileHeader.svelte';
+  import SourcefileHeader from '../../routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileHeader.svelte';
   import NavTabs from './NavTabs.svelte';
   
   export let sourcefile: Sourcefile;
@@ -8,7 +8,7 @@
   export let metadata: Metadata;
   export let navigation: Navigation;
   export let stats: Stats;
-  export let language_code: string;
+  export let target_language_code: string;
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;
   export let language_name: string;
@@ -18,23 +18,23 @@
   $: tabs = [
     {
       label: 'Text',
-      href: `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}/text`,
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/text`,
       active: activeTab === 'text'
     },
     {
       label: 'Translation',
-      href: `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}/translation`,
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/translation`,
       active: activeTab === 'translation'
     },
     {
       label: 'Words',
-      href: `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}/words`,
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/words`,
       count: stats.wordforms_count,
       active: activeTab === 'words'
     },
     {
       label: 'Phrases',
-      href: `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}/phrases`,
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/phrases`,
       count: stats.phrases_count,
       active: activeTab === 'phrases'
     }
@@ -47,9 +47,9 @@
       <ol class="breadcrumb mb-0">
         <li class="breadcrumb-item"><a href="/">Home</a></li>
         <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
-        <li class="breadcrumb-item"><a href="/language/{language_code}/sources">{language_name || language_code}</a></li>
-        <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
-        <li class="breadcrumb-item"><a href="/language/{language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
+        <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{language_name || target_language_code}</a></li>
+        <li class="breadcrumb-item"><a href="/language/{target_language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
+        <li class="breadcrumb-item"><a href="/language/{target_language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
         <li class="breadcrumb-item active" aria-current="page">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</li>
       </ol>
     </nav>
@@ -61,7 +61,7 @@
     {metadata}
     {navigation}
     {stats}
-    {language_code}
+    {target_language_code}
     {sourcedir_slug}
     {sourcefile_slug}
   />

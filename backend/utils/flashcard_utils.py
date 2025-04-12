@@ -13,21 +13,21 @@ from flask import url_for
 
 
 def get_flashcard_landing_data(
-    language_code: str, sourcefile_slug=None, sourcedir_slug=None
+    target_language_code: str, sourcefile_slug=None, sourcedir_slug=None
 ):
     """
     Get data needed for the flashcard landing page.
     Used by both the view and API functions.
 
     Args:
-        language_code: The target language code
+        target_language_code: The target language code
         sourcefile_slug: Optional sourcefile slug to filter by
         sourcedir_slug: Optional sourcedir slug to filter by
 
     Returns:
         Dictionary with flashcard landing data, or None if an error occurred
     """
-    language_name = get_language_name(language_code)
+    language_name = get_language_name(target_language_code)
 
     sourcefile_entry = None
     sourcedir_entry = None
@@ -38,7 +38,7 @@ def get_flashcard_landing_data(
     if sourcedir_slug:
         try:
             sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
-            lemmas = get_sourcedir_lemmas(language_code, sourcedir_slug)
+            lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
             lemma_count = len(lemmas) if lemmas else 0
         except DoesNotExist:
             error = "Sourcedir not found"
@@ -52,7 +52,7 @@ def get_flashcard_landing_data(
                 .get()
             )
             lemmas = get_sourcefile_lemmas(
-                language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
+                target_language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
             )
             lemma_count = len(lemmas) if lemmas else 0
         except DoesNotExist:
@@ -62,7 +62,7 @@ def get_flashcard_landing_data(
         return {"error": error}
 
     return {
-        "language_code": language_code,
+        "target_language_code": target_language_code,
         "language_name": language_name,
         "sourcefile": (
             {
@@ -83,14 +83,14 @@ def get_flashcard_landing_data(
 
 
 def get_flashcard_sentence_data(
-    language_code: str, slug: str, sourcefile_slug=None, sourcedir_slug=None
+    target_language_code: str, slug: str, sourcefile_slug=None, sourcedir_slug=None
 ):
     """
     Get data for a specific sentence flashcard.
     Used by both the view and API functions.
 
     Args:
-        language_code: The target language code
+        target_language_code: The target language code
         slug: The sentence slug
         sourcefile_slug: Optional sourcefile slug to filter by
         sourcedir_slug: Optional sourcedir slug to filter by
@@ -98,11 +98,12 @@ def get_flashcard_sentence_data(
     Returns:
         Dictionary with sentence data or error information
     """
-    language_name = get_language_name(language_code)
+    language_name = get_language_name(target_language_code)
 
     try:
         sentence = Sentence.get(
-            (Sentence.language_code == language_code) & (Sentence.slug == slug)
+            (Sentence.target_language_code == target_language_code)
+            & (Sentence.slug == slug)
         )
     except DoesNotExist:
         return {"error": "Sentence not found"}
@@ -127,7 +128,7 @@ def get_flashcard_sentence_data(
     if sourcedir_slug:
         try:
             sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
-            lemmas = get_sourcedir_lemmas(language_code, sourcedir_slug)
+            lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
             lemma_count = len(lemmas)
         except DoesNotExist:
             return {"error": "Sourcedir not found"}
@@ -141,7 +142,7 @@ def get_flashcard_sentence_data(
                 .get()
             )
             lemmas = get_sourcefile_lemmas(
-                language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
+                target_language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
             )
             lemma_count = len(lemmas)
         except DoesNotExist:
@@ -156,11 +157,11 @@ def get_flashcard_sentence_data(
         "lemma_words": sentence.lemma_words,
         "audio_url": url_for(
             "sentence_api.get_sentence_audio_api",
-            target_language_code=language_code,
+            target_language_code=target_language_code,
             sentence_id=sentence.id,
         ),
         "metadata": {
-            "language_code": language_code,
+            "target_language_code": target_language_code,
             "language_name": language_name,
         },
         "sentence": sentence,  # Include the full sentence model for views
@@ -187,14 +188,14 @@ def get_flashcard_sentence_data(
 
 
 def get_random_flashcard_data(
-    language_code: str, sourcefile_slug=None, sourcedir_slug=None
+    target_language_code: str, sourcefile_slug=None, sourcedir_slug=None
 ):
     """
     Get data for a random sentence flashcard.
     Used by both the view and API functions.
 
     Args:
-        language_code: The target language code
+        target_language_code: The target language code
         sourcefile_slug: Optional sourcefile slug to filter by
         sourcedir_slug: Optional sourcedir slug to filter by
 
@@ -207,7 +208,7 @@ def get_random_flashcard_data(
     if sourcedir_slug:
         try:
             sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
-            lemmas = get_sourcedir_lemmas(language_code, sourcedir_slug)
+            lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
         except DoesNotExist:
             return {"error": "Sourcedir not found"}
     # If sourcefile is provided, get its lemmas for filtering
@@ -220,14 +221,14 @@ def get_random_flashcard_data(
                 .get()
             )
             lemmas = get_sourcefile_lemmas(
-                language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
+                target_language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
             )
         except DoesNotExist:
             return {"error": "Sourcefile not found"}
 
     # Get random sentence
     sentence_data = get_random_sentence(
-        target_language_code=language_code,
+        target_language_code=target_language_code,
         required_lemmas=lemmas if lemmas else None,
     )
 

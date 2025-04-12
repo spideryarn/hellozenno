@@ -11,7 +11,7 @@ from utils.url_registry import endpoint_for, generate_route_registry
 
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
-    TEST_LANGUAGE_CODE,
+    TEST_TARGET_LANGUAGE_CODE,
     SAMPLE_LEMMA_DATA,
     SAMPLE_PHRASE_DATA,
 )
@@ -42,13 +42,13 @@ def extract_data_attribute(html: str, attribute_name: str) -> Optional[str]:
 
 
 def get_sourcedir_and_file(
-    client, language_code: str = "el"
+    client, target_language_code: str = "el"
 ) -> Tuple[Optional[str], Optional[str]]:
     """Get a sourcedir and sourcefile for testing.
 
     Args:
         client: The Flask test client
-        language_code: The language code to use
+        target_language_code: The language code to use
 
     Returns:
         A tuple of (sourcedir, sourcefile) or (None, None) if not found
@@ -60,7 +60,9 @@ def get_sourcedir_and_file(
 
     # Get the list of sourcedirs
     url = build_url_with_query(
-        client, sourcedirs_for_language_vw, target_language_code=language_code
+        client,
+        sourcedirs_for_language_vw,
+        target_language_code=target_language_code,
     )
     response = client.get(url)
     if response.status_code != 200:
@@ -75,7 +77,7 @@ def get_sourcedir_and_file(
     url = build_url_with_query(
         client,
         sourcefiles_for_sourcedir_vw,
-        target_language_code=language_code,
+        target_language_code=target_language_code,
         sourcedir_slug=sourcedir,
     )
     response = client.get(url)

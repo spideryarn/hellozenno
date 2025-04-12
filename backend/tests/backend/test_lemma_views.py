@@ -9,7 +9,7 @@ from db_models import (
     LemmaExampleSentence,
     SentenceLemma,
 )
-from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
+from tests.fixtures_for_tests import TEST_TARGET_LANGUAGE_CODE, SAMPLE_LEMMA_DATA
 from utils.store_utils import load_or_generate_lemma_metadata
 from tests.backend.utils_for_testing import build_url_with_query
 from views.wordform_views import wordforms_list_vw
@@ -21,14 +21,14 @@ def test_lemmas_list_basic(client, fixture_for_testing_db):
     # Create a test lemma
     lemma = Lemma.create(
         lemma="test_list",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         translations=["test translation"],
         commonality=0.5,
         etymology="test etymology",
     )
 
     url = build_url_with_query(
-        client, lemmas_list_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, lemmas_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -53,11 +53,13 @@ def test_lemma_detail_view(client, fixture_for_testing_db):
         [Lemma, Sentence, LemmaExampleSentence, SentenceLemma]
     ):
         # Create a test lemma with full metadata
-        lemma = Lemma.create(language_code=TEST_LANGUAGE_CODE, **SAMPLE_LEMMA_DATA)
+        lemma = Lemma.create(
+            target_language_code=TEST_TARGET_LANGUAGE_CODE, **SAMPLE_LEMMA_DATA
+        )
 
         # Create a test sentence
         sentence = Sentence.create(
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sentence="Είναι καλός άνθρωπος",
             translation="He is a good person",
         )
@@ -73,7 +75,7 @@ def test_lemma_detail_view(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             get_lemma_metadata_vw,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma=lemma.lemma,
         )
         response = client.get(url)
@@ -119,7 +121,7 @@ def test_nonexistent_lemma(client):
     url = build_url_with_query(
         client,
         get_lemma_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma="nonexistent",
     )
     response = client.get(url)
@@ -135,26 +137,26 @@ def test_lemmas_list_sorting(client, fixture_for_testing_db):
     # Create lemmas with different case to test case-insensitive sorting
     lemma1 = Lemma.create(
         lemma="Alpha",  # Capital A to test case-insensitive sorting
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         commonality=0.8,
         translations=["test1"],
     )
     lemma2 = Lemma.create(
         lemma="beta",  # lowercase b to test case-insensitive sorting
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         commonality=0.5,
         translations=["test2"],
     )
     lemma3 = Lemma.create(
         lemma="Gamma",  # Capital G to test case-insensitive sorting
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         commonality=0.9,
         translations=["test3"],
     )
 
     # Use build_url_with_query instead of hardcoded URL
     url = build_url_with_query(
-        client, lemmas_list_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, lemmas_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -162,7 +164,7 @@ def test_lemmas_list_sorting(client, fixture_for_testing_db):
     # Get the lemmas from the database in the expected order
     lemmas_alpha = list(
         Lemma.select()
-        .where(Lemma.language_code == TEST_LANGUAGE_CODE)
+        .where(Lemma.target_language_code == TEST_TARGET_LANGUAGE_CODE)
         .order_by(fn.Lower(Lemma.lemma))
     )
     lemma_names_alpha = [lemma.lemma for lemma in lemmas_alpha]
@@ -178,7 +180,7 @@ def test_lemma_model_defaults(fixture_for_testing_db):
     # Create a minimal lemma
     lemma = Lemma.create(
         lemma="test",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Convert to dict and check defaults
@@ -199,14 +201,14 @@ def test_delete_lemma(client, fixture_for_testing_db):
         # Create a test lemma with associated wordforms
         lemma = Lemma.create(
             lemma="test_delete",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             translations=["test translation"],
         )
 
         # Create associated wordform
         wordform = Wordform.create(
             wordform="test_delete_form",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma_entry=lemma,
             translations=["test translation"],
         )
@@ -217,7 +219,7 @@ def test_delete_lemma(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             get_lemma_metadata_vw,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma="test_delete",
         )
         response = client.get(url)
@@ -228,12 +230,14 @@ def test_delete_lemma(client, fixture_for_testing_db):
         delete_url = build_url_with_query(
             client,
             delete_lemma_vw,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma="test_delete",
         )
         # Building the expected redirect URL for more robust testing
         expected_redirect_url = build_url_with_query(
-            client, lemmas_list_vw, target_language_code=TEST_LANGUAGE_CODE
+            client,
+            lemmas_list_vw,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
         )
 
         response = client.post(delete_url)
@@ -244,14 +248,14 @@ def test_delete_lemma(client, fixture_for_testing_db):
         with pytest.raises(DoesNotExist):
             Lemma.get(
                 Lemma.lemma == "test_delete",
-                Lemma.language_code == TEST_LANGUAGE_CODE,
+                Lemma.target_language_code == TEST_TARGET_LANGUAGE_CODE,
             )
 
         # Verify wordform is also deleted due to cascade
         with pytest.raises(DoesNotExist):
             Wordform.get(
                 Wordform.wordform == "test_delete_form",
-                Wordform.language_code == TEST_LANGUAGE_CODE,
+                Wordform.target_language_code == TEST_TARGET_LANGUAGE_CODE,
             )
 
 
@@ -261,12 +265,12 @@ def test_delete_nonexistent_lemma(client):
     delete_url = build_url_with_query(
         client,
         delete_lemma_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma="nonexistent",
     )
     # Building the expected redirect URL for more robust testing
     expected_redirect_url = build_url_with_query(
-        client, lemmas_list_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, lemmas_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
 
     response = client.post(delete_url)
@@ -279,13 +283,13 @@ def test_wordforms_list_with_no_lemma(client, fixture_for_testing_db):
     # Create a wordform without a lemma
     wordform = Wordform.create(
         wordform="test_no_lemma",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         translations=["test translation"],
     )
 
     # Test accessing the wordforms list view
     url = build_url_with_query(
-        client, wordforms_list_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, wordforms_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -304,7 +308,7 @@ def test_wordform_detail_with_no_lemma(client, fixture_for_testing_db):
         # Create a wordform without a lemma
         wordform = Wordform.create(
             wordform="test_no_lemma",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             translations=["test translation"],
         )
 
@@ -314,7 +318,7 @@ def test_wordform_detail_with_no_lemma(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             get_wordform_metadata_vw,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             wordform="test_no_lemma",
         )
         response = client.get(url)
@@ -331,7 +335,7 @@ def test_lemma_update_or_create(client, fixture_for_testing_db):
     with fixture_for_testing_db.bind_ctx([Lemma]):
         # Test creation of new lemma
         lemma, created = Lemma.update_or_create(
-            lookup={"lemma": "νέος", "language_code": TEST_LANGUAGE_CODE},
+            lookup={"lemma": "νέος", "target_language_code": TEST_TARGET_LANGUAGE_CODE},
             updates={"translations": ["new", "young"], "part_of_speech": "adjective"},
         )
         assert created is True
@@ -341,7 +345,7 @@ def test_lemma_update_or_create(client, fixture_for_testing_db):
 
         # Test update of existing lemma
         updated_lemma, created = Lemma.update_or_create(
-            lookup={"lemma": "νέος", "language_code": TEST_LANGUAGE_CODE},
+            lookup={"lemma": "νέος", "target_language_code": TEST_TARGET_LANGUAGE_CODE},
             updates={"commonality": 0.75, "cultural_context": "Modern Greek usage"},
         )
         assert created is False
@@ -350,7 +354,7 @@ def test_lemma_update_or_create(client, fixture_for_testing_db):
 
         # Test that we can still update an existing entry
         lemma, created = Lemma.update_or_create(
-            lookup={"lemma": "νέος", "language_code": TEST_LANGUAGE_CODE},
+            lookup={"lemma": "νέος", "target_language_code": TEST_TARGET_LANGUAGE_CODE},
             updates={"translations": ["updated"]},
         )
         assert created is False
@@ -362,7 +366,7 @@ def test_load_lemma_metadata_handles_null_lemma(client, fixture_for_testing_db):
     # Create a wordform with a null lemma
     wordform = Wordform.create(
         wordform=None,  # Using None as the wordform to prevent LLM generation
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma_entry=None,
         part_of_speech="unknown",
         translations=[],
@@ -371,7 +375,9 @@ def test_load_lemma_metadata_handles_null_lemma(client, fixture_for_testing_db):
     )
 
     # Test that the function handles the null lemma gracefully
-    metadata = load_or_generate_lemma_metadata(wordform.wordform, TEST_LANGUAGE_CODE)
+    metadata = load_or_generate_lemma_metadata(
+        wordform.wordform, TEST_TARGET_LANGUAGE_CODE
+    )
 
     # Verify the metadata is returned with appropriate defaults
     assert metadata is not None
@@ -387,7 +393,7 @@ def test_load_lemma_metadata_handles_null_lemma(client, fixture_for_testing_db):
 def test_load_lemma_metadata_with_none(client, fixture_for_testing_db):
     """Test that load_or_generate_lemma_metadata handles None input gracefully."""
     # Test with None lemma
-    metadata = load_or_generate_lemma_metadata(None, TEST_LANGUAGE_CODE)
+    metadata = load_or_generate_lemma_metadata(None, TEST_TARGET_LANGUAGE_CODE)
 
     # Verify the metadata is returned with appropriate defaults
     assert metadata is not None

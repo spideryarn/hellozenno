@@ -4,7 +4,7 @@ import pytest
 from io import BytesIO
 from peewee import DoesNotExist
 from db_models import Sentence, Wordform, Lemma
-from tests.fixtures_for_tests import TEST_LANGUAGE_CODE, create_test_sentence
+from tests.fixtures_for_tests import TEST_TARGET_LANGUAGE_CODE, create_test_sentence
 import utils.audio_utils as audio_utils  # Import the module directly for mocking
 import json
 from tests.backend.utils_for_testing import build_url_with_query
@@ -30,7 +30,7 @@ def test_get_sentence_audio(client, test_sentence):
     url = build_url_with_query(
         client,
         get_sentence_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sentence_id=test_sentence.id,
     )
     response = client.get(url)
@@ -42,7 +42,7 @@ def test_get_sentence_audio(client, test_sentence):
     url = build_url_with_query(
         client,
         get_sentence_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sentence_id=999,
     )
     response = client.get(url)
@@ -55,7 +55,7 @@ def test_get_sentence_audio(client, test_sentence):
     url = build_url_with_query(
         client,
         get_sentence_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sentence_id=test_sentence.id,
     )
     response = client.get(url)
@@ -82,7 +82,7 @@ def test_get_random_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         get_random_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -91,7 +91,7 @@ def test_get_random_sentence(client, test_sentence):
     assert data["sentence"] == test_sentence.sentence
     assert data["translation"] == test_sentence.translation
     assert data["lemma_words"] == test_sentence.lemma_words
-    assert data["target_language_code"] == TEST_LANGUAGE_CODE
+    assert data["target_language_code"] == TEST_TARGET_LANGUAGE_CODE
     assert data["slug"] == test_sentence.slug
 
     # Test with missing audio - should generate it
@@ -100,7 +100,7 @@ def test_get_random_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         get_random_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -112,7 +112,7 @@ def test_get_random_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         get_random_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         query_params={"lemmas[]": test_sentence.lemma_words[0]},
     )
     response = client.get(url)
@@ -124,7 +124,7 @@ def test_get_random_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         get_random_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         query_params={"lemmas[]": "nonexistentlemma"},
     )
     response = client.get(url)
@@ -147,7 +147,7 @@ def test_get_sentences_list(client, test_sentence):
     url = build_url_with_query(
         client,
         sentences_list_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -159,7 +159,7 @@ def test_get_sentence_by_slug(client, test_sentence):
     url = build_url_with_query(
         client,
         get_sentence_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.get(url)
@@ -170,7 +170,7 @@ def test_get_sentence_by_slug(client, test_sentence):
     url = build_url_with_query(
         client,
         get_sentence_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="nonexistent-slug",
     )
     response = client.get(url)
@@ -192,7 +192,7 @@ def test_delete_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         delete_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.delete(url)
@@ -202,7 +202,7 @@ def test_delete_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         get_sentence_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.get(url)
@@ -212,7 +212,7 @@ def test_delete_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         delete_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="nonexistent-slug",
     )
     response = client.delete(url)
@@ -225,7 +225,7 @@ def test_rename_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         rename_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.put(
@@ -241,7 +241,7 @@ def test_rename_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         rename_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.put(
@@ -254,7 +254,7 @@ def test_rename_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         rename_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.put(
@@ -267,7 +267,7 @@ def test_rename_sentence(client, test_sentence):
     url = build_url_with_query(
         client,
         rename_sentence_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="nonexistent-slug",
     )
     response = client.put(
@@ -282,7 +282,7 @@ def test_generate_sentence_audio(client, test_sentence):
     url = build_url_with_query(
         client,
         generate_sentence_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.post(url)
@@ -292,7 +292,7 @@ def test_generate_sentence_audio(client, test_sentence):
     url = build_url_with_query(
         client,
         generate_sentence_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="nonexistent-slug",
     )
     response = client.post(url)
@@ -304,7 +304,7 @@ def test_sentence_word_links(client, test_sentence):
     url = build_url_with_query(
         client,
         get_sentence_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.get(url)

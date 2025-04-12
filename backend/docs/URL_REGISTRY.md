@@ -41,12 +41,12 @@ const apiUrl = getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, {
 });
 
 // Get a frontend page URL with type-safe parameters
-const pageUrl = getPageUrl('wordforms', { language_code: 'el' });
+const pageUrl = getPageUrl('wordforms', { target_language_code: 'el' });
 
 // Or with query parameters
 const searchPageUrl = getPageUrl(
   'search', 
-  { language_code: 'el' }, 
+  { target_language_code: 'el' }, 
   { query: 'hello', filter: 'all' }
 );
 
@@ -110,11 +110,11 @@ import { RouteName } from '$lib/generated/routes';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
-  const { language_code, wordform } = params;
+  const { target_language_code, wordform } = params;
   
   const url = getApiUrl(
     RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
-    { target_language_code: language_code, wordform }
+    { target_language_code: target_language_code, wordform }
   );
   
   const response = await fetch(url);
@@ -224,4 +224,4 @@ The URL registry relies on correct naming of blueprints and functions:
 
 ## Parameter Naming Consistency
 
-The Flask API uses `target_language_code` as the parameter name for language code, while SvelteKit routes may use `language_code`. When calling APIs from SvelteKit, always map the SvelteKit route parameter to `target_language_code` in API calls.
+The Flask API uses `target_language_code` as the parameter name for language code, while SvelteKit routes may use `target_language_code`. When calling APIs from SvelteKit, always map the SvelteKit route parameter to `target_language_code` in API calls.

@@ -1,13 +1,13 @@
 from pycountry import languages
 from config import LANGUAGE_NAME_OVERRIDES, SUPPORTED_LANGUAGES
 
-VALID_LANGUAGE_CODES = set(
+VALID_target_language_codeS = set(
     lang.alpha_2 for lang in languages if hasattr(lang, "alpha_2")  # type: ignore
 )
-assert set(LANGUAGE_NAME_OVERRIDES.keys()).issubset(VALID_LANGUAGE_CODES)
+assert set(LANGUAGE_NAME_OVERRIDES.keys()).issubset(VALID_target_language_codeS)
 assert SUPPORTED_LANGUAGES is None or SUPPORTED_LANGUAGES.issubset(
-    VALID_LANGUAGE_CODES
-), f"Invalid language code(s) in SUPPORTED_LANGUAGES: {SUPPORTED_LANGUAGES - VALID_LANGUAGE_CODES}"
+    VALID_target_language_codeS
+), f"Invalid language code(s) in SUPPORTED_LANGUAGES: {SUPPORTED_LANGUAGES - VALID_target_language_codeS}"
 
 
 def get_all_languages():
@@ -56,7 +56,7 @@ def get_language_name(lang_code_or_obj):
     )
 
 
-def get_language_code(lang_name_or_code: str) -> str:
+def get_target_language_code(lang_name_or_code: str) -> str:
     """Get the 2-letter language code for a language name or code.
 
     Args:
@@ -69,7 +69,7 @@ def get_language_code(lang_name_or_code: str) -> str:
         LookupError: If the language is not found
     """
     # If it's already a valid 2-letter code, return it
-    if lang_name_or_code in VALID_LANGUAGE_CODES:
+    if lang_name_or_code in VALID_target_language_codeS:
         return lang_name_or_code
 
     # Try to find by name

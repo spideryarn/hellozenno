@@ -38,17 +38,19 @@ def validate_audio_file(file_path: Path) -> tuple[bool, Optional[str]]:
     return True, None
 
 
-def transcribe_audio(file_obj: BinaryIO | Path, language_code: str) -> tuple[str, dict]:
+def transcribe_audio(
+    file_obj: BinaryIO | Path, target_language_code: str
+) -> tuple[str, dict]:
     """
     Transcribe audio file using OpenAI's Whisper
     Returns (transcribed_text, metadata).
 
     Args:
         file_obj: Either a Path to an audio file or a file-like object containing audio data
-        language_code: ISO 639-1 code (e.g. 'el' for Greek)
+        target_language_code: ISO 639-1 code (e.g. 'el' for Greek)
     """
-    if language_code not in SUPPORTED_LANGUAGES:
-        raise ValueError(f"Language {language_code} not supported")
+    if target_language_code not in SUPPORTED_LANGUAGES:
+        raise ValueError(f"Language {target_language_code} not supported")
 
     try:
         # If it's a Path, open and read the file
@@ -66,7 +68,7 @@ def transcribe_audio(file_obj: BinaryIO | Path, language_code: str) -> tuple[str
             model="whisper-1",
             file=audio_file,
             # Explicitly set the language for better accuracy
-            language=language_code,
+            language=target_language_code,
             # Request timestamps for potential future use
             timestamp_granularities=["segment"],
             # Add parameters to improve transcription quality

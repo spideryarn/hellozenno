@@ -39,7 +39,7 @@ All API endpoints are available as enum values in `RouteName` from the generated
 
 ## Parameter Naming
 
-The backend API uses `target_language_code` as the parameter name, while SvelteKit routes may use `language_code`. When calling APIs, always map the SvelteKit route parameter to `target_language_code`.
+The backend API uses `target_language_code` as the parameter name, while SvelteKit routes may use `target_language_code`. When calling APIs, always map the SvelteKit route parameter to `target_language_code`.
 
 ## Flask development server
 

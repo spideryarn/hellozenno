@@ -19,7 +19,7 @@ def test_sourcedir(fixture_for_testing_db):
     """Create a test sourcedir."""
     sourcedir = Sourcedir.create(
         path="test_dir",
-        language_code="el",
+        target_language_code="el",
     )
     return sourcedir
 
@@ -140,7 +140,7 @@ def test_ensure_model_audio_data(
     """Test generating audio for model instances."""
     # Test with Sentence model
     sentence = Sentence.create(
-        language_code="el",
+        target_language_code="el",
         sentence="Test sentence",
         translation="Test translation",
     )
@@ -161,7 +161,7 @@ def test_ensure_model_audio_data(
 
     # Test with empty text
     empty_sentence = Sentence.create(
-        language_code="el",
+        target_language_code="el",
         sentence="",
         translation="",
     )

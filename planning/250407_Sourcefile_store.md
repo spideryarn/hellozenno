@@ -37,7 +37,7 @@ export const createSourcefileStore = (initialSourcefile, languageCode, sourcedir
   // Main state
   const { subscribe, set, update } = writable({
     sourcefile: initialSourcefile,
-    language_code: languageCode,
+    target_language_code: languageCode,
     sourcedir_slug: sourcedirSlug,
     sourcefile_slug: initialSourcefileSlug
   });
@@ -48,7 +48,7 @@ export const createSourcefileStore = (initialSourcefile, languageCode, sourcedir
     ($state) => getApiUrl(
       RouteName.SOURCEFILE_VIEWS_VIEW_SOURCEFILE_VW,
       {
-        target_language_code: $state.language_code,
+        target_language_code: $state.target_language_code,
         sourcedir_slug: $state.sourcedir_slug,
         sourcefile_slug: $state.sourcefile_slug
       }
@@ -60,7 +60,7 @@ export const createSourcefileStore = (initialSourcefile, languageCode, sourcedir
     ($state) => getApiUrl(
       RouteName.SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW,
       {
-        target_language_code: $state.language_code,
+        target_language_code: $state.target_language_code,
         sourcedir_slug: $state.sourcedir_slug,
         sourcefile_slug: $state.sourcefile_slug
       }
@@ -95,7 +95,7 @@ export const createSourcefileStore = (initialSourcefile, languageCode, sourcedir
   // Initialize store with data from the server
   const sourcefileStore = createSourcefileStore(
     data.sourcefile,
-    $page.params.language_code,
+    $page.params.target_language_code,
     $page.params.sourcedir_slug,
     $page.params.sourcefile_slug
   );
@@ -119,7 +119,7 @@ export const createSourcefileStore = (initialSourcefile, languageCode, sourcedir
   
   // Destructure and use the store
   $: sourcefile = $sourcefileStore.sourcefile;
-  $: language_code = $sourcefileStore.language_code;
+  $: target_language_code = $sourcefileStore.target_language_code;
   $: sourcedir_slug = $sourcefileStore.sourcedir_slug;
   $: sourcefile_slug = $sourcefileStore.sourcefile_slug;
   $: viewUrl = $sourcefileStore.viewUrl;
@@ -135,7 +135,7 @@ export const createSourcefileStore = (initialSourcefile, languageCode, sourcedir
         getApiUrl(
           RouteName.SOURCEFILE_API_RENAME_SOURCEFILE_API,
           {
-            target_language_code: language_code,
+            target_language_code: target_language_code,
             sourcedir_slug,
             sourcefile_slug
           }
@@ -162,7 +162,7 @@ export const createSourcefileStore = (initialSourcefile, languageCode, sourcedir
       
       // Redirect to the new URL
       const sourcefileTextUrl = getPageUrl('sourcefile_text', {
-        language_code,
+        target_language_code,
         sourcedir_slug,
         sourcefile_slug: result.new_slug
       });
@@ -206,7 +206,7 @@ The minimal fix would be to make URL generation reactive in SourcefileHeader.sve
 
 ```svelte
 $: viewUrl = getApiUrl(RouteName.SOURCEFILE_VIEWS_VIEW_SOURCEFILE_VW, {
-  target_language_code: language_code,
+  target_language_code: target_language_code,
   sourcedir_slug,
   sourcefile_slug
 });

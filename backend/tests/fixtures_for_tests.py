@@ -18,7 +18,7 @@ from db_models import (
 )
 
 # Basic test constants
-TEST_LANGUAGE_CODE = "el"
+TEST_TARGET_LANGUAGE_CODE = "el"
 TEST_LANGUAGE_NAME = "Greek"
 TEST_SOURCE_DIR = "test_source"
 TEST_SOURCE_FILE = "test.txt"
@@ -105,7 +105,7 @@ def create_test_lemma(db, **kwargs) -> Lemma:
     """Create a test lemma with customizable properties."""
     lemma_data = {
         "lemma": "test",
-        "language_code": TEST_LANGUAGE_CODE,
+        "target_language_code": TEST_TARGET_LANGUAGE_CODE,
         "part_of_speech": "noun",
         "translations": ["test"],
         "register": "neutral",
@@ -125,7 +125,7 @@ def create_test_wordform(db, lemma: Lemma = None, **kwargs) -> Wordform:
     wordform_data = {
         "wordform": "test",
         "lemma_entry": lemma,
-        "language_code": TEST_LANGUAGE_CODE,
+        "target_language_code": TEST_TARGET_LANGUAGE_CODE,
         "part_of_speech": "noun",
         "translations": ["test translation"],
         "inflection_type": "nominative",
@@ -137,13 +137,16 @@ def create_test_wordform(db, lemma: Lemma = None, **kwargs) -> Wordform:
 
 def create_test_phrase(db, **kwargs) -> Phrase:
     """Create a test phrase with customizable properties."""
-    phrase_data = {"language_code": TEST_LANGUAGE_CODE, **SAMPLE_PHRASE_DATA}
+    phrase_data = {
+        "target_language_code": TEST_TARGET_LANGUAGE_CODE,
+        **SAMPLE_PHRASE_DATA,
+    }
     phrase_data.update(kwargs)
     return Phrase.create(**phrase_data)
 
 
 def create_test_sourcedir(
-    db, return_dict=True, path=None, language_code=None, **kwargs
+    db, return_dict=True, path=None, target_language_code=None, **kwargs
 ) -> Union[Dict[str, Sourcedir], Sourcedir]:
     """Create test sourcedirs.
 
@@ -151,7 +154,7 @@ def create_test_sourcedir(
         db: Database connection
         return_dict: If True, returns dictionary with multiple sourcedirs, otherwise returns a single sourcedir
         path: Optional path to use for a single sourcedir
-        language_code: Optional language code for a single sourcedir
+        target_language_code: Optional language code for a single sourcedir
         **kwargs: Additional arguments to pass to Sourcedir.create
 
     Returns:
@@ -160,19 +163,23 @@ def create_test_sourcedir(
     if return_dict:
         return {
             "empty": Sourcedir.create(
-                path="empty_dir", language_code=TEST_LANGUAGE_CODE, **kwargs
+                path="empty_dir",
+                target_language_code=TEST_TARGET_LANGUAGE_CODE,
+                **kwargs
             ),
             "with_files": Sourcedir.create(
-                path=TEST_SOURCE_DIR, language_code=TEST_LANGUAGE_CODE, **kwargs
+                path=TEST_SOURCE_DIR,
+                target_language_code=TEST_TARGET_LANGUAGE_CODE,
+                **kwargs
             ),
             "other_lang": Sourcedir.create(
-                path="test_dir_fr", language_code="fr", **kwargs
+                path="test_dir_fr", target_language_code="fr", **kwargs
             ),
         }
     else:
         sourcedir_data = {
             "path": path or TEST_SOURCE_DIR,
-            "language_code": language_code or TEST_LANGUAGE_CODE,
+            "target_language_code": target_language_code or TEST_TARGET_LANGUAGE_CODE,
         }
         sourcedir_data.update(kwargs)
         return Sourcedir.create(**sourcedir_data)
@@ -264,7 +271,7 @@ def create_test_sourcefile_links(
 def create_test_sentence(db, lemma_words=None, **kwargs) -> Sentence:
     """Create a test sentence with audio data and customizable properties."""
     sentence_data = {
-        "language_code": TEST_LANGUAGE_CODE,
+        "target_language_code": TEST_TARGET_LANGUAGE_CODE,
         "sentence": "Το σπίτι είναι μεγάλο",
         "translation": "The house is big",
         "audio_data": b"test audio data",  # Dummy audio data for testing
@@ -277,7 +284,7 @@ def create_test_sentence(db, lemma_words=None, **kwargs) -> Sentence:
     for lemma_word in lemma_words:
         lemma = Lemma.create(
             lemma=lemma_word,
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             part_of_speech="unknown",
             translations=[],
         )

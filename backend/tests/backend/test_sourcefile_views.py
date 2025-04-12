@@ -13,7 +13,7 @@ from db_models import (
 )
 from tests.fixtures_for_tests import (
     SAMPLE_PHRASE_DATA,
-    TEST_LANGUAGE_CODE,
+    TEST_TARGET_LANGUAGE_CODE,
     TEST_LANGUAGE_NAME,
     TEST_SOURCE_DIR,
     TEST_SOURCE_FILE,
@@ -88,7 +88,7 @@ def test_inspect_sourcefile(client, test_data, monkeypatch):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -111,7 +111,7 @@ def test_inspect_sourcefile(client, test_data, monkeypatch):
 
     # Get the sourcefile entry directly using the helper
     sourcefile_entry = utils.sourcefile_utils._get_sourcefile_entry(
-        TEST_LANGUAGE_CODE, sourcedir.slug, sourcefile.slug
+        TEST_TARGET_LANGUAGE_CODE, sourcedir.slug, sourcefile.slug
     )
     assert sourcefile_entry is not None
     assert sourcefile_entry.id == sourcefile.id
@@ -122,7 +122,7 @@ def test_inspect_sourcefile(client, test_data, monkeypatch):
 
     with pytest.raises(DoesNotExist):
         utils.sourcefile_utils._get_sourcefile_entry(
-            TEST_LANGUAGE_CODE, sourcedir.slug, "nonexistent-file"
+            TEST_TARGET_LANGUAGE_CODE, sourcedir.slug, "nonexistent-file"
         )
 
 
@@ -131,7 +131,7 @@ def test_view_sourcefile(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -151,7 +151,7 @@ def test_view_sourcefile(client, test_data):
     url = build_url_with_query(
         client,
         view_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -164,7 +164,7 @@ def test_view_sourcefile(client, test_data):
     url = build_url_with_query(
         client,
         view_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent-file",
     )
@@ -178,7 +178,7 @@ def test_download_sourcefile(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -191,7 +191,7 @@ def test_download_sourcefile(client, test_data):
     url = build_url_with_query(
         client,
         download_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -204,7 +204,7 @@ def test_download_sourcefile(client, test_data):
     url = build_url_with_query(
         client,
         download_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent-txt",
     )
@@ -218,7 +218,7 @@ def test_play_sourcefile_audio(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -231,7 +231,7 @@ def test_play_sourcefile_audio(client, test_data):
     url = build_url_with_query(
         client,
         play_sourcefile_audio_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -244,7 +244,7 @@ def test_play_sourcefile_audio(client, test_data):
     url = build_url_with_query(
         client,
         play_sourcefile_audio_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent-txt",
     )
@@ -258,7 +258,7 @@ def test_sourcefile_sentences(client, test_data, monkeypatch):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -287,7 +287,9 @@ def test_sourcefile_sentences(client, test_data, monkeypatch):
     assert sourcefile_entry is not None
 
     # Test getting lemmas for the sourcefile
-    lemmas = get_sourcefile_lemmas(TEST_LANGUAGE_CODE, sourcedir.slug, sourcefile.slug)
+    lemmas = get_sourcefile_lemmas(
+        TEST_TARGET_LANGUAGE_CODE, sourcedir.slug, sourcefile.slug
+    )
     assert isinstance(lemmas, list)  # Just verify it returns a list
 
     # Test nonexistent sourcefile
@@ -303,7 +305,9 @@ def test_sourcefile_sentences(client, test_data, monkeypatch):
 def test_delete_sourcefile(client):
     """Test deleting a source file."""
     # Create test sourcedir and sourcefile with language code
-    sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
+    sourcedir = Sourcedir.create(
+        path="test_dir", target_language_code=TEST_TARGET_LANGUAGE_CODE
+    )
     sourcefile = Sourcefile.create(
         sourcedir=sourcedir,
         filename="test.txt",
@@ -321,7 +325,7 @@ def test_delete_sourcefile(client):
     url = build_url_with_query(
         client,
         delete_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -339,7 +343,7 @@ def test_delete_sourcefile(client):
     url = build_url_with_query(
         client,
         delete_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent-txt",
     )
@@ -351,7 +355,7 @@ def test_delete_sourcefile(client):
     url = build_url_with_query(
         client,
         delete_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug="nonexistent_dir",
         sourcefile_slug="test.txt",
     )
@@ -396,7 +400,7 @@ def test_auto_linking_wordforms(client, fixture_for_testing_db):
         # Create sourcedir and sourcefile
         sourcedir = Sourcedir.create(
             path="test_dir",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
         )
         sourcefile = Sourcefile.create(
             sourcedir=sourcedir,
@@ -410,13 +414,13 @@ def test_auto_linking_wordforms(client, fixture_for_testing_db):
         # Create some wordforms in the database (but not linked to sourcefile)
         lemma1 = Lemma.create(
             lemma="καλημέρα",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             part_of_speech="expression",
             translations=["good morning"],
         )
         wordform1 = Wordform.create(
             wordform="καλημέρα",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma_entry=lemma1,
             part_of_speech="expression",
             translations=["good morning"],
@@ -425,13 +429,13 @@ def test_auto_linking_wordforms(client, fixture_for_testing_db):
 
         lemma2 = Lemma.create(
             lemma="είμαι",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             part_of_speech="verb",
             translations=["to be"],
         )
         wordform2 = Wordform.create(
             wordform="είστε",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma_entry=lemma2,
             part_of_speech="verb",
             translations=["you are"],
@@ -443,7 +447,7 @@ def test_auto_linking_wordforms(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             inspect_sourcefile_vw,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
             sourcefile_slug=sourcefile.slug,
         )
@@ -462,7 +466,7 @@ def test_auto_linking_case_insensitive(client, fixture_for_testing_db):
         # Create test data
         sourcedir = Sourcedir.create(
             path="test_dir",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
         )
         sourcefile = Sourcefile.create(
             sourcedir=sourcedir,
@@ -476,13 +480,13 @@ def test_auto_linking_case_insensitive(client, fixture_for_testing_db):
         # Create wordform in database (lowercase)
         lemma = Lemma.create(
             lemma="καλημέρα",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             part_of_speech="expression",
             translations=["good morning"],
         )
         wordform = Wordform.create(
             wordform="καλημέρα",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma_entry=lemma,
             part_of_speech="expression",
             translations=["good morning"],
@@ -492,7 +496,7 @@ def test_auto_linking_case_insensitive(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             inspect_sourcefile_vw,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
             sourcefile_slug=sourcefile.slug,
         )
@@ -511,7 +515,7 @@ def test_auto_linking_preserves_existing(client, fixture_for_testing_db):
         # Create test data
         sourcedir = Sourcedir.create(
             path="test_dir",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
         )
         sourcefile = Sourcefile.create(
             sourcedir=sourcedir,
@@ -525,13 +529,13 @@ def test_auto_linking_preserves_existing(client, fixture_for_testing_db):
         # Create wordform and existing link with custom centrality
         lemma = Lemma.create(
             lemma="καλημέρα",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             part_of_speech="expression",
             translations=["good morning"],
         )
         wordform = Wordform.create(
             wordform="καλημέρα",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma_entry=lemma,
             part_of_speech="expression",
             translations=["good morning"],
@@ -547,7 +551,7 @@ def test_auto_linking_preserves_existing(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             inspect_sourcefile_text_vw,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
             sourcefile_slug=sourcefile.slug,
         )
@@ -561,7 +565,9 @@ def test_auto_linking_preserves_existing(client, fixture_for_testing_db):
 def test_rename_sourcefile(client):
     """Test renaming a source file."""
     # Create test sourcedir and sourcefile
-    sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
+    sourcedir = Sourcedir.create(
+        path="test_dir", target_language_code=TEST_TARGET_LANGUAGE_CODE
+    )
     sourcefile = Sourcefile.create(
         sourcedir=sourcedir,
         filename="test.txt",
@@ -580,7 +586,7 @@ def test_rename_sourcefile(client):
     url = build_url_with_query(
         client,
         rename_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=original_slug,
     )
@@ -608,7 +614,7 @@ def test_rename_sourcefile(client):
     url = build_url_with_query(
         client,
         rename_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent-txt",
     )
@@ -623,7 +629,7 @@ def test_rename_sourcefile(client):
     url = build_url_with_query(
         client,
         rename_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="new-test-txt",
     )
@@ -638,7 +644,7 @@ def test_rename_sourcefile(client):
     url = build_url_with_query(
         client,
         rename_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="new-test-txt",
     )
@@ -663,7 +669,7 @@ def test_rename_sourcefile(client):
     url = build_url_with_query(
         client,
         rename_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="new-test-txt",
     )
@@ -681,7 +687,7 @@ def test_sourcefile_navigation(client, fixture_for_testing_db):
     # Create sourcedir
     sourcedir = Sourcedir.create(
         path="test_dir",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Create multiple sourcefiles in alphabetical order
@@ -724,7 +730,7 @@ def test_sourcefile_navigation(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         next_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefiles[1].slug,
     )
@@ -736,7 +742,7 @@ def test_sourcefile_navigation(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         prev_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefiles[1].slug,
     )
@@ -748,7 +754,7 @@ def test_sourcefile_navigation(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         prev_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefiles[0].slug,
     )
@@ -760,7 +766,7 @@ def test_sourcefile_navigation(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         next_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefiles[2].slug,
     )
@@ -772,7 +778,7 @@ def test_sourcefile_navigation(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         next_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent-txt",
     )
@@ -787,7 +793,7 @@ def test_sourcefile_phrases(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -798,7 +804,7 @@ def test_sourcefile_phrases(client, test_data):
     url = build_url_with_query(
         client,
         inspect_sourcefile_phrases_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -813,7 +819,7 @@ def test_sourcefile_phrase_metadata(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -824,7 +830,7 @@ def test_sourcefile_phrase_metadata(client, test_data):
     url = build_url_with_query(
         client,
         inspect_sourcefile_phrases_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -839,7 +845,7 @@ def test_sourcefile_phrase_ordering(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -847,7 +853,7 @@ def test_sourcefile_phrase_ordering(client, test_data):
 
     # Create another phrase with different ordering
     second_phrase = Phrase.create(
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         canonical_form="second test phrase",
         raw_forms=["second test phrase"],
         translations=["second test translation"],
@@ -864,7 +870,7 @@ def test_sourcefile_phrase_ordering(client, test_data):
     url = build_url_with_query(
         client,
         inspect_sourcefile_phrases_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -879,7 +885,7 @@ def test_sourcefile_slug_generation(client, fixture_for_testing_db):
     # Create test sourcedir
     sourcedir = Sourcedir.create(
         path="test_dir",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Test basic slug generation
@@ -909,7 +915,7 @@ def test_sourcefile_slug_generation(client, fixture_for_testing_db):
     # Test that same filename can be used in different sourcedirs
     sourcedir2 = Sourcedir.create(
         path="test_dir2",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     sourcefile3 = Sourcefile.create(
         sourcedir=sourcedir2,
@@ -961,7 +967,7 @@ def test_process_sourcefile(client, monkeypatch):
     # Create test data
     sourcedir = Sourcedir.create(
         path="test_dir",
-        language_code="el",
+        target_language_code="el",
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
@@ -1004,7 +1010,7 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
     # Create test sourcedir
     sourcedir = Sourcedir.create(
         path="test_dir",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Already imported the API function create_sourcefile_from_text_api
@@ -1013,7 +1019,7 @@ def test_create_sourcefile_from_text(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         create_sourcefile_from_text_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
 
@@ -1080,14 +1086,14 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
 
     # Create test sourcedir
     sourcedir = Sourcedir.create(
-        path="test_dir_audio", language_code=TEST_LANGUAGE_CODE
+        path="test_dir_audio", target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
 
     # Get URL for upload endpoint
     url = build_url_with_query(
         client,
         upload_sourcedir_new_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
 
@@ -1151,13 +1157,15 @@ def test_add_sourcefile_from_youtube(client, monkeypatch, fixture_for_testing_db
     monkeypatch.setattr("utils.youtube_utils.download_audio", mock_download_audio)
 
     # Create test sourcedir
-    sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
+    sourcedir = Sourcedir.create(
+        path="test_dir", target_language_code=TEST_TARGET_LANGUAGE_CODE
+    )
 
     # Use build_url_with_query for API function
     url = build_url_with_query(
         client,
         add_sourcefile_from_youtube_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
 
@@ -1235,7 +1243,7 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
     # Create test sourcedir and sourcefile
     sourcedir = Sourcedir.create(
         path="test_dir_audio",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     sourcefile = Sourcefile.create(
         sourcedir=sourcedir,
@@ -1252,7 +1260,7 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         generate_sourcefile_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -1270,7 +1278,7 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
     url_nonexistent = build_url_with_query(
         client,
         generate_sourcefile_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug="nonexistent",
     )
@@ -1291,7 +1299,7 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
     url_empty = build_url_with_query(
         client,
         generate_sourcefile_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=empty_sourcefile.slug,
     )
@@ -1313,7 +1321,7 @@ def test_generate_sourcefile_audio(client, monkeypatch, fixture_for_testing_db):
     url_long = build_url_with_query(
         client,
         generate_sourcefile_audio_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=long_sourcefile.slug,
     )
@@ -1330,7 +1338,9 @@ def test_delete_sourcefile_with_wordforms(client):
     from views.sourcefile_api import delete_sourcefile_api
 
     # Create test sourcedir and sourcefile with language code
-    sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
+    sourcedir = Sourcedir.create(
+        path="test_dir", target_language_code=TEST_TARGET_LANGUAGE_CODE
+    )
     sourcefile = Sourcefile.create(
         sourcedir=sourcedir,
         filename="test.txt",
@@ -1345,13 +1355,13 @@ def test_delete_sourcefile_with_wordforms(client):
     # Create a lemma and wordform
     lemma = Lemma.create(
         lemma="test",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         part_of_speech="noun",
         translations=["test"],
     )
     wordform = Wordform.create(
         wordform="test",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma_entry=lemma,
         part_of_speech="noun",
         translations=["test"],
@@ -1370,7 +1380,7 @@ def test_delete_sourcefile_with_wordforms(client):
     url = build_url_with_query(
         client,
         delete_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )
@@ -1400,7 +1410,7 @@ def test_process_individual_words(client, fixture_for_testing_db):
         # Create sourcedir and sourcefile
         sourcedir = Sourcedir.create(
             path="test_dir",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
         )
         sourcefile = Sourcefile.create(
             sourcedir=sourcedir,
@@ -1414,13 +1424,13 @@ def test_process_individual_words(client, fixture_for_testing_db):
         # Create lemma and wordform
         lemma = Lemma.create(
             lemma="test",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             part_of_speech="noun",
             translations=["test"],
         )
         wordform = Wordform.create(
             wordform="test",
-            language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma_entry=lemma,
             part_of_speech="noun",
             translations=["test"],
@@ -1439,7 +1449,7 @@ def test_process_individual_words(client, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             process_individual_words_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
             sourcefile_slug=sourcefile.slug,
         )
@@ -1472,7 +1482,9 @@ def test_upload_audio_file(client, monkeypatch, fixture_for_testing_db):
 def test_process_png_file(client, monkeypatch, fixture_for_testing_db):
     """Test processing a PNG file."""
     # Create test sourcedir
-    sourcedir = Sourcedir.create(path="test_dir_png", language_code=TEST_LANGUAGE_CODE)
+    sourcedir = Sourcedir.create(
+        path="test_dir_png", target_language_code=TEST_TARGET_LANGUAGE_CODE
+    )
 
     # Mock process_sourcefile_content to return sample data
     # This avoids making actual API calls to external services for text extraction and translation
@@ -1518,7 +1530,7 @@ def test_process_png_file(client, monkeypatch, fixture_for_testing_db):
     upload_url = build_url_with_query(
         client,
         upload_sourcedir_new_sourcefile_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
 
@@ -1546,7 +1558,7 @@ def test_process_png_file(client, monkeypatch, fixture_for_testing_db):
     process_url = build_url_with_query(
         client,
         process_sourcefile_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
         sourcefile_slug=sourcefile.slug,
     )

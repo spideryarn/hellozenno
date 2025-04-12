@@ -48,7 +48,7 @@
   async function fetchLemmaData(lemma: string) {
     try {
       const url = resolveRoute(RouteName.LEMMA_API_GET_LEMMA_DATA_API, {
-        target_language_code: sentence.language_code,
+        target_language_code: sentence.target_language_code,
         lemma: lemma
       });
       
@@ -87,7 +87,7 @@
     isGeneratingAudio = true;
     try {
       const url = resolveRoute(RouteName.SENTENCE_API_GENERATE_SENTENCE_AUDIO_API, {
-        target_language_code: sentence.language_code,
+        target_language_code: sentence.target_language_code,
         slug: sentence.slug
       });
       
@@ -113,7 +113,7 @@
   
   // Generate the audio URL using route registry
   const audioUrl = resolveRoute(RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API, {
-    target_language_code: sentence.language_code,
+    target_language_code: sentence.target_language_code,
     sentence_id: String(sentence.id)
   });
 </script>
@@ -178,7 +178,7 @@
                 lemma={lemma}
                 partOfSpeech={lemmasData[lemma]?.part_of_speech || ''}
                 translations={lemmasData[lemma]?.translations || []}
-                href="/lang/{sentence.language_code}/lemma/{lemma}"
+                href="/lang/{sentence.target_language_code}/lemma/{lemma}"
               />
               {#if lemmasData[lemma]?.isLoading}
                 <div class="loading-indicator">Loading lemma data...</div>

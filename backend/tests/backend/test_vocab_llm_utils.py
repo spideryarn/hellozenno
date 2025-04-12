@@ -153,7 +153,7 @@ def test_extract_phrases_from_text_empty(mock_gpt_from_template, monkeypatch):
         template_name = None
         if isinstance(kwargs.get("prompt_template"), Path):
             template_name = kwargs["prompt_template"].stem
-        
+
         if template_name == "extract_phrases_from_text":
             return {
                 "phrases": [],
@@ -188,7 +188,7 @@ def test_extract_phrases_from_text_invalid_response(
         template_name = None
         if isinstance(kwargs.get("prompt_template"), Path):
             template_name = kwargs["prompt_template"].stem
-            
+
         if template_name == "extract_phrases_from_text":
             return "Invalid response", {}
         return "Unexpected template", {}
@@ -216,7 +216,7 @@ def test_extract_phrases_from_text_missing_fields(mock_gpt_from_template, monkey
         template_name = None
         if isinstance(kwargs.get("prompt_template"), Path):
             template_name = kwargs["prompt_template"].stem
-            
+
         if template_name == "extract_phrases_from_text":
             return {
                 "phrases": [

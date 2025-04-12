@@ -64,7 +64,10 @@ sourcefile_api_bp = Blueprint(
 
 
 def _inspect_sourcefile_core(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str, purpose: str
+    target_language_code: str,
+    sourcedir_slug: str,
+    sourcefile_slug: str,
+    purpose: str,
 ):
     """Core implementation for all sourcefile inspection API endpoints.
 
@@ -136,7 +139,8 @@ def inspect_sourcefile_api(
 
 
 @sourcefile_api_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/text", methods=["GET"]
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/text",
+    methods=["GET"],
 )
 def inspect_sourcefile_text_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -148,7 +152,8 @@ def inspect_sourcefile_text_api(
 
 
 @sourcefile_api_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/words", methods=["GET"]
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/words",
+    methods=["GET"],
 )
 def inspect_sourcefile_words_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
@@ -361,7 +366,8 @@ def update_sourcefile_description_api(
 
 
 @sourcefile_api_bp.route(
-    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/move", methods=["PUT"]
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/move",
+    methods=["PUT"],
 )
 def move_sourcefile_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str

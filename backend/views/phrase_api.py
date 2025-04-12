@@ -56,7 +56,7 @@ def phrase_preview_api(target_language_code: str, phrase: str):
             Phrase.select()
             .where(
                 (Phrase.canonical_form == phrase)
-                & (Phrase.language_code == target_language_code)
+                & (Phrase.target_language_code == target_language_code)
             )
             .first()
         )
@@ -64,7 +64,7 @@ def phrase_preview_api(target_language_code: str, phrase: str):
         if phrase_model is None:
             # Try to find it by a raw form
             for p in Phrase.select().where(
-                Phrase.language_code == target_language_code
+                Phrase.target_language_code == target_language_code
             ):
                 if phrase in p.raw_forms:
                     phrase_model = p

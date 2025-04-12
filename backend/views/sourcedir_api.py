@@ -16,7 +16,7 @@ from config import (
     SOURCE_EXTENSIONS,
 )
 from db_models import Sourcedir, Sourcefile
-from utils.lang_utils import VALID_LANGUAGE_CODES
+from utils.lang_utils import VALID_target_language_codeS
 from utils.sourcedir_utils import (
     _get_sourcedir_entry,
     allowed_file,
@@ -123,12 +123,15 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
     try:
         data = request.get_json()
         if not data or "target_language_code" not in data:
-            return jsonify({"error": "Missing target_language_code parameter"}), 400
+            return (
+                jsonify({"error": "Missing target_language_code parameter"}),
+                400,
+            )
 
-        new_language_code = data["target_language_code"]
+        new_target_language_code = data["target_language_code"]
 
         # Validate the new language code
-        if not new_language_code in VALID_LANGUAGE_CODES:
+        if not new_target_language_code in VALID_target_language_codeS:
             return jsonify({"error": "Invalid language code"}), 400
 
         # Get the sourcedir entry
@@ -142,7 +145,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
             Sourcedir.select()
             .where(
                 Sourcedir.path == sourcedir_entry.path,
-                Sourcedir.target_language_code == new_language_code,
+                Sourcedir.target_language_code == new_target_language_code,
                 Sourcedir.id != sourcedir_entry.id,  # type: ignore
             )
             .exists()
@@ -153,7 +156,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
             )
 
         # Update the language code
-        sourcedir_entry.target_language_code = new_language_code
+        sourcedir_entry.target_language_code = new_target_language_code
         sourcedir_entry.save()
 
         return "", 204
@@ -309,10 +312,10 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
         # Return JSON response with appropriate status code
         response_data = {
             "uploaded_count": uploaded_count,
-            "skipped_count": skipped_count
+            "skipped_count": skipped_count,
         }
-        
-        # Use HTTP 200 if files were uploaded, 204 if only skipped files, 
+
+        # Use HTTP 200 if files were uploaded, 204 if only skipped files,
         # or 400 if no valid files were uploaded
         if uploaded_count > 0:
             return jsonify(response_data), 200
@@ -375,7 +378,7 @@ def get_sourcedirs_for_language_api(target_language_code: str):
 
         # Format the response for the API
         response = {
-            "language_code": result["target_language_code"],
+            "target_language_code": result["target_language_code"],
             "language_name": result["target_language_name"],
             "sources": [],
         }
@@ -424,7 +427,7 @@ def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str
                 "path": sourcedir_entry.path,
                 "slug": sourcedir_entry.slug,
                 "description": sourcedir_entry.description,
-                "language_code": sourcedir_entry.target_language_code,
+                "target_language_code": sourcedir_entry.target_language_code,
             },
             "sourcefiles": result["sourcefiles"],
             "language_name": result["target_language_name"],

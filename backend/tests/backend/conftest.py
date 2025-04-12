@@ -28,7 +28,7 @@ from db_models import (
     SourcefilePhrase,
 )
 from tests.fixtures_for_tests import (
-    TEST_LANGUAGE_CODE,
+    TEST_TARGET_LANGUAGE_CODE,
     create_complete_test_data,
 )
 from views.core_views import core_views_bp

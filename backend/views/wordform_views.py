@@ -29,7 +29,7 @@ def wordforms_list_vw(target_language_code: str):
     # Get all wordforms for this language using the enhanced model method
     # which now handles all sorting options including commonality
     wordforms = Wordform.get_all_wordforms_for(
-        language_code=target_language_code, sort_by=sort_by
+        target_language_code=target_language_code, sort_by=sort_by
     )
 
     # Convert to list of dictionaries for template
@@ -123,7 +123,7 @@ def delete_wordform_vw(target_language_code: str, wordform: str):
     try:
         wordform_model = Wordform.get(
             Wordform.wordform == wordform,
-            Wordform.language_code == target_language_code,
+            Wordform.target_language_code == target_language_code,
         )
         wordform_model.delete_instance()
         return redirect(

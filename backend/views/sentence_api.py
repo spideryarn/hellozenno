@@ -77,7 +77,7 @@ def get_sentence_audio_api(target_language_code: str, sentence_id: int):
     """
     try:
         sentence = Sentence.get(
-            (Sentence.id == sentence_id) & (Sentence.language_code == target_language_code)  # type: ignore
+            (Sentence.id == sentence_id) & (Sentence.target_language_code == target_language_code)  # type: ignore
         )
         if not sentence.audio_data:
             return jsonify({"error": "Audio not found"}), 404
@@ -105,7 +105,8 @@ def delete_sentence_api(target_language_code: str, slug: str):
     """Delete a sentence."""
     try:
         sentence = Sentence.get(
-            (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
+            (Sentence.target_language_code == target_language_code)
+            & (Sentence.slug == slug)
         )
         sentence.delete_instance()
         return "", 204
@@ -126,7 +127,8 @@ def rename_sentence_api(target_language_code: str, slug: str):
             return jsonify({"error": "Invalid sentence text"}), 400
 
         sentence = Sentence.get(
-            (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
+            (Sentence.target_language_code == target_language_code)
+            & (Sentence.slug == slug)
         )
 
         # Update the sentence text - this will trigger slug regeneration in save()
@@ -147,7 +149,8 @@ def generate_sentence_audio_api(target_language_code: str, slug: str):
     """Generate audio for a sentence."""
     try:
         sentence = Sentence.get(
-            (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
+            (Sentence.target_language_code == target_language_code)
+            & (Sentence.slug == slug)
         )
 
         if not sentence.sentence:

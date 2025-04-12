@@ -27,18 +27,18 @@ def get_languages_api():
     return jsonify(languages)
 
 
-@languages_api_bp.route("/language_name/<language_code>", methods=["GET"])
-def get_language_name_api(language_code):
+@languages_api_bp.route("/language_name/<target_language_code>", methods=["GET"])
+def get_language_name_api(target_language_code):
     """Get the display name for a language code.
 
     Args:
-        language_code: 2-letter language code
+        target_language_code: 2-letter language code
 
     Returns:
         JSON response with the language name
     """
     try:
-        name = get_language_name(language_code)
-        return jsonify({"code": language_code, "name": name})
+        name = get_language_name(target_language_code)
+        return jsonify({"code": target_language_code, "name": name})
     except LookupError as e:
         return jsonify({"error": str(e)}), 404

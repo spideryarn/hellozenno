@@ -5,7 +5,7 @@ import urllib.parse
 from unittest.mock import patch, MagicMock
 
 from tests.fixtures_for_tests import (
-    TEST_LANGUAGE_CODE,
+    TEST_TARGET_LANGUAGE_CODE,
     TEST_LANGUAGE_NAME,
     create_test_lemma,
     create_test_wordform,
@@ -18,7 +18,7 @@ from views.wordform_views import get_wordform_metadata_vw
 def test_search_landing_page(client):
     """Test the search landing page loads correctly."""
     url = build_url_with_query(
-        client, search_landing_vw, target_language_code=TEST_LANGUAGE_CODE
+        client, search_landing_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
     response = client.get(url)
     assert_html_response(response)
@@ -31,13 +31,16 @@ def test_search_landing_with_query_redirects(client):
     url = build_url_with_query(
         client,
         search_landing_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         query_params={"q": "test"},
     )
     response = client.get(url)
     assert response.status_code == 302
     assert build_url_with_query(
-        client, search_word_vw, target_language_code=TEST_LANGUAGE_CODE, wordform="test"
+        client,
+        search_word_vw,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
+        wordform="test",
     ) in response.headers.get("Location")
 
 
@@ -51,7 +54,7 @@ def test_search_word_redirects_to_wordform(client, fixture_for_testing_db):
     url = build_url_with_query(
         client,
         search_word_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform=wordform.wordform,
     )
     response = client.get(url)
@@ -59,7 +62,7 @@ def test_search_word_redirects_to_wordform(client, fixture_for_testing_db):
     assert build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform=wordform.wordform,
     ) in response.headers.get("Location")
 
@@ -174,7 +177,7 @@ def test_enhanced_search_english_word(mock_search, client):
     url = build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="example",
     )
     response = client.get(url)
@@ -196,7 +199,7 @@ def test_enhanced_search_single_match(mock_search, client):
     url = build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="single_match",
     )
     response = client.get(url)
@@ -218,7 +221,7 @@ def test_enhanced_search_both_languages(mock_search, client):
     url = build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="both",
     )
     response = client.get(url)
@@ -242,7 +245,7 @@ def test_enhanced_search_no_matches(mock_search, client):
     url = build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="nonexistent",
     )
     response = client.get(url)
@@ -265,7 +268,7 @@ def test_enhanced_search_misspelled(mock_search, client):
     url = build_url_with_query(
         client,
         get_wordform_metadata_vw,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="misspelled",
     )
     response = client.get(url)

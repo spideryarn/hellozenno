@@ -6,7 +6,7 @@ This document describes the structure of source file pages, their components, an
 
 Sourcefile pages follow a tab-based interface pattern with routes at:
 ```
-/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/[tab]
+/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/[tab]
 ```
 
 Each tab has its own route handler, with routes redirecting from the base path to `/text` by default.
@@ -16,7 +16,7 @@ see also: `planning/250405_speeding_up_Sourcefile.md` for a discussion on refact
 ## Components Organization
 
 ```
-frontend/src/routes/language/[language_code]/source/[sourcedir_slug]/[sourcefile_slug]/
+frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/
 ├── +page.server.ts        # Main route handler (redirects to /text)
 ├── +page.svelte           # Legacy component (redirects to tab routes)
 ├── components/            # Shared components for sourcefile tabs
@@ -61,7 +61,7 @@ Tabs use a common layout pattern via `SourcefileLayout.svelte` which provides:
      // existing tabs
      {
        label: 'New Tab',
-       href: `/language/${language_code}/source/${sourcedir_slug}/${sourcefile_slug}/newtab`,
+       href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/newtab`,
        active: activeTab === 'newtab'
      }
    ];

@@ -22,7 +22,7 @@ export function getPageUrl(
       url = '/languages';
       break;
     case 'wordforms':
-      url = `/language/${params.language_code}/wordforms`;
+      url = `/language/${params.target_language_code}/wordforms`;
       break;
     // ... other cases
   }
@@ -78,10 +78,10 @@ import { route } from '$lib/ROUTES'
 <a href={route('/')}>Home</a>
 
 // With route parameters
-<a href={route('/language/[language_code]/wordforms', { language_code: 'el' })}>Greek Wordforms</a>
+<a href={route('/language/[target_language_code]/wordforms', { target_language_code: 'el' })}>Greek Wordforms</a>
 
 // With query parameters (third parameter)
-<a href={route('/language/[language_code]/flashcards', { language_code: 'el' }, { sourcefile: 'myfile' })}>Flashcards</a>
+<a href={route('/language/[target_language_code]/flashcards', { target_language_code: 'el' }, { sourcefile: 'myfile' })}>Flashcards</a>
 ```
 
 **Key Advantages:**
@@ -126,7 +126,7 @@ We've performed a partial implementation to evaluate the plugin's functionality:
 We modified two components to test the functionality:
 
 1. **Error Page Component**: 
-   Updated `/language/[language_code]/+error.svelte` to use the new `route` function:
+   Updated `/language/[target_language_code]/+error.svelte` to use the new `route` function:
 
    ```svelte
    <script lang="ts">
@@ -137,7 +137,7 @@ We modified two components to test the functionality:
    <!-- Example of usage in links -->
    <a href={route('/')} class="btn btn-primary">Go to the homepage</a>
    <a href={route('/languages')} class="btn btn-secondary">View available languages</a>
-   <a href={route('/language/[language_code]/sources', { language_code: page.params.language_code })} class="btn btn-info">
+   <a href={route('/language/[target_language_code]/sources', { target_language_code: page.params.target_language_code })} class="btn btn-info">
      Back to language page
    </a>
    ```
@@ -147,14 +147,14 @@ We modified two components to test the functionality:
 
    ```typescript
    // Generate navigation URLs using the new route function
-   $: sourcedirUrl = route('/language/[language_code]/source/[sourcedir_slug]', {
-     language_code,
+   $: sourcedirUrl = route('/language/[target_language_code]/source/[sourcedir_slug]', {
+     target_language_code,
      sourcedir_slug
    });
    
    // With query parameters (third parameter)
-   $: flashcardsUrl = route('/language/[language_code]/flashcards', {
-     language_code
+   $: flashcardsUrl = route('/language/[target_language_code]/flashcards', {
+     target_language_code
    }, { sourcefile: sourcefile_slug });
    ```
 

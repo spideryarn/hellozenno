@@ -32,7 +32,9 @@ def lemmas_list_vw(target_language_code: str):
 
     # Get all lemmas for this language from the database using the enhanced model method
     # which now handles optimized queries and multiple sorting options
-    lemmas = Lemma.get_all_lemmas_for(language_code=target_language_code, sort_by=sort)
+    lemmas = Lemma.get_all_lemmas_for(
+        target_language_code=target_language_code, sort_by=sort
+    )
     # TODO: Update parameter name to 'target_language_code' to match rename
 
     # Convert query results to the format expected by the template
@@ -64,7 +66,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             Lemma.select()
             .where(
                 Lemma.lemma == lemma,
-                Lemma.language_code == target_language_code,
+                Lemma.target_language_code == target_language_code,
             )
             .join(LemmaExampleSentence, JOIN.LEFT_OUTER)
             .get()
@@ -171,7 +173,7 @@ def delete_lemma_vw(target_language_code: str, lemma: str):
     try:
         lemma_model = Lemma.get(
             Lemma.lemma == lemma,
-            Lemma.language_code == target_language_code,
+            Lemma.target_language_code == target_language_code,
         )
         # Simply delete the lemma - wordforms will be deleted by cascade
         lemma_model.delete_instance()

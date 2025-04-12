@@ -6,12 +6,9 @@ def mock_quick_search_for_wordform(
         return {
             "target_language_results": {
                 "matches": [],
-                "possible_misspellings": ["test"]
+                "possible_misspellings": ["test"],
             },
-            "english_results": {
-                "matches": [],
-                "possible_misspellings": None
-            }
+            "english_results": {"matches": [], "possible_misspellings": None},
         }, {}
     else:
         return {
@@ -22,13 +19,10 @@ def mock_quick_search_for_wordform(
                         "target_language_lemma": wordform,  # For simplicity, use wordform as lemma
                         "part_of_speech": "noun",
                         "english": ["test translation"],
-                        "inflection_type": "nominative"
+                        "inflection_type": "nominative",
                     }
                 ],
-                "possible_misspellings": None
+                "possible_misspellings": None,
             },
-            "english_results": {
-                "matches": [],
-                "possible_misspellings": None
-            }
+            "english_results": {"matches": [], "possible_misspellings": None},
         }, {}

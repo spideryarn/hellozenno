@@ -68,6 +68,7 @@ def delete_phrase_vw(target_language_code, slug):
 
     return redirect(
         url_for(
-            "phrase_views.phrases_list_vw", target_language_code=target_language_code
+            "phrase_views.phrases_list_vw",
+            target_language_code=target_language_code,
         )
     )

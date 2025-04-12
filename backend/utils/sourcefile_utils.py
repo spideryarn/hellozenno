@@ -134,8 +134,10 @@ def get_text_from_sourcefile(
             temp_file.flush()
 
             # Convert language name to code for Whisper API
-            language_code = sourcefile_entry.sourcedir.target_language_code
-            txt_tgt, extra = transcribe_audio(Path(temp_file.name), language_code)
+            target_language_code = sourcefile_entry.sourcedir.target_language_code
+            txt_tgt, extra = transcribe_audio(
+                Path(temp_file.name), target_language_code
+            )
 
             try:
                 os.unlink(temp_file.name)  # Clean up temp file
@@ -159,7 +161,10 @@ def get_text_from_sourcefile(
 
 
 def process_uploaded_file(
-    file_content: bytes, original_filename: str, sourcedir_path: str, language_code: str
+    file_content: bytes,
+    original_filename: str,
+    sourcedir_path: str,
+    target_language_code: str,
 ) -> tuple[bytes, str, dict]:
     """Process an uploaded file, handling resizing and filename generation.
 
@@ -167,7 +172,7 @@ def process_uploaded_file(
         file_content: The raw file content
         original_filename: The original filename
         sourcedir_path: The path of the source directory
-        language_code: The language code
+        target_language_code: The language code
 
     Returns:
         tuple of (processed_content, final_filename, metadata)
@@ -189,7 +194,7 @@ def process_uploaded_file(
         "voice.mp3",
     }
     if original_filename.lower() in generic_names:
-        filename = f"{dt_str()}_{sourcedir_path}_{language_code}{ext}"
+        filename = f"{dt_str()}_{sourcedir_path}_{target_language_code}{ext}"
     else:
         filename = original_filename
 
@@ -233,7 +238,9 @@ def ensure_text_extracted(sourcefile_entry):
     """Extract text if not already present based on sourcefile type."""
     if sourcefile_entry.text_target:
         return sourcefile_entry
-    target_language_name = get_language_name(sourcefile_entry.sourcedir.target_language_code)
+    target_language_name = get_language_name(
+        sourcefile_entry.sourcedir.target_language_code
+    )
     extracted_text, extra_metadata = get_text_from_sourcefile(
         sourcefile_entry, target_language_name
     )
@@ -252,7 +259,9 @@ def ensure_translation(sourcefile_entry):
         return sourcefile_entry
     if not sourcefile_entry.text_target:
         sourcefile_entry = ensure_text_extracted(sourcefile_entry)
-    target_language_name = get_language_name(sourcefile_entry.sourcedir.target_language_code)
+    target_language_name = get_language_name(
+        sourcefile_entry.sourcedir.target_language_code
+    )
     translated_text, translation_metadata = translate_to_english(
         sourcefile_entry.text_target, target_language_name, verbose=1
     )
@@ -269,7 +278,10 @@ def ensure_translation(sourcefile_entry):
 
 
 def _store_word_in_database(
-    sourcefile_entry: Sourcefile, word_d: dict, ordering: int, target_language_code: str
+    sourcefile_entry: Sourcefile,
+    word_d: dict,
+    ordering: int,
+    target_language_code: str,
 ):
     """Store a single wordform and its lemma in the database."""
     lemma, _ = Lemma.update_or_create(
@@ -466,7 +478,7 @@ def get_sourcefile_details(
             "id": sourcedir.id,  # type: ignore
             "path": sourcedir.path,
             "slug": sourcedir.slug,
-            "language_code": sourcedir.target_language_code,
+            "target_language_code": sourcedir.target_language_code,
         },
         "metadata": {
             "created_at": sourcefile_entry.created_at,
@@ -494,12 +506,15 @@ def get_sourcefile_details(
 
     # Generate enhanced text only for text tab (requires wordforms)
     if purpose == "text" and sourcefile_entry.text_target:
-        from utils.vocab_llm_utils import create_interactive_word_links, create_interactive_word_data
+        from utils.vocab_llm_utils import (
+            create_interactive_word_links,
+            create_interactive_word_data,
+        )
         from db_models import Wordform
 
         # Get minimal wordform data needed for links
         wordforms_for_links = Wordform.get_all_wordforms_for(
-            language_code=target_language_code,
+            target_language_code=target_language_code,
             sourcefile=sourcefile_entry,
             include_junction_data=True,
         )
@@ -512,7 +527,7 @@ def get_sourcefile_details(
             wordforms=wordforms_for_links,
             target_language_code=target_language_code,
         )
-        
+
         # Generate new structured data format for the updated component
         recognized_words, found_wordforms_data = create_interactive_word_data(
             text=str(sourcefile_entry.text_target),
@@ -525,9 +540,9 @@ def get_sourcefile_details(
         result["recognized_words"] = recognized_words  # New format (structured data)
         result["text_data"] = {
             "text": str(sourcefile_entry.text_target),  # Original plain text
-            "recognized_words": recognized_words  # Words with positions and metadata
+            "recognized_words": recognized_words,  # Words with positions and metadata
         }
-        
+
         # Include wordforms in the result so the frontend can use them
         result["wordforms"] = wordforms_for_links
 
@@ -536,7 +551,7 @@ def get_sourcefile_details(
         from db_models import Wordform
 
         wordforms = Wordform.get_all_wordforms_for(
-            language_code=target_language_code,
+            target_language_code=target_language_code,
             sourcefile=sourcefile_entry,
             include_junction_data=True,
         )
@@ -548,7 +563,7 @@ def get_sourcefile_details(
         from db_models import Phrase
 
         phrases = Phrase.get_all_phrases_for(
-            language_code=target_language_code,
+            target_language_code=target_language_code,
             sourcefile=sourcefile_entry,
             include_junction_data=True,
         )

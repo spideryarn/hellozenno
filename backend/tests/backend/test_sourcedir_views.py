@@ -14,7 +14,7 @@ from db_models import (
 )
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
-    TEST_LANGUAGE_CODE,
+    TEST_TARGET_LANGUAGE_CODE,
     TEST_LANGUAGE_NAME,
     TEST_SOURCE_DIR,
     TEST_SOURCE_FILE,
@@ -63,7 +63,9 @@ def test_sourcedirs_for_language(client, test_data):
     """Test listing source directories for a language."""
     # Test default sort (alpha)
     url = build_url_with_query(
-        client, sourcedirs_for_language_vw, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        sourcedirs_for_language_vw,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -75,7 +77,7 @@ def test_sourcedirs_for_language(client, test_data):
         client,
         sourcedirs_for_language_vw,
         query_params={"sort": "date"},
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.get(url)
     assert response.status_code == 200
@@ -100,14 +102,14 @@ def test_update_sourcedir_language(client, test_data):
     # Create test sourcedir
     sourcedir = Sourcedir.create(
         path="test_dir_lang",
-        language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Test successful language update
     url = build_url_with_query(
         client,
         update_sourcedir_language_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
     response = client.put(url, json={"target_language_code": "fr"})
@@ -115,7 +117,7 @@ def test_update_sourcedir_language(client, test_data):
 
     # Verify language was updated
     updated_sourcedir = Sourcedir.get(Sourcedir.path == "test_dir_lang")
-    assert updated_sourcedir.language_code == "fr"
+    assert updated_sourcedir.target_language_code == "fr"
 
     # Test invalid language code
     url = build_url_with_query(
@@ -143,14 +145,14 @@ def test_update_sourcedir_language(client, test_data):
     url = build_url_with_query(
         client,
         update_sourcedir_language_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug="nonexistent",
     )
     response = client.put(url, json={"target_language_code": "fr"})
     assert response.status_code == 404
 
     # Create another sourcedir with same path but different language
-    Sourcedir.create(path="test_dir_lang", language_code="es")
+    Sourcedir.create(path="test_dir_lang", target_language_code="es")
 
     # Test conflict when trying to update to a language that already has this path
     url = build_url_with_query(
@@ -168,7 +170,9 @@ def test_create_sourcedir(client):
     """Test creating a new source directory."""
     # Test successful creation
     url = build_url_with_query(
-        client, create_sourcedir_api, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        create_sourcedir_api,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.post(url, json={"path": "new_dir"})
     assert response.status_code == 201
@@ -178,9 +182,9 @@ def test_create_sourcedir(client):
 
     sourcedir = Sourcedir.get(
         Sourcedir.path == "new_dir",
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
-    assert sourcedir.language_code == TEST_LANGUAGE_CODE
+    assert sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE
     assert sourcedir.slug == "new-dir"
 
     # Test same path for different language (should succeed)
@@ -191,21 +195,25 @@ def test_create_sourcedir(client):
     assert data["slug"] == "new-dir"  # Same slug is ok for different language
     sourcedir = Sourcedir.get(
         Sourcedir.path == "new_dir",
-        Sourcedir.language_code == "fr",
+        Sourcedir.target_language_code == "fr",
     )
-    assert sourcedir.language_code == "fr"
+    assert sourcedir.target_language_code == "fr"
     assert sourcedir.slug == "new-dir"
 
     # Test duplicate directory for same language
     url = build_url_with_query(
-        client, create_sourcedir_api, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        create_sourcedir_api,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.post(url, json={"path": "new_dir"})
     assert response.status_code == 409
 
     # Test invalid request
     url = build_url_with_query(
-        client, create_sourcedir_api, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        create_sourcedir_api,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.post(url, json={})
     assert response.status_code == 400
@@ -215,7 +223,9 @@ def test_slug_generation(client):
     """Test slug generation for sourcedirs."""
     # Test basic slug generation
     url = build_url_with_query(
-        client, create_sourcedir_api, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        create_sourcedir_api,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.post(url, json={"path": "Test Directory"})
     assert response.status_code == 201
@@ -224,7 +234,9 @@ def test_slug_generation(client):
 
     # Test slug with special characters
     url = build_url_with_query(
-        client, create_sourcedir_api, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        create_sourcedir_api,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.post(url, json={"path": "Test & Directory!"})
     assert response.status_code == 409  # Should fail because it generates same slug
@@ -233,7 +245,9 @@ def test_slug_generation(client):
     # Test very long path gets truncated in slug
     long_path = "x" * 200
     url = build_url_with_query(
-        client, create_sourcedir_api, target_language_code=TEST_LANGUAGE_CODE
+        client,
+        create_sourcedir_api,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
     )
     response = client.post(url, json={"path": long_path})
     assert response.status_code == 201
@@ -246,12 +260,12 @@ def test_delete_sourcedir(client, test_data):
     # Test deleting empty directory
     empty_dir = Sourcedir.get(
         Sourcedir.path == "empty_dir",
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
     url = build_url_with_query(
         client,
         delete_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=empty_dir.slug,
     )
     response = client.delete(url)
@@ -260,7 +274,7 @@ def test_delete_sourcedir(client, test_data):
         not Sourcedir.select()
         .where(
             Sourcedir.path == "empty_dir",
-            Sourcedir.language_code == TEST_LANGUAGE_CODE,
+            Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
         )
         .exists()
     )
@@ -268,12 +282,12 @@ def test_delete_sourcedir(client, test_data):
     # Test deleting non-empty directory
     non_empty_dir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
     url = build_url_with_query(
         client,
         delete_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=non_empty_dir.slug,
     )
     response = client.delete(url)
@@ -282,7 +296,7 @@ def test_delete_sourcedir(client, test_data):
         Sourcedir.select()
         .where(
             Sourcedir.path == TEST_SOURCE_DIR,
-            Sourcedir.language_code == TEST_LANGUAGE_CODE,
+            Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
         )
         .exists()
     )
@@ -291,7 +305,7 @@ def test_delete_sourcedir(client, test_data):
     url = build_url_with_query(
         client,
         delete_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug="nonexistent",
     )
     response = client.delete(url)
@@ -303,7 +317,7 @@ def test_sourcefiles_for_sourcedir(client, test_data):
     # Get the sourcedir entry to get its slug
     sourcedir = Sourcedir.get(
         Sourcedir.path == TEST_SOURCE_DIR,
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
 
     # Get the sourcefile to get its slug
@@ -314,7 +328,7 @@ def test_sourcefiles_for_sourcedir(client, test_data):
     from utils.sourcedir_utils import _get_sourcedir_entry
 
     # Verify sourcedir can be fetched by slug
-    sourcedir_entry = _get_sourcedir_entry(TEST_LANGUAGE_CODE, sourcedir.slug)
+    sourcedir_entry = _get_sourcedir_entry(TEST_TARGET_LANGUAGE_CODE, sourcedir.slug)
     assert sourcedir_entry is not None
     assert sourcedir_entry.path == TEST_SOURCE_DIR
 
@@ -334,13 +348,15 @@ def test_sourcefiles_for_sourcedir(client, test_data):
 def test_rename_sourcedir(client):
     """Test renaming a source directory."""
     # Create test sourcedir
-    sourcedir = Sourcedir.create(path="test_dir", language_code=TEST_LANGUAGE_CODE)
+    sourcedir = Sourcedir.create(
+        path="test_dir", target_language_code=TEST_TARGET_LANGUAGE_CODE
+    )
 
     # Test successful rename
     url = build_url_with_query(
         client,
         rename_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
     response = client.put(url, json={"new_name": "new_test_dir"})
@@ -351,19 +367,21 @@ def test_rename_sourcedir(client):
     # Verify directory was renamed in database
     sourcedir = Sourcedir.get(
         Sourcedir.path == "new_test_dir",
-        Sourcedir.language_code == TEST_LANGUAGE_CODE,
+        Sourcedir.target_language_code == TEST_TARGET_LANGUAGE_CODE,
     )
     assert sourcedir.path == "new_test_dir"
     assert sourcedir.slug == "new-test-dir"  # Verify slug was updated
 
     # Create another sourcedir with same language
-    other_dir = Sourcedir.create(path="existing_dir", language_code=TEST_LANGUAGE_CODE)
+    other_dir = Sourcedir.create(
+        path="existing_dir", target_language_code=TEST_TARGET_LANGUAGE_CODE
+    )
 
     # Test renaming to existing directory name
     url = build_url_with_query(
         client,
         rename_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
     response = client.put(url, json={"new_name": "existing_dir"})
@@ -374,7 +392,7 @@ def test_rename_sourcedir(client):
     url = build_url_with_query(
         client,
         rename_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
     response = client.put(url, json={"new_name": ""})
@@ -385,7 +403,7 @@ def test_rename_sourcedir(client):
     url = build_url_with_query(
         client,
         rename_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug=sourcedir.slug,
     )
     response = client.put(url, json={})
@@ -396,7 +414,7 @@ def test_rename_sourcedir(client):
     url = build_url_with_query(
         client,
         rename_sourcedir_api,
-        target_language_code=TEST_LANGUAGE_CODE,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
         sourcedir_slug="nonexistent",
     )
     response = client.put(url, json={"new_name": "new_dir"})
@@ -420,7 +438,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
     models = [Sourcefile, Sourcedir]
     with fixture_for_testing_db.bind_ctx(models):
         sourcedir = Sourcedir.create(
-            path="test_dir_upload", language_code=TEST_LANGUAGE_CODE
+            path="test_dir_upload", target_language_code=TEST_TARGET_LANGUAGE_CODE
         )
 
         # Test generic filename renaming
@@ -432,7 +450,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             upload_sourcedir_new_sourcefile_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
         )
         response = client.post(
@@ -444,7 +462,9 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
         print(f"DEBUG: Response data: {response.data.decode()}")
 
         # Verify file was created with renamed filename
-        expected_filename = f"231231_1459_23_{sourcedir.path}_{TEST_LANGUAGE_CODE}.jpg"
+        expected_filename = (
+            f"231231_1459_23_{sourcedir.path}_{TEST_TARGET_LANGUAGE_CODE}.jpg"
+        )
         print(f"DEBUG: Looking for file with name: {expected_filename}")
         sourcefile = Sourcefile.get(
             Sourcefile.sourcedir == sourcedir,
@@ -462,7 +482,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             upload_sourcedir_new_sourcefile_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
         )
         response = client.post(
@@ -490,7 +510,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             upload_sourcedir_new_sourcefile_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=sourcedir.slug,
         )
         response = client.post(
@@ -521,7 +541,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
             large_content = f.read()
 
         response = client.post(
-            f"/api/lang/sourcedir/{TEST_LANGUAGE_CODE}/{sourcedir.slug}/upload",
+            f"/api/lang/sourcedir/{TEST_TARGET_LANGUAGE_CODE}/{sourcedir.slug}/upload",
             data={"files[]": (BytesIO(large_content), "large.jpg")},
             follow_redirects=True,
         )
@@ -543,13 +563,13 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
 
         # Create test sourcedir for huge file test
         huge_sourcedir = Sourcedir.create(
-            path="test_dir_huge", language_code=TEST_LANGUAGE_CODE
+            path="test_dir_huge", target_language_code=TEST_TARGET_LANGUAGE_CODE
         )
 
         url = build_url_with_query(
             client,
             upload_sourcedir_new_sourcefile_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=huge_sourcedir.slug,
         )
         response = client.post(
@@ -562,12 +582,12 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
 
         # Test invalid file type
         invalid_type_sourcedir = Sourcedir.create(
-            path="test_dir_invalid", language_code=TEST_LANGUAGE_CODE
+            path="test_dir_invalid", target_language_code=TEST_TARGET_LANGUAGE_CODE
         )
         url = build_url_with_query(
             client,
             upload_sourcedir_new_sourcefile_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=invalid_type_sourcedir.slug,
         )
         response = client.post(
@@ -582,7 +602,7 @@ def test_upload_sourcefile(client, monkeypatch, fixture_for_testing_db):
         url = build_url_with_query(
             client,
             upload_sourcedir_new_sourcefile_api,
-            target_language_code=TEST_LANGUAGE_CODE,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
             sourcedir_slug=invalid_type_sourcedir.slug,
         )
         response = client.post(

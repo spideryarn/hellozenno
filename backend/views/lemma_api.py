@@ -26,7 +26,8 @@ def get_lemma_data_api(target_language_code: str, lemma: str):
     """Get detailed data for a specific lemma."""
     try:
         lemma_model = Lemma.get(
-            (Lemma.lemma == lemma) & (Lemma.target_language_code == target_language_code)
+            (Lemma.lemma == lemma)
+            & (Lemma.target_language_code == target_language_code)
         )
         data = lemma_model.to_dict()
         return jsonify(data)
@@ -52,8 +53,10 @@ def lemmas_list_api(target_language_code: str):
     sort = request.args.get("sort", "alpha")
 
     # Get all lemmas for this language from the database
-    # Still using language_code as parameter for backward compatibility
-    lemmas = Lemma.get_all_lemmas_for(language_code=target_language_code, sort_by=sort)
+    # Still using target_language_code as parameter for backward compatibility
+    lemmas = Lemma.get_all_lemmas_for(
+        target_language_code=target_language_code, sort_by=sort
+    )
 
     # Transform the response to match the frontend's expected format
     lemma_list = []
@@ -71,12 +74,12 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
 
     This API endpoint corresponds to the get_lemma_metadata_vw view function.
     It returns complete metadata for a lemma, including default values for missing fields.
-    
+
     If the lemma doesn't exist, it will be generated using Claude AI.
     """
     # URL decode the lemma parameter to handle non-Latin characters properly
     lemma = urllib.parse.unquote(lemma)
-    
+
     try:
         # First try to find the lemma in the database
         lemma_model = (
@@ -88,14 +91,14 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
             .join(LemmaExampleSentence, JOIN.LEFT_OUTER)
             .get()
         )
-        
+
         # Load or regenerate metadata if incomplete
         lemma_data = load_or_generate_lemma_metadata(
             lemma=lemma,
             target_language_code=target_language_code,
             generate_if_incomplete=True,
         )
-        
+
         # All required fields should be handled by load_or_generate_lemma_metadata
 
         # Create the response
@@ -109,7 +112,7 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
             },
         }
         return jsonify(response_data)
-        
+
     except DoesNotExist:
         # Lemma not found, generate new metadata
         try:
@@ -119,13 +122,13 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
                 target_language_code=target_language_code,
                 generate_if_incomplete=True,
             )
-            
+
             # Find the newly created lemma
             lemma_model = Lemma.get(
                 Lemma.lemma == lemma,
                 Lemma.target_language_code == target_language_code,
             )
-            
+
             # Create the response
             response_data = {
                 "lemma_metadata": lemma_data,
@@ -137,7 +140,7 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
                 },
             }
             return jsonify(response_data)
-            
+
         except Exception as e:
             # If generation fails, return a proper 500 error
             error_data = {

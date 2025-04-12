@@ -185,7 +185,7 @@ class Lemma(BaseModel):
     @classmethod
     def get_all_lemmas_for(
         cls,
-        language_code: str,
+        target_language_code: str,
         sourcedir=None,
         sourcefile=None,
         sort_by: str = "alpha",
@@ -193,7 +193,7 @@ class Lemma(BaseModel):
         """Get lemmas for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
 
         Args:
-            language_code: 2-letter language code (e.g. "el" for Greek)
+            target_language_code: 2-letter language code (e.g. "el" for Greek)
             sourcedir: Optional Sourcedir object to filter by
             sourcefile: Optional Sourcefile object to filter by
             sort_by: Sorting method ("alpha", "date", or "commonality")
@@ -212,7 +212,7 @@ class Lemma(BaseModel):
                     SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)
                 )
                 .where(
-                    (cls.target_language_code == language_code)
+                    (cls.target_language_code == target_language_code)
                     & (SourcefileWordform.sourcefile == sourcefile)
                 )
             )
@@ -227,13 +227,13 @@ class Lemma(BaseModel):
                 )
                 .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
                 .where(
-                    (cls.target_language_code == language_code)
+                    (cls.target_language_code == target_language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
             )
         else:
             # No filter, get all lemmas for the language
-            query = cls.select().where(cls.target_language_code == language_code)
+            query = cls.select().where(cls.target_language_code == target_language_code)
 
         # Apply sorting
         if sort_by == "date":
@@ -304,7 +304,7 @@ class Wordform(BaseModel):
     def get_or_create_from_metadata(
         cls,
         wordform: str,
-        language_code: str,
+        target_language_code: str,
         metadata: dict,
         lemma_entry: Optional[Lemma] = None,
     ):
@@ -312,7 +312,7 @@ class Wordform(BaseModel):
 
         Args:
             wordform: The wordform text
-            language_code: The language code (e.g. 'el' for Greek)
+            target_language_code: The language code (e.g. 'el' for Greek)
             metadata: Dictionary containing wordform metadata
             lemma_entry: Optional pre-fetched lemma model
 
@@ -325,7 +325,7 @@ class Wordform(BaseModel):
             lemma_metadata = metadata.copy()
             lemma_lookup = {
                 "lemma": metadata["lemma"],
-                "target_language_code": language_code,
+                "target_language_code": target_language_code,
             }
             for key in lemma_lookup:
                 if key in lemma_metadata:
@@ -346,7 +346,10 @@ class Wordform(BaseModel):
         }
 
         return cls.update_or_create(
-            lookup={"wordform": wordform, "target_language_code": language_code},
+            lookup={
+                "wordform": wordform,
+                "target_language_code": target_language_code,
+            },
             updates=updates,
         )
 
@@ -363,12 +366,14 @@ class Wordform(BaseModel):
         }
 
     @classmethod
-    def find_by_text(cls, wordform: str, language_code: str) -> Optional["Wordform"]:
+    def find_by_text(
+        cls, wordform: str, target_language_code: str
+    ) -> Optional["Wordform"]:
         """Find a wordform by its text, case-insensitive."""
         try:
             return cls.get(
                 fn.Lower(cls.wordform) == wordform.lower(),
-                cls.target_language_code == language_code,
+                cls.target_language_code == target_language_code,
             )
         except DoesNotExist:
             return None
@@ -376,7 +381,7 @@ class Wordform(BaseModel):
     @classmethod
     def get_all_wordforms_for(
         cls,
-        language_code: str,
+        target_language_code: str,
         sourcedir=None,
         sourcefile=None,
         sort_by: str = "alpha",
@@ -385,7 +390,7 @@ class Wordform(BaseModel):
         """Get wordforms for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
 
         Args:
-            language_code: 2-letter language code (e.g. "el" for Greek)
+            target_language_code: 2-letter language code (e.g. "el" for Greek)
             sourcedir: Optional Sourcedir object or slug to filter by
             sourcefile: Optional Sourcefile object to filter by
             sort_by: Sorting method ("alpha", "date", or "commonality")
@@ -414,7 +419,7 @@ class Wordform(BaseModel):
                 .switch(cls)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.target_language_code == language_code)
+                    (cls.target_language_code == target_language_code)
                     & (SourcefileWordform.sourcefile == sourcefile)
                 )
                 .order_by(SourcefileWordform.ordering)
@@ -438,7 +443,7 @@ class Wordform(BaseModel):
                 .switch(cls)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.target_language_code == language_code)
+                    (cls.target_language_code == target_language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
                 .group_by(cls.id, Lemma.id)
@@ -452,7 +457,7 @@ class Wordform(BaseModel):
                 .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.target_language_code == language_code)
+                    (cls.target_language_code == target_language_code)
                     & (Sourcedir.slug == sourcedir_slug)
                 )
                 .group_by(cls.id, Lemma.id)
@@ -462,7 +467,7 @@ class Wordform(BaseModel):
             query = (
                 cls.select(cls, Lemma)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
-                .where(cls.target_language_code == language_code)
+                .where(cls.target_language_code == target_language_code)
             )
 
         # Apply sorting
@@ -505,20 +510,20 @@ class Sentence(BaseModel):
     @classmethod
     def get_all_sentences_for(
         cls,
-        language_code: str,
+        target_language_code: str,
         sort_by: str = "date",
     ):
         """Get sentences for a language with efficient loading of related lemmas.
 
         Args:
-            language_code: 2-letter language code
+            target_language_code: 2-letter language code
             sort_by: Sorting method ("date" or "alpha")
 
         Returns:
             List of sentence dictionaries with preloaded lemma data
         """
         # Start with a simple query for all sentences in this language
-        query = cls.select().where(cls.target_language_code == language_code)
+        query = cls.select().where(cls.target_language_code == target_language_code)
 
         # Apply sorting
         if sort_by == "date":
@@ -654,7 +659,7 @@ class Phrase(BaseModel):
     @classmethod
     def get_all_phrases_for(
         cls,
-        language_code: str,
+        target_language_code: str,
         sourcedir=None,
         sourcefile=None,
         sort_by: str = "alpha",
@@ -663,7 +668,7 @@ class Phrase(BaseModel):
         """Get phrases for a language with specified sorting, optionally filtered by sourcedir or sourcefile.
 
         Args:
-            language_code: 2-letter language code (e.g. "el" for Greek)
+            target_language_code: 2-letter language code (e.g. "el" for Greek)
             sourcedir: Optional Sourcedir object or slug to filter by
             sourcefile: Optional Sourcefile object to filter by
             sort_by: Sorting method ("alpha" or "date")
@@ -682,7 +687,7 @@ class Phrase(BaseModel):
                 cls.select(cls, SourcefilePhrase)
                 .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
                 .where(
-                    (cls.target_language_code == language_code)
+                    (cls.target_language_code == target_language_code)
                     & (SourcefilePhrase.sourcefile == sourcefile)
                 )
                 .order_by(SourcefilePhrase.ordering)
@@ -704,14 +709,14 @@ class Phrase(BaseModel):
                 .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
                 .join(Sourcefile, on=(SourcefilePhrase.sourcefile == Sourcefile.id))
                 .where(
-                    (cls.target_language_code == language_code)
+                    (cls.target_language_code == target_language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
                 .group_by(cls.id)
             )
         else:
             # No filter, get all phrases for the language
-            query = cls.select().where(cls.target_language_code == language_code)
+            query = cls.select().where(cls.target_language_code == target_language_code)
 
         # Apply sorting
         if sort_by == "date":

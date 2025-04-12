@@ -10,7 +10,7 @@ from slugify import slugify
 from gjdutils.llm_utils import generate_gpt_from_template
 from utils.prompt_utils import get_prompt_template_path
 from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
-from utils.lang_utils import get_language_name, get_language_code
+from utils.lang_utils import get_language_name, get_target_language_code
 from db_models import (
     Lemma,
     Phrase,
@@ -161,7 +161,7 @@ def metadata_for_lemma_full(
 
     Returns:
         Tuple of (metadata, extra_info)
-        
+
     Raises:
         Exception: If there's an error generating the metadata or processing the API response
     """
@@ -177,11 +177,13 @@ def metadata_for_lemma_full(
         response_json=True,
         verbose=verbose,
     )
-    
+
     # Validate API response
     if not isinstance(out, dict):
-        raise ValueError(f"Invalid response format from Claude API: expected dict, got {type(out)}")
-    
+        raise ValueError(
+            f"Invalid response format from Claude API: expected dict, got {type(out)}"
+        )
+
     # Add default values for required fields if missing
     defaults = {
         "lemma": lemma,  # Ensure lemma is always set
@@ -206,7 +208,7 @@ def metadata_for_lemma_full(
             out[key] = default_value
 
     # Create sentence records for example usage
-    target_language_code = get_language_code(target_language_name)
+    target_language_code = get_target_language_code(target_language_name)
     example_usage = out.get("example_usage", [])
 
     # Get or create the lemma record first
@@ -218,11 +220,11 @@ def metadata_for_lemma_full(
             "translations": out.get("translations", []),
         },
     )
-    
+
     # Add all metadata fields to the lemma model
     for key, value in out.items():
         setattr(lemma_model, key, value)
-    
+
     # Save the updated model
     lemma_model.save()
 
@@ -236,7 +238,7 @@ def metadata_for_lemma_full(
         slug = slugify(phrase)
         if len(slug) > 255:
             slug = slug[:255]
-        
+
         # Create sentence if it doesn't exist or update if it does
         sentence, _ = Sentence.update_or_create(
             lookup={
@@ -256,8 +258,7 @@ def metadata_for_lemma_full(
         SentenceLemma.update_or_create(
             lookup={"lemma": lemma_model, "sentence": sentence}, updates={}
         )
-    
-        
+
     return out, extra
 
 
@@ -291,7 +292,10 @@ def quick_search_for_wordform(
     if not isinstance(wordform, str) or not isinstance(target_language_code, str):
         raise ValueError("wordform and target_language_code must be strings")
 
-    wordform, target_language_code = wordform.strip(), target_language_code.strip()
+    wordform, target_language_code = (
+        wordform.strip(),
+        target_language_code.strip(),
+    )
     if not wordform or not target_language_code:
         raise ValueError("wordform and target_language_code cannot be empty")
 
@@ -311,7 +315,9 @@ def quick_search_for_wordform(
 
     # Validate response format
     if not out or not isinstance(out, dict):
-        raise ValueError(f"Invalid response format from API: expected dict, got {type(out)}")
+        raise ValueError(
+            f"Invalid response format from API: expected dict, got {type(out)}"
+        )
 
     # Ensure all required fields are present
     required_fields = {
@@ -322,7 +328,7 @@ def quick_search_for_wordform(
         "inflection_type": None,
         "possible_misspellings": None,
     }
-    
+
     for field, default in required_fields.items():
         if field not in out:
             out[field] = default
@@ -356,7 +362,9 @@ def extract_phrases_from_text(
 
     # Ensure out is a dict
     if not isinstance(out, dict):
-        raise ValueError(f"Invalid response format from API: expected dict, got {type(out)}")
+        raise ValueError(
+            f"Invalid response format from API: expected dict, got {type(out)}"
+        )
 
     # Add default values for required fields if missing
     defaults = {
@@ -386,7 +394,6 @@ def extract_phrases_from_text(
             if key not in phrase or phrase[key] is None:
                 phrase[key] = default_value
 
-
     return out, extra
 
 
@@ -396,10 +403,10 @@ def create_interactive_word_data(
     target_language_code: str,
 ) -> tuple[list[dict], set[str]]:
     """Analyze the input text and return structured data about recognized words.
-    
+
     Instead of generating HTML, this function returns structured data that can be
     used by the frontend to render the text with interactive elements.
-    
+
     Returns:
         Tuple of (recognized_words, found_wordforms) where:
         - recognized_words is a list of dictionaries, each containing information about a recognized word:
@@ -416,11 +423,11 @@ def create_interactive_word_data(
     """
     from utils.store_utils import load_or_generate_lemma_metadata
     from utils.word_utils import ensure_nfc, normalize_text
-    
+
     # Track which wordforms we actually find in the text
     found_wordforms = set()
     recognized_words = []
-    
+
     # Sort wordforms by length in descending order to handle overlapping words
     sorted_wordforms = sorted(
         wordforms, key=lambda wf: len(wf["wordform"]), reverse=True
@@ -428,28 +435,28 @@ def create_interactive_word_data(
 
     # First, normalize the input text to NFC for consistent pattern matching
     text_nfc = ensure_nfc(text)
-    
+
     # Create a regex pattern that matches both original and normalized forms
     pattern_parts = []
     wordform_variations = {}  # Map normalized forms to their variations
-    
+
     for wf in sorted_wordforms:
         # Ensure wordform is in NFC form for consistent pattern matching
         nfc_wordform = ensure_nfc(wf["wordform"])
         normalized_form = normalize_text(nfc_wordform)
-        
+
         # Initialize the variations set if we haven't seen this normalized form before
         if normalized_form not in wordform_variations:
             wordform_variations[normalized_form] = {
                 "original_wordform": wf["wordform"],
                 "variations": set(),
-                "metadata": wf
+                "metadata": wf,
             }
-        
+
         # Add the original form to the variations
         wordform_variations[normalized_form]["variations"].add(nfc_wordform)
         pattern_parts.append(re.escape(nfc_wordform))
-        
+
         # Add any case variations found in the text
         text_words = re.findall(r"\b\w+\b", text_nfc, re.UNICODE)
         for word in text_words:
@@ -458,54 +465,62 @@ def create_interactive_word_data(
             if normalize_text(nfc_word) == normalized_form:
                 wordform_variations[normalized_form]["variations"].add(nfc_word)
                 pattern_parts.append(re.escape(nfc_word))
-    
+
     # If no pattern parts, return empty results
     if not pattern_parts:
         return [], set()
-    
+
     # Create the pattern with all unique variations
     pattern = re.compile(
         r"\b(" + "|".join(set(pattern_parts)) + r")\b",
         re.UNICODE,
     )
-    
+
     # Find all matches in the text
     for match in pattern.finditer(text_nfc):
         word = match.group(0)  # Original word with case and accents preserved
         start_pos = match.start()
         end_pos = match.end()
-        
+
         # First ensure the word is in NFC form for consistent matching
         word_nfc = ensure_nfc(word)
         normalized_word = normalize_text(word_nfc)
-        
+
         # Find which wordform this matches
         for norm_form, data in wordform_variations.items():
-            if any(normalize_text(var) == normalized_word for var in data["variations"]):
+            if any(
+                normalize_text(var) == normalized_word for var in data["variations"]
+            ):
                 wf = data["metadata"]
                 found_wordforms.add(wf["wordform"])  # Track that we found this wordform
-                
+
                 # Gather word data
                 lemma = wf["lemma"]
                 translations = wf.get("translations", [])
                 if not translations and wf.get("translated_word"):
                     translations = [wf.get("translated_word")]
-                
+
                 # Add this word occurrence to our results
-                recognized_words.append({
-                    "word": word,                             # Original word from text
-                    "start": start_pos,                       # Position in text
-                    "end": end_pos,                           # End position in text
-                    "lemma": lemma,                           # Dictionary form
-                    "translations": translations,             # English meanings
-                    "part_of_speech": wf.get("part_of_speech", "unknown"),  # Noun, verb, etc
-                    "inflection_type": wf.get("inflection_type", "unknown") # Grammatical form
-                })
+                recognized_words.append(
+                    {
+                        "word": word,  # Original word from text
+                        "start": start_pos,  # Position in text
+                        "end": end_pos,  # End position in text
+                        "lemma": lemma,  # Dictionary form
+                        "translations": translations,  # English meanings
+                        "part_of_speech": wf.get(
+                            "part_of_speech", "unknown"
+                        ),  # Noun, verb, etc
+                        "inflection_type": wf.get(
+                            "inflection_type", "unknown"
+                        ),  # Grammatical form
+                    }
+                )
                 break
-    
+
     # Sort recognized words by their position in the text
     recognized_words.sort(key=lambda w: w["start"])
-    
+
     return recognized_words, found_wordforms
 
 
@@ -876,7 +891,7 @@ def process_phrases_from_text(
         phrase, phrase_created = Phrase.update_or_create(
             lookup={
                 "canonical_form": phrase_d["canonical_form"],
-                "language_code": target_language_code,
+                "target_language_code": target_language_code,
             },
             updates={
                 "raw_forms": phrase_d.get("raw_forms", [phrase_d["canonical_form"]]),

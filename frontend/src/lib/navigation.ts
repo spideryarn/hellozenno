@@ -44,41 +44,41 @@ export function getPageUrl(
       url = '/languages';
       break;
     case 'wordforms':
-      url = `/language/${params.language_code}/wordforms`;
+      url = `/language/${params.target_language_code}/wordforms`;
       break;
     case 'lemmas':
-      url = `/language/${params.language_code}/lemmas`;
+      url = `/language/${params.target_language_code}/lemmas`;
       break;
     case 'phrases':
-      url = `/language/${params.language_code}/phrases`;
+      url = `/language/${params.target_language_code}/phrases`;
       break;
     case 'sentences':
-      url = `/language/${params.language_code}/sentences`;
+      url = `/language/${params.target_language_code}/sentences`;
       break;
     case 'search':
-      url = `/language/${params.language_code}/search`;
+      url = `/language/${params.target_language_code}/search`;
       break;
     
     // Source directory/file pages
     case 'sourcedir':
-      url = `/language/${params.language_code}/source/${params.sourcedir_slug}`;
+      url = `/language/${params.target_language_code}/source/${params.sourcedir_slug}`;
       break;
     case 'sourcefile':
-      url = `/language/${params.language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}`;
+      url = `/language/${params.target_language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}`;
       break;
     case 'sourcefile_text':
-      url = `/language/${params.language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}/text`;
+      url = `/language/${params.target_language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}/text`;
       break;
     case 'sourcefile_words':
-      url = `/language/${params.language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}/words`;
+      url = `/language/${params.target_language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}/words`;
       break;
     case 'sourcefile_phrases':
-      url = `/language/${params.language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}/phrases`;
+      url = `/language/${params.target_language_code}/source/${params.sourcedir_slug}/${params.sourcefile_slug}/phrases`;
       break;
     
     // Flashcards
     case 'flashcards':
-      url = `/language/${params.language_code}/flashcards`;
+      url = `/language/${params.target_language_code}/flashcards`;
       break;
     
     default:
