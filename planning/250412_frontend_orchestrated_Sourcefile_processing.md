@@ -61,7 +61,8 @@ This document outlines a plan to improve the sourcefile processing experience by
   - [x] After we have extracted tricky wordforms, we want to ideally update the hover-hyperlinks (see `create_interactive_word_data()`) so that the newly-extracted wordforms become new hover-hyperlinks. Ideally do this without having to reload the whole page. But I care more about keeping things simple than being over-clever.
   - [ ] Complete the metadata for individual Lemmas. The `extract_tricky_words()` function only gets the most essential fields for the Lemmas corresponding to the Wordforms it extracts. So at the end of each processing run, we need to completely process each Lemma with `metadata_for_lemma_full()`. Ideally there'd be a way to determine en masse which Lemmas are complete (they have an `is_complete` field - see `backend/docs/MODELS.md`). It takes a few seconds to complete each Lemma's metadata, so let's add each Lemma-completion as an individual step at the very end of our queue.
   - [ ] Add as much information as possible to the progress bar as a toolip
-  - [ ] Don't flash up an alert when you've finished processing
+  - [ ] Don't flash up an annoying modal alert when you've finished processing. Instead, just display a nice message at the top (perhaps with a tooltip with extra details)
+  - [ ] Sometimes I'm seeing a duplicate key error message, e.g. "duplicate key value violates unique constraint "phrase_slug_language_code" DETAIL: Key (slug, target_language_code)=(sto-kato-kato, el) already exists.". I assume this isn't a big deal, so let's ignore/mask these. Is it a sign we should be more aggressively skipping words we've already processed?
   
 - [ ] Stage: Parallel Processing
   - [ ] Implement parallel processing for independent steps (especially extracting the full lemma metadata)

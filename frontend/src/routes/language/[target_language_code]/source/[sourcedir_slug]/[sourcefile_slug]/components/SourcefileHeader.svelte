@@ -49,8 +49,9 @@
   let showAutoProcessNotification = false;
   let autoProcessNotificationMessage = '';
   
-  // Multi-processing settings
-  let processingIterations = 1; // Default to 1 iteration
+  // Multi-processing counter and queue system
+  let processingClicks = 0; // Count of process button clicks
+  let pendingRuns = 0; // Number of queued processing runs
   
   // Create a reactive variable for the processing queue
   $: processingQueue = new SourcefileProcessingQueue(
@@ -186,8 +187,6 @@
   };
 
   async function processSourcefile() {
-    if ($processingState.isProcessing) return;
-    
     try {
       // Hide auto-process notification if showing
       showAutoProcessNotification = false;
@@ -201,28 +200,48 @@
         return;
       }
       
-      // Ensure we have a valid number of iterations (minimum 1)
-      const iterations = Math.max(1, processingIterations);
+      // Increment the processing clicks counter and pending runs
+      processingClicks++;
+      pendingRuns++;
       
-      // Start processing with the specified number of iterations
-      await processingQueue.processAll(iterations);
+      // If already processing, just queue this run (don't execute yet)
+      if ($processingState.isProcessing) {
+        console.log(`Added processing run to queue. Now have ${pendingRuns} pending runs.`);
+        return;
+      }
       
-      // Check if we have processed data
-      if ($processingState.processedSourcefileData) {
-        // Dispatch the event with the updated data
-        dispatchProcessingComplete($processingState.processedSourcefileData);
+      // Process all pending runs sequentially
+      while (pendingRuns > 0) {
+        // Use current pending runs count as iterations for this batch
+        const iterations = pendingRuns;
         
-        // Show success notification briefly
-        const successMessage = iterations > 1 
-          ? `Successfully processed text ${iterations} times.` 
-          : 'Successfully processed text.';
-        alert(successMessage);
-      } else {
-        // Fall back to page reload if no data returned
-        window.location.reload();
+        // Reset pending runs counter since we're about to process them all
+        pendingRuns = 0;
+        
+        // Start processing with the current number of iterations
+        await processingQueue.processAll(iterations);
+        
+        // Check if we have processed data
+        if ($processingState.processedSourcefileData) {
+          // Dispatch the event with the updated data
+          dispatchProcessingComplete($processingState.processedSourcefileData);
+          
+          // Show success notification briefly (only for the last batch)
+          if (pendingRuns === 0) {
+            alert(`Successfully processed text ${iterations} time${iterations !== 1 ? 's' : ''}.`);
+          }
+        } else {
+          // Fall back to page reload if no data returned
+          window.location.reload();
+          return;
+        }
+        
+        // If more requests came in while we were processing, handle them in the next iteration
       }
     } catch (error) {
       console.error('Error processing file:', error);
+      // Reset pending runs on error to avoid getting stuck
+      pendingRuns = 0;
     }
   }
   
@@ -448,31 +467,22 @@
   <div class="action-row">
     <div class="section process-section">
       <div class="process-controls">
-        <div class="iterations-control">
-          <div class="iteration-label">Times to process:</div>
-          <div class="iteration-counter">
-            <button 
-              class="counter-button" 
-              on:click={() => processingIterations = Math.max(1, processingIterations - 1)}
-              disabled={$processingState.isProcessing || processingIterations <= 1}
-            >-</button>
-            <span class="counter-value">{processingIterations}</span>
-            <button 
-              class="counter-button" 
-              on:click={() => processingIterations = Math.min(10, processingIterations + 1)}
-              disabled={$processingState.isProcessing || processingIterations >= 10}
-            >+</button>
-          </div>
-        </div>
-        <button on:click={processSourcefile} class="button" disabled={$processingState.isProcessing}>
+        <button on:click={processSourcefile} class="button">
           {#if $processingState.isProcessing}
             {$processingState.description || 'Processing...'}
             {#if $processingState.totalIterations > 1}
               (Run {$processingState.currentIteration}/{$processingState.totalIterations})
             {/if}
             ({$processingState.progress}/{$processingState.totalSteps})
+            {#if pendingRuns > 0}
+              <span class="queued-runs">+{pendingRuns} queued</span>
+            {/if}
           {:else}
-            Process this text
+            {#if processingClicks > 0}
+              Process again (×{processingClicks + 1})
+            {:else}
+              Process this text
+            {/if}
           {/if}
         </button>
       </div>
@@ -630,47 +640,7 @@
     gap: 0.5rem;
   }
   
-  .iterations-control {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-  }
-  
-  .iteration-label {
-    white-space: nowrap;
-  }
-  
-  .iteration-counter {
-    display: flex;
-    align-items: center;
-  }
-  
-  .counter-button {
-    width: 24px;
-    height: 24px;
-    background-color: #4CAD53;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-weight: bold;
-    padding: 0;
-  }
-  
-  .counter-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
-  
-  .counter-value {
-    margin: 0 0.5rem;
-    min-width: 1.5rem;
-    text-align: center;
-  }
+  /* Removed iterations control styles */
   
   .section-divider {
     height: 24px;
@@ -754,6 +724,17 @@
     font-size: 0.85rem;
     color: #3c8c41;
     background-color: rgba(76, 173, 83, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  
+  .queued-runs {
+    margin-left: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #3c8c41;
     padding: 2px 6px;
     border-radius: 4px;
     display: inline-block;

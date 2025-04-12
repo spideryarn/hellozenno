@@ -66,11 +66,17 @@
   
   // Add and remove event listeners for the custom event
   onMount(() => {
-    document.addEventListener('processingComplete', handleProcessingComplete as EventListener);
+    // Only run in browser environment, not during SSR
+    if (typeof document !== 'undefined') {
+      document.addEventListener('processingComplete', handleProcessingComplete as EventListener);
+    }
   });
   
   onDestroy(() => {
-    document.removeEventListener('processingComplete', handleProcessingComplete as EventListener);
+    // Only run in browser environment, not during SSR
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('processingComplete', handleProcessingComplete as EventListener);
+    }
   });
 </script>
 

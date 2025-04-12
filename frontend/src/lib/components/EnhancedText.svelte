@@ -27,6 +27,11 @@
   
   // Function to detect mobile/touch devices
   function isTouchDevice(): boolean {
+    // Check if we're in browser environment
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return false; // Default to false during SSR
+    }
+    
     return (
       'ontouchstart' in window ||
       navigator.maxTouchPoints > 0
@@ -223,7 +228,7 @@
       delay: [200, 0], // Delay before showing tooltip
       maxWidth: 300,
       interactive: true,
-      appendTo: document.body,
+      appendTo: typeof document !== 'undefined' ? document.body : 'parent', // Use parent if document not available
       touch: true,
       trigger: isTouchDevice() ? 'click' : 'mouseenter focus', // Use click on touch devices
       onShow(instance) {
