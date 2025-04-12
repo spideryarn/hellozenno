@@ -226,7 +226,8 @@ def process_sourcefile_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Process a source file to transcribe, translate, and extract wordforms and phrases.
-    This is now a synchronous operation - the request will complete after all processing is done."""
+    This is now a synchronous operation - the request will complete after all processing is done.
+    """
     try:
         # Get the sourcefile entry using helper
         sourcefile_entry = _get_sourcefile_entry(
@@ -336,26 +337,37 @@ def process_individual_words_api(target_language_code, sourcedir_slug, sourcefil
         # Get unique lemmas through the lemma_entry relationship
         unique_lemmas = {wf.lemma_entry.lemma for wf in wordforms}
 
-        # Process lemmas in parallel with a thread pool
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            # Submit all tasks
-            futures = [
-                executor.submit(_process_individual_lemma, lemma, target_language_code)
-                for lemma in unique_lemmas
-            ]
+        # Track processed and failed lemmas
+        processed_lemmas = []
+        failed_lemmas = []
 
-            # Wait for all tasks to complete
-            for future in futures:
-                try:
-                    future.result()  # This will raise any exceptions from the thread
-                except Exception as e:
-                    print(f"Thread failed: {str(e)}")
-                    # Continue processing other lemmas even if one fails
+        # Process lemmas serially with a standard for loop
+        for lemma in unique_lemmas:
+            try:
+                _process_individual_lemma(lemma, target_language_code)
+                processed_lemmas.append(lemma)
+            except Exception as e:
+                failed_lemmas.append({"lemma": lemma, "error": str(e)})
+                print(f"Failed to process lemma {lemma}: {str(e)}")
+                # Continue processing other lemmas even if one fails
 
         print(f"Done processing sourcefile {sourcefile_slug}")
-        return "", 204
+
+        # Return information about what was processed
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "sourcefile_slug": sourcefile_slug,
+                    "total_lemmas": len(unique_lemmas),
+                    "processed_lemmas": processed_lemmas,
+                    "failed_lemmas": failed_lemmas,
+                }
+            ),
+            200,
+        )
     except Exception as e:
-        response = jsonify({"error": str(e)})
+        response = jsonify({"success": False, "error": str(e)})
         response.status_code = 500
         return response
 
