@@ -22,12 +22,18 @@ Update this doc regularly to keep the actions up-to-date. When you change it, ma
 - As you get new information from the user, update this doc so it's always up-to-date.
 
 
+### Useful references
+
+- Include a list of highly relevant documentation, files, functions, webpages, etc.
+- Provide a 1-sentence summary for each, emphasising what's useful/relevant about it, directing attention to the most important part, and perhaps a HIGH/MEDIUM/LOW priority for how essential it is to read for this project.
+
+
 ### Actions
 
 - Break into lots of stages. Start with a really simple working v1, and gradually layer in complexity, ending each stage with passing tests and working code.
-- List action in the order that they should be tackled
+- Order the actions in the order that they should be tackled
 - Don't number the stages, so that it's easier to move them around without having to renumber everything
-- Label the beginning of each action section with TODO, DONE, etc, updating task status as we go along
+- Update task status as we go along
 - Include subtasks with clear acceptance criteria
 - Referring concretely to specific files/functions, so it's clear exactly what needs to be done
 - Explicitly add tasks for writing automated tests, usually before writing code. (Perhaps one or two end-to-end tests first, then gradually adding more detailed tests as complexity grows). Explicitly add tasks for running the automated tests before ending each stage. see `docs/FRONTEND_TESTING.md`

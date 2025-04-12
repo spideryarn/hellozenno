@@ -150,13 +150,15 @@ When a user processes a sourcefile (by clicking the "Process this text" button),
 2. **Translation**: Translates the extracted text to English
 
 3. **Vocabulary Extraction**: Identifies important or difficult words in the text, creating:
-   - Lemma entries (dictionary form)
+   - Lemma entries (dictionary form) - partial, focusing on key fields like "translation"
    - Wordform entries (inflected forms)
    - SourcefileWordform junction entries (linking words to this sourcefile)
 
 4. **Phrase Extraction**: Identifies idiomatic expressions and phrases, creating:
    - Phrase entries
    - SourcefilePhrase junction entries
+
+5. **Full Lemma metadata** - fills out the rest of the lemma, e.g. etymology, easily confused with, etc
 
 The process is designed to be idempotent - each stage checks if work is already complete before proceeding, allowing for partial or repeated processing without duplicating work.
 
