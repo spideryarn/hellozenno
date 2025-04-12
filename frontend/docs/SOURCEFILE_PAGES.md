@@ -2,6 +2,22 @@
 
 This document describes the structure of source file pages, their components, and how to add new tabs.
 
+## What is a Sourcefile?
+
+A Sourcefile is a core data entity in HelloZenno representing learning content in a target language. Sourcefiles can be:
+
+- **Text files**: Created by pasting or typing text directly
+- **Image files**: Uploaded images containing text (processed with OCR)
+- **Audio files**: Including YouTube audio downloads
+
+Sourcefiles are organized into Sourcedirs (directories) and contain:
+- Target language text (`text_target`)
+- English translation (`text_english`)
+- Associated wordforms and phrases
+- Optional metadata, description, and audio
+
+See `backend/db_models.py` for the database model definitions, particularly the `Sourcefile` model and related junction tables (`SourcefileWordform`, `SourcefilePhrase`).
+
 ## Page Structure
 
 Sourcefile pages follow a tab-based interface pattern with routes at:
@@ -11,7 +27,9 @@ Sourcefile pages follow a tab-based interface pattern with routes at:
 
 Each tab has its own route handler, with routes redirecting from the base path to `/text` by default.
 
-see also: `planning/250405_speeding_up_Sourcefile.md` for a discussion on refactoring, overlap, and performance.
+The content in the text tab is displayed using "Enhanced Text" functionality which provides interactive word links - see `frontend/docs/ENHANCED_TEXT.md` for details on this implementation.
+
+See also: `planning/250405_speeding_up_Sourcefile.md` for a discussion on refactoring, overlap, and performance.
 
 ## Components Organization
 
@@ -70,9 +88,76 @@ Tabs use a common layout pattern via `SourcefileLayout.svelte` which provides:
 
 ## Data Flow
 
-1. The server component (`+page.server.ts`) loads data from the Flask API
+1. The server component (`+page.server.ts`) loads data from the Flask API endpoints in `backend/views/sourcefile_api.py`
 2. Data is passed to the page component (`+page.svelte`)
 3. The page component uses `SourcefileLayout` and passes the tab-specific component
 4. The tab component receives and renders data specific to its function
+
+Each tab fetches data through a specialized endpoint like:
+- `/api/lang/sourcefile/<language_code>/<sourcedir_slug>/<sourcefile_slug>/text`
+- `/api/lang/sourcefile/<language_code>/<sourcedir_slug>/<sourcefile_slug>/words`
+- `/api/lang/sourcefile/<language_code>/<sourcedir_slug>/<sourcefile_slug>/phrases`
+
+The text tab integrates with the Enhanced Text system to display interactive word links with tooltips. When a user hovers over a word, a tooltip shows information about the word's lemma, translations, and other metadata.
+
+## API Integration
+
+Sourcefile pages interact with several backend API endpoints:
+- `inspect_sourcefile_*_api()` - Get sourcefile content based on purpose (text, words, phrases)
+- `process_sourcefile_api()` - Process file to extract words and phrases
+- `generate_sourcefile_audio_api()` - Generate audio for the sourcefile text
+
+See [BACKEND_FLASK_API_INTEGRATION.md](./BACKEND_FLASK_API_INTEGRATION.md) for details on API interaction.
+
+## Sourcefile Processing Flow
+
+When a user processes a sourcefile (by clicking the "Process this text" button), a synchronous flow is triggered that transforms raw content into learning materials:
+
+```
+[HTTP Request]
+    │
+    ▼
+[process_sourcefile_api]
+    │ "Sets processing parameters and initializes"
+    │
+    ▼
+[process_sourcefile]
+    │ "Main orchestration function that calls specialized helpers"
+    │
+    ├───────────────┬───────────────┬───────────────┐
+    │               │               │               │
+    ▼               ▼               ▼               ▼
+[ensure_text_     [ensure_        [ensure_tricky_ [ensure_tricky_
+ extracted]        translation]     wordforms]      phrases]
+    │ "Extract      │ "Translate    │ "Extract      │ "Extract
+    │  text from    │  text to      │  vocabulary   │  phrases from
+    │  image/audio/ │  English"     │  words"       │  text"
+    │  text file"   │               │               │
+    ▼               ▼               ▼               ▼
+[Database Updates]    [Database Updates]    [Database Updates]
+   "Store extracted    "Store translation    "Create/update Lemma, Wordform,
+    text in            in text_english       SourcefileWordform, Phrase,
+    text_target field" field"               and SourcefilePhrase entries"
+```
+
+### Key Processing Stages
+
+1. **Text Extraction**: Extracts text content from the sourcefile based on type:
+   - Image files: Uses OCR to extract text
+   - Audio files: Transcribes speech or uses YouTube subtitles
+   - Text files: Uses content directly
+
+2. **Translation**: Translates the extracted text to English
+
+3. **Vocabulary Extraction**: Identifies important or difficult words in the text, creating:
+   - Lemma entries (dictionary form)
+   - Wordform entries (inflected forms)
+   - SourcefileWordform junction entries (linking words to this sourcefile)
+
+4. **Phrase Extraction**: Identifies idiomatic expressions and phrases, creating:
+   - Phrase entries
+   - SourcefilePhrase junction entries
+
+The process is designed to be idempotent - each stage checks if work is already complete before proceeding, allowing for partial or repeated processing without duplicating work.
 
 See [SITE_ORGANISATION.md](./SITE_ORGANISATION.md) for overall site structure and [FRONTEND_SVELTEKIT_ARCHITECTURE.md](./FRONTEND_SVELTEKIT_ARCHITECTURE.md) for architecture details. 
