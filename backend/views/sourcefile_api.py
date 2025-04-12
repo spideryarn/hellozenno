@@ -585,6 +585,9 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
 
         title = data.get("title", "").strip()
         text_target = data.get("text_target", "").strip()
+        description = data.get("description")
+        if description is not None:
+            description = description.strip() or None
 
         if not title:
             return jsonify({"error": "Title is required"}), 400
@@ -604,6 +607,11 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
             .exists()
         ):
             return jsonify({"error": f"File {filename} already exists"}), 409
+            
+        # Create metadata with text format
+        metadata = {
+            "text_format": "plain"
+        }
 
         # Create sourcefile entry
         sourcefile = Sourcefile.create(
@@ -611,7 +619,8 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
             filename=filename,
             text_target=text_target,
             text_english="",  # Will be populated during processing
-            metadata={},
+            metadata=metadata,
+            description=description,
             sourcefile_type="text",
         )
 

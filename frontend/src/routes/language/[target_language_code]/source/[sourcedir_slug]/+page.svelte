@@ -42,6 +42,7 @@
   let showYoutubeModal = false;
   let textTitle = '';
   let textContent = '';
+  let textDescription = '';
   let youtubeUrl = '';
   let uploadProgress = false;
   let uploadProgressValue = 0;
@@ -228,6 +229,7 @@
     showCreateTextModal = true;
     textTitle = '';
     textContent = '';
+    textDescription = '';
   }
   
   function closeCreateTextModal() {
@@ -254,7 +256,8 @@
           },
           body: JSON.stringify({
             title: textTitle.trim(),
-            text_target: textContent.trim()
+            text_target: textContent.trim(),
+            description: textDescription.trim() || null
           })
         }
       );
@@ -534,6 +537,11 @@
             <input type="text" class="form-control" id="textTitle" bind:value={textTitle} 
                    placeholder="Enter title for the text" autocomplete="off"
                    use:focusOnMount>
+          </div>
+          <div class="mb-3">
+            <label for="textDescription" class="form-label">Description (optional):</label>
+            <textarea class="form-control" id="textDescription" rows="3" bind:value={textDescription} 
+                      placeholder="Enter an optional description for this text"></textarea>
           </div>
           <div class="mb-3">
             <label for="textContent" class="form-label">Text Content:</label>
