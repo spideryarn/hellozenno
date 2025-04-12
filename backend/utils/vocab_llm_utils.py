@@ -212,7 +212,7 @@ def metadata_for_lemma_full(
     # Get or create the lemma record first
     lemma_model, _ = Lemma.get_or_create(
         lemma=lemma,
-        language_code=target_language_code,
+        target_language_code=target_language_code,
         defaults={
             "part_of_speech": out.get("part_of_speech", "unknown"),
             "translations": out.get("translations", []),
@@ -240,7 +240,7 @@ def metadata_for_lemma_full(
         # Create sentence if it doesn't exist or update if it does
         sentence, _ = Sentence.update_or_create(
             lookup={
-                "language_code": target_language_code,
+                "target_language_code": target_language_code,
                 "sentence": phrase,
             },
             updates={

@@ -72,7 +72,7 @@ def generate_sentence(
             # Get or create the lemma
             lemma, _ = Lemma.get_or_create(
                 lemma=lemma_word,
-                language_code=target_language_code,
+                target_language_code=target_language_code,
                 defaults={
                     "part_of_speech": "unknown",
                     "translations": [],
@@ -129,7 +129,7 @@ def get_random_sentence(
     Returns:
         Optional[Dict]: Random sentence metadata or None if no matching sentences found
     """
-    query = Sentence.select().where(Sentence.language_code == target_language_code)
+    query = Sentence.select().where(Sentence.target_language_code == target_language_code)
 
     if required_lemmas:
         # Filter sentences using database JOIN to find those with matching lemmas
@@ -232,7 +232,7 @@ def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
         DoesNotExist: If the sentence is not found
     """
     sentence = Sentence.get(
-        (Sentence.language_code == target_language_code) & (Sentence.slug == slug)
+        (Sentence.target_language_code == target_language_code) & (Sentence.slug == slug)
     )
 
     # Extract tokens from the sentence text
@@ -240,7 +240,7 @@ def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
 
     # Query database for all wordforms in this language
     wordforms = list(
-        Wordform.select().where((Wordform.language_code == target_language_code))
+        Wordform.select().where((Wordform.target_language_code == target_language_code))
     )
 
     # Filter wordforms in Python using normalize_text

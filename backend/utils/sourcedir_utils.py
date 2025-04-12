@@ -19,7 +19,7 @@ def _get_sourcedir_entry(target_language_code: str, sourcedir_slug: str) -> Sour
     """Helper function to get sourcedir entry by slug with language code."""
     return Sourcedir.get(
         Sourcedir.slug == sourcedir_slug,
-        Sourcedir.language_code == target_language_code,
+        Sourcedir.target_language_code == target_language_code,
     )
 
 
@@ -214,7 +214,7 @@ def get_sourcedirs_for_language(target_language_code: str, sort_by: str = "date"
     supported_languages = get_all_languages()
 
     # Query sourcedirs from database - filtered by language
-    query = Sourcedir.select().where(Sourcedir.language_code == target_language_code)
+    query = Sourcedir.select().where(Sourcedir.target_language_code == target_language_code)
 
     if sort_by == "date":
         # Sort by modification time, newest first

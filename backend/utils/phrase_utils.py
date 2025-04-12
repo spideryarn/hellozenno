@@ -19,7 +19,7 @@ def get_phrases_query(target_language_code: str, sort_by: str = "alpha"):
         A Peewee SelectQuery with the specified filters and sorting applied
     """
     # Query phrases from database
-    query = Phrase.select().where(Phrase.language_code == target_language_code)
+    query = Phrase.select().where(Phrase.target_language_code == target_language_code)
 
     if sort_by == "date":
         # Sort by modification time, newest first
@@ -52,7 +52,7 @@ def get_phrase_by_slug(target_language_code: str, slug: str) -> Phrase:
 
     # Find the phrase with eager loading of related data
     phrase = Phrase.get(
-        (Phrase.language_code == target_language_code) & (Phrase.slug == slug)
+        (Phrase.target_language_code == target_language_code) & (Phrase.slug == slug)
     )
 
     # Prefetch related phrases (both directions)

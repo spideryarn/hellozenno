@@ -75,7 +75,7 @@ class BaseModel(Model):
 
 class Lemma(BaseModel):
     lemma = CharField()  # the dictionary form
-    language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
+    target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     part_of_speech = CharField(default="unknown")  # e.g. "verb", "adjective", "noun"
     translations = JSONField(default=list)  # list[str] of English translations
     etymology = TextField(null=True)  # origins and development of the word
@@ -98,7 +98,7 @@ class Lemma(BaseModel):
     is_complete = BooleanField(default=False)  # whether all metadata has been populated
 
     class Meta:
-        indexes = ((("lemma", "language_code"), True),)  # Unique index
+        indexes = ((("lemma", "target_language_code"), True),)  # Unique index
 
     @staticmethod
     def check_metadata_completeness(metadata: dict) -> bool:
@@ -212,7 +212,7 @@ class Lemma(BaseModel):
                     SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)
                 )
                 .where(
-                    (cls.language_code == language_code)
+                    (cls.target_language_code == language_code)
                     & (SourcefileWordform.sourcefile == sourcefile)
                 )
             )
@@ -227,13 +227,13 @@ class Lemma(BaseModel):
                 )
                 .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
                 .where(
-                    (cls.language_code == language_code)
+                    (cls.target_language_code == language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
             )
         else:
             # No filter, get all lemmas for the language
-            query = cls.select().where(cls.language_code == language_code)
+            query = cls.select().where(cls.target_language_code == language_code)
 
         # Apply sorting
         if sort_by == "date":
@@ -277,7 +277,7 @@ class Wordform(BaseModel):
     lemma_entry = ForeignKeyField(
         Lemma, backref="wordforms", null=True, on_delete="CASCADE"
     )  # reference to the lemma entry
-    language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
+    target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     part_of_speech = CharField(null=True)  # e.g. "verb", "adjective", "noun"
     translations = JSONField(null=True)  # List of English translations
     inflection_type = CharField(null=True)  # e.g. "first-person singular present"
@@ -285,7 +285,7 @@ class Wordform(BaseModel):
     is_lemma = BooleanField(default=False)  # whether this is a dictionary form
 
     class Meta:
-        indexes = ((("wordform", "language_code"), True),)  # Unique index
+        indexes = ((("wordform", "target_language_code"), True),)  # Unique index
 
     def save(self, *args, **kwargs):
         """Override save to ensure wordform is in NFC form."""
@@ -325,7 +325,7 @@ class Wordform(BaseModel):
             lemma_metadata = metadata.copy()
             lemma_lookup = {
                 "lemma": metadata["lemma"],
-                "language_code": language_code,
+                "target_language_code": language_code,
             }
             for key in lemma_lookup:
                 if key in lemma_metadata:
@@ -346,7 +346,7 @@ class Wordform(BaseModel):
         }
 
         return cls.update_or_create(
-            lookup={"wordform": wordform, "language_code": language_code},
+            lookup={"wordform": wordform, "target_language_code": language_code},
             updates=updates,
         )
 
@@ -368,7 +368,7 @@ class Wordform(BaseModel):
         try:
             return cls.get(
                 fn.Lower(cls.wordform) == wordform.lower(),
-                cls.language_code == language_code,
+                cls.target_language_code == language_code,
             )
         except DoesNotExist:
             return None
@@ -414,7 +414,7 @@ class Wordform(BaseModel):
                 .switch(cls)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.language_code == language_code)
+                    (cls.target_language_code == language_code)
                     & (SourcefileWordform.sourcefile == sourcefile)
                 )
                 .order_by(SourcefileWordform.ordering)
@@ -438,7 +438,7 @@ class Wordform(BaseModel):
                 .switch(cls)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.language_code == language_code)
+                    (cls.target_language_code == language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
                 .group_by(cls.id, Lemma.id)
@@ -452,7 +452,7 @@ class Wordform(BaseModel):
                 .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
                 .where(
-                    (cls.language_code == language_code)
+                    (cls.target_language_code == language_code)
                     & (Sourcedir.slug == sourcedir_slug)
                 )
                 .group_by(cls.id, Lemma.id)
@@ -462,7 +462,7 @@ class Wordform(BaseModel):
             query = (
                 cls.select(cls, Lemma)
                 .join(Lemma, on=(cls.lemma_entry == Lemma.id))
-                .where(cls.language_code == language_code)
+                .where(cls.target_language_code == language_code)
             )
 
         # Apply sorting
@@ -482,7 +482,7 @@ class Wordform(BaseModel):
 
 
 class Sentence(BaseModel):
-    language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
+    target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     sentence = TextField()  # the actual sentence text
     translation = TextField()  # English translation
     audio_data = BlobField(null=True)  # MP3 audio data for the sentence
@@ -518,7 +518,7 @@ class Sentence(BaseModel):
             List of sentence dictionaries with preloaded lemma data
         """
         # Start with a simple query for all sentences in this language
-        query = cls.select().where(cls.language_code == language_code)
+        query = cls.select().where(cls.target_language_code == language_code)
 
         # Apply sorting
         if sort_by == "date":
@@ -557,7 +557,7 @@ class Sentence(BaseModel):
                     "sentence": sentence.sentence,
                     "translation": sentence.translation,
                     "lemma_words": lemma_data.get(sentence.id, []),
-                    "target_language_code": sentence.language_code,
+                    "target_language_code": sentence.target_language_code,
                     "slug": sentence.slug,
                     "has_audio": bool(sentence.audio_data),
                 }
@@ -567,8 +567,8 @@ class Sentence(BaseModel):
 
     class Meta:
         indexes = (
-            (("sentence", "language_code"), True),  # Unique index
-            (("slug", "language_code"), True),  # Unique index for URLs
+            (("sentence", "target_language_code"), True),  # Unique index
+            (("slug", "target_language_code"), True),  # Unique index for URLs
         )
 
 
@@ -583,7 +583,7 @@ class SentenceLemma(BaseModel):
 
 
 class Phrase(BaseModel):
-    language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
+    target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     canonical_form = CharField()  # the standard form of the phrase
     raw_forms = JSONField()  # list[str] of alternative forms
     translations = JSONField()  # list[str] of English translations
@@ -617,8 +617,8 @@ class Phrase(BaseModel):
 
     class Meta:
         indexes = (
-            (("canonical_form", "language_code"), True),  # Unique index
-            (("slug", "language_code"), True),  # Unique index for URLs
+            (("canonical_form", "target_language_code"), True),  # Unique index
+            (("slug", "target_language_code"), True),  # Unique index for URLs
         )
 
     def to_dict(self) -> dict:
@@ -682,7 +682,7 @@ class Phrase(BaseModel):
                 cls.select(cls, SourcefilePhrase)
                 .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
                 .where(
-                    (cls.language_code == language_code)
+                    (cls.target_language_code == language_code)
                     & (SourcefilePhrase.sourcefile == sourcefile)
                 )
                 .order_by(SourcefilePhrase.ordering)
@@ -704,14 +704,14 @@ class Phrase(BaseModel):
                 .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
                 .join(Sourcefile, on=(SourcefilePhrase.sourcefile == Sourcefile.id))
                 .where(
-                    (cls.language_code == language_code)
+                    (cls.target_language_code == language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
                 .group_by(cls.id)
             )
         else:
             # No filter, get all phrases for the language
-            query = cls.select().where(cls.language_code == language_code)
+            query = cls.select().where(cls.target_language_code == language_code)
 
         # Apply sorting
         if sort_by == "date":
@@ -752,7 +752,7 @@ class RelatedPhrase(BaseModel):
 
 class Sourcedir(BaseModel):
     path = CharField()  # the directory path
-    language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
+    target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     slug = CharField(max_length=SOURCEDIR_SLUG_MAX_LENGTH)
     description = TextField(null=True)  # description of the directory content
 
@@ -768,8 +768,8 @@ class Sourcedir(BaseModel):
     class Meta:
         database = database
         indexes = (
-            (("path", "language_code"), True),  # Unique index
-            (("slug", "language_code"), True),  # Unique index for URLs
+            (("path", "target_language_code"), True),  # Unique index
+            (("slug", "target_language_code"), True),  # Unique index for URLs
         )
 
 

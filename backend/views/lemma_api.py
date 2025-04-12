@@ -26,7 +26,7 @@ def get_lemma_data_api(target_language_code: str, lemma: str):
     """Get detailed data for a specific lemma."""
     try:
         lemma_model = Lemma.get(
-            (Lemma.lemma == lemma) & (Lemma.language_code == target_language_code)
+            (Lemma.lemma == lemma) & (Lemma.target_language_code == target_language_code)
         )
         data = lemma_model.to_dict()
         return jsonify(data)
@@ -52,6 +52,7 @@ def lemmas_list_api(target_language_code: str):
     sort = request.args.get("sort", "alpha")
 
     # Get all lemmas for this language from the database
+    # Still using language_code as parameter for backward compatibility
     lemmas = Lemma.get_all_lemmas_for(language_code=target_language_code, sort_by=sort)
 
     # Transform the response to match the frontend's expected format
@@ -82,7 +83,7 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
             Lemma.select()
             .where(
                 Lemma.lemma == lemma,
-                Lemma.language_code == target_language_code,
+                Lemma.target_language_code == target_language_code,
             )
             .join(LemmaExampleSentence, JOIN.LEFT_OUTER)
             .get()
@@ -122,7 +123,7 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
             # Find the newly created lemma
             lemma_model = Lemma.get(
                 Lemma.lemma == lemma,
-                Lemma.language_code == target_language_code,
+                Lemma.target_language_code == target_language_code,
             )
             
             # Create the response

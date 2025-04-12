@@ -2,7 +2,7 @@ export interface Sourcedir {
     id: number;
     path: string;
     slug: string;
-    language_code: string;
+    language_code: string; // This is kept as language_code for backward compatibility
 }
 
 export interface Sourcefile {
@@ -52,7 +52,7 @@ export interface Stats {
 
 export interface Wordform {
     id: number;
-    language_code: string;
+    target_language_code: string;
     wordform: string;
     lemma: string;
     frequency: number;
@@ -64,7 +64,7 @@ export interface Wordform {
 
 export interface Phrase {
     id: number;
-    language_code: string;
+    target_language_code: string;
     phrase: string;
     translation: string | null;
     notes: string | null;

@@ -48,14 +48,14 @@ def get_word_preview(target_language_code: str, word: str) -> WordPreview | None
     try:
         # First try exact match
         wordform = Wordform.get(
-            Wordform.wordform == word, Wordform.language_code == target_language_code
+            Wordform.wordform == word, Wordform.target_language_code == target_language_code
         )
     except DoesNotExist:
         # If not found, try case-insensitive match
         try:
             wordform = Wordform.get(
                 fn.LOWER(Wordform.wordform) == word.lower(),
-                Wordform.language_code == target_language_code,
+                Wordform.target_language_code == target_language_code,
             )
         except DoesNotExist:
             # If still not found, try normalized form (no diacritics)
@@ -63,7 +63,7 @@ def get_word_preview(target_language_code: str, word: str) -> WordPreview | None
             try:
                 wordform = (
                     Wordform.select()
-                    .where(Wordform.language_code == target_language_code)
+                    .where(Wordform.target_language_code == target_language_code)
                     .where(fn.LOWER(Wordform.wordform) == normalized_word)
                     .get()
                 )
@@ -86,7 +86,7 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
         sourcedir = (
             Sourcedir.select()
             .where(Sourcedir.slug == sourcedir_slug)
-            .where(Sourcedir.language_code == language_code)
+            .where(Sourcedir.target_language_code == language_code)
             .get()
         )
     except DoesNotExist:
@@ -101,7 +101,7 @@ def get_sourcedir_lemmas(language_code: str, sourcedir_slug: str) -> list[str]:
         .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
         .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
         .where(
-            (Lemma.language_code == language_code) & (Sourcefile.sourcedir == sourcedir)
+            (Lemma.target_language_code == language_code) & (Sourcefile.sourcedir == sourcedir)
         )
         .order_by(Lemma.lemma)  # Simple ordering by column, not expression
     )
@@ -137,7 +137,7 @@ def get_sourcefile_lemmas(
         .join(Wordform, on=(Wordform.lemma_entry == Lemma.id))
         .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
         .where(
-            (Lemma.language_code == language_code)
+            (Lemma.target_language_code == language_code)
             & (SourcefileWordform.sourcefile == sourcefile)
         )
         .order_by(Lemma.lemma)  # Simple ordering by column, not expression
@@ -178,7 +178,7 @@ def get_wordform_metadata(target_language_code: str, wordform: str):
     # First try to find existing wordform in database
     wordform_model = Wordform.get(
         Wordform.wordform == wordform,
-        Wordform.language_code == target_language_code,
+        Wordform.target_language_code == target_language_code,
     )
 
     # Get the data

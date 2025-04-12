@@ -134,7 +134,7 @@ def get_text_from_sourcefile(
             temp_file.flush()
 
             # Convert language name to code for Whisper API
-            language_code = sourcefile_entry.sourcedir.language_code
+            language_code = sourcefile_entry.sourcedir.target_language_code
             txt_tgt, extra = transcribe_audio(Path(temp_file.name), language_code)
 
             try:
@@ -233,7 +233,7 @@ def ensure_text_extracted(sourcefile_entry):
     """Extract text if not already present based on sourcefile type."""
     if sourcefile_entry.text_target:
         return sourcefile_entry
-    target_language_name = get_language_name(sourcefile_entry.sourcedir.language_code)
+    target_language_name = get_language_name(sourcefile_entry.sourcedir.target_language_code)
     extracted_text, extra_metadata = get_text_from_sourcefile(
         sourcefile_entry, target_language_name
     )
@@ -252,7 +252,7 @@ def ensure_translation(sourcefile_entry):
         return sourcefile_entry
     if not sourcefile_entry.text_target:
         sourcefile_entry = ensure_text_extracted(sourcefile_entry)
-    target_language_name = get_language_name(sourcefile_entry.sourcedir.language_code)
+    target_language_name = get_language_name(sourcefile_entry.sourcedir.target_language_code)
     translated_text, translation_metadata = translate_to_english(
         sourcefile_entry.text_target, target_language_name, verbose=1
     )
@@ -275,7 +275,7 @@ def _store_word_in_database(
     lemma, _ = Lemma.update_or_create(
         lookup={
             "lemma": word_d["lemma"],
-            "language_code": target_language_code,
+            "target_language_code": target_language_code,
         },
         updates={
             "part_of_speech": word_d["part_of_speech"],
@@ -286,7 +286,7 @@ def _store_word_in_database(
     wordform, _ = Wordform.update_or_create(
         lookup={
             "wordform": word_d["wordform"],
-            "language_code": target_language_code,
+            "target_language_code": target_language_code,
         },
         updates={
             "lemma_entry": lemma,
@@ -332,7 +332,7 @@ def ensure_tricky_wordforms(
     ):
         if wf_entry.wordform and wf_entry.wordform.wordform:
             existing_wordforms.append(wf_entry.wordform.wordform)
-    target_language_code = sourcefile_entry.sourcedir.language_code
+    target_language_code = sourcefile_entry.sourcedir.target_language_code
     target_language_name = get_language_name(target_language_code)
     # Extract more vocabulary - ensure text_target is a string
     tricky_d, tricky_extra = extract_tricky_words(
@@ -385,7 +385,7 @@ def ensure_tricky_phrases(
     if max_new_phrases is None or max_new_phrases == 0:
         return sourcefile_entry, {}
     assert sourcefile_entry.text_target, "Text must have been extracted first"
-    target_language_code = sourcefile_entry.sourcedir.language_code
+    target_language_code = sourcefile_entry.sourcedir.target_language_code
     target_language_name = get_language_name(target_language_code)
     phrases_extra = process_phrases_from_text(
         str(sourcefile_entry.text_target),
@@ -466,7 +466,7 @@ def get_sourcefile_details(
             "id": sourcedir.id,  # type: ignore
             "path": sourcedir.path,
             "slug": sourcedir.slug,
-            "language_code": sourcedir.language_code,
+            "language_code": sourcedir.target_language_code,
         },
         "metadata": {
             "created_at": sourcefile_entry.created_at,

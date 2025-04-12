@@ -53,7 +53,7 @@ def create_sourcedir_api(target_language_code: str):
         Sourcedir.select()
         .where(
             Sourcedir.path == path,
-            Sourcedir.language_code == target_language_code,
+            Sourcedir.target_language_code == target_language_code,
         )
         .exists()
     ):
@@ -65,7 +65,7 @@ def create_sourcedir_api(target_language_code: str):
         Sourcedir.select()
         .where(
             Sourcedir.slug == test_slug,
-            Sourcedir.language_code == target_language_code,
+            Sourcedir.target_language_code == target_language_code,
         )
         .exists()
     ):
@@ -75,7 +75,7 @@ def create_sourcedir_api(target_language_code: str):
         # Create new sourcedir with language code
         sourcedir = Sourcedir.create(
             path=path,
-            language_code=target_language_code,
+            target_language_code=target_language_code,
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
         )
@@ -95,7 +95,7 @@ def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     try:
         sourcedir_entry = Sourcedir.get(
             Sourcedir.slug == sourcedir_slug,
-            Sourcedir.language_code == target_language_code,
+            Sourcedir.target_language_code == target_language_code,
         )
 
         # Check if the sourcedir has any sourcefiles
@@ -134,7 +134,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
         # Get the sourcedir entry
         sourcedir_entry = Sourcedir.get(
             Sourcedir.slug == sourcedir_slug,
-            Sourcedir.language_code == target_language_code,
+            Sourcedir.target_language_code == target_language_code,
         )
 
         # Check if a sourcedir with the same path already exists for the new language
@@ -142,7 +142,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
             Sourcedir.select()
             .where(
                 Sourcedir.path == sourcedir_entry.path,
-                Sourcedir.language_code == new_language_code,
+                Sourcedir.target_language_code == new_language_code,
                 Sourcedir.id != sourcedir_entry.id,  # type: ignore
             )
             .exists()
@@ -153,7 +153,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
             )
 
         # Update the language code
-        sourcedir_entry.language_code = new_language_code
+        sourcedir_entry.target_language_code = new_language_code
         sourcedir_entry.save()
 
         return "", 204
@@ -181,7 +181,7 @@ def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
         # Get the sourcedir entry
         sourcedir_entry = Sourcedir.get(
             Sourcedir.slug == sourcedir_slug,
-            Sourcedir.language_code == target_language_code,
+            Sourcedir.target_language_code == target_language_code,
         )
 
         # Check if a sourcedir with the new name already exists for this language
@@ -189,7 +189,7 @@ def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
             Sourcedir.select()
             .where(
                 Sourcedir.path == new_name,
-                Sourcedir.language_code == target_language_code,
+                Sourcedir.target_language_code == target_language_code,
                 Sourcedir.id != sourcedir_entry.id,  # type: ignore
             )
             .exists()
@@ -345,7 +345,7 @@ def update_sourcedir_description_api(target_language_code: str, sourcedir_slug: 
         # Get the sourcedir entry
         sourcedir_entry = Sourcedir.get(
             Sourcedir.slug == sourcedir_slug,
-            Sourcedir.language_code == target_language_code,
+            Sourcedir.target_language_code == target_language_code,
         )
 
         # Update the description
@@ -424,7 +424,7 @@ def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str
                 "path": sourcedir_entry.path,
                 "slug": sourcedir_entry.slug,
                 "description": sourcedir_entry.description,
-                "language_code": sourcedir_entry.language_code,
+                "language_code": sourcedir_entry.target_language_code,
             },
             "sourcefiles": result["sourcefiles"],
             "language_name": result["target_language_name"],

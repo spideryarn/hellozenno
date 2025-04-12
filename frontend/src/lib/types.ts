@@ -9,7 +9,7 @@ export interface Language {
 
 export interface Sentence {
     id: number;
-    language_code: string;
+    target_language_code: string;
     text: string;
     translation: string;
     slug: string;
@@ -48,7 +48,7 @@ export interface Lemma {
 export interface Wordform {
     wordform: string;
     lemma?: string;
-    language_code: string;
+    target_language_code: string;
     part_of_speech?: string;
     translations: string[];
     inflection_type?: string;

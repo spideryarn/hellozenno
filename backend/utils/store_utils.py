@@ -20,7 +20,7 @@ def save_lemma_metadata(
     """
     try:
         lemma, created = Lemma.update_or_create(
-            lookup={"lemma": lemma, "language_code": target_language_code},
+            lookup={"lemma": lemma, "target_language_code": target_language_code},
             updates=metadata,
         )
         return lemma
@@ -98,7 +98,7 @@ def load_or_generate_lemma_metadata(
     try:
         # Try to find lemma in database
         lemma_model = Lemma.get(
-            Lemma.lemma == lemma, Lemma.language_code == target_language_code
+            Lemma.lemma == lemma, Lemma.target_language_code == target_language_code
         )
         metadata = lemma_model.to_dict()
 
@@ -125,14 +125,14 @@ def get_lemma_for_wordform(wordform: str, target_language_code: str) -> Optional
     # Get all known lemmas for the language
     query = Lemma.get_all_lemmas_for(
         language_code=target_language_code, sort_by="alpha"
-    )
+    )  # get_all_lemmas_for still uses language_code parameter
     lemmas = [lemma.lemma for lemma in query]
 
     # Helper function to get all wordforms for a lemma
     def get_all_wordforms(lemma: str) -> set[str]:
         try:
             lemma_model = Lemma.get(
-                Lemma.lemma == lemma, Lemma.language_code == target_language_code
+                Lemma.lemma == lemma, Lemma.target_language_code == target_language_code
             )
             return lemma_model.get_all_wordforms()
         except DoesNotExist:
@@ -150,7 +150,7 @@ def save_wordform_metadata(
 ) -> None:
     """Save metadata for a wordform to database."""
     Wordform.get_or_create_from_metadata(
-        wordform=wordform, language_code=target_language_code, metadata=metadata
+        wordform=wordform, target_language_code=target_language_code, metadata=metadata
     )
 
 

@@ -386,7 +386,7 @@ def move_sourcefile_api(
         try:
             new_sourcedir_entry = Sourcedir.get(
                 Sourcedir.slug == new_sourcedir_slug,
-                Sourcedir.language_code == target_language_code,
+                Sourcedir.target_language_code == target_language_code,
             )
         except DoesNotExist:
             return jsonify({"error": "Target directory not found"}), 404
@@ -701,7 +701,7 @@ def generate_sourcefile_audio_api(
             Sourcefile.select()
             .join(Sourcedir)
             .where(
-                (Sourcedir.language_code == target_language_code)
+                (Sourcedir.target_language_code == target_language_code)
                 & (Sourcedir.slug == sourcedir_slug)
                 & (Sourcefile.slug == sourcefile_slug)
             )
