@@ -13,8 +13,13 @@
   export let sourcefile_slug: string;
   export let language_name: string;
   export let available_sourcedirs: any[] = [];
-  export let activeTab: 'text' | 'words' | 'phrases' | 'translation';
+  export let activeTab: 'text' | 'words' | 'phrases' | 'translation' | 'image' | 'audio';
   
+  // Determine if this is an image or audio file
+  $: isImageFile = sourcefile.sourcefile_type === 'image';
+  $: isAudioFile = sourcefile.sourcefile_type === 'audio' || 
+                  sourcefile.sourcefile_type === 'youtube_audio';
+                  
   // Set up tabs for navigation
   $: tabs = [
     {
@@ -38,7 +43,18 @@
       href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/phrases`,
       count: stats.phrases_count,
       active: activeTab === 'phrases'
-    }
+    },
+    // Conditional tabs based on file type
+    ...(isImageFile ? [{
+      label: 'Image',
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/image`,
+      active: activeTab === 'image'
+    }] : []),
+    ...(isAudioFile ? [{
+      label: 'Audio',
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/audio`,
+      active: activeTab === 'audio'
+    }] : [])
   ];
 </script>
 

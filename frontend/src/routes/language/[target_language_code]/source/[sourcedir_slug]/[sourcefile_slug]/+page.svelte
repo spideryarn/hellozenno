@@ -1,9 +1,15 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import { page } from '$app/stores';
+  import { NavTabs } from '$lib';
   import SourcefileHeader from './components/SourcefileHeader.svelte';
   import SourcefileText from './components/SourcefileText.svelte';
   import SourcefileWords from './components/SourcefileWords.svelte';
   import SourcefilePhrases from './components/SourcefilePhrases.svelte';
+  import SourcefileImageTab from './components/SourcefileImageTab.svelte';
+  import SourcefileAudioTab from './components/SourcefileAudioTab.svelte';
+  import { getApiUrl } from '$lib/api';
+  import { RouteName } from '$lib/generated/routes';
   
   export let data: PageData;
   
@@ -16,8 +22,70 @@
   const navigation = textData.navigation;
   const stats = textData.stats;
   
-  // Active tab (default to 'text')
-  let activeTab = 'text';
+  // Determine active tab based on URL path
+  $: path = $page.url.pathname;
+  $: activeTab = 
+    path.endsWith('/words') ? 'words' :
+    path.endsWith('/phrases') ? 'phrases' :
+    path.endsWith('/image') ? 'image' :
+    path.endsWith('/audio') ? 'audio' :
+    'text';
+  
+  // Generate URLs for view and download
+  $: viewUrl = getApiUrl(
+    RouteName.SOURCEFILE_VIEWS_VIEW_SOURCEFILE_VW,
+    {
+      target_language_code,
+      sourcedir_slug,
+      sourcefile_slug
+    }
+  );
+
+  $: downloadUrl = getApiUrl(
+    RouteName.SOURCEFILE_VIEWS_DOWNLOAD_SOURCEFILE_VW,
+    {
+      target_language_code,
+      sourcedir_slug,
+      sourcefile_slug
+    }
+  );
+  
+  // Determine if this is an image or audio file
+  $: isImageFile = sourcefile.sourcefile_type === 'image';
+  $: isAudioFile = sourcefile.sourcefile_type === 'audio' || 
+                  sourcefile.sourcefile_type === 'youtube_audio';
+  
+  // Build tabs array with conditional tabs based on file type
+  $: tabs = [
+    { 
+      label: 'Text', 
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/text`,
+      active: activeTab === 'text' 
+    },
+    { 
+      label: 'Words', 
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/words`,
+      count: stats.wordforms_count,
+      active: activeTab === 'words' 
+    },
+    { 
+      label: 'Phrases', 
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/phrases`,
+      count: stats.phrases_count,
+      active: activeTab === 'phrases' 
+    },
+    ...(isImageFile ? [{ 
+      label: 'Image', 
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/image`,
+      active: activeTab === 'image' 
+    }] : []),
+    
+    ...(isAudioFile ? [{ 
+      label: 'Audio', 
+      href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/audio`,
+      active: activeTab === 'audio' 
+    }] : [])
+  ];
 </script>
 
 <svelte:head>
@@ -42,29 +110,10 @@
     {target_language_code}
     {sourcedir_slug}
     {sourcefile_slug}
+    available_sourcedirs={sourcefileData.available_sourcedirs || []}
   />
   
-  <div class="tabs">
-    <a 
-      href="/language/{target_language_code}/source/{sourcedir_slug}/{sourcefile_slug}" 
-      class="tab {activeTab === 'text' ? 'active' : ''}" 
-      on:click|preventDefault={() => activeTab = 'text'}
-    >
-      Text
-    </a>
-    <a 
-      href="/language/{target_language_code}/source/{sourcedir_slug}/{sourcefile_slug}/words" 
-      class="tab {activeTab === 'words' ? 'active' : ''}"
-    >
-      Words <small>({stats.wordforms_count})</small>
-    </a>
-    <a 
-      href="/language/{target_language_code}/source/{sourcedir_slug}/{sourcefile_slug}/phrases" 
-      class="tab {activeTab === 'phrases' ? 'active' : ''}"
-    >
-      Phrases <small>({stats.phrases_count})</small>
-    </a>
-  </div>
+  <NavTabs {tabs} />
   
   <div class="tab-content">
     {#if activeTab === 'text'}
@@ -82,6 +131,18 @@
       <SourcefilePhrases 
         phrases={phrasesData.phrases || []}
         {target_language_code}
+      />
+    {:else if activeTab === 'image' && isImageFile}
+      <SourcefileImageTab 
+        {viewUrl}
+        {downloadUrl}
+        filename={sourcefile.filename}
+      />
+    {:else if activeTab === 'audio' && isAudioFile}
+      <SourcefileAudioTab 
+        audioUrl={viewUrl}
+        {downloadUrl}
+        filename={sourcefile.filename}
       />
     {/if}
   </div>
@@ -108,29 +169,8 @@
     text-decoration: underline;
   }
   
-  .tabs {
-    display: flex;
-    margin: 2rem 0 0.5rem;
-    border-bottom: 1px solid #ccc;
-  }
-  
-  .tab {
-    padding: 0.5rem 1rem;
-    margin-right: 0.5rem;
-    border: 1px solid #ccc;
-    border-bottom: none;
-    border-radius: 4px 4px 0 0;
-    text-decoration: none;
-  }
-  
-  .tab.active {
-    background-color: #4CAD53;
-    color: white;
-    border-color: #4CAD53;
-  }
-  
   .tab-content {
     margin-top: 1.5rem;
     padding-bottom: 2rem;
   }
-</style> 
+</style>
