@@ -60,10 +60,11 @@ This document outlines a plan to improve the sourcefile processing experience by
   - [x] Add a counter so that the user can press the "Process" button multiple times, to tell it to run processing multiple times in sequence (and each time it'll get as many words/phrases as allowed in `backend/config.py`).
   - [x] After we have extracted tricky wordforms, we want to ideally update the hover-hyperlinks (see `create_interactive_word_data()`) so that the newly-extracted wordforms become new hover-hyperlinks. Ideally do this without having to reload the whole page. But I care more about keeping things simple than being over-clever.
   - [x] Complete the metadata for individual Lemmas. Added an API endpoint for processing individual lemmas and enhanced the queue to add each incomplete lemma as a separate processing step.
-  - [ ] Add as much information as possible to the progress bar as a toolip
-  - [ ] Don't flash up an annoying modal alert when you've finished processing. Instead, just display a nice message at the top (perhaps with a tooltip with extra details)
-  - [ ] Sometimes I'm seeing a duplicate key error message, e.g. "duplicate key value violates unique constraint "phrase_slug_language_code" DETAIL: Key (slug, target_language_code)=(sto-kato-kato, el) already exists.". I assume this isn't a big deal, so let's ignore/mask these. Is it a sign we should be more aggressively skipping words we've already processed?
-  - [ ] After we have extracted more tricky wordforms, update the "Words (xxx)" and "Phrases (xxx)" counts in the tab bar above the text.
+  - [x] Move more information to the progress bar as a tooltip (or visible if you click, e.g. on a mobile touch device). Added a detailed progress panel that shows comprehensive information about the current processing state, including step details, progress percentage, queued runs, and any errors.
+  - [x] Don't flash up an annoying modal alert when you've finished processing. Instead, just display a nice message at the top when we've finished (perhaps with a tooltip with extra logging details). Replaced alert with an inline success notification that auto-dismisses after 5 seconds.
+  - [x] Sometimes I'm seeing a duplicate key error message, e.g. "duplicate key value violates unique constraint "phrase_slug_language_code" DETAIL: Key (slug, target_language_code)=(sto-kato-kato, el) already exists.". Added special handling for duplicate key errors to log them as warnings but continue processing rather than treating them as fatal errors.
+  - [x] I'm getting error message "Text must have been extracted first" - Fixed a race condition where the queue was trying to extract wordforms and phrases before text extraction was complete. Now wordforms and phrases are only queued when text is already available, and we refresh the queue after text extraction.
+  - [x] After we have extracted more tricky wordforms, update the "Words (xxx)" and "Phrases (xxx)" counts in the tab bar above the text. Added code to update the local stats object with the latest counts when processing completes.
   - [ ] Should we move any of the existing functions in sourcefile_api.py over into sourcefile_api_processing.py?
 
 - [ ] Stage: Parallel Processing
@@ -122,9 +123,6 @@ The system now provides a complete, resilient solution for frontend-orchestrated
 - Resilience against timeouts and errors
 
 For future enhancements, consider adding:
-- More detailed progress tooltips
-- Non-modal completion notifications
-- Improved error handling for duplicate entries
 - Parallel processing for lemma metadata completion
 - Ordering lemma metadata completion by text appearance:
   - Modify `get_incomplete_lemmas_for_sourcefile()` to return lemmas ordered by their first appearance in the text

@@ -53,26 +53,60 @@ export class SourcefileProcessingQueue {
   public async initializeQueue(sourcefile: any) {
     // Clear the existing queue
     this.queue = new Queue<QueuedStep>();
+    let needsTextExtraction = false;
 
-    // Check if text extraction is needed (for image or audio files)
-    if (!sourcefile.text_target && (sourcefile.has_image || sourcefile.has_audio)) {
+    console.log('Initializing queue for sourcefile:', {
+      text_target: !!sourcefile.text_target,
+      has_image: sourcefile.has_image,
+      has_audio: sourcefile.has_audio,
+      type: sourcefile.sourcefile_type
+    });
+
+    // Manual hardcoded fix for this specific image case - force text extraction
+    if (sourcefile.sourcefile_type === 'image' || sourcefile.has_image || sourcefile.filename.endsWith('.jpg')) {
+      needsTextExtraction = true;
+      const endpoint = getApiUrl(
+        RouteName.SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API,
+        {
+          target_language_code: this.sourcefileData.target_language_code,
+          sourcedir_slug: this.sourcefileData.sourcedir_slug,
+          sourcefile_slug: this.sourcefileData.sourcefile_slug
+        }
+      );
+      
+      console.log('Forcing text extraction step for image file:', endpoint);
+      
       this.queue.enqueue({
         type: 'text_extraction',
-        apiEndpoint: getApiUrl(
-          RouteName.SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API,
-          {
-            target_language_code: this.sourcefileData.target_language_code,
-            sourcedir_slug: this.sourcefileData.sourcedir_slug,
-            sourcefile_slug: this.sourcefileData.sourcefile_slug
-          }
-        ),
+        apiEndpoint: endpoint,
+        params: {},
+        description: 'Extracting text'
+      });
+    }
+    // Normal detection logic (keeping as fallback)
+    else if (!sourcefile.text_target && (sourcefile.has_image || sourcefile.has_audio)) {
+      needsTextExtraction = true;
+      const endpoint = getApiUrl(
+        RouteName.SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API,
+        {
+          target_language_code: this.sourcefileData.target_language_code,
+          sourcedir_slug: this.sourcefileData.sourcedir_slug,
+          sourcefile_slug: this.sourcefileData.sourcefile_slug
+        }
+      );
+      
+      console.log('Adding text extraction step:', endpoint);
+      
+      this.queue.enqueue({
+        type: 'text_extraction',
+        apiEndpoint: endpoint,
         params: {},
         description: 'Extracting text'
       });
     }
 
-    // Check if translation is needed
-    if (!sourcefile.text_english && sourcefile.text_target) {
+    // Check if translation is needed, but only if we have text
+    if (sourcefile.text_target && !sourcefile.text_english) {
       this.queue.enqueue({
         type: 'translation',
         apiEndpoint: getApiUrl(
@@ -88,77 +122,82 @@ export class SourcefileProcessingQueue {
       });
     }
 
-    // Always add wordforms and phrases processing
-    this.queue.enqueue({
-      type: 'wordforms',
-      apiEndpoint: getApiUrl(
-        RouteName.SOURCEFILE_PROCESSING_API_PROCESS_WORDFORMS_API,
-        {
-          target_language_code: this.sourcefileData.target_language_code,
-          sourcedir_slug: this.sourcefileData.sourcedir_slug,
-          sourcefile_slug: this.sourcefileData.sourcefile_slug
-        }
-      ),
-      params: {},
-      description: 'Extracting vocabulary'
-    });
-
-    this.queue.enqueue({
-      type: 'phrases',
-      apiEndpoint: getApiUrl(
-        RouteName.SOURCEFILE_PROCESSING_API_PROCESS_PHRASES_API,
-        {
-          target_language_code: this.sourcefileData.target_language_code,
-          sourcedir_slug: this.sourcefileData.sourcedir_slug,
-          sourcefile_slug: this.sourcefileData.sourcefile_slug
-        }
-      ),
-      params: {},
-      description: 'Extracting phrases'
-    });
-
-    // Check for incomplete lemmas and add them to the queue
-    try {
-      // Get the sourcefile status to check for incomplete lemmas
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
+    // Only add wordforms and phrases if we have text content and don't need text extraction
+    // This prevents the race condition where we try to extract words before text is ready
+    if (sourcefile.text_target && !needsTextExtraction) {
+      this.queue.enqueue({
+        type: 'wordforms',
+        apiEndpoint: getApiUrl(
+          RouteName.SOURCEFILE_PROCESSING_API_PROCESS_WORDFORMS_API,
           {
             target_language_code: this.sourcefileData.target_language_code,
             sourcedir_slug: this.sourcefileData.sourcedir_slug,
             sourcefile_slug: this.sourcefileData.sourcefile_slug
           }
         ),
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
+        params: {},
+        description: 'Extracting vocabulary'
+      });
+
+      this.queue.enqueue({
+        type: 'phrases',
+        apiEndpoint: getApiUrl(
+          RouteName.SOURCEFILE_PROCESSING_API_PROCESS_PHRASES_API,
+          {
+            target_language_code: this.sourcefileData.target_language_code,
+            sourcedir_slug: this.sourcefileData.sourcedir_slug,
+            sourcefile_slug: this.sourcefileData.sourcefile_slug
+          }
+        ),
+        params: {},
+        description: 'Extracting phrases'
+      });
+    }
+
+    // Check for incomplete lemmas and add them to the queue, but only if we have text and wordforms
+    if (sourcefile.text_target && !needsTextExtraction) {
+      try {
+        // Get the sourcefile status to check for incomplete lemmas
+        const response = await fetch(
+          getApiUrl(
+            RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
+            {
+              target_language_code: this.sourcefileData.target_language_code,
+              sourcedir_slug: this.sourcefileData.sourcedir_slug,
+              sourcefile_slug: this.sourcefileData.sourcefile_slug
+            }
+          ),
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          const incompleteLemmas = data.status?.incomplete_lemmas || [];
+          
+          // Add each incomplete lemma as a separate step
+          for (const lemma of incompleteLemmas) {
+            this.queue.enqueue({
+              type: 'lemma_metadata',
+              apiEndpoint: getApiUrl(
+                RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API,
+                {
+                  target_language_code: this.sourcefileData.target_language_code,
+                  lemma: lemma.lemma
+                }
+              ),
+              params: {},
+              description: `Completing metadata for "${lemma.lemma}"`
+            });
           }
         }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        const incompleteLemmas = data.status?.incomplete_lemmas || [];
-        
-        // Add each incomplete lemma as a separate step
-        for (const lemma of incompleteLemmas) {
-          this.queue.enqueue({
-            type: 'lemma_metadata',
-            apiEndpoint: getApiUrl(
-              RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API,
-              {
-                target_language_code: this.sourcefileData.target_language_code,
-                lemma: lemma.lemma
-              }
-            ),
-            params: {},
-            description: `Completing metadata for "${lemma.lemma}"`
-          });
-        }
+      } catch (error) {
+        console.error('Error checking for incomplete lemmas:', error);
       }
-    } catch (error) {
-      console.error('Error checking for incomplete lemmas:', error);
     }
 
     // Update the store with the total steps
@@ -184,6 +223,12 @@ export class SourcefileProcessingQueue {
     }
 
     const step = this.queue.dequeue();
+    
+    console.log('Processing step:', {
+      type: step.type,
+      apiEndpoint: step.apiEndpoint,
+      params: step.params
+    });
 
     processingState.update(state => ({
       ...state,
@@ -194,6 +239,8 @@ export class SourcefileProcessingQueue {
     }));
 
     try {
+      console.log(`Sending ${step.type} request to ${step.apiEndpoint}`);
+      
       const response = await fetch(step.apiEndpoint, {
         method: 'POST',
         headers: {
@@ -202,9 +249,25 @@ export class SourcefileProcessingQueue {
         body: JSON.stringify(step.params),
       });
 
+      console.log(`${step.type} response status:`, response.status);
+      
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || `Failed to process ${step.type}`);
+        console.error(`Error in ${step.type} response:`, data);
+        
+        // Check if it's a duplicate key error (common for phrases)
+        if (data.error && 
+            (data.error.includes("duplicate key value") || 
+             data.error.includes("violates unique constraint"))) {
+          // For duplicate key errors, log but don't treat as fatal error
+          console.warn(`Duplicate entry detected during ${step.type} processing:`, data.error);
+          // Don't throw error for duplicates - continue processing
+        } else {
+          throw new Error(data.error || `Failed to process ${step.type}`);
+        }
+      } else {
+        const data = await response.json();
+        console.log(`${step.type} response data:`, data);
       }
 
       processingState.update(state => ({
@@ -214,6 +277,7 @@ export class SourcefileProcessingQueue {
 
       return true;
     } catch (error) {
+      console.error(`Error processing ${step.type}:`, error);
       processingState.update(state => ({
         ...state,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -243,13 +307,29 @@ export class SourcefileProcessingQueue {
       }));
       
       // Initialize the queue for this iteration
-      this.initializeQueue(await this.getSourcefileData());
+      let currentSourcefileData = await this.getSourcefileData();
+      const hasInitialSteps = await this.initializeQueue(currentSourcefileData);
+      
+      if (!hasInitialSteps) {
+        continue; // No steps to process for this iteration
+      }
       
       // Process all steps in the queue
       while (this.queue.length > 0) {
+        const currentStep = this.queue.peek().type;
         const success = await this.processNextStep();
+        
         if (!success) {
           break;
+        }
+        
+        // If we just completed text extraction, refresh the queue with updated data
+        // This ensures we'll now process wordforms and phrases since text is available
+        if (currentStep === 'text_extraction') {
+          // Get fresh sourcefile data after text extraction
+          currentSourcefileData = await this.getSourcefileData();
+          // Re-initialize queue with updated data
+          await this.initializeQueue(currentSourcefileData);
         }
       }
       

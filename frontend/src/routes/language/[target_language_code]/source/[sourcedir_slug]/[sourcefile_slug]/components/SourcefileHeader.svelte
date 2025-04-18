@@ -8,6 +8,7 @@
     DescriptionSection, 
     FileOperationsSection 
   } from '$lib';
+  import { Info } from 'phosphor-svelte';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
   import { onMount } from 'svelte';
@@ -52,6 +53,14 @@
   // Multi-processing counter and queue system
   let processingClicks = 0; // Count of process button clicks
   let pendingRuns = 0; // Number of queued processing runs
+  
+  // Progress detail display state
+  let showDetailedProgress = false;
+  
+  // Success notification
+  let showSuccessNotification = false;
+  let successMessage = '';
+  let successNotificationTimeout: ReturnType<typeof setTimeout> | null = null;
   
   // Create a reactive variable for the processing queue
   $: processingQueue = new SourcefileProcessingQueue(
@@ -180,6 +189,14 @@
       detail,
       bubbles: true, // Allow event to bubble up the DOM tree
     });
+    
+    // Also update the stats object if available in the processed data
+    if (detail && detail.stats && stats) {
+      // Update local stats to refresh the tabs
+      stats.wordforms_count = detail.stats.wordforms_count;
+      stats.phrases_count = detail.stats.phrases_count;
+    }
+    
     // Dispatch the event from this component
     if (typeof document !== 'undefined') {
       document.dispatchEvent(event);
@@ -228,7 +245,19 @@
           
           // Show success notification briefly (only for the last batch)
           if (pendingRuns === 0) {
-            alert(`Successfully processed text ${iterations} time${iterations !== 1 ? 's' : ''}.`);
+            // Clear any existing timeout
+            if (successNotificationTimeout) {
+              clearTimeout(successNotificationTimeout);
+            }
+            
+            // Set success notification
+            successMessage = `Successfully processed text ${iterations} time${iterations !== 1 ? 's' : ''}.`;
+            showSuccessNotification = true;
+            
+            // Auto-hide after 5 seconds
+            successNotificationTimeout = setTimeout(() => {
+              showSuccessNotification = false;
+            }, 5000);
           }
         } else {
           // Fall back to page reload if no data returned
@@ -585,15 +614,25 @@
   </div>
 </div>
 
-<!-- Add a progress bar if processing -->
+<!-- Notifications area -->
 {#if showAutoProcessNotification && !$processingState.isProcessing}
   <div class="auto-process-notification">
     <div class="notification-text">{autoProcessNotificationMessage}</div>
   </div>
 {/if}
 
+{#if showSuccessNotification}
+  <div class="success-notification">
+    <div class="notification-content">
+      <span class="success-icon">✓</span>
+      <div class="notification-text">{successMessage}</div>
+    </div>
+    <button class="close-notification" on:click={() => showSuccessNotification = false}>×</button>
+  </div>
+{/if}
+
 {#if $processingState.isProcessing && $processingState.totalSteps > 0}
-  <div class="processing-status">
+  <div class="processing-status" on:click={() => showDetailedProgress = !showDetailedProgress}>
     <div class="progress-container">
       <div class="progress-bar" style="width: {($processingState.progress / $processingState.totalSteps) * 100}%"></div>
     </div>
@@ -611,10 +650,53 @@
         <span>Extracting vocabulary... ({$processingState.progress}/{$processingState.totalSteps})</span>
       {:else if $processingState.currentStep === 'phrases'}
         <span>Finding useful phrases... ({$processingState.progress}/{$processingState.totalSteps})</span>
+      {:else if $processingState.currentStep === 'lemma_metadata'}
+        <span>Completing vocabulary details... ({$processingState.progress}/{$processingState.totalSteps})</span>
       {:else}
         <span>Processing... ({$processingState.progress}/{$processingState.totalSteps})</span>
       {/if}
+      
+      <div class="progress-info-icon" title="Click for more details">
+        <Info size={16} weight="duotone" />
+      </div>
     </div>
+    
+    {#if showDetailedProgress}
+      <div class="detailed-progress">
+        <div class="detailed-progress-header">Processing Details</div>
+        <div class="detailed-progress-item">
+          <span class="detail-label">Current Step:</span>
+          <span class="detail-value">{$processingState.description || 'Processing'}</span>
+        </div>
+        <div class="detailed-progress-item">
+          <span class="detail-label">Progress:</span>
+          <span class="detail-value">{$processingState.progress} of {$processingState.totalSteps} steps completed ({Math.floor(($processingState.progress / $processingState.totalSteps) * 100)}%)</span>
+        </div>
+        {#if $processingState.totalIterations > 1}
+          <div class="detailed-progress-item">
+            <span class="detail-label">Current Run:</span>
+            <span class="detail-value">{$processingState.currentIteration} of {$processingState.totalIterations}</span>
+          </div>
+        {/if}
+        {#if pendingRuns > 0}
+          <div class="detailed-progress-item">
+            <span class="detail-label">Queued Runs:</span>
+            <span class="detail-value">{pendingRuns}</span>
+          </div>
+        {/if}
+        {#if $processingState.error}
+          <div class="detailed-progress-item error">
+            <span class="detail-label">Error:</span>
+            <span class="detail-value">{$processingState.error}</span>
+          </div>
+        {/if}
+        <div class="detailed-progress-footer">
+          <button class="close-details-btn" on:click|stopPropagation={() => showDetailedProgress = false}>
+            Close Details
+          </button>
+        </div>
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -781,6 +863,132 @@
     font-size: 0.9rem;
   }
   
+  .success-notification {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(76, 173, 83, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #4CAD53;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideDown 0.3s ease-in-out;
+  }
+  
+  .notification-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .success-icon {
+    color: #4CAD53;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+  
+  .close-notification {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .close-notification:hover {
+    color: #343a40;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .progress-info-icon {
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #4CAD53;
+    cursor: pointer;
+  }
+  
+  .detailed-progress {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(76, 173, 83, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  .detailed-progress-header {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(76, 173, 83, 0.2);
+    color: #3c8c41;
+  }
+  
+  .detailed-progress-item {
+    display: flex;
+    margin-bottom: 0.4rem;
+    align-items: baseline;
+  }
+  
+  .detailed-progress-item.error {
+    color: #d9534f;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    width: 110px;
+    flex-shrink: 0;
+    color: #6c757d;
+  }
+  
+  .detail-value {
+    flex-grow: 1;
+  }
+  
+  .detailed-progress-footer {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(76, 173, 83, 0.2);
+    text-align: center;
+  }
+  
+  .close-details-btn {
+    background-color: transparent;
+    color: #4CAD53;
+    border: 1px solid #4CAD53;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .close-details-btn:hover {
+    background-color: #4CAD53;
+    color: white;
+  }
+  
+  .processing-status {
+    cursor: pointer;
+  }
+  
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -823,6 +1031,19 @@
     .expanded-operations-divider span {
       font-size: 0.8rem;
       padding: 0 0.5rem;
+    }
+    
+    .detailed-progress {
+      padding: 0.5rem;
+    }
+    
+    .detail-label {
+      width: 90px;
+      font-size: 0.85rem;
+    }
+    
+    .detail-value {
+      font-size: 0.85rem;
     }
   }
 </style>
