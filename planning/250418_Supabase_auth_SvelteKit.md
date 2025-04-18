@@ -78,12 +78,36 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
 
 **Stage 5: Protecting Costly Operations**
 - **Adopt Hybrid Approach:**
-  - **Backend:** Identify API endpoints triggering LLM calls (e.g., text extraction, translation, word/phrase processing, lemma generation) and protect them with `@api_auth_required`.
-  - **Frontend:** Use the `$session` store (or equivalent auth state) in relevant Svelte components to conditionally display/enable controls (like processing buttons). Show a disabled state or a "Login required" message/link for logged-out users.
-  - **Error Handling:** Ensure robust frontend handling for potential 401 errors from the API.
-- **Initial Implementation (Processing Button):**
-  - [ ] Add `@api_auth_required` to processing endpoints in `sourcefile_api_processing.py`.
-  - [ ] Modify `SourcefileHeader.svelte` to show/hide the "Process this text" button based on login state.
+  - **Backend:** Identify API endpoints triggering LLM/TTS/Transcription calls and protect them either directly (`@api_auth_required`) or conditionally (checking `g.user` before generation).
+  - **Frontend:** Use the `$session` store (or `$user` store) in relevant Svelte components to conditionally display/enable controls. Show disabled state or "Login required" prompt for logged-out users.
+  - **Error Handling:** Ensure robust frontend handling for potential 401/403 errors from conditionally gated APIs.
+
+- **Detailed Implementation Plan:**
+  - **Stage 5.1: Backend - Direct Gating:**
+    - [ ] Add `@api_auth_required` to `sourcefile_api.generate_sourcefile_audio_api`.
+    - [ ] Add `@api_auth_required` to `sourcedir_api.add_youtube_audio_api`.
+    - [ ] Add `@api_auth_required` to `sentence_api.generate_sentence_audio_api`.
+    - [ ] Add `@api_auth_required` to `lemma_api.complete_lemma_metadata_api`.
+    - [ ] Add `@api_auth_required` to `sourcedir_api.upload_sourcedir_new_sourcefile_api` (file uploads).
+    - [ ] Add `@api_auth_required` to `sourcefile_api.create_sourcefile_from_text_api` (text file creation).
+    - [x] Verify `@api_auth_required` is present on endpoints in `sourcefile_api_processing.py` (extract_text, translate, process_wordforms, process_phrases).
+  - **Stage 5.2: Backend - Conditional Gating (Lemma Generation):**
+    - [ ] Define custom exception `AuthenticationRequiredForGenerationError` (e.g., in `utils/exceptions.py` or `utils/auth_utils.py`).
+    - [ ] Modify `utils/store_utils.py -> load_or_generate_lemma_metadata`: Check `g.user` before calling `_generate_and_save_metadata`. If generation needed and no user, raise `AuthenticationRequiredForGenerationError`.
+    - [ ] Modify `lemma_api.py -> get_lemma_metadata_api`: Add `try...except AuthenticationRequiredForGenerationError` around the call to `load_or_generate_lemma_metadata`. In `except`, return `jsonify({"error": "Authentication required to generate full lemma details"}), 401` (or 403).
+  - **Stage 5.3: Backend - Conditional Gating (Flashcard Sentence Audio):**
+    - [ ] Modify `utils/audio_utils.py -> get_or_create_sentence_audio`: Check `g.user` before calling `generate_and_save_audio`. If generation needed and no user, raise `AuthenticationRequiredForGenerationError`.
+    - [ ] Modify `utils/flashcard_utils.py -> prepare_flashcard_sentence_data`: Add `try...except AuthenticationRequiredForGenerationError` around the call to `get_or_create_sentence_audio`. If caught, proceed but include a flag indicating audio generation was skipped due to auth (e.g., add `audio_requires_login=True` to the returned data dictionary).
+    - [ ] Modify `flashcard_api.py -> flashcard_sentence_api`: Ensure the response structure accommodates the potential `audio_requires_login` flag from the util function.
+  - **Stage 5.4: Frontend - Handle Conditional Lemma Error:**
+    - [ ] Search frontend (`*.svelte`, `*.ts`) for usage of `RouteName.LEMMA_API_GET_LEMMA_METADATA_API`.
+    - [ ] Update API client calls or component logic (likely in lemma detail page) to specifically catch the 401/403 error *from this endpoint*. Display a user-friendly message (e.g., "Login to generate full details") instead of a generic fetch error, while still showing any existing partial data.
+  - **Stage 5.5: Frontend - Handle Conditional Flashcard Audio:**
+    - [ ] Search frontend for usage of `RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API`.
+    - [ ] Update component logic (likely flashcard view) to check for the `audio_requires_login` flag in the API response. If true, disable the audio player or show a "Login to hear audio" message.
+  - **Stage 5.6: Frontend - UI for Directly Gated Actions:**
+    - [ ] Identify components triggering APIs gated in Stage 5.1 (Audio generation, YouTube add, Uploads, Text creation).
+    - [ ] Use `$user` store checks in these components to hide/disable UI elements (buttons, forms) for logged-out users. Show appropriate "Login required" prompts/links (`/auth?next=...`).
 
 **Testing:**
 - [ ] Add tests alongside feature implementation in each stage.

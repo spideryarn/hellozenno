@@ -9,6 +9,10 @@ from gjdutils.audios import play_mp3
 from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from openai import OpenAI
 
+# Import the exception and g for global context
+from flask import g
+from .exceptions import AuthenticationRequiredForGenerationError
+
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY.get_secret_value())
 
@@ -200,8 +204,16 @@ def ensure_model_audio_data(
         should_add_delays: Whether to add delays between sentences
         should_play: Whether to play the audio
         verbose: Verbosity level
+
+    Raises:
+        AuthenticationRequiredForGenerationError: If generation needed for a Sentence and user is not logged in.
     """
     if not model.audio_data:
+        if not hasattr(g, "user") or g.user is None:
+            raise AuthenticationRequiredForGenerationError(
+                "User must be logged in to generate audio."
+            )
+
         print(f"Generating audio for {model.__class__.__name__}: {model.id}")
         # Get text based on model type
         text = model.sentence if hasattr(model, "sentence") else model.text_target

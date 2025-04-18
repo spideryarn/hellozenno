@@ -3,9 +3,13 @@
   import Card from '$lib/components/Card.svelte';
   import { KeyReturn } from 'phosphor-svelte';
   import { getPageUrl } from '$lib/navigation';
+  import { page } from '$app/stores'; // Import page store for current URL
+  import Alert from '$lib/components/Alert.svelte'; // Import Alert
   
   export let data;
   
+  // Define login URL with redirect back to current page
+  $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
   
   let currentStage = 1; // 1: Audio only, 2: Show sentence, 3: Show translation
   
@@ -63,12 +67,14 @@
   }
   
   onMount(() => {
-    // Autoplay audio on load
-    const audioElement = document.getElementById('audio-player') as HTMLAudioElement;
-    if (audioElement) {
-      audioElement.play().catch(err => {
-        console.error('Failed to autoplay audio:', err);
-      });
+    // Autoplay audio on load ONLY if login is not required
+    if (!data.audio_requires_login) {
+      const audioElement = document.getElementById('audio-player') as HTMLAudioElement;
+      if (audioElement) {
+        audioElement.play().catch(err => {
+          console.error('Failed to autoplay audio:', err);
+        });
+      }
     }
     
     // Add keyboard event listener
@@ -111,8 +117,17 @@
         
         <div class="row align-items-center mb-4">
           <div class="col-12">
-            <!-- Audio player (always visible) -->
-            <audio id="audio-player" src={data.audio_url} controls class="w-100 mb-3"></audio>
+            <!-- Audio player (always visible, but may be disabled) -->
+            {#if data.audio_requires_login}
+              <Alert type="info" class="mb-3">
+                Audio generation requires login.
+                <a href={loginUrl} class="btn btn-sm btn-primary ms-2">Login</a>
+              </Alert>
+              <!-- Render a disabled player or just omit -->
+              <audio id="audio-player" src={data.audio_url} controls disabled class="w-100 mb-3"></audio>
+            {:else}
+              <audio id="audio-player" src={data.audio_url} controls class="w-100 mb-3"></audio>
+            {/if}
             
             <!-- Sentence (visible in stage 2+) -->
             {#if currentStage >= 2}
@@ -135,7 +150,8 @@
           <div class="col-4">
             <button 
               class="btn btn-secondary w-100 py-3" 
-              on:click={currentStage === 1 ? playAudio : prevStage}>
+              on:click={currentStage === 1 ? playAudio : prevStage}
+              disabled={data.audio_requires_login}>
               {currentStage === 1 ? 'Play audio (←)' : currentStage === 2 ? 'Play audio (←)' : 'Show sentence (←)'}
             </button>
           </div>

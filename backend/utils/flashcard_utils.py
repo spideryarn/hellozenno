@@ -11,6 +11,9 @@ from utils.audio_utils import ensure_model_audio_data
 from utils.sentence_utils import get_random_sentence
 from flask import url_for
 
+# Import the exception
+from utils.exceptions import AuthenticationRequiredForGenerationError
+
 
 def get_flashcard_landing_data(
     target_language_code: str, sourcefile_slug=None, sourcedir_slug=None
@@ -108,6 +111,9 @@ def get_flashcard_sentence_data(
     except DoesNotExist:
         return {"error": "Sentence not found"}
 
+    # Default audio status flag
+    audio_requires_login = False
+
     # Pre-generate audio if needed
     if not sentence.audio_data:
         try:
@@ -116,8 +122,11 @@ def get_flashcard_sentence_data(
                 should_add_delays=True,
                 verbose=1,
             )
+        except AuthenticationRequiredForGenerationError:
+            # Set flag if audio generation requires login
+            audio_requires_login = True
         except Exception as e:
-            # Log error but continue - audio can be generated on demand
+            # Log other errors but continue - audio can be generated on demand
             print(f"Error pre-generating audio: {e}")
 
     sourcefile_entry = None
@@ -160,6 +169,7 @@ def get_flashcard_sentence_data(
             target_language_code=target_language_code,
             sentence_id=sentence.id,
         ),
+        "audio_requires_login": audio_requires_login,
         "metadata": {
             "target_language_code": target_language_code,
             "language_name": language_name,

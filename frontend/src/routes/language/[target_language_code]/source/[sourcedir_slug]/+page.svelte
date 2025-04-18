@@ -5,8 +5,14 @@
   import { Spinner, Trash, ArrowUp } from 'phosphor-svelte';
   import { onMount } from 'svelte';
   import { DescriptionFormatted } from '$lib';
+  import { user } from '$lib/stores/authStore';
+  import { page } from '$app/stores';
+  import Alert from '$lib/components/Alert.svelte';
   
   export let data: PageData;
+  
+  // Define login URL with redirect back to current page
+  $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
   
   // Initialize tooltips when the component is mounted
   onMount(() => {
@@ -414,43 +420,49 @@
       <div class="card mb-4">
         <div class="card-header">Add Files</div>
         <div class="card-body">
-          <div class="row mb-3">
-            <div class="col">
-              <label for="fileInput" class="btn btn-outline-primary me-2">Upload Image Files</label>
-              <input type="file" id="fileInput" class="d-none" multiple accept="image/*" on:change={handleFileSelect}>
-              
-              <label for="audioInput" class="btn btn-outline-primary me-2">Upload Audio Files</label>
-              <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" on:change={handleFileSelect}>
-              
-              <div class="d-inline-block position-relative me-2">
-                <label for="textInput" class="btn btn-outline-primary" 
-                       data-bs-toggle="tooltip" 
-                       data-bs-html="true"
-                       title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">
-                  Upload Text Files
-                </label>
-                <input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" on:change={handleFileSelect}>
-              </div>
-              
-              <button class="btn btn-outline-primary me-2" on:click={() => showCreateTextModal = true}>Create From Text</button>
-              <!-- Leave this commented. We've disabled it for now, but might want to try it again in the future. -->
-              <!-- <button class="btn btn-outline-primary" on:click={() => showYoutubeModal = true}>Upload YouTube Video</button> -->
-            </div>
-          </div>
-          
-          <!-- Mobile-specific options would go here -->
-          
-          {#if uploadProgress}
-            <div class="progress mb-3">
-              <div class="progress-bar bg-success" 
-                   role="progressbar" 
-                   style="width: {uploadProgressValue}%" 
-                   aria-valuenow={uploadProgressValue} 
-                   aria-valuemin="0" 
-                   aria-valuemax="100">
-                {uploadProgressValue}%
+          {#if $user}
+            <div class="row mb-3">
+              <div class="col">
+                <label for="fileInput" class="btn btn-outline-primary me-2">Upload Image Files</label>
+                <input type="file" id="fileInput" class="d-none" multiple accept="image/*" on:change={handleFileSelect}>
+                
+                <label for="audioInput" class="btn btn-outline-primary me-2">Upload Audio Files</label>
+                <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" on:change={handleFileSelect}>
+                
+                <div class="d-inline-block position-relative me-2">
+                  <label for="textInput" class="btn btn-outline-primary" 
+                         data-bs-toggle="tooltip" 
+                         data-bs-html="true"
+                         title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">
+                    Upload Text Files
+                  </label>
+                  <input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" on:change={handleFileSelect}>
+                </div>
+                
+                <button class="btn btn-outline-primary me-2" on:click={() => showCreateTextModal = true}>Create From Text</button>
+                <!-- Leave this commented. We've disabled it for now, but might want to try it again in the future. -->
+                <!-- <button class="btn btn-outline-primary" on:click={() => showYoutubeModal = true}>Upload YouTube Video</button> -->
               </div>
             </div>
+            
+            <!-- Mobile-specific options would go here -->
+            
+            {#if uploadProgress}
+              <div class="progress mb-3">
+                <div class="progress-bar bg-success" 
+                     role="progressbar" 
+                     style="width: {uploadProgressValue}%" 
+                     aria-valuenow={uploadProgressValue} 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                  {uploadProgressValue}%
+                </div>
+              </div>
+            {/if}
+          {:else}
+            <Alert type="info">
+              Please <a href={loginUrl}>login</a> to upload files or create text sources.
+            </Alert>
           {/if}
         </div>
       </div>

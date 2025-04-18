@@ -55,6 +55,9 @@ from slugify import slugify
 from utils.types import LanguageLevel
 from typing import get_args
 
+# Import the auth decorator
+from utils.auth_utils import api_auth_required
+
 
 # Create a blueprint with standardized prefix
 sourcefile_api_bp = Blueprint(
@@ -605,6 +608,7 @@ def rename_sourcefile_api(
     "/<target_language_code>/<sourcedir_slug>/create_from_text",
     methods=["POST"],
 )
+@api_auth_required
 def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: str):
     """Create a new sourcefile from pasted text."""
     try:
@@ -675,6 +679,7 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
     "/<target_language_code>/<sourcedir_slug>/youtube",
     methods=["POST"],
 )
+@api_auth_required
 def add_sourcefile_from_youtube_api(target_language_code, sourcedir_slug):
     """Add a new sourcefile from a YouTube video's audio."""
     sourcedir = get_sourcedir_or_404(target_language_code, sourcedir_slug)
@@ -737,6 +742,7 @@ def add_sourcefile_from_youtube_api(target_language_code, sourcedir_slug):
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/generate_audio",
     methods=["POST"],
 )
+@api_auth_required
 def generate_sourcefile_audio_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):

@@ -16,6 +16,10 @@ from db_models import Lemma, LemmaExampleSentence
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.sourcefile_utils import complete_lemma_metadata
 
+# Import the auth decorator and the new exception
+from utils.auth_utils import api_auth_required
+from utils.exceptions import AuthenticationRequiredForGenerationError
+
 # Create a blueprint with standardized prefix
 lemma_api_bp = Blueprint("lemma_api", __name__, url_prefix="/api/lang/lemma")
 
@@ -82,22 +86,17 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
     lemma = urllib.parse.unquote(lemma)
 
     try:
-        # First try to find the lemma in the database
-        lemma_model = (
-            Lemma.select()
-            .where(
-                Lemma.lemma == lemma,
-                Lemma.target_language_code == target_language_code,
-            )
-            .join(LemmaExampleSentence, JOIN.LEFT_OUTER)
-            .get()
-        )
-
-        # Load or regenerate metadata if incomplete
+        # This will now potentially raise AuthenticationRequiredForGenerationError
         lemma_data = load_or_generate_lemma_metadata(
             lemma=lemma,
             target_language_code=target_language_code,
             generate_if_incomplete=True,
+        )
+
+        # Find the lemma model - it should exist now
+        lemma_model = Lemma.get(
+            Lemma.lemma == lemma,
+            Lemma.target_language_code == target_language_code,
         )
 
         # All required fields should be handled by load_or_generate_lemma_metadata
@@ -114,85 +113,101 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
         }
         return jsonify(response_data)
 
-    except DoesNotExist:
-        # Lemma not found, generate new metadata
+    except AuthenticationRequiredForGenerationError:
+        # Handle the case where generation requires login
+        error_data = {
+            "error": "Authentication Required",
+            "description": "Authentication required to generate full lemma details",
+            "target_language_code": target_language_code,
+            "target_language_name": get_language_name(target_language_code),
+            "authentication_required_for_generation": True,  # Add a flag for frontend
+        }
+        # Attempt to return partial data if lemma exists but is incomplete
         try:
-            # This will create the lemma in the database
-            lemma_data = load_or_generate_lemma_metadata(
-                lemma=lemma,
-                target_language_code=target_language_code,
-                generate_if_incomplete=True,
-            )
-
-            # Find the newly created lemma
             lemma_model = Lemma.get(
                 Lemma.lemma == lemma,
                 Lemma.target_language_code == target_language_code,
             )
-
-            # Create the response
-            response_data = {
-                "lemma_metadata": lemma_data,
-                "target_language_code": target_language_code,
-                "target_language_name": get_language_name(target_language_code),
-                "metadata": {
-                    "created_at": lemma_model.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                    "updated_at": lemma_model.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-                },
+            error_data["partial_lemma_metadata"] = lemma_model.to_dict()
+            error_data["metadata"] = {
+                "created_at": lemma_model.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "updated_at": lemma_model.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
             }
-            return jsonify(response_data)
+        except DoesNotExist:
+            # If lemma doesn't exist at all, just return the 401 error
+            pass
+        return jsonify(error_data), 401
 
-        except Exception as e:
-            # If generation fails, return a proper 500 error
-            error_data = {
-                "error": "Failed to generate lemma",
-                "description": f"Could not generate metadata for lemma '{lemma}': {str(e)}",
-                "target_language_code": target_language_code,
-                "target_language_name": get_language_name(target_language_code),
-            }
-            response = jsonify(error_data)
-            response.status_code = 500
-            return response
+    except DoesNotExist:
+        # This case should theoretically not be hit anymore as load_or_generate
+        # handles creation, but kept for safety.
+        error_data = {
+            "error": "Not Found",
+            "description": f"Lemma '{lemma}' not found and could not be generated.",
+            "target_language_code": target_language_code,
+            "target_language_name": get_language_name(target_language_code),
+        }
+        response = jsonify(error_data)
+        response.status_code = 404
+        return response
+
+    except Exception as e:
+        # Handle other potential errors during generation/loading
+        logger.exception(
+            f"Error in get_lemma_metadata_api for lemma '{lemma}': {str(e)}"
+        )
+        error_data = {
+            "error": "Failed to process lemma",
+            "description": f"Could not retrieve or generate metadata for lemma '{lemma}': {str(e)}",
+            "target_language_code": target_language_code,
+            "target_language_name": get_language_name(target_language_code),
+        }
+        response = jsonify(error_data)
+        response.status_code = 500
+        return response
 
 
-@lemma_api_bp.route("/<target_language_code>/<lemma>/complete_metadata", methods=["POST"])
+@lemma_api_bp.route(
+    "/<target_language_code>/<lemma>/complete_metadata", methods=["POST"]
+)
+@api_auth_required
 def complete_lemma_metadata_api(target_language_code: str, lemma: str):
     """Complete the metadata for a specific lemma.
-    
+
     This API endpoint processes an individual lemma to generate full metadata.
     It is designed to be called as part of the frontend-orchestrated processing queue.
     """
     # URL decode the lemma parameter to handle non-Latin characters properly
     lemma = urllib.parse.unquote(lemma)
-    
+
     try:
         # Get the lemma model
         lemma_model = Lemma.get(
             (Lemma.lemma == lemma)
             & (Lemma.target_language_code == target_language_code)
         )
-        
+
         # Complete the metadata
         lemma_model = complete_lemma_metadata(lemma_model)
-        
+
         # Return the completed lemma data
-        return jsonify({
-            "success": True,
-            "lemma": lemma_model.to_dict(),
-        })
-        
+        return jsonify(
+            {
+                "success": True,
+                "lemma": lemma_model.to_dict(),
+            }
+        )
+
     except DoesNotExist:
-        response = jsonify({
-            "error": "Not Found",
-            "description": f"Lemma '{lemma}' not found"
-        })
+        response = jsonify(
+            {"error": "Not Found", "description": f"Lemma '{lemma}' not found"}
+        )
         response.status_code = 404
         return response
-        
+
     except Exception as e:
-        response = jsonify({
-            "error": "Failed to complete lemma metadata",
-            "description": str(e)
-        })
+        response = jsonify(
+            {"error": "Failed to complete lemma metadata", "description": str(e)}
+        )
         response.status_code = 500
         return response

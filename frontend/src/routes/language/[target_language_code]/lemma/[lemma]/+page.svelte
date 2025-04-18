@@ -4,18 +4,22 @@
   import SentenceCard from '$lib/components/SentenceCard.svelte';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
+  import { page } from '$app/stores'; // Import page store for current URL
+  import Alert from '$lib/components/Alert.svelte'; // Assuming an Alert component exists
+  import UserDisplay from '$lib/components/UserDisplay.svelte'; // Needed for login link
   
   export let data: PageData;
-  const { lemmaData } = data;
+  const { lemmaData, authError, target_language_code, target_language_name, metadata } = data;
   
-  // Unwrap the data from the response
-  const lemma_metadata = lemmaData.lemma_metadata;
-  const target_language_code = lemmaData.target_language_code;
-  const target_language_name = lemmaData.target_language_name;
-  const metadata = lemmaData.metadata;
-  
-  // Generate API URL for delete action
-  const deleteUrl = getApiUrl(RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW, {
+  // Handle potential partial data in case of auth error
+  // The actual full metadata is nested within lemmaData if successful
+  const lemma_metadata = lemmaData?.lemma_metadata || lemmaData || {};
+
+  // Define login URL with redirect back to current page
+  $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
+
+  // Generate API URL for delete action (only if lemma exists properly)
+  const deleteUrl = lemma_metadata?.lemma ? getApiUrl(RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW, {
     target_language_code,
     lemma: lemma_metadata.lemma
   });
@@ -33,15 +37,22 @@
     <div class="col">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Languages</a></li>
-          <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{target_language_name}</a></li>
+          <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
+          <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{target_language_name || target_language_code}</a></li>
           <li class="breadcrumb-item"><a href="/language/{target_language_code}/lemmas">Lemmas</a></li>
-          <li class="breadcrumb-item active" aria-current="page">{lemma_metadata.lemma}</li>
+          <li class="breadcrumb-item active" aria-current="page">{lemma_metadata?.lemma || 'Lemma'}</li>
         </ol>
       </nav>
     </div>
   </div>
   
+  {#if authError}
+  <Alert type="warning" class="mb-4">
+    { authError }
+    <a href={loginUrl} class="btn btn-sm btn-primary ms-2">Login to generate</a>
+  </Alert>
+  {/if}
+
   <div class="row mb-3">
     <div class="col-md-8">
       <h1 class="mb-4">{lemma_metadata.lemma}</h1>
@@ -53,44 +64,46 @@
     </div>
   </div>
 
+  {#if lemma_metadata.lemma} <!-- Only show delete if we have a valid lemma -->
   <div class="mb-4">
     <form action={deleteUrl} method="POST" 
           on:submit={handleDeleteSubmit}>
       <button type="submit" class="btn btn-danger">Delete lemma</button>
     </form>
   </div>
+  {/if}
   
   <Card title="Lemma Details">
     <div class="translations mb-3">
       <p><strong>Translation:</strong> 
-        {#if lemma_metadata.translations && lemma_metadata.translations.length > 0}
+        {#if lemma_metadata?.translations && lemma_metadata.translations.length > 0}
           {lemma_metadata.translations.join('; ')}
         {:else}
-          No translation available
+          {#if !authError}No translation available{/if} <!-- Show nothing if auth error -->
         {/if}
       </p>
     </div>
     
-    <p><strong>Part of Speech:</strong> {lemma_metadata.part_of_speech || 'Not available'}</p>
+    <p><strong>Part of Speech:</strong> {lemma_metadata?.part_of_speech || '-'}</p>
     
     <div class="etymology mb-3">
-      <p><strong>Etymology:</strong> {lemma_metadata.etymology || 'Not available'}</p>
+      <p><strong>Etymology:</strong> {lemma_metadata?.etymology || '-'}</p>
     </div>
     
     <div class="commonality mb-3">
-      <p><strong>Commonality:</strong> {Math.round((lemma_metadata.commonality || 0) * 100)}%</p>
+      <p><strong>Commonality:</strong> {lemma_metadata?.commonality ? Math.round((lemma_metadata.commonality) * 100) + '%' : '-'}</p>
     </div>
     
     <div class="guessability mb-3">
-      <p><strong>Guessability:</strong> {Math.round((lemma_metadata.guessability || 0) * 100)}%</p>
+      <p><strong>Guessability:</strong> {lemma_metadata?.guessability ? Math.round((lemma_metadata.guessability) * 100) + '%' : '-'}</p>
     </div>
     
     <div class="register mb-3">
-      <p><strong>Register:</strong> {lemma_metadata.register || 'Not available'}</p>
+      <p><strong>Register:</strong> {lemma_metadata?.register || '-'}</p>
     </div>
   </Card>
   
-  {#if lemma_metadata.example_usage && lemma_metadata.example_usage.length > 0}
+  {#if !authError && lemma_metadata?.example_usage && lemma_metadata.example_usage.length > 0}
   <Card title="Example Usage" className="mt-4">
     <div class="d-flex flex-column gap-3">
       {#each lemma_metadata.example_usage as example}
@@ -105,7 +118,7 @@
   </Card>
   {/if}
   
-  {#if lemma_metadata.mnemonics && lemma_metadata.mnemonics.length > 0}
+  {#if !authError && lemma_metadata?.mnemonics && lemma_metadata.mnemonics.length > 0}
   <Card title="Mnemonics" className="mt-4">
     <ul class="list-group">
       {#each lemma_metadata.mnemonics as mnemonic}
@@ -115,7 +128,7 @@
   </Card>
   {/if}
   
-  {#if lemma_metadata.related_words_phrases_idioms && lemma_metadata.related_words_phrases_idioms.length > 0}
+  {#if !authError && lemma_metadata?.related_words_phrases_idioms && lemma_metadata.related_words_phrases_idioms.length > 0}
   <Card title="Related Words, Phrases & Idioms" className="mt-4">
     <div class="row row-cols-1 row-cols-md-2 g-3">
       {#each lemma_metadata.related_words_phrases_idioms as related}
@@ -131,7 +144,7 @@
   </Card>
   {/if}
   
-  {#if lemma_metadata.synonyms && lemma_metadata.synonyms.length > 0}
+  {#if !authError && lemma_metadata?.synonyms && lemma_metadata.synonyms.length > 0}
   <Card title="Synonyms" className="mt-4">
     <div class="row row-cols-1 row-cols-md-2 g-3">
       {#each lemma_metadata.synonyms as synonym}
@@ -147,7 +160,7 @@
   </Card>
   {/if}
   
-  {#if lemma_metadata.antonyms && lemma_metadata.antonyms.length > 0}
+  {#if !authError && lemma_metadata?.antonyms && lemma_metadata.antonyms.length > 0}
   <Card title="Antonyms" className="mt-4">
     <div class="row row-cols-1 row-cols-md-2 g-3">
       {#each lemma_metadata.antonyms as antonym}
@@ -163,7 +176,7 @@
   </Card>
   {/if}
   
-  {#if lemma_metadata.example_wordforms && lemma_metadata.example_wordforms.length > 0}
+  {#if !authError && lemma_metadata?.example_wordforms && lemma_metadata.example_wordforms.length > 0}
   <Card title="Example Wordforms" className="mt-4">
     <div class="list-group">
       {#each lemma_metadata.example_wordforms as form}
@@ -176,13 +189,13 @@
   </Card>
   {/if}
   
-  {#if lemma_metadata.cultural_context}
+  {#if !authError && lemma_metadata?.cultural_context}
   <Card title="Cultural Context" className="mt-4">
     <p>{lemma_metadata.cultural_context}</p>
   </Card>
   {/if}
   
-  {#if lemma_metadata.easily_confused_with && lemma_metadata.easily_confused_with.length > 0 && lemma_metadata.easily_confused_with[0].lemma}
+  {#if !authError && lemma_metadata?.easily_confused_with && lemma_metadata.easily_confused_with.length > 0 && lemma_metadata.easily_confused_with[0].lemma}
   <Card title="Easily Confused With" className="mt-4">
     <div class="list-group">
       {#each lemma_metadata.easily_confused_with as confused}

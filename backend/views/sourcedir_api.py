@@ -33,6 +33,9 @@ from slugify import slugify
 
 from views.sourcefile_views import inspect_sourcefile_vw
 
+# Import the auth decorator
+from utils.auth_utils import api_auth_required
+
 # Create a blueprint with standardized prefix
 sourcedir_api_bp = Blueprint(
     "sourcedir_api", __name__, url_prefix="/api/lang/sourcedir"
@@ -217,6 +220,7 @@ def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
 @sourcedir_api_bp.route(
     "/<target_language_code>/<sourcedir_slug>/upload", methods=["POST"]
 )
+@api_auth_required
 def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slug: str):
     """Handle file upload to a source directory."""
     try:
@@ -261,7 +265,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                 size_limit = MAX_TEXT_SIZE_UPLOAD_ALLOWED
             else:
                 size_limit = MAX_IMAGE_SIZE_UPLOAD_ALLOWED
-                
+
             if len(file_content) > size_limit:
                 flash(
                     f"File {file.filename} too large (max {size_limit // (1024*1024)}MB)"
@@ -294,7 +298,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
 
                 # Create sourcefile entry without processing
                 print(f"DEBUG: Creating sourcefile with filename {filename}")
-                
+
                 # Determine file type and set appropriate fields
                 if filename.endswith(".mp3"):
                     sourcefile_type = "audio"
@@ -306,10 +310,13 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                     image_data = None
                     audio_data = None
                     # For text files, we use the file content directly as text_target
-                    text_target = file_content.decode('utf-8').strip()
-                    
+                    text_target = file_content.decode("utf-8").strip()
+
                     # If there's a description in metadata, set it on the sourcefile
-                    if "description" in metadata and metadata["description"] is not None:
+                    if (
+                        "description" in metadata
+                        and metadata["description"] is not None
+                    ):
                         description = metadata["description"]
                     else:
                         description = None
@@ -319,7 +326,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                     audio_data = None
                     text_target = ""  # Will be populated during processing
                     description = None
-                
+
                 sourcefile = Sourcefile.create(
                     sourcedir=sourcedir_entry,
                     filename=filename,
@@ -329,7 +336,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                     text_english="",  # Will be populated during processing
                     metadata=metadata,
                     sourcefile_type=sourcefile_type,
-                    description=description
+                    description=description,
                 )
                 print(f"DEBUG: Created sourcefile with ID {sourcefile.id}")
                 uploaded_count += 1

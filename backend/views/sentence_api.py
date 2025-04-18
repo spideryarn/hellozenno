@@ -17,6 +17,7 @@ from utils.sentence_utils import (
     get_all_sentences,
 )
 from utils.audio_utils import ensure_model_audio_data
+from utils.auth_utils import api_auth_required
 
 # Create a blueprint with standardized prefix
 sentence_api_bp = Blueprint("sentence_api", __name__, url_prefix="/api/lang/sentence")
@@ -145,6 +146,7 @@ def rename_sentence_api(target_language_code: str, slug: str):
 @sentence_api_bp.route(
     "/<target_language_code>/<slug>/generate_audio", methods=["POST"]
 )
+@api_auth_required
 def generate_sentence_audio_api(target_language_code: str, slug: str):
     """Generate audio for a sentence."""
     try:

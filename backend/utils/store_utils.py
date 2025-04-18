@@ -4,6 +4,10 @@ from utils.vocab_llm_utils import metadata_for_lemma_full
 from db_models import Lemma, Wordform, Phrase, DoesNotExist
 from peewee import DatabaseError
 
+# Import the new exception and g for global context
+from flask import g
+from .exceptions import AuthenticationRequiredForGenerationError
+
 
 def save_lemma_metadata(
     lemma: str, metadata: dict[str, Any], target_language_code: str
@@ -19,14 +23,20 @@ def save_lemma_metadata(
         peewee.DatabaseError: If there's an error saving to the database
     """
     try:
-        lemma, created = Lemma.update_or_create(
+        # Explicitly get the instance after update_or_create
+        Lemma.update_or_create(
             lookup={
                 "lemma": lemma,
                 "target_language_code": target_language_code,
             },
             updates=metadata,
         )
-        return lemma
+        # Fetch the instance to ensure correct type for return
+        lemma_instance: Lemma = Lemma.get(
+            Lemma.lemma == lemma,
+            Lemma.target_language_code == target_language_code,
+        )
+        return lemma_instance
     except Exception as e:
         raise DatabaseError(f"Error saving lemma metadata: {e}") from e
 
@@ -42,7 +52,16 @@ def _generate_and_save_metadata(
 
     Returns:
         The generated metadata dictionary
+
+    Raises:
+        AuthenticationRequiredForGenerationError: If user is not logged in.
     """
+    # Check if user is logged in before allowing generation
+    if not hasattr(g, "user") or g.user is None:
+        raise AuthenticationRequiredForGenerationError(
+            "User must be logged in to generate lemma metadata."
+        )
+
     target_language_name = get_language_name(target_language_code)
 
     # Generate metadata using the LLM
