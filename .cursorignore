@@ -10,4 +10,5 @@ __pycache__/
 .cursor/browser-tools/
 !logs/
 !logs/backend.log
-!logs/vite_dev.log
+!logs/frontend.log
+
