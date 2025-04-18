@@ -28,6 +28,8 @@
     FolderOpen
   } from 'phosphor-svelte';
   import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
+  import { user } from '$lib/stores/authStore';
+  import { page } from '$app/stores';
   
   export let sourcefile: Sourcefile;
   export const sourcedir: Sourcedir = undefined as unknown as Sourcedir;
@@ -77,7 +79,7 @@
       text_english: !!sourcefile.text_english,
       has_image: sourcefile.has_image,
       has_audio: sourcefile.has_audio,
-      wordforms_count: metadata.wordforms_count || 0,
+      wordforms_count: stats.wordforms_count || 0,
       stats: stats
     });
     
@@ -104,7 +106,7 @@
     // Case 3: Has text with content but ZERO wordforms extracted
     // Only trigger if there's text content but NO wordforms at all
     const hasContent = sourcefile.text_target && sourcefile.text_target.trim() !== '' && sourcefile.text_target !== '-';
-    const hasAbsolutelyNoWordforms = hasContent && (metadata.wordforms_count === 0);
+    const hasAbsolutelyNoWordforms = hasContent && (stats.wordforms_count === 0);
     if (hasContent && hasAbsolutelyNoWordforms) {
       autoProcessNotificationMessage = 'Automatically extracting initial vocabulary from this text...';
       console.log('Auto-process: Triggering wordform extraction');
@@ -486,7 +488,7 @@
     />
     
     <DescriptionSection 
-      description={sourcefile.description}
+      description={sourcefile.description ?? undefined}
       onSave={saveDescription}
     />
   </div>
@@ -502,28 +504,36 @@
 
   <div class="action-row">
     <div class="section process-section">
-      <div class="process-controls">
-        <button on:click={processSourcefile} class="button">
-          {#if $processingState.isProcessing}
-            {$processingState.description || 'Processing...'}
-            {#if $processingState.totalIterations > 1}
-              (Run {$processingState.currentIteration}/{$processingState.totalIterations})
-            {/if}
-            ({$processingState.progress}/{$processingState.totalSteps})
-            {#if pendingRuns > 0}
-              <span class="queued-runs">+{pendingRuns} queued</span>
-            {/if}
-          {:else}
-            {#if processingClicks > 0}
-              Process again (×{processingClicks + 1})
+      {#if $user}
+        <div class="process-controls">
+          <button on:click={processSourcefile} class="button" disabled={$processingState.isProcessing}>
+            {#if $processingState.isProcessing}
+              {$processingState.description || 'Processing...'}
+              {#if $processingState.totalIterations > 1}
+                (Run {$processingState.currentIteration}/{$processingState.totalIterations})
+              {/if}
+              ({$processingState.progress}/{$processingState.totalSteps})
+              {#if pendingRuns > 0}
+                <span class="queued-runs">+{pendingRuns} queued</span>
+              {/if}
             {:else}
-              Process this text
+              {#if processingClicks > 0}
+                Process again (×{processingClicks + 1})
+              {:else}
+                Process this text
+              {/if}
             {/if}
-          {/if}
-        </button>
-      </div>
-      {#if $processingState.error}
-        <span class="error-message">{$processingState.error}</span>
+          </button>
+        </div>
+        {#if $processingState.error}
+          <span class="error-message">{$processingState.error}</span>
+        {/if}
+      {:else}
+        <div class="process-controls login-prompt">
+          <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}`} class="button is-light">
+            Login to Process Text
+          </a>
+        </div>
       {/if}
     </div>
     
@@ -747,8 +757,6 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-  
-  /* Removed iterations control styles */
   
   .section-divider {
     height: 24px;
@@ -1045,5 +1053,16 @@
     .detail-value {
       font-size: 0.85rem;
     }
+  }
+  
+  .process-controls.login-prompt a.button.is-light {
+    background-color: #f5f5f5;
+    color: #363636;
+    border: 1px solid #dbdbdb;
+  }
+  
+  .process-controls.login-prompt a.button.is-light:hover {
+    background-color: #e8e8e8;
+    border-color: #b5b5b5;
   }
 </style>

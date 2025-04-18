@@ -77,7 +77,13 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
   - [x] Make "Login / Sign Up" link include `?next=CURRENT_PAGE`.
 
 **Stage 5: Protecting Costly Operations**
-*(Details to be added based on future discussion)*
+- **Adopt Hybrid Approach:**
+  - **Backend:** Identify API endpoints triggering LLM calls (e.g., text extraction, translation, word/phrase processing, lemma generation) and protect them with `@api_auth_required`.
+  - **Frontend:** Use the `$session` store (or equivalent auth state) in relevant Svelte components to conditionally display/enable controls (like processing buttons). Show a disabled state or a "Login required" message/link for logged-out users.
+  - **Error Handling:** Ensure robust frontend handling for potential 401 errors from the API.
+- **Initial Implementation (Processing Button):**
+  - [ ] Add `@api_auth_required` to processing endpoints in `sourcefile_api_processing.py`.
+  - [ ] Modify `SourcefileHeader.svelte` to show/hide the "Process this text" button based on login state.
 
 **Testing:**
 - [ ] Add tests alongside feature implementation in each stage.

@@ -156,7 +156,7 @@
               {#if isMenuOpen} <!-- Conditionally render menu -->
               <ul class="profile-menu" aria-labelledby="profileDropdownMenuButton"> <!-- Use custom class -->
                 <li><h6 class="dropdown-header">{$user.email}</h6></li>
-                <li><a class="dropdown-item" href="/profile">Edit Profile</a></li>
+                <li><a class="dropdown-item" href="/auth/profile">Edit Profile</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                   <button class="dropdown-item" type="button" on:click={() => { handleLogout(); isMenuOpen = false; }}> <!-- Close menu on logout click -->

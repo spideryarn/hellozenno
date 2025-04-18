@@ -31,6 +31,9 @@ from utils.sourcefile_utils import (
 from utils.types import LanguageLevel
 from typing import get_args
 
+# Import the auth decorator
+from utils.auth_utils import api_auth_required
+
 
 # Create a blueprint with standardized prefix
 sourcefile_processing_api_bp = Blueprint(
@@ -42,6 +45,7 @@ sourcefile_processing_api_bp = Blueprint(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/extract_text",
     methods=["POST"],
 )
+@api_auth_required
 def extract_text_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -55,10 +59,12 @@ def extract_text_api(
         # Extract text
         sourcefile_entry = ensure_text_extracted(sourcefile_entry)
 
-        return jsonify({
-            "success": True,
-            "has_text": bool(sourcefile_entry.text_target),
-        })
+        return jsonify(
+            {
+                "success": True,
+                "has_text": bool(sourcefile_entry.text_target),
+            }
+        )
 
     except Exception as e:
         current_app.logger.error(f"Error extracting text: {str(e)}")
@@ -69,9 +75,8 @@ def extract_text_api(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/translate",
     methods=["POST"],
 )
-def translate_api(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
-):
+@api_auth_required
+def translate_api(target_language_code: str, sourcedir_slug: str, sourcefile_slug: str):
     """Translate the text of a sourcefile."""
     try:
         # Get the sourcefile entry
@@ -86,10 +91,12 @@ def translate_api(
         # Translate the text
         sourcefile_entry = ensure_translation(sourcefile_entry)
 
-        return jsonify({
-            "success": True,
-            "has_translation": bool(sourcefile_entry.text_english),
-        })
+        return jsonify(
+            {
+                "success": True,
+                "has_translation": bool(sourcefile_entry.text_english),
+            }
+        )
 
     except Exception as e:
         current_app.logger.error(f"Error translating text: {str(e)}")
@@ -100,6 +107,7 @@ def translate_api(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process_wordforms",
     methods=["POST"],
 )
+@api_auth_required
 def process_wordforms_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -113,9 +121,13 @@ def process_wordforms_api(
         # Get processing parameters from request or use defaults
         data = request.get_json() or {}
 
-        max_new_words = int(data.get("max_new_words", DEFAULT_MAX_NEW_WORDS_PER_PROCESSING))
+        max_new_words = int(
+            data.get("max_new_words", DEFAULT_MAX_NEW_WORDS_PER_PROCESSING)
+        )
         language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
-        assert language_level in get_args(LanguageLevel), f"Invalid language level: {language_level}"
+        assert language_level in get_args(
+            LanguageLevel
+        ), f"Invalid language level: {language_level}"
 
         # Process wordforms
         sourcefile_entry, _ = ensure_tricky_wordforms(
@@ -125,18 +137,22 @@ def process_wordforms_api(
         )
 
         # Count the wordforms for response
-        wordforms_count = SourcefileWordform.select().where(
-            SourcefileWordform.sourcefile == sourcefile_entry
-        ).count()
+        wordforms_count = (
+            SourcefileWordform.select()
+            .where(SourcefileWordform.sourcefile == sourcefile_entry)
+            .count()
+        )
 
-        return jsonify({
-            "success": True,
-            "params": {
-                "max_new_words": max_new_words,
-                "language_level": language_level,
-            },
-            "wordforms_count": wordforms_count
-        })
+        return jsonify(
+            {
+                "success": True,
+                "params": {
+                    "max_new_words": max_new_words,
+                    "language_level": language_level,
+                },
+                "wordforms_count": wordforms_count,
+            }
+        )
 
     except Exception as e:
         current_app.logger.error(f"Error processing wordforms: {str(e)}")
@@ -147,6 +163,7 @@ def process_wordforms_api(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process_phrases",
     methods=["POST"],
 )
+@api_auth_required
 def process_phrases_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -160,9 +177,13 @@ def process_phrases_api(
         # Get processing parameters from request or use defaults
         data = request.get_json() or {}
 
-        max_new_phrases = int(data.get("max_new_phrases", DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING))
+        max_new_phrases = int(
+            data.get("max_new_phrases", DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING)
+        )
         language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
-        assert language_level in get_args(LanguageLevel), f"Invalid language level: {language_level}"
+        assert language_level in get_args(
+            LanguageLevel
+        ), f"Invalid language level: {language_level}"
 
         # Process phrases
         sourcefile_entry, _ = ensure_tricky_phrases(
@@ -172,18 +193,22 @@ def process_phrases_api(
         )
 
         # Count the phrases for response
-        phrases_count = SourcefilePhrase.select().where(
-            SourcefilePhrase.sourcefile == sourcefile_entry
-        ).count()
+        phrases_count = (
+            SourcefilePhrase.select()
+            .where(SourcefilePhrase.sourcefile == sourcefile_entry)
+            .count()
+        )
 
-        return jsonify({
-            "success": True,
-            "params": {
-                "max_new_phrases": max_new_phrases,
-                "language_level": language_level,
-            },
-            "phrases_count": phrases_count
-        })
+        return jsonify(
+            {
+                "success": True,
+                "params": {
+                    "max_new_phrases": max_new_phrases,
+                    "language_level": language_level,
+                },
+                "phrases_count": phrases_count,
+            }
+        )
 
     except Exception as e:
         current_app.logger.error(f"Error processing phrases: {str(e)}")
@@ -208,33 +233,37 @@ def sourcefile_status_api(
         status = {
             "has_text": bool(sourcefile_entry.text_target),
             "has_translation": bool(sourcefile_entry.text_english),
-            "wordforms_count": SourcefileWordform.select().where(
-                SourcefileWordform.sourcefile == sourcefile_entry
-            ).count(),
-            "phrases_count": SourcefilePhrase.select().where(
-                SourcefilePhrase.sourcefile == sourcefile_entry
-            ).count(),
+            "wordforms_count": SourcefileWordform.select()
+            .where(SourcefileWordform.sourcefile == sourcefile_entry)
+            .count(),
+            "phrases_count": SourcefilePhrase.select()
+            .where(SourcefilePhrase.sourcefile == sourcefile_entry)
+            .count(),
         }
-        
+
         # Get information about incomplete lemmas
         incomplete_lemmas = get_incomplete_lemmas_for_sourcefile(sourcefile_entry)
         lemma_data = []
-        
+
         # Include basic lemma information for each incomplete lemma
         for lemma in incomplete_lemmas:
-            lemma_data.append({
-                "lemma": lemma.lemma,
-                "part_of_speech": lemma.part_of_speech,
-                "translations": lemma.translations
-            })
-            
+            lemma_data.append(
+                {
+                    "lemma": lemma.lemma,
+                    "part_of_speech": lemma.part_of_speech,
+                    "translations": lemma.translations,
+                }
+            )
+
         status["incomplete_lemmas"] = lemma_data
         status["incomplete_lemmas_count"] = len(lemma_data)
 
-        return jsonify({
-            "success": True,
-            "status": status,
-        })
+        return jsonify(
+            {
+                "success": True,
+                "status": status,
+            }
+        )
 
     except Exception as e:
         current_app.logger.error(f"Error getting sourcefile status: {str(e)}")
