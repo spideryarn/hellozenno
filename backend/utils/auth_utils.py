@@ -12,6 +12,9 @@ from flask import request, redirect, url_for, g, jsonify, make_response
 
 from utils.url_registry import endpoint_for
 
+# Import Profile model
+from db_models import Profile
+
 # Cache for Supabase public key
 _supabase_public_key = None
 _supabase_public_key_last_fetched = 0
@@ -106,11 +109,9 @@ def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
 
 
 def extract_token_from_request() -> Optional[str]:
-    """Extract JWT token from request headers or cookies.
+    """Extract JWT token from the Authorization header.
 
-    Checks for token in the following order:
-    1. Authorization header (Bearer token)
-    2. Cookie named 'sb-auth-token'
+    Checks for token in 'Authorization: Bearer <token>'.
 
     Returns:
         str: JWT token if found, None otherwise
@@ -118,12 +119,14 @@ def extract_token_from_request() -> Optional[str]:
     # Check Authorization header
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
-        return auth_header.split(" ")[1]
+        token = auth_header.split(" ", 1)[1]
+        if token:
+            return token
 
-    # Check cookies
-    token = request.cookies.get("sb-auth-token")
-    if token:
-        return token
+    # No longer checking cookies
+    # token = request.cookies.get("sb-auth-token")
+    # if token:
+    #    return token
 
     return None
 
@@ -159,7 +162,8 @@ def api_auth_required(f: Callable) -> Callable:
     """Decorator for API endpoints that require authentication.
 
     If authentication fails, returns a 401 Unauthorized response.
-    Otherwise, sets g.user with the authenticated user data.
+    Otherwise, sets g.user with the authenticated user data from the JWT
+    and g.profile with the corresponding Profile record (creating it if necessary).
 
     Args:
         f: The function to decorate
@@ -170,93 +174,34 @@ def api_auth_required(f: Callable) -> Callable:
 
     @wraps(f)
     def decorated(*args, **kwargs):
-        user = get_current_user()
+        user = get_current_user()  # Gets user data from verified JWT
 
-        if not user:
+        if not user or not user.get("id") or not user.get("email"):
+            logger.warning("API auth failed: No user data or missing id/email in JWT.")
             return jsonify({"error": "Unauthorized"}), 401
 
-        # Store user info in Flask's g object
+        # Store JWT user info in Flask's g object
         g.user = user
+
+        # Get or create the user profile in our database
+        try:
+            # Call the custom class method, passing email for logging if needed
+            profile, created = Profile.get_or_create_for_user(
+                user_id=user["id"], email=user["email"]
+            )
+            if created:
+                logger.info(f"Created new profile for user_id: {user['id']}")
+            g.profile = profile
+        except Exception as e:
+            # Log the error and return an internal server error
+            logger.error(
+                f"Failed to get or create profile for user {user.get('id')}: {e}"
+            )
+            return (
+                jsonify({"error": "Internal Server Error during profile retrieval"}),
+                500,
+            )
+
         return f(*args, **kwargs)
 
     return decorated
-
-
-def page_auth_required(f: Callable) -> Callable:
-    """Decorator for page routes that require authentication.
-
-    If authentication fails, redirects to the auth page.
-    Otherwise, sets g.user with the authenticated user data.
-
-    Args:
-        f: The function to decorate
-
-    Returns:
-        The decorated function
-    """
-
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        user = get_current_user()
-
-        if not user:
-            # For non-API routes, redirect to login page
-            target_language_code = kwargs.get("target_language_code")
-            # Only include target_language_code if it's a valid non-empty value
-
-            # We can't use endpoint_for because of circular imports
-            auth_page_endpoint = "auth_views.auth_page_vw"
-
-            if target_language_code and target_language_code != "":
-                login_url = url_for(
-                    auth_page_endpoint,
-                    target_language_code=target_language_code,
-                )
-            else:
-                login_url = url_for(auth_page_endpoint)
-
-            # Add the current path as a redirect parameter
-            current_path = request.path
-            if current_path not in ["/auth", "/auth/"]:
-                login_url = f"{login_url}?redirect={current_path}"
-
-            return redirect(login_url)
-
-        # Store user info in Flask's g object
-        g.user = user
-        return f(*args, **kwargs)
-
-    return decorated
-
-
-def set_auth_cookie(token: str, max_age: int = 3600):
-    """Set an HTTP-only cookie with the auth token.
-
-    Args:
-        token: JWT token string
-        max_age: Cookie max age in seconds, defaults to 1 hour
-
-    Returns:
-        Response: Flask response object with cookie set
-    """
-    response = make_response()
-    response.set_cookie(
-        "sb-auth-token",
-        token,
-        max_age=max_age,
-        httponly=True,
-        secure=True,
-        samesite="Lax",
-    )
-    return response
-
-
-def clear_auth_cookie():
-    """Clear the auth token cookie.
-
-    Returns:
-        Response: Flask response object with cookie cleared
-    """
-    response = make_response()
-    response.delete_cookie("sb-auth-token")
-    return response

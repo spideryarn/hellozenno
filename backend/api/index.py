@@ -72,7 +72,8 @@ def create_app():
 
     # Register blueprints
     from views.system_views import system_views_bp
-    from views.auth_views import auth_views_bp
+
+    # from views.auth_views import auth_views_bp # Comment out this import
     from views.auth_api import auth_api_bp
     from views.core_views import core_views_bp
     from views.wordform_views import wordform_views_bp
@@ -89,7 +90,7 @@ def create_app():
     app.register_blueprint(system_views_bp)
 
     # Register system management blueprints
-    app.register_blueprint(auth_views_bp)
+    # app.register_blueprint(auth_views_bp) # Comment out this registration
     app.register_blueprint(auth_api_bp)
 
     # Register remaining blueprints
@@ -170,33 +171,38 @@ def create_app():
     @app.errorhandler(404)
     def page_not_found(e):
         # Check if this is an API request
-        if request.path.startswith('/api/'):
-            return jsonify({
-                "error": "Not found",
-                "status_code": 404,
-                "endpoint": request.endpoint,
-                "url": request.url
-            }), 404
+        if request.path.startswith("/api/"):
+            return (
+                jsonify(
+                    {
+                        "error": "Not found",
+                        "status_code": 404,
+                        "endpoint": request.endpoint,
+                        "url": request.url,
+                    }
+                ),
+                404,
+            )
         return render_template("404.jinja"), 404
-    
+
     @app.errorhandler(500)
     def server_error(e):
         """Handle 500 errors with detailed logging and appropriate response format.
         Focus on providing detailed error information for API routes."""
         # Get the original exception
         original_error = getattr(e, "original_exception", e)
-        
+
         # Log the full error with traceback
         logger.exception(f"Unhandled exception: {str(original_error)}")
-        
+
         # For API requests, always return a JSON response with useful details
-        if request.path.startswith('/api/'):
+        if request.path.startswith("/api/"):
             response = {
                 "error": "Internal server error",
                 "status_code": 500,
-                "message": str(original_error)
+                "message": str(original_error),
             }
-            
+
             # In development, include more details
             if not app.config["IS_PRODUCTION"]:
                 response["exception_type"] = type(original_error).__name__
@@ -204,9 +210,9 @@ def create_app():
                 response["endpoint"] = request.endpoint
                 response["url"] = request.url
                 response["method"] = request.method
-                
+
             return jsonify(response), 500
-        
+
         # For web requests, return the error template or a basic error
         return "Internal Server Error", 500
 
