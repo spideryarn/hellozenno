@@ -46,33 +46,43 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
 **Stage 2: Frontend Login/Signup Implementation (Client-Side)**
 - [x] Implement UI forms (in `+page.svelte`).
 - [x] Call Supabase client methods for login/signup (in `+page.svelte`).
-- [ ] Handle Supabase auth state changes globally (e.g., using a store - needed for Stage 4).
-- [ ] Implement logout.
+- [x] Handle Supabase auth state changes globally (e.g., using a store - needed for Stage 4).
+- [x] Implement logout.
 - [x] Manage redirect using `next` parameter (in `+page.svelte` on success).
 
 **Stage 3: Backend API Authentication**
-*(Details to be added)*
-- Adapt/verify JWT verification in `utils/auth_utils.py`.
-- Adapt `@api_auth_required` decorator.
-- Implement auto-creation of `Profile` record within the decorator.
-- Protect relevant API endpoints.
-- Remove unused cookie logic from `auth_api.py`.
+- [x] Adapt/verify JWT verification in `utils/auth_utils.py`.
+- [x] Adapt `@api_auth_required` decorator.
+- [ ] Implement auto-creation of `Profile` record within the decorator.
+- [ ] Protect relevant API endpoints.
+- [x] Remove unused cookie logic from `auth_api.py`.
+- [x] Remove unused Jinja auth views (`auth_views.py`).
 
 **Stage 4: Connecting Frontend and Backend**
-*(Details to be added)*
-- Add JWT to API requests from SvelteKit.
-- Implement profile viewing/editing page (potentially `/profile`).
-- Update frontend UI based on auth state (e.g., show user menu).
+- [x] Add JWT to API requests from SvelteKit (Implicit via Supabase client, needs verification for custom fetch calls).
+- [x] Update frontend UI based on auth state (e.g., show user menu).
+- [ ] Implement profile viewing/editing page (`/auth/profile`).
+  - [x] Create backend API endpoint (GET/PUT `/api/profile`) protected by `@api_auth_required`.
+  - [ ] Endpoint should handle fetching/creating `Profile`.
+  - [ ] PUT endpoint should validate `target_language_code` using `lang_utils`.
+  - [x] Create SvelteKit route `/profile` (`+page.svelte`, `+page.ts`).
+  - [ ] Move SvelteKit route to `/auth/profile`.
+  - [ ] Fix profile data loading (CORS/fetch error).
+  - [ ] Fetch profile data and available languages from backend.
+  - [ ] Implement form to update `target_language_code`.
+  - [ ] Call backend API to save changes.
+- [x] Improve header UI:
+  - [x] Make profile display more compact (dropdown menu).
+  - [x] Include email, link to `/profile`, and logout button in dropdown.
+  - [x] Make "Login / Sign Up" link include `?next=CURRENT_PAGE`.
 
 **Stage 5: Protecting Costly Operations**
 *(Details to be added based on future discussion)*
-- Decide strategy (backend decorator vs. frontend UI changes).
-- Implement protection for endpoints like AI generation.
 
 **Testing:**
 - [ ] Add tests alongside feature implementation in each stage.
 
-## Future actions that need to be discussed
+## Future actions that need to be discussed - how to restrict access
 
 Thoughts that need discussion further down the line:
 - Hello Zenno is a 'generative dictionary', i.e. it uses LLMs to generate the dictionary entries for words when they're first searched for. This takes a little bit of time, and costs a small amount of money.

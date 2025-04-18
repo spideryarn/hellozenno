@@ -174,6 +174,10 @@ def api_auth_required(f: Callable) -> Callable:
 
     @wraps(f)
     def decorated(*args, **kwargs):
+        # Allow CORS preflight requests (OPTIONS) to pass through without auth
+        if request.method == "OPTIONS":
+            return make_response()  # Return empty 200 OK for OPTIONS
+
         user = get_current_user()  # Gets user data from verified JWT
 
         if not user or not user.get("id") or not user.get("email"):
