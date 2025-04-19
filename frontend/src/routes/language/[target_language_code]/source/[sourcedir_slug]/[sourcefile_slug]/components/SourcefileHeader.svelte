@@ -79,7 +79,7 @@
       text_english: !!sourcefile.text_english,
       has_image: sourcefile.has_image,
       has_audio: sourcefile.has_audio,
-      wordforms_count: stats.wordforms_count || 0,
+      wordforms_count: stats?.wordforms_count || 0,
       stats: stats
     });
     
@@ -106,7 +106,7 @@
     // Case 3: Has text with content but ZERO wordforms extracted
     // Only trigger if there's text content but NO wordforms at all
     const hasContent = sourcefile.text_target && sourcefile.text_target.trim() !== '' && sourcefile.text_target !== '-';
-    const hasAbsolutelyNoWordforms = hasContent && (stats.wordforms_count === 0);
+    const hasAbsolutelyNoWordforms = hasContent && (stats?.wordforms_count === 0);
     if (hasContent && hasAbsolutelyNoWordforms) {
       autoProcessNotificationMessage = 'Automatically extracting initial vocabulary from this text...';
       console.log('Auto-process: Triggering wordform extraction');

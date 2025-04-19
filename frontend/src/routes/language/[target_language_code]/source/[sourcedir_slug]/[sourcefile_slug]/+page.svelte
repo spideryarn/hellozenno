@@ -13,14 +13,26 @@
   
   export let data: PageData;
   
-  const { sourcefileData, textData, wordsData, phrasesData, target_language_code, sourcedir_slug, sourcefile_slug, language_name } = data;
+  // Destructure the original data structure
+  const { 
+    sourcefileData, 
+    textData, 
+    wordsData, 
+    phrasesData, 
+    target_language_code, 
+    sourcedir_slug, 
+    sourcefile_slug, 
+    language_name 
+  } = data;
   
-  // Extract needed data
+  // Extract nested data needed by child components from textData
   const sourcefile = textData.sourcefile;
   const sourcedir = textData.sourcedir;
   const metadata = textData.metadata;
   const navigation = textData.navigation;
-  const stats = textData.stats;
+  
+  // Explicitly get stats from the top-level data object
+  const stats = data.stats;
   
   // Determine active tab based on URL path
   $: path = $page.url.pathname;

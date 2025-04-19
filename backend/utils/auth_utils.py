@@ -12,70 +12,21 @@ from flask import request, redirect, url_for, g, jsonify, make_response
 
 from utils.url_registry import endpoint_for
 
+# Import SUPABASE_JWT_SECRET from env_config
+from utils.env_config import SUPABASE_JWT_SECRET
+
 # Import Profile model
 from db_models import Profile
 
-# Cache for Supabase public key
-_supabase_public_key = None
-_supabase_public_key_last_fetched = 0
-_REFRESH_INTERVAL = 3600  # Refresh key every hour
-
-
-def get_supabase_public_key() -> Optional[str]:
-    """Fetch and cache Supabase's public key for JWT verification.
-
-    Returns:
-        str: The public key as a string, or None if unable to fetch
-    """
-    global _supabase_public_key, _supabase_public_key_last_fetched
-
-    # Get Supabase URL from environment
-    supabase_url = os.environ.get("SUPABASE_URL")
-    if not supabase_url:
-        logger.error("SUPABASE_URL environment variable not set")
-        return None
-
-    # Check if we need to fetch or refresh the key
-    now = time.time()
-    if (
-        _supabase_public_key is None
-        or now - _supabase_public_key_last_fetched > _REFRESH_INTERVAL
-    ):
-        try:
-            # Construct the JWKS URL
-            jwks_url = f"{supabase_url}/auth/v1/jwks"
-
-            # Make the request
-            response = requests.get(jwks_url, timeout=10)
-            response.raise_for_status()
-
-            # Parse the JWKS response
-            jwks = response.json()
-            if not jwks.get("keys") or len(jwks["keys"]) == 0:
-                logger.error("No keys found in JWKS response")
-                return None
-
-            # Get the first key (there's usually only one)
-            key_data = jwks["keys"][0]
-
-            # Convert JWK to PEM format
-            _supabase_public_key = jwt.algorithms.RSAAlgorithm.from_jwk(
-                json.dumps(key_data)
-            )
-            _supabase_public_key_last_fetched = now
-
-            logger.info("Successfully fetched Supabase public key")
-            return _supabase_public_key
-
-        except Exception as e:
-            logger.error(f"Error fetching Supabase public key: {e}")
-            return None
-
-    return _supabase_public_key
+# Get Supabase JWT Secret from environment - Now imported from env_config
+# supabase_jwt_secret = os.environ.get("SUPABASE_JWT_SECRET")
+# if not supabase_jwt_secret:
+#     logger.critical("SUPABASE_JWT_SECRET environment variable not set. Authentication will fail.")
+#     # Consider raising an exception or exiting if the secret is critical for startup
 
 
 def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
-    """Verify a JWT token using Supabase's public key.
+    """Verify a JWT token using the Supabase JWT Secret.
 
     Args:
         token: JWT token string to verify
@@ -83,27 +34,42 @@ def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
     Returns:
         dict: The decoded JWT payload if valid, None otherwise
     """
-    try:
-        # Get the public key
-        public_key = get_supabase_public_key()
-        if not public_key:
-            logger.error("No public key available for JWT verification")
-            return None
+    # Remove check for secret existence, env_config handles it
+    # if not supabase_jwt_secret:
+    #     logger.error("JWT Secret not configured. Cannot verify token.")
+    #     return None
 
-        # Verify the token
+    try:
+        # Decode and verify the token using the JWT Secret
+        # Specify HS256 algorithm and verify audience 'authenticated'
         payload = jwt.decode(
-            token, public_key, algorithms=["RS256"], options={"verify_exp": True}
+            token,
+            SUPABASE_JWT_SECRET.get_secret_value(),  # Use the imported secret
+            algorithms=["HS256"],  # Use HS256 algorithm
+            audience="authenticated",  # Verify audience
+            options={
+                "verify_exp": True,
+                # Remove verify_aud: False, it's handled by the audience parameter
+            },
         )
 
         return payload
 
-    except jwt.ExpiredSignatureError:
+    except jwt.exceptions.DecodeError as e:
+        logger.warning(f"Invalid token signature or structure: {e}")
+        return None
+    except jwt.exceptions.ExpiredSignatureError:
         logger.warning("JWT token expired")
         return None
-    except jwt.InvalidTokenError as e:
+    # Catch specific audience error
+    except jwt.exceptions.InvalidAudienceError:
+        logger.warning("Invalid JWT audience")
+        return None
+    except jwt.exceptions.InvalidTokenError as e:
         logger.warning(f"Invalid JWT token: {e}")
         return None
     except Exception as e:
+        # Catch potential errors during key fetching by PyJWKClient - No longer relevant
         logger.error(f"Error verifying JWT token: {e}")
         return None
 
@@ -116,18 +82,11 @@ def extract_token_from_request() -> Optional[str]:
     Returns:
         str: JWT token if found, None otherwise
     """
-    # Check Authorization header
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ", 1)[1]
         if token:
             return token
-
-    # No longer checking cookies
-    # token = request.cookies.get("sb-auth-token")
-    # if token:
-    #    return token
-
     return None
 
 

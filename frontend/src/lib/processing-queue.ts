@@ -2,6 +2,7 @@ import { Queue } from 'queue-typescript';
 import { writable } from 'svelte/store';
 import { getApiUrl } from './api';
 import { RouteName } from './generated/routes';
+import { supabase } from './supabaseClient';
 
 // Define processing step types
 export type ProcessingStep =
@@ -241,11 +242,21 @@ export class SourcefileProcessingQueue {
     try {
       console.log(`Sending ${step.type} request to ${step.apiEndpoint}`);
       
+      // Get the current session/token
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      
+      // Log the headers being sent
+      console.log('Sending request with headers:', JSON.stringify(headers));
+      
       const response = await fetch(step.apiEndpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify(step.params),
       });
 
@@ -255,13 +266,16 @@ export class SourcefileProcessingQueue {
         const data = await response.json();
         console.error(`Error in ${step.type} response:`, data);
         
-        // Check if it's a duplicate key error (common for phrases)
+        // Check for 401 specifically
+        if (response.status === 401) {
+           throw new Error(data.error || 'Unauthorized. Please log in again.');
+        }
+        
+        // Handle other errors (like duplicate key)
         if (data.error && 
             (data.error.includes("duplicate key value") || 
              data.error.includes("violates unique constraint"))) {
-          // For duplicate key errors, log but don't treat as fatal error
           console.warn(`Duplicate entry detected during ${step.type} processing:`, data.error);
-          // Don't throw error for duplicates - continue processing
         } else {
           throw new Error(data.error || `Failed to process ${step.type}`);
         }
@@ -298,6 +312,8 @@ export class SourcefileProcessingQueue {
       processedSourcefileData: null
     }));
 
+    let errorOccurred = false; // Flag to track if any step failed
+
     // Run the requested number of iterations
     for (let i = 0; i < iterations; i++) {
       // Update iteration counter in the state
@@ -306,8 +322,8 @@ export class SourcefileProcessingQueue {
         currentIteration: i + 1
       }));
       
-      // Initialize the queue for this iteration
-      let currentSourcefileData = await this.getSourcefileData();
+      // Fetch full sourcefile data for this iteration
+      let currentSourcefileData = await this.fetchCurrentSourcefileData(); 
       const hasInitialSteps = await this.initializeQueue(currentSourcefileData);
       
       if (!hasInitialSteps) {
@@ -316,25 +332,23 @@ export class SourcefileProcessingQueue {
       
       // Process all steps in the queue
       while (this.queue.length > 0) {
-        const currentStep = this.queue.peek().type;
+        const currentStep = this.queue.front.type;
         const success = await this.processNextStep();
         
         if (!success) {
+          errorOccurred = true; // Set flag on error
           break;
         }
         
-        // If we just completed text extraction, refresh the queue with updated data
-        // This ensures we'll now process wordforms and phrases since text is available
         if (currentStep === 'text_extraction') {
-          // Get fresh sourcefile data after text extraction
-          currentSourcefileData = await this.getSourcefileData();
-          // Re-initialize queue with updated data
+          // Get fresh FULL sourcefile data after text extraction
+          currentSourcefileData = await this.fetchCurrentSourcefileData(); 
           await this.initializeQueue(currentSourcefileData);
         }
       }
       
       // If we couldn't process the queue successfully, stop iterations
-      if (this.queue.length > 0) {
+      if (errorOccurred) {
         break;
       }
     }
@@ -344,28 +358,30 @@ export class SourcefileProcessingQueue {
       const finalSourcefileData = await this.getFullSourcefileData();
       processingState.update(state => ({
         ...state,
-        isProcessing: this.queue.length > 0,
+        // Set isProcessing to false if an error occurred OR if the queue is empty
+        isProcessing: !errorOccurred && this.queue.length > 0,
         processedSourcefileData: finalSourcefileData
       }));
     } catch (error) {
       console.error('Error fetching final sourcefile data:', error);
       processingState.update(state => ({
         ...state,
-        isProcessing: this.queue.length > 0,
+        // Set isProcessing to false if an error occurred OR if the queue is empty
+        isProcessing: !errorOccurred && this.queue.length > 0,
         processedSourcefileData: null
       }));
     }
 
-    return this.queue.length === 0;
+    return !errorOccurred && this.queue.length === 0;
   }
   
-  // Helper method to get current sourcefile data for subsequent iterations
-  private async getSourcefileData(): Promise<any> {
+  // Helper method to get FULL current sourcefile data for subsequent iterations
+  private async fetchCurrentSourcefileData(): Promise<any> {
     try {
-      // Get the current status of the sourcefile
+      // Get the complete sourcefile data
       const response = await fetch(
         getApiUrl(
-          RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
+          RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API, // Use inspect API for full data
           {
             target_language_code: this.sourcefileData.target_language_code,
             sourcedir_slug: this.sourcefileData.sourcedir_slug,
@@ -376,27 +392,23 @@ export class SourcefileProcessingQueue {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-          }
+          },
+          // Bypass cache to ensure we get fresh data
+          cache: 'no-cache' 
         }
       );
       
       if (!response.ok) {
-        throw new Error('Failed to get sourcefile status');
+        throw new Error('Failed to get current sourcefile data');
       }
       
       const data = await response.json();
       
-      // Return a simplified sourcefile object with the data we need
-      return {
-        text_target: data.status.has_text,
-        text_english: data.status.has_translation,
-        has_image: false, // These don't change during processing
-        has_audio: false, // These don't change during processing
-        wordforms_count: data.status.wordforms_count,
-        phrases_count: data.status.phrases_count
-      };
+      // Return the sourcefile object from the response
+      return data.sourcefile; // Assuming the inspect API returns { sourcefile: {...} }
+      
     } catch (error) {
-      console.error('Error getting sourcefile data:', error);
+      console.error('Error getting current sourcefile data:', error);
       throw error;
     }
   }

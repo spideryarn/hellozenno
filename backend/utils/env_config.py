@@ -143,6 +143,9 @@ FLASK_SECRET_KEY = get_env_var_and_track("FLASK_SECRET_KEY", SecretStr).get_secr
 # Local to prod configuration
 USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ignore
 
+# Supabase configuration
+SUPABASE_JWT_SECRET = get_env_var_and_track("SUPABASE_JWT_SECRET", SecretStr)  # type: ignore
+
 # # Validate we processed all required variables
 # if env_file == ENV_FILE_LOCAL:
 #     required_vars = list_env_example_vars(ENV_FILE_EXAMPLE)

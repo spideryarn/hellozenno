@@ -109,17 +109,14 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
     - [ ] Identify components triggering APIs gated in Stage 5.1 (Audio generation, YouTube add, Uploads, Text creation).
     - [ ] Use `$user` store checks in these components to hide/disable UI elements (buttons, forms) for logged-out users. Show appropriate "Login required" prompts/links (`/auth?next=...`).
 
+
+**Stage: Avoid initial loading flash where the user interface appears to be for an anonymous user, then realises if you're logged in and updates**
+- [ ] Reproduce the problem with Playwright MCP
+- [ ] Add actions here...
+
 **Testing:**
 - [ ] Add tests alongside feature implementation in each stage.
 
-## Future actions that need to be discussed - how to restrict access
-
-Thoughts that need discussion further down the line:
-- Hello Zenno is a 'generative dictionary', i.e. it uses LLMs to generate the dictionary entries for words when they're first searched for. This takes a little bit of time, and costs a small amount of money.
-- Right now, I want the app to be freely available, at least at small scale. I put it up online a short while ago, and then received a surprisingly large bill soon after for AI tokens. My best guess is that aggressive AI crawler bots were triggering lots of expensive AI-generation.
-- My plan for now, is to annotate most of the actions that will incur meaningful costs as being logged-in-users only, hoping that will be enough of a barrier. So we're going to need a simple way to annotate these API functions (e.g. for generating lemma metadata).
-- OR Alternatively, we could swap out the buttons on the frontend somehow for non-logged-in users. I want the user interface to be clear to users.
-[] Please 
 
 ## Appendix
 
