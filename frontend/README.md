@@ -12,6 +12,7 @@ This project's documentation is organized into the following sections:
 - [API Integration](./docs/BACKEND_FLASK_API_INTEGRATION.md) - How to interact with the Flask backend, e.g. using `getApiUrl()`
 - [Site Organization](./docs/SITE_ORGANISATION.md) - Overall site structure and routing
 - [Sourcefile Pages](./docs/SOURCEFILE_PAGES.md) - Structure and implementation of sourcefile pages
+- `frontend/docs/AUTH.md`
 
 ## Project Status and Roadmap
 

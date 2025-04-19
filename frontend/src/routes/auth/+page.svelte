@@ -1,10 +1,17 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import { supabase } from '$lib/supabaseClient';
+    // Remove direct import of supabase client
+    // import { supabase } from '$lib/supabaseClient'; 
     import { goto } from '$app/navigation';
     import { AuthApiError } from '@supabase/supabase-js';
+    import type { SupabaseClient } from '@supabase/supabase-js'; // Import type
 
     export let data: PageData;
+    // Get the supabase client passed from the root layout
+    let supabase: SupabaseClient | null = data.supabase;
+
+    // Need to update supabase when data changes (e.g., after SSR)
+    $: supabase = data.supabase;
 
     let email = '';
     let password = '';
@@ -13,9 +20,14 @@
     let loading = false;
 
     async function handleLogin() {
+        if (!supabase) {
+            errorMessage = 'Supabase client not available.';
+            return;
+        }
         loading = true;
         errorMessage = null;
         try {
+            // Use the client from data prop
             const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
@@ -30,6 +42,7 @@
                 console.error('Login error:', error);
             } else {
                 // Login successful, redirect
+                // Auth state change listener in layout should trigger invalidate
                 await goto(data.nextUrl);
             }
         } catch (err: any) {
@@ -41,6 +54,10 @@
     }
 
     async function handleSignup() {
+        if (!supabase) {
+            errorMessage = 'Supabase client not available.';
+            return;
+        }
         if (password !== confirmPassword) {
             errorMessage = 'Passwords do not match';
             return;
@@ -48,6 +65,7 @@
         loading = true;
         errorMessage = null;
         try {
+             // Use the client from data prop
             const { error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -58,16 +76,16 @@
                     errorMessage = 'Invalid email or password (must be at least 6 characters).';
                  } else if (error instanceof AuthApiError && error.status === 429) {
                     errorMessage = 'Too many signup attempts. Please try again later.';
-                 } else if (error instanceof AuthApiError && error.status === 422) {
-                     errorMessage = 'User already exists.'; // More specific handling might be needed
+                 } else if (error instanceof AuthApiError && error.status === 422) { // Maybe User exists?
+                     errorMessage = 'User already exists or another issue occurred.'; 
                  } else {
                     errorMessage = error.message;
                 }
                 console.error('Signup error:', error);
             } else {
                 // Signup successful (Supabase may require email confirmation)
-                // For now, redirect immediately. Consider adding a message about email confirmation.
                 alert('Signup successful! Check your email for confirmation if required.');
+                // Auth state change listener in layout should trigger invalidate
                 await goto(data.nextUrl);
             }
         } catch (err: any) {

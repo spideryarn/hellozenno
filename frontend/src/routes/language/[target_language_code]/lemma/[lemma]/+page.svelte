@@ -5,8 +5,8 @@
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/stores'; // Import page store for current URL
-  import Alert from '$lib/components/Alert.svelte'; // Assuming an Alert component exists
-  import UserDisplay from '$lib/components/UserDisplay.svelte'; // Needed for login link
+  // import Alert from '$lib/components/Alert.svelte'; // TODO: Fix path or create component
+  // import UserDisplay from '$lib/components/UserDisplay.svelte'; // TODO: Fix path or create component
   
   export let data: PageData;
   const { lemmaData, authError, target_language_code, target_language_name, metadata } = data;
@@ -19,10 +19,10 @@
   $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
 
   // Generate API URL for delete action (only if lemma exists properly)
-  const deleteUrl = lemma_metadata?.lemma ? getApiUrl(RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW, {
+  const deleteUrl: string | undefined = lemma_metadata?.lemma ? getApiUrl(RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW, {
     target_language_code,
     lemma: lemma_metadata.lemma
-  });
+  }) : undefined;
   
   function handleDeleteSubmit(event: SubmitEvent) {
     const confirmed = confirm('Are you sure you want to delete this lemma? All associated wordforms will also be deleted. This action cannot be undone.');
@@ -47,10 +47,14 @@
   </div>
   
   {#if authError}
-  <Alert type="warning" class="mb-4">
+  <!-- <Alert type="warning" class="mb-4">
     { authError }
     <a href={loginUrl} class="btn btn-sm btn-primary ms-2">Login to generate</a>
-  </Alert>
+  </Alert> -->
+  <div class="alert alert-warning mb-4" role="alert">
+    { authError }
+    <a href={loginUrl} class="btn btn-sm btn-primary ms-2">Login to generate</a>
+  </div>
   {/if}
 
   <div class="row mb-3">
@@ -64,7 +68,7 @@
     </div>
   </div>
 
-  {#if lemma_metadata.lemma} <!-- Only show delete if we have a valid lemma -->
+  {#if deleteUrl} <!-- Only show delete if we have a valid URL -->
   <div class="mb-4">
     <form action={deleteUrl} method="POST" 
           on:submit={handleDeleteSubmit}>
@@ -134,7 +138,7 @@
       {#each lemma_metadata.related_words_phrases_idioms as related}
         <div class="col">
           <LemmaCard 
-            lemma={related} 
+            lemma={{ lemma: related }} 
             target_language_code={target_language_code} 
             showDetails={false} 
           />
@@ -150,7 +154,7 @@
       {#each lemma_metadata.synonyms as synonym}
         <div class="col">
           <LemmaCard 
-            lemma={synonym} 
+            lemma={{ lemma: synonym }} 
             target_language_code={target_language_code} 
             showDetails={false} 
           />
@@ -166,7 +170,7 @@
       {#each lemma_metadata.antonyms as antonym}
         <div class="col">
           <LemmaCard 
-            lemma={antonym}
+            lemma={{ lemma: antonym }}
             target_language_code={target_language_code} 
             showDetails={false} 
           />
@@ -226,7 +230,7 @@
               <SentenceCard
                 text={confused.example_usage_this_target}
                 translation={confused.example_usage_this_source}
-                slug=""
+                slug={confused.example_usage_this_slug || ''}
                 target_language_code={target_language_code}
               />
             </div>
@@ -238,7 +242,7 @@
               <SentenceCard
                 text={confused.example_usage_other_target}
                 translation={confused.example_usage_other_source}
-                slug=""
+                slug={confused.example_usage_other_slug || ''}
                 target_language_code={target_language_code}
               />
             </div>

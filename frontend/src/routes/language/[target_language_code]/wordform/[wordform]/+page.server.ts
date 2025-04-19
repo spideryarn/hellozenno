@@ -1,10 +1,11 @@
 import { error, redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { getWordformWithSearch } from "$lib/api";
-import type { SearchResults } from "$lib/types";
+import type { SearchResult } from "$lib/types";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code, wordform } = params;
+    const { supabase } = locals;
 
     try {
         // Use our enhanced search function to handle various result types
@@ -12,7 +13,7 @@ export const load: PageServerLoad = async ({ params }) => {
         
         // Set a reasonable timeout for server-side rendering
         // This is important since we now wait for wordform generation to complete
-        const data = await getWordformWithSearch(target_language_code, wordform);
+        const data = await getWordformWithSearch(supabase, target_language_code, wordform);
         console.log(`Received wordform data:`, data);
 
         // Handle different response types based on status

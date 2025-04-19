@@ -117,54 +117,91 @@ def get_current_user() -> Optional[Dict[str, Any]]:
     return user_data
 
 
-def api_auth_required(f: Callable) -> Callable:
-    """Decorator for API endpoints that require authentication.
-
-    If authentication fails, returns a 401 Unauthorized response.
-    Otherwise, sets g.user with the authenticated user data from the JWT
-    and g.profile with the corresponding Profile record (creating it if necessary).
-
-    Args:
-        f: The function to decorate
+def _attempt_authentication_and_set_g() -> bool:
+    """Attempts to authenticate user from JWT and set g.user and g.profile.
 
     Returns:
-        The decorated function
+        bool: True if authentication succeeded (user found), False otherwise.
+              Note: Returns True even if profile fetch fails after successful auth.
     """
+    user = get_current_user()  # Attempt to get user from verified JWT
+    g.user = None  # Initialize
+    g.profile = None  # Initialize
 
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        # Allow CORS preflight requests (OPTIONS) to pass through without auth
-        if request.method == "OPTIONS":
-            return make_response()  # Return empty 200 OK for OPTIONS
-
-        user = get_current_user()  # Gets user data from verified JWT
-
-        if not user or not user.get("id") or not user.get("email"):
-            logger.warning("API auth failed: No user data or missing id/email in JWT.")
-            return jsonify({"error": "Unauthorized"}), 401
-
-        # Store JWT user info in Flask's g object
+    if user and user.get("id") and user.get("email"):
+        # User is authenticated
         g.user = user
-
-        # Get or create the user profile in our database
         try:
-            # Call the custom class method, passing email for logging if needed
-            profile, created = Profile.get_or_create_for_user(
+            profile_obj, created = Profile.get_or_create_for_user(
                 user_id=user["id"], email=user["email"]
             )
             if created:
                 logger.info(f"Created new profile for user_id: {user['id']}")
-            g.profile = profile
+            g.profile = profile_obj
         except Exception as e:
-            # Log the error and return an internal server error
+            # Log profile fetch error, but proceed since user is authenticated
             logger.error(
-                f"Failed to get or create profile for user {user.get('id')}: {e}"
+                f"Failed to get or create profile for authenticated user {user.get('id')}: {e}"
+            )
+            # g.profile remains None
+        return True  # Authentication successful
+    else:
+        # Authentication failed or no token provided
+        return False  # Authentication failed
+
+
+def api_auth_optional(f: Callable) -> Callable:
+    """Decorator for API endpoints where authentication is optional.
+
+    Attempts authentication and sets g.user and g.profile if successful.
+    Always proceeds with the request, regardless of auth success.
+    """
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return make_response()
+
+        _attempt_authentication_and_set_g()  # Attempt auth, ignore return value
+
+        # Proceed regardless of whether user was found
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def api_auth_required(f: Callable) -> Callable:
+    """Decorator for API endpoints that require authentication.
+
+    If authentication fails, returns a 401 Unauthorized response.
+    Otherwise, sets g.user and g.profile, then proceeds.
+    """
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if request.method == "OPTIONS":
+            return make_response()
+
+        authenticated = _attempt_authentication_and_set_g()
+
+        if not authenticated:
+            logger.warning("API auth failed: Required but no valid user found.")
+            return jsonify({"error": "Unauthorized"}), 401
+
+        # Check if profile retrieval failed during the attempt (g.profile would be None)
+        if g.user and g.profile is None:
+            logger.error(
+                f"Internal Server Error: Profile retrieval failed for user {g.user.get('id')} during required auth."
             )
             return (
                 jsonify({"error": "Internal Server Error during profile retrieval"}),
                 500,
             )
 
+        # Proceed if authenticated and profile is available
         return f(*args, **kwargs)
 
     return decorated
+
+
+# Remove the old complex implementation of api_auth_required that handled required=False

@@ -7,7 +7,6 @@
   import { DescriptionFormatted } from '$lib';
   import { user } from '$lib/stores/authStore';
   import { page } from '$app/stores';
-  import Alert from '$lib/components/Alert.svelte';
   
   export let data: PageData;
   
@@ -460,9 +459,10 @@
               </div>
             {/if}
           {:else}
-            <Alert type="info">
+            <!-- Use standard Bootstrap alert -->
+            <div class="alert alert-info" role="alert">
               Please <a href={loginUrl}>login</a> to upload files or create text sources.
-            </Alert>
+            </div>
           {/if}
         </div>
       </div>

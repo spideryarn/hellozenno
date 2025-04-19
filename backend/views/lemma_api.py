@@ -16,8 +16,8 @@ from db_models import Lemma, LemmaExampleSentence
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.sourcefile_utils import complete_lemma_metadata
 
-# Import the auth decorator and the new exception
-from utils.auth_utils import api_auth_required
+# Import the auth decorators and the new exception
+from utils.auth_utils import api_auth_required, api_auth_optional
 from utils.exceptions import AuthenticationRequiredForGenerationError
 
 # Create a blueprint with standardized prefix
@@ -74,6 +74,7 @@ def lemmas_list_api(target_language_code: str):
 
 
 @lemma_api_bp.route("/<target_language_code>/lemma/<lemma>/metadata")
+@api_auth_optional
 def get_lemma_metadata_api(target_language_code: str, lemma: str):
     """Get detailed metadata for a lemma.
 

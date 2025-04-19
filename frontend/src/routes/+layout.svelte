@@ -1,22 +1,38 @@
 <script lang="ts">
-  // Import any common components or global styles here
-  import { user } from '$lib/stores/authStore';
-  import { supabase } from '$lib/supabaseClient';
-  import { goto } from '$app/navigation';
-  import { page } from '$app/stores'; // Import the page store
-  // import Dropdown from 'bootstrap/js/dist/dropdown'; // Remove Bootstrap JS import
-  // import { onMount } from 'svelte'; // Remove onMount if only used for dropdown
+  // Import necessary functions and stores
+  import { onMount } from 'svelte';
+  import { invalidateAll } from '$app/navigation'; // Use invalidateAll for simplicity
+  import { page } from '$app/stores'; 
+  import type { LayoutData } from './$types'; // Import the type for LayoutData
+
+  // Get data passed from +layout.ts
+  export let data: LayoutData;
+  $: ({ supabase, session } = data); // Destructure supabase and session reactively
+
+  // Handle auth state changes on the client
+  onMount(() => {
+    const { data: { subscription } } = supabase?.auth.onAuthStateChange((event, newSession) => {
+      // Important: Check if the session has actually changed to avoid infinite loops
+      if (newSession?.access_token !== session?.access_token) {
+        console.log('Auth state changed detected in root layout, invalidating...');
+        invalidateAll(); // Re-run all load functions
+      }
+    }) ?? { data: { subscription: null } }; // Handle null supabase during SSR
+
+    // Cleanup subscription on component unmount
+    return () => subscription?.unsubscribe();
+  });
 
   async function handleLogout() {
+    if (!supabase) return; // Should not happen in browser, but safety check
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error logging out:', error);
         alert('Logout failed: ' + error.message);
       } else {
-        console.log('User logged out');
-        // Optionally redirect after logout
-        // await goto('/'); 
+        console.log('User logged out successfully');
+        // invalidateAll() will handle UI update via onAuthStateChange
       }
     } catch (error) {
       console.error('Unexpected error during logout:', error);
@@ -24,21 +40,11 @@
     }
   }
 
-  // // Remove dropdown initialization
-  // onMount(() => {
-  //   const dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
-  //   dropdownElementList.map(function (dropdownToggleEl) {
-  //     return new Dropdown(dropdownToggleEl);
-  //   });
-  // });
-
   let isMenuOpen = false;
 
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
   }
-
-  // TODO: Add click outside handler if needed
 
 </script>
 
@@ -140,10 +146,10 @@
         <div class="d-flex align-items-center">
           <a href="/languages" class="text-decoration-none text-white ms-3">Languages</a>
           
-          <!-- Auth Status -->
-          {#if $user}
+          <!-- Auth Status: Use reactive `session` from data -->
+          {#if session}
             <!-- Custom Svelte Dropdown for logged-in user -->
-            <div class="profile-dropdown ms-3"> <!-- Use custom class -->
+            <div class="profile-dropdown ms-3"> 
               <button
                 class="btn btn-sm btn-secondary"
                 type="button"
@@ -153,13 +159,14 @@
               >
                 <i class="fas fa-user"></i> Profile
               </button>
-              {#if isMenuOpen} <!-- Conditionally render menu -->
-              <ul class="profile-menu" aria-labelledby="profileDropdownMenuButton"> <!-- Use custom class -->
-                <li><h6 class="dropdown-header">{$user.email}</h6></li>
+              {#if isMenuOpen} 
+              <ul class="profile-menu" aria-labelledby="profileDropdownMenuButton"> 
+                <!-- Use session.user.email -->
+                <li><h6 class="dropdown-header">{session.user.email}</h6></li>
                 <li><a class="dropdown-item" href="/auth/profile">Edit Profile</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                  <button class="dropdown-item" type="button" on:click={() => { handleLogout(); isMenuOpen = false; }}> <!-- Close menu on logout click -->
+                  <button class="dropdown-item" type="button" on:click={() => { handleLogout(); isMenuOpen = false; }}>
                     Logout
                   </button>
                 </li>

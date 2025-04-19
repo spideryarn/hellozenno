@@ -1,57 +1,40 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { API_BASE_URL } from "$lib/config";
-import { goto } from "$app/navigation"; // Import goto for potential redirect
+// Remove API_BASE_URL if no longer needed directly
+// import { API_BASE_URL } from "$lib/config"; 
+import { getLemmaMetadata } from "$lib/api"; // Import the new helper
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code, lemma } = params;
 
+    // Get the supabase client and session from locals (populated by hooks)
+    const { supabase, session } = locals;
+
     try {
-        // URL encode the lemma parameter to handle non-Latin characters properly
-        const encodedLemma = encodeURIComponent(lemma);
+        // Call the helper function, passing the server client instance
+        const lemmaResult = await getLemmaMetadata(supabase, target_language_code, lemma);
 
-        // Fetch lemma metadata from API
-        const response = await fetch(
-            `${API_BASE_URL}/api/lang/lemma/${target_language_code}/lemma/${encodedLemma}/metadata`,
-        );
-
-        const data = await response.json();
-
-        // Check for specific 401 error indicating auth needed for generation
-        if (response.status === 401 && data?.authentication_required_for_generation) {
-            // Pass the error details and partial data (if any) to the page
-            return {
-                lemmaData: data.partial_lemma_metadata || { lemma: lemma }, // Use partial or minimal data
-                authError: data.description || "Authentication required to generate full details.",
-                metadata: data.metadata, // Include metadata if present in error response
-                target_language_code: target_language_code, // Ensure these are passed too
-                target_language_name: data.target_language_name,
-            };
-        }
-
-        if (!response.ok) {
-            // Throw generic error for other non-ok responses
-            throw error(
-                response.status,
-                `Error fetching lemma data: ${data?.error || response.statusText}`,
-            );
-        }
-
-        // Successful response
+        // The helper function returns the data directly if successful,
+        // or returns the specific error body for 401/404 cases.
+        // We just need to pass this result to the page.
         return {
-            lemmaData: data, // Contains lemma_metadata, metadata, etc.
-            authError: null,
+            session: session, // Pass session for UI state
+            lemmaResult: lemmaResult, // Pass the result (data or error body)
+            // No need for separate authError, target_language_code, etc. 
+            // if they are included within lemmaResult (either in lemma_metadata or error body)
+            // Verify the structure returned by getLemmaMetadata in both success/error cases.
+            // If needed, extract specific fields here, e.g.:
+            target_language_code: target_language_code, // Keep passing this for clarity
+            lemma: lemma, // Keep passing this for clarity
         };
-    } catch (err) {
-        console.error("Error loading lemma:", err);
-        // Don't re-throw errors already handled by SvelteKit's error function
-        if (err instanceof Object && 'status' in err) { throw err; }
-        // Throw a generic 500 for other unexpected errors
+
+    } catch (err: any) {
+        // Catch errors *thrown* by getLemmaMetadata (i.e., not the handled 401/404)
+        console.error("Error loading lemma in +page.server.ts:", err);
+        // Throw SvelteKit error for unexpected issues
         throw error(
-            500,
-            `Failed to load lemma: ${
-                err instanceof Error ? err.message : String(err)
-            }`,
+            err.status || 500, // Use status from error if available
+            `Failed to load lemma: ${err.message || String(err)}`,
         );
     }
 };

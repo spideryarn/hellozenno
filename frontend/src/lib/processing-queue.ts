@@ -2,7 +2,7 @@ import { Queue } from 'queue-typescript';
 import { writable } from 'svelte/store';
 import { getApiUrl } from './api';
 import { RouteName } from './generated/routes';
-import { supabase } from './supabaseClient';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Define processing step types
 export type ProcessingStep =
@@ -56,14 +56,17 @@ export class SourcefileProcessingQueue {
     sourcefile_slug: string;
   };
   private sourcefileType: 'text' | 'image' | 'audio'; // Track sourcefile type
+  private supabaseClient: SupabaseClient | null; // Store the client instance
 
   constructor(
+    supabaseClient: SupabaseClient | null, // Accept client instance
     target_language_code: string,
     sourcedir_slug: string,
     sourcefile_slug: string,
     sourcefile_type: 'text' | 'image' | 'audio' // Pass type during construction
   ) {
     this.queue = new Queue<QueuedStep>();
+    this.supabaseClient = supabaseClient; // Store the passed client
     this.sourcefileData = {
       target_language_code,
       sourcedir_slug,
@@ -205,15 +208,21 @@ export class SourcefileProcessingQueue {
 
     try {
       console.log(`Sending ${step.type} request to ${step.apiEndpoint}`);
-      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Use the stored supabaseClient instance
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      let accessToken: string | null = null;
+      if (this.supabaseClient) {
+          const { data: { session } } = await this.supabaseClient.auth.getSession();
+          accessToken = session?.access_token ?? null;
       }
-      // console.log('Sending request with headers:', JSON.stringify(headers)); // Optional: less verbose logging
+      
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
 
       const response = await fetch(step.apiEndpoint, {
-        method: 'POST', // Assuming all processing steps use POST
+        method: 'POST', 
         headers: headers,
         body: JSON.stringify(step.params),
       });

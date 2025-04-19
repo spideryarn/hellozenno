@@ -1,105 +1,109 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import { fetchAuthenticated } from '$lib/apiClient';
-    import { user } from '$lib/stores/authStore';
-    import { goto } from '$app/navigation';
-    import { invalidateAll } from '$app/navigation';
+    import { goto, invalidateAll } from '$app/navigation';
+    import type { SupabaseClient } from '@supabase/supabase-js';
+    import { apiFetch } from '$lib/api';
+    import { RouteName } from '$lib/generated/routes';
 
     export let data: PageData;
+    let supabase: SupabaseClient | null = data.supabase;
+    $: supabase = data.supabase;
+    let session = data.session;
+    $: session = data.session;
 
     let selectedLanguage: string | null | undefined = data.profile?.target_language_code;
     let isLoading = false;
-    let errorMessage: string | null = null;
+    let errorMessage: string | null = data.error || null;
     let successMessage: string | null = null;
 
-    // Redirect if load function encountered an error or user became unauthenticated
     $: {
-        if (data.error && typeof window !== 'undefined') {
-            // Handle error from load function (e.g., show message, redirect)
-            console.error("Load error:", data.error);
-            alert("Could not load profile data.");
-            // Optionally redirect to home or another page
-            // goto('/');
-        } else if (!$user && typeof window !== 'undefined') {
-            // User logged out while on the page
-            goto('/auth?next=/profile');
+        if (!session && typeof window !== 'undefined') {
+            goto('/auth?next=/auth/profile');
         }
-        // Update local state if profile data changes (e.g., after save)
-        selectedLanguage = data.profile?.target_language_code;
+        if (data.profile?.target_language_code !== selectedLanguage) {
+            selectedLanguage = data.profile?.target_language_code;
+        }
+        if (!data.error && errorMessage) {
+            errorMessage = null;
+        }
     }
 
-    async function saveProfile() {
+    async function handleSaveProfile() {
+        if (!supabase || !session) {
+            errorMessage = 'Not authenticated.';
+            return;
+        }
+        if (!selectedLanguage) {
+            errorMessage = 'Please select a target language.';
+            return;
+        }
+
         isLoading = true;
         errorMessage = null;
         successMessage = null;
 
         try {
-            const response = await fetchAuthenticated('/api/profile', {
-                method: 'PUT',
-                body: JSON.stringify({ 
-                    target_language_code: selectedLanguage 
-                }),
+            const response = await apiFetch({
+                supabaseClient: supabase,
+                routeName: RouteName.PROFILE_API_UPDATE_PROFILE_API,
+                params: {},
+                options: {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target_language_code: selectedLanguage })
+                }
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Failed to save profile: ${response.statusText}`);
-            }
+            successMessage = 'Profile updated successfully!';
+            await invalidateAll();
 
-            successMessage = 'Profile saved successfully!';
-            // Re-run load function to get fresh data after saving
-            await invalidateAll(); 
-
-        } catch (error) {
-            console.error('Error saving profile:', error);
-            errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        } catch (err: any) {
+            console.error('Error saving profile:', err);
+            errorMessage = err.body?.message || err.message || 'Failed to save profile.';
         } finally {
             isLoading = false;
-            // Clear success message after a delay
-            if (successMessage) {
-                setTimeout(() => successMessage = null, 3000);
-            }
         }
     }
 
 </script>
 
-<div class="container mt-4">
-    {#if data.error}
-        <div class="alert alert-danger">{data.error}</div>
-    {:else if data.profile}
-        <h1>User Profile</h1>
-        <p>Email: {$user?.email}</p> 
+<h1>User Profile</h1>
 
-        <form on:submit|preventDefault={saveProfile}>
-            <div class="mb-3">
-                <label for="targetLanguage" class="form-label">Preferred Target Language</label>
-                <select 
-                    id="targetLanguage"
-                    class="form-select"
-                    bind:value={selectedLanguage}
-                    disabled={isLoading}
-                >
-                    <option value={null}>-- Select a Language --</option>
-                    {#each data.availableLanguages || [] as lang}
-                        <option value={lang.code}>{lang.name}</option>
-                    {/each}
-                </select>
-                <div class="form-text">Select the language you are primarily learning.</div>
-            </div>
+{#if errorMessage}
+    <div class="alert alert-danger" role="alert">
+        {errorMessage}
+    </div>
+{/if}
 
-            {#if errorMessage}
-                <div class="alert alert-danger">{errorMessage}</div>
-            {/if}
-            {#if successMessage}
-                <div class="alert alert-success">{successMessage}</div>
-            {/if}
+{#if successMessage}
+    <div class="alert alert-success" role="alert">
+        {successMessage}
+    </div>
+{/if}
 
-            <button type="submit" class="btn btn-primary" disabled={isLoading}>
-                {#if isLoading}Saving...{:else}Save Profile{/if}
-            </button>
-        </form>
-    {:else}
-        <p>Loading profile...</p> 
-    {/if}
-</div> 
+{#if data.profile}
+    <p>Email: {data.profile.email || session?.user?.email}</p> 
+
+    <form on:submit|preventDefault={handleSaveProfile}>
+        <div class="mb-3">
+            <label for="targetLanguage" class="form-label">Target Language</label>
+            <select 
+                id="targetLanguage" 
+                class="form-select" 
+                bind:value={selectedLanguage} 
+                required
+                disabled={isLoading}
+            >
+                <option value="" disabled selected>-- Select Language --</option>
+                {#each data.availableLanguages || [] as lang}
+                    <option value={lang.code}>{lang.name}</option>
+                {/each}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" disabled={isLoading}>
+            {#if isLoading}Saving...{:else}Save Profile{/if}
+        </button>
+    </form>
+{:else if !errorMessage}
+    <p>Loading profile...</p>
+{/if} 
