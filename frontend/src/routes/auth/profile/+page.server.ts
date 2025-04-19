@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
         return {
             profile: profileData, 
-            availableLanguages: languagesData.languages || [],
+            availableLanguages: languagesData || [],
             error: null // Explicitly return error as null on success
         };
     } catch (err: any) {

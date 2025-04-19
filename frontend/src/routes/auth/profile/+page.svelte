@@ -11,7 +11,8 @@
     let session = data.session;
     $: session = data.session;
 
-    let selectedLanguage: string | null | undefined = data.profile?.target_language_code;
+    // Initialize with profile value or empty string to match default option
+    let selectedLanguage: string | null | undefined = data.profile?.target_language_code || "";
     let isLoading = false;
     let errorMessage: string | null = data.error || null;
     let successMessage: string | null = null;
@@ -19,9 +20,6 @@
     $: {
         if (!session && typeof window !== 'undefined') {
             goto('/auth?next=/auth/profile');
-        }
-        if (data.profile?.target_language_code !== selectedLanguage) {
-            selectedLanguage = data.profile?.target_language_code;
         }
         if (!data.error && errorMessage) {
             errorMessage = null;
@@ -91,7 +89,6 @@
                 id="targetLanguage" 
                 class="form-select" 
                 bind:value={selectedLanguage} 
-                required
                 disabled={isLoading}
             >
                 <option value="" disabled selected>-- Select Language --</option>

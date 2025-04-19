@@ -850,6 +850,16 @@ class Profile(BaseModel):
     class Meta:
         indexes = ((("user_id",), True),)  # Unique index
 
+    def to_dict(self) -> dict:
+        """Convert profile model to dictionary format."""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "target_language_code": self.target_language_code,
+            "created_at": (self.created_at.isoformat() if self.created_at else None),
+            "updated_at": (self.updated_at.isoformat() if self.updated_at else None),
+        }
+
     @classmethod
     def get_or_create_for_user(cls, user_id: str, email: str = None):
         """Get or create a profile for a Supabase auth user.
