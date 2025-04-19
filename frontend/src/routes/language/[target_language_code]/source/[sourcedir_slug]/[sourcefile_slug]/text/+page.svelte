@@ -53,6 +53,7 @@
   {sourcefile_slug}
   {language_name}
   {available_sourcedirs}
+  {data}
   activeTab="text"
 >
   <SourcefileText 

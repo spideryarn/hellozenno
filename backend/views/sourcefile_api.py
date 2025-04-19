@@ -151,7 +151,11 @@ def _inspect_sourcefile_core(
     except DoesNotExist:
         return jsonify({"success": False, "error": "File not found"}), 404
     except Exception as e:
-        current_app.logger.error(f"Error in inspect_sourcefile_{purpose}_api: {str(e)}")
+        # Log the full traceback
+        current_app.logger.exception(
+            f"Error in inspect_sourcefile_{purpose}_api for {target_language_code}/{sourcedir_slug}/{sourcefile_slug}"
+        )
+        # Return 500 with the error message (as before)
         return jsonify({"success": False, "error": str(e)}), 500
 
 

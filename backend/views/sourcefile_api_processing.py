@@ -266,5 +266,9 @@ def sourcefile_status_api(
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error getting sourcefile status: {str(e)}")
+        # Log the full traceback
+        current_app.logger.exception(
+            f"Error getting sourcefile status for {target_language_code}/{sourcedir_slug}/{sourcefile_slug}"
+        )
+        # Return 500 with the error message (as before)
         return jsonify({"success": False, "error": str(e)}), 500

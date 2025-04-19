@@ -28,7 +28,6 @@
     FolderOpen
   } from 'phosphor-svelte';
   import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
-  import { user } from '$lib/stores/authStore';
   import { page } from '$app/stores';
   
   export let sourcefile: Sourcefile;
@@ -40,6 +39,7 @@
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;
   export let available_sourcedirs: any[] = [];
+  export let data: any; // Add data prop to receive layout data
   
   // Variables for sourcedir dropdown
   let moveError = '';
@@ -70,6 +70,7 @@
     // Make sure sourcefile and its type are available and NOT youtube_audio
     if (sourcefile && sourcefile.sourcefile_type && sourcefile.sourcefile_type !== 'youtube_audio') {
        processingQueue = new SourcefileProcessingQueue(
+        data.supabase,
         target_language_code,
         sourcedir_slug,
         sourcefile_slug,
@@ -524,7 +525,7 @@
 
   <div class="action-row">
     <div class="section process-section">
-      {#if $user}
+      {#if data.session}
         <div class="process-controls">
           <button on:click={processSourcefile} class="button" disabled={$processingState.isProcessing}>
             {#if $processingState.isProcessing}

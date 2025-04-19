@@ -5,7 +5,6 @@
   import { Spinner, Trash, ArrowUp } from 'phosphor-svelte';
   import { onMount } from 'svelte';
   import { DescriptionFormatted } from '$lib';
-  import { user } from '$lib/stores/authStore';
   import { page } from '$app/stores';
   
   export let data: PageData;
@@ -419,7 +418,7 @@
       <div class="card mb-4">
         <div class="card-header">Add Files</div>
         <div class="card-body">
-          {#if $user}
+          {#if data.session}
             <div class="row mb-3">
               <div class="col">
                 <label for="fileInput" class="btn btn-outline-primary me-2">Upload Image Files</label>

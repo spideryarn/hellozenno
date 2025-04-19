@@ -14,6 +14,7 @@
   export let language_name: string;
   export let available_sourcedirs: any[] = [];
   export let activeTab: 'text' | 'words' | 'phrases' | 'translation' | 'image' | 'audio';
+  export let data: any;
   
   // Determine if this is an image or audio file
   $: isImageFile = sourcefile.sourcefile_type === 'image';
@@ -82,6 +83,7 @@
     {sourcedir_slug}
     {sourcefile_slug}
     {available_sourcedirs}
+    {data}
   />
   
   <NavTabs {tabs} />
