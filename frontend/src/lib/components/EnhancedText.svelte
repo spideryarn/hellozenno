@@ -101,7 +101,7 @@
       return data;
     } catch (error) {
       console.error(`- API request failed:`, error);
-      
+      const errorMessage = (error instanceof Error) ? error.message : String(error);
       // Return a fallback result
       return {
         lemma: word,
@@ -109,7 +109,7 @@
         etymology: null,
         _debug: {
           url,
-          error: error.message
+          error: errorMessage // Use processed error message
         }
       } as WordPreview;
     }
@@ -145,6 +145,7 @@
           <strong>Details:</strong><br>
           Language code: ${target_language_code}<br>
           Word: ${word}
+          ${data._debug?.error ? `<br>Error: ${data._debug.error}` : ''}
         </div>
       `;
       content += debugInfo;
@@ -173,7 +174,8 @@
           word: word 
         });
       } catch (urlError) {
-        urlForDebug = `Error: ${urlError.message}`;
+        const urlErrorMessage = (urlError instanceof Error) ? urlError.message : String(urlError);
+        urlForDebug = `Error: ${urlErrorMessage}`; // Use processed error message
       }
       
       errorContent += `
@@ -183,7 +185,7 @@
           <strong>Details:</strong><br>
           Language code: ${target_language_code}<br>
           Word: ${word}
-          ${error ? `<br>Error: ${error.message}` : ''}
+          ${error ? `<br>Error: ${(error instanceof Error) ? error.message : String(error)}` : ''}
         </div>
       `;
     }
@@ -205,21 +207,6 @@
       });
     }
     
-    // Preload the data before showing tooltip
-    let preloadedData = null;
-    let preloadError = null;
-    
-    // Start the data fetch immediately (not waiting for hover)
-    fetchWordData(word, target_language_code)
-      .then(data => {
-        preloadedData = data;
-        console.log(`Preloaded data for "${word}":`, data);
-      })
-      .catch(error => {
-        preloadError = error;
-        console.error(`Error preloading data for "${word}":`, error);
-      });
-    
     const instance = tippy(element, {
       content: '<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>',
       allowHTML: true,
@@ -230,7 +217,7 @@
       interactive: true,
       appendTo: typeof document !== 'undefined' ? document.body : 'parent', // Use parent if document not available
       touch: true,
-      trigger: isTouchDevice() ? 'click' : 'mouseenter focus', // Use click on touch devices
+      trigger: isTouchDevice() ? 'click' : 'mouseenter', // Use click on touch, ONLY mouseenter on desktop
       onShow(instance) {
         // Hide all other tooltips
         hideAll({ exclude: instance });
@@ -240,20 +227,11 @@
         // Set initial loading content with spinner
         instance.setContent('<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>');
         
-        // Use preloaded data if available, otherwise fetch
-        if (preloadedData) {
-          console.log(`Using preloaded data for "${word}"`);
-          instance.setContent(createTooltipContent(preloadedData, word));
-        } else if (preloadError) {
-          console.log(`Using preloaded error for "${word}"`);
-          instance.setContent(createErrorContent(word, preloadError));
-        } else {
-          console.log(`Fetching data on-demand for "${word}"`);
-          // No preloaded data yet, fetch it now
-          fetchWordData(word, target_language_code)
-            .then(data => instance.setContent(createTooltipContent(data, word)))
-            .catch(error => instance.setContent(createErrorContent(word, error)));
-        }
+        // Fetch data on-demand when the tooltip is shown
+        console.log(`Fetching data on-demand for "${word}"`);
+        fetchWordData(word, target_language_code)
+          .then(data => instance.setContent(createTooltipContent(data, word)))
+          .catch(error => instance.setContent(createErrorContent(word, error)));
       }
     });
     
@@ -449,7 +427,7 @@
           href={`/language/${target_language_code}/wordform/${encodeURIComponent(segment.word)}`}
           class="word-link"
           data-word={segment.word}
-          data-lemma={segment.lemma}
+          data-lemma={String(segment.lemma || '')}
         >
           {segment.text}
         </a>
