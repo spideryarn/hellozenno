@@ -53,8 +53,8 @@
   let autoProcessNotificationMessage = '';
   
   // Multi-processing counter and queue system
-  let processingClicks = 0; // Count of process button clicks
-  let pendingRuns = 0; // Number of queued processing runs
+  let processingClicks = 0; // Tracks total clicks for UI text
+  let pendingRuns = 0; // Tracks how many times the button was clicked while processing
   
   // Progress detail display state
   let showDetailedProgress = false;
@@ -64,12 +64,22 @@
   let successMessage = '';
   let successNotificationTimeout: ReturnType<typeof setTimeout> | null = null;
   
-  // Create a reactive variable for the processing queue
-  $: processingQueue = new SourcefileProcessingQueue(
-    target_language_code,
-    sourcedir_slug,
-    sourcefile_slug
-  );
+  // Initialize the processing queue when the component mounts
+  let processingQueue: SourcefileProcessingQueue;
+  onMount(() => {
+    // Make sure sourcefile and its type are available and NOT youtube_audio
+    if (sourcefile && sourcefile.sourcefile_type && sourcefile.sourcefile_type !== 'youtube_audio') {
+       processingQueue = new SourcefileProcessingQueue(
+        target_language_code,
+        sourcedir_slug,
+        sourcefile_slug,
+        sourcefile.sourcefile_type as 'text' | 'image' | 'audio' // Type assertion after check
+      );
+    } else {
+      console.error("Sourcefile data missing, or type is 'youtube_audio', cannot initialize processing queue.");
+      // Optionally disable the process button or show an error
+    }
+  });
   
   // Check if sourcefile needs INITIAL processing - only trigger for files that 
   // haven't been processed at all for a specific step
@@ -184,7 +194,7 @@
     goto(url, { invalidateAll: true });
   }
   
-  // Create a custom event to signal data updates
+  // Function to dispatch event after processing is complete
   const dispatchProcessingComplete = (detail: any) => {
     // Use a custom event to notify parent components about the updated data
     const event = new CustomEvent('processingComplete', {
@@ -206,18 +216,15 @@
   };
 
   async function processSourcefile() {
+    if (!processingQueue) {
+      console.error("Processing queue not initialized.");
+      alert("Error: Processing cannot start. Please refresh the page.");
+      return;
+    }
+    
     try {
       // Hide auto-process notification if showing
       showAutoProcessNotification = false;
-      
-      // Initialize the queue based on what needs to be processed
-      const hasSteps = processingQueue.initializeQueue(sourcefile);
-      
-      if (!hasSteps) {
-        // Nothing to process
-        alert('No processing steps needed.');
-        return;
-      }
       
       // Increment the processing clicks counter and pending runs
       processingClicks++;
@@ -238,10 +245,11 @@
         pendingRuns = 0;
         
         // Start processing with the current number of iterations
+        // The processAll method now handles initialization internally
         await processingQueue.processAll(iterations);
         
         // Check if we have processed data
-        if ($processingState.processedSourcefileData) {
+        if ($processingState.processedSourcefileData && !$processingState.error) {
           // Dispatch the event with the updated data
           dispatchProcessingComplete($processingState.processedSourcefileData);
           
@@ -262,15 +270,27 @@
             }, 5000);
           }
         } else {
-          // Fall back to page reload if no data returned
-          window.location.reload();
-          return;
+          // Handle cases where processing finished but might have had errors
+          // or failed to return data (check $processingState.error)
+          console.log("Processing finished, but no data returned or error occurred. State:", $processingState);
+          if (!$processingState.error) {
+             // If no specific error, maybe just skip reload or show generic message?
+             // alert('Processing finished, but failed to retrieve updated data.'); 
+          }
+          // No reload here, rely on error message in processing state
+          // window.location.reload(); 
+          // return; 
         }
         
         // If more requests came in while we were processing, handle them in the next iteration
       }
     } catch (error) {
       console.error('Error processing file:', error);
+      processingState.update(state => ({ 
+        ...state, 
+        error: error instanceof Error ? error.message : 'Unknown error processing file',
+        isProcessing: false
+      }));
       // Reset pending runs on error to avoid getting stuck
       pendingRuns = 0;
     }

@@ -18,6 +18,21 @@ export interface QueuedStep {
   apiEndpoint: string;
   params: Record<string, any>;
   description: string;
+  lemma?: string; // Optional: for lemma_metadata steps
+}
+
+// Define the shape of the status object from the API
+interface SourcefileStatus {
+  has_text: boolean;
+  has_translation: boolean;
+  wordforms_count: number;
+  phrases_count: number;
+  incomplete_lemmas: Array<{
+    lemma: string;
+    part_of_speech?: string;
+    translations?: string[];
+  }>;
+  incomplete_lemmas_count: number;
 }
 
 // Create a store for tracking progress
@@ -40,198 +55,147 @@ export class SourcefileProcessingQueue {
     sourcedir_slug: string;
     sourcefile_slug: string;
   };
+  private sourcefileType: 'text' | 'image' | 'audio'; // Track sourcefile type
 
-  constructor(target_language_code: string, sourcedir_slug: string, sourcefile_slug: string) {
+  constructor(
+    target_language_code: string,
+    sourcedir_slug: string,
+    sourcefile_slug: string,
+    sourcefile_type: 'text' | 'image' | 'audio' // Pass type during construction
+  ) {
     this.queue = new Queue<QueuedStep>();
     this.sourcefileData = {
       target_language_code,
       sourcedir_slug,
       sourcefile_slug
     };
+    this.sourcefileType = sourcefile_type;
   }
 
-  // Add the necessary steps based on what's needed
-  public async initializeQueue(sourcefile: any) {
-    // Clear the existing queue
-    this.queue = new Queue<QueuedStep>();
-    let needsTextExtraction = false;
-
-    console.log('Initializing queue for sourcefile:', {
-      text_target: !!sourcefile.text_target,
-      has_image: sourcefile.has_image,
-      has_audio: sourcefile.has_audio,
-      type: sourcefile.sourcefile_type
-    });
-
-    // Manual hardcoded fix for this specific image case - force text extraction
-    if (sourcefile.sourcefile_type === 'image' || sourcefile.has_image || sourcefile.filename.endsWith('.jpg')) {
-      needsTextExtraction = true;
-      const endpoint = getApiUrl(
-        RouteName.SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API,
+  // Fetch the current status of the sourcefile
+  private async fetchSourcefileStatus(): Promise<SourcefileStatus | null> {
+    try {
+      const response = await fetch(
+        getApiUrl(
+          RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
+          this.sourcefileData
+        ),
         {
-          target_language_code: this.sourcefileData.target_language_code,
-          sourcedir_slug: this.sourcefileData.sourcedir_slug,
-          sourcefile_slug: this.sourcefileData.sourcefile_slug
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-cache' // Ensure fresh status
         }
       );
-      
-      console.log('Forcing text extraction step for image file:', endpoint);
-      
-      this.queue.enqueue({
+
+      if (!response.ok) {
+        console.error('Failed to fetch sourcefile status:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      return data.status as SourcefileStatus;
+    } catch (error) {
+      console.error('Error fetching sourcefile status:', error);
+      return null;
+    }
+  }
+
+  // Determine the necessary steps based on the current status
+  private async determineSteps(status: SourcefileStatus | null): Promise<QueuedStep[]> {
+    const steps: QueuedStep[] = [];
+    if (!status) {
+      console.error("Cannot determine steps without sourcefile status.");
+      return []; // Cannot proceed without status
+    }
+
+    console.log('Determining steps based on status:', status);
+
+    // 1. Text Extraction (if needed)
+    if ((this.sourcefileType === 'image' || this.sourcefileType === 'audio') && !status.has_text) {
+      console.log('Adding text extraction step.');
+      steps.push({
         type: 'text_extraction',
-        apiEndpoint: endpoint,
+        apiEndpoint: getApiUrl(
+          RouteName.SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API,
+          this.sourcefileData
+        ),
         params: {},
         description: 'Extracting text'
       });
-    }
-    // Normal detection logic (keeping as fallback)
-    else if (!sourcefile.text_target && (sourcefile.has_image || sourcefile.has_audio)) {
-      needsTextExtraction = true;
-      const endpoint = getApiUrl(
-        RouteName.SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API,
-        {
-          target_language_code: this.sourcefileData.target_language_code,
-          sourcedir_slug: this.sourcefileData.sourcedir_slug,
-          sourcefile_slug: this.sourcefileData.sourcefile_slug
-        }
-      );
-      
-      console.log('Adding text extraction step:', endpoint);
-      
-      this.queue.enqueue({
-        type: 'text_extraction',
-        apiEndpoint: endpoint,
-        params: {},
-        description: 'Extracting text'
-      });
+      // If text extraction is needed, subsequent steps depend on its success,
+      // so we determine them in the next iteration after status refresh.
+      return steps;
     }
 
-    // Check if translation is needed, but only if we have text
-    if (sourcefile.text_target && !sourcefile.text_english) {
-      this.queue.enqueue({
+    // 2. Translation (if needed and text exists)
+    if (status.has_text && !status.has_translation) {
+      console.log('Adding translation step.');
+      steps.push({
         type: 'translation',
         apiEndpoint: getApiUrl(
           RouteName.SOURCEFILE_PROCESSING_API_TRANSLATE_API,
-          {
-            target_language_code: this.sourcefileData.target_language_code,
-            sourcedir_slug: this.sourcefileData.sourcedir_slug,
-            sourcefile_slug: this.sourcefileData.sourcefile_slug
-          }
+          this.sourcefileData
         ),
         params: {},
         description: 'Translating text'
       });
     }
 
-    // Only add wordforms and phrases if we have text content and don't need text extraction
-    // This prevents the race condition where we try to extract words before text is ready
-    if (sourcefile.text_target && !needsTextExtraction) {
-      this.queue.enqueue({
+    // 3. Wordforms & Phrases (if text exists)
+    // These can be added regardless of translation status
+    if (status.has_text) {
+      console.log('Adding wordforms extraction step.');
+      steps.push({
         type: 'wordforms',
         apiEndpoint: getApiUrl(
           RouteName.SOURCEFILE_PROCESSING_API_PROCESS_WORDFORMS_API,
-          {
-            target_language_code: this.sourcefileData.target_language_code,
-            sourcedir_slug: this.sourcefileData.sourcedir_slug,
-            sourcefile_slug: this.sourcefileData.sourcefile_slug
-          }
+          this.sourcefileData
         ),
-        params: {},
+        params: {}, // Consider adding max_new_words if needed per iteration
         description: 'Extracting vocabulary'
       });
 
-      this.queue.enqueue({
+      console.log('Adding phrases extraction step.');
+      steps.push({
         type: 'phrases',
         apiEndpoint: getApiUrl(
           RouteName.SOURCEFILE_PROCESSING_API_PROCESS_PHRASES_API,
-          {
-            target_language_code: this.sourcefileData.target_language_code,
-            sourcedir_slug: this.sourcefileData.sourcedir_slug,
-            sourcefile_slug: this.sourcefileData.sourcefile_slug
-          }
+          this.sourcefileData
         ),
-        params: {},
+        params: {}, // Consider adding max_new_phrases if needed per iteration
         description: 'Extracting phrases'
       });
     }
 
-    // Check for incomplete lemmas and add them to the queue, but only if we have text and wordforms
-    if (sourcefile.text_target && !needsTextExtraction) {
-      try {
-        // Get the sourcefile status to check for incomplete lemmas
-        const response = await fetch(
-          getApiUrl(
-            RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
+    // 4. Lemma Metadata Completion (if text exists and there are incomplete lemmas)
+    if (status.has_text && status.incomplete_lemmas_count > 0) {
+      console.log(`Adding ${status.incomplete_lemmas_count} lemma metadata completion steps.`);
+      for (const lemmaInfo of status.incomplete_lemmas) {
+        steps.push({
+          type: 'lemma_metadata',
+          apiEndpoint: getApiUrl(
+            RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API,
             {
               target_language_code: this.sourcefileData.target_language_code,
-              sourcedir_slug: this.sourcefileData.sourcedir_slug,
-              sourcefile_slug: this.sourcefileData.sourcefile_slug
+              lemma: lemmaInfo.lemma // Pass lemma identifier
             }
           ),
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          const incompleteLemmas = data.status?.incomplete_lemmas || [];
-          
-          // Add each incomplete lemma as a separate step
-          for (const lemma of incompleteLemmas) {
-            this.queue.enqueue({
-              type: 'lemma_metadata',
-              apiEndpoint: getApiUrl(
-                RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API,
-                {
-                  target_language_code: this.sourcefileData.target_language_code,
-                  lemma: lemma.lemma
-                }
-              ),
-              params: {},
-              description: `Completing metadata for "${lemma.lemma}"`
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error checking for incomplete lemmas:', error);
+          params: {},
+          description: `Completing metadata for "${lemmaInfo.lemma}"`,
+          lemma: lemmaInfo.lemma // Store lemma for potential detailed logging/UI
+        });
       }
     }
 
-    // Update the store with the total steps
-    processingState.update(state => ({
-      ...state,
-      totalSteps: this.queue.length,
-      progress: 0
-    }));
-
-    return this.queue.length > 0;
+    return steps;
   }
 
-  // Process the next step in the queue
-  public async processNextStep() {
-    if (this.queue.length === 0) {
-      processingState.update(state => ({
-        ...state,
-        isProcessing: false,
-        currentStep: null,
-        progress: state.totalSteps,
-      }));
-      return false;
-    }
 
-    const step = this.queue.dequeue();
-    
-    console.log('Processing step:', {
-      type: step.type,
-      apiEndpoint: step.apiEndpoint,
-      params: step.params
-    });
+  // Process a single step
+  private async processSingleStep(step: QueuedStep): Promise<boolean> {
+     console.log(`Processing step: ${step.type}`, { apiEndpoint: step.apiEndpoint, params: step.params });
 
-    processingState.update(state => ({
+     processingState.update(state => ({
       ...state,
       isProcessing: true,
       currentStep: step.type,
@@ -241,178 +205,162 @@ export class SourcefileProcessingQueue {
 
     try {
       console.log(`Sending ${step.type} request to ${step.apiEndpoint}`);
-      
-      // Get the current session/token
       const { data: { session } } = await supabase.auth.getSession();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
-      
-      // Log the headers being sent
-      console.log('Sending request with headers:', JSON.stringify(headers));
-      
+      // console.log('Sending request with headers:', JSON.stringify(headers)); // Optional: less verbose logging
+
       const response = await fetch(step.apiEndpoint, {
-        method: 'POST',
+        method: 'POST', // Assuming all processing steps use POST
         headers: headers,
         body: JSON.stringify(step.params),
       });
 
       console.log(`${step.type} response status:`, response.status);
-      
+
       if (!response.ok) {
-        const data = await response.json();
-        console.error(`Error in ${step.type} response:`, data);
-        
-        // Check for 401 specifically
+        let errorData = { error: `HTTP error ${response.status}`};
+        try {
+          errorData = await response.json();
+        } catch (e) { /* Ignore JSON parsing error */ }
+
+        console.error(`Error in ${step.type} response:`, errorData);
+
         if (response.status === 401) {
-           throw new Error(data.error || 'Unauthorized. Please log in again.');
+           throw new Error(errorData.error || 'Unauthorized. Please log in again.');
         }
-        
-        // Handle other errors (like duplicate key)
-        if (data.error && 
-            (data.error.includes("duplicate key value") || 
-             data.error.includes("violates unique constraint"))) {
-          console.warn(`Duplicate entry detected during ${step.type} processing:`, data.error);
+
+        // Handle duplicate key errors gracefully (as warnings)
+        if (errorData.error &&
+            (errorData.error.includes("duplicate key value") ||
+             errorData.error.includes("violates unique constraint"))) {
+          console.warn(`Duplicate entry detected during ${step.type} processing:`, errorData.error);
+          // Treat as success to allow queue to continue for other steps
+          processingState.update(state => ({ ...state, progress: state.progress + 1 }));
+          return true;
         } else {
-          throw new Error(data.error || `Failed to process ${step.type}`);
+          throw new Error(errorData.error || `Failed to process ${step.type}`);
         }
       } else {
-        const data = await response.json();
-        console.log(`${step.type} response data:`, data);
+        const responseData = await response.json();
+        console.log(`${step.type} response data:`, responseData);
+        processingState.update(state => ({ ...state, progress: state.progress + 1 }));
+        return true; // Step succeeded
       }
-
-      processingState.update(state => ({
-        ...state,
-        progress: state.totalSteps - this.queue.length,
-      }));
-
-      return true;
     } catch (error) {
       console.error(`Error processing ${step.type}:`, error);
       processingState.update(state => ({
         ...state,
         error: error instanceof Error ? error.message : 'Unknown error',
+        isProcessing: false, // Stop processing on error
       }));
-      return false;
+      return false; // Step failed
     }
   }
 
-  // Start processing the entire queue
-  public async processAll(iterations: number = 1) {
+
+  // Start processing for a given number of iterations
+  public async processAll(iterations: number = 1): Promise<boolean> {
     processingState.update(state => ({
       ...state,
       isProcessing: true,
       progress: 0,
+      totalSteps: 0, // Will be updated per iteration
       error: null,
-      currentIteration: 1,
+      currentIteration: 0,
       totalIterations: iterations,
       processedSourcefileData: null
     }));
 
-    let errorOccurred = false; // Flag to track if any step failed
+    let overallSuccess = true;
 
-    // Run the requested number of iterations
     for (let i = 0; i < iterations; i++) {
-      // Update iteration counter in the state
-      processingState.update(state => ({
-        ...state,
-        currentIteration: i + 1
-      }));
-      
-      // Fetch full sourcefile data for this iteration
-      let currentSourcefileData = await this.fetchCurrentSourcefileData(); 
-      const hasInitialSteps = await this.initializeQueue(currentSourcefileData);
-      
-      if (!hasInitialSteps) {
-        continue; // No steps to process for this iteration
-      }
-      
-      // Process all steps in the queue
-      while (this.queue.length > 0) {
-        const currentStep = this.queue.front.type;
-        const success = await this.processNextStep();
-        
-        if (!success) {
-          errorOccurred = true; // Set flag on error
-          break;
-        }
-        
-        if (currentStep === 'text_extraction') {
-          // Get fresh FULL sourcefile data after text extraction
-          currentSourcefileData = await this.fetchCurrentSourcefileData(); 
-          await this.initializeQueue(currentSourcefileData);
-        }
-      }
-      
-      // If we couldn't process the queue successfully, stop iterations
-      if (errorOccurred) {
-        break;
-      }
-    }
+      const currentIteration = i + 1;
+      console.log(`--- Starting Iteration ${currentIteration}/${iterations} ---`);
 
-    // Get the final sourcefile data after all processing is complete
-    try {
-      const finalSourcefileData = await this.getFullSourcefileData();
+      processingState.update(state => ({ ...state, currentIteration }));
+
+      // 1. Fetch current status for this iteration
+      const currentStatus = await this.fetchSourcefileStatus();
+      if (!currentStatus) {
+        console.error(`Iteration ${currentIteration}: Failed to fetch status, aborting.`);
+        processingState.update(state => ({
+          ...state,
+          error: "Failed to fetch sourcefile status",
+          isProcessing: false
+        }));
+        overallSuccess = false;
+        break; // Stop all iterations if status fails
+      }
+
+      // 2. Determine steps for *this* iteration based on *current* status
+      const stepsForThisIteration = await this.determineSteps(currentStatus);
+      if (stepsForThisIteration.length === 0) {
+        console.log(`Iteration ${currentIteration}: No steps needed.`);
+        continue; // Move to the next iteration if no steps are required
+      }
+
+      // Update total steps for the UI progress bar (relative to this iteration)
       processingState.update(state => ({
         ...state,
-        // Set isProcessing to false if an error occurred OR if the queue is empty
-        isProcessing: !errorOccurred && this.queue.length > 0,
-        processedSourcefileData: finalSourcefileData
+        totalSteps: stepsForThisIteration.length,
+        progress: 0 // Reset progress for the new iteration
+      }));
+
+      // 3. Process steps for this iteration
+      this.queue = new Queue<QueuedStep>(...stepsForThisIteration); // Load queue for this iteration
+
+      while (this.queue.length > 0) {
+        const step = this.queue.dequeue();
+        const success = await this.processSingleStep(step);
+
+        if (!success) {
+          console.error(`Iteration ${currentIteration}: Step ${step.type} failed. Aborting further processing.`);
+          overallSuccess = false;
+          // State updated within processSingleStep
+          break; // Stop processing this iteration
+        }
+      }
+
+      if (!overallSuccess) {
+        break; // Stop all iterations if one fails
+      }
+
+      console.log(`--- Finished Iteration ${currentIteration}/${iterations} ---`);
+    } // End of iterations loop
+
+    // Final state update
+    console.log("Processing finished. Fetching final data...");
+    try {
+      const finalSourcefileData = await this.getFullSourcefileData(); // Fetch final state for UI update
+      processingState.update(state => ({
+        ...state,
+        isProcessing: false, // Processing is complete (or stopped due to error)
+        currentStep: null,
+         // Ensure progress reflects completion if successful
+        progress: overallSuccess ? state.totalSteps : state.progress,
+        processedSourcefileData: finalSourcefileData,
+        description: overallSuccess ? 'Processing complete!' : 'Processing failed.',
       }));
     } catch (error) {
       console.error('Error fetching final sourcefile data:', error);
       processingState.update(state => ({
         ...state,
-        // Set isProcessing to false if an error occurred OR if the queue is empty
-        isProcessing: !errorOccurred && this.queue.length > 0,
-        processedSourcefileData: null
+        isProcessing: false,
+        currentStep: null,
+        error: state.error || "Failed to fetch final sourcefile data",
+        processedSourcefileData: null,
+        description: 'Processing finished with errors.',
       }));
+      overallSuccess = false;
     }
 
-    return !errorOccurred && this.queue.length === 0;
+    console.log(`Overall processing success: ${overallSuccess}`);
+    return overallSuccess;
   }
-  
-  // Helper method to get FULL current sourcefile data for subsequent iterations
-  private async fetchCurrentSourcefileData(): Promise<any> {
-    try {
-      // Get the complete sourcefile data
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API, // Use inspect API for full data
-          {
-            target_language_code: this.sourcefileData.target_language_code,
-            sourcedir_slug: this.sourcefileData.sourcedir_slug,
-            sourcefile_slug: this.sourcefileData.sourcefile_slug
-          }
-        ),
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Bypass cache to ensure we get fresh data
-          cache: 'no-cache' 
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to get current sourcefile data');
-      }
-      
-      const data = await response.json();
-      
-      // Return the sourcefile object from the response
-      return data.sourcefile; // Assuming the inspect API returns { sourcefile: {...} }
-      
-    } catch (error) {
-      console.error('Error getting current sourcefile data:', error);
-      throw error;
-    }
-  }
-  
+
   // Get the full sourcefile data including recognized words for updating the UI
   private async getFullSourcefileData(): Promise<any> {
     try {
@@ -420,30 +368,25 @@ export class SourcefileProcessingQueue {
       const response = await fetch(
         getApiUrl(
           RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
-          {
-            target_language_code: this.sourcefileData.target_language_code,
-            sourcedir_slug: this.sourcefileData.sourcedir_slug,
-            sourcefile_slug: this.sourcefileData.sourcefile_slug
-          }
+          this.sourcefileData
         ),
         {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Bypass cache to ensure we get fresh data
-          cache: 'no-cache'
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-cache' // Ensure fresh data
         }
       );
-      
+
       if (!response.ok) {
-        throw new Error('Failed to get complete sourcefile data');
+        throw new Error(`Failed to get complete sourcefile data (status: ${response.status})`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error getting full sourcefile data:', error);
-      throw error;
+      // Return a minimal error structure or null? Decide based on consuming component needs
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { error: `Failed to load final data: ${errorMessage}` };
     }
   }
 }
