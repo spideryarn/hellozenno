@@ -6,32 +6,72 @@ SvelteKit components communicate with the Flask backend through API calls. The b
 
 Flask API endpoints follow the pattern `/api/[resource]/[action]`. All API endpoints are automatically mapped to TypeScript types through a generated routes file, providing type-safety and refactoring protection.
 
+## Authenticated API Calls
+
+The frontend uses the `apiFetch` utility function from `$lib/api.ts` to make API calls. This function:
+
+1. Accepts a Supabase client instance (`supabaseClient`)
+2. Automatically extracts the JWT token from the session
+3. Adds the `Authorization: Bearer <token>` header to requests if authenticated
+4. Handles API-specific error responses, including authentication errors
+
+For detailed information about authentication, see [Authentication](./AUTH.md).
+
+```typescript
+// Example of authenticated API call in a server load function
+export const load: PageServerLoad = async ({ locals }) => {
+  const { supabase } = locals;
+  
+  const data = await apiFetch({
+    supabaseClient: supabase,
+    routeName: RouteName.SOME_API_ENDPOINT,
+    params: { /* params */ },
+    options: { method: 'GET' }
+  });
+  
+  return { data };
+};
+```
+
 ## Example Usage
 
 Here's how to fetch data from the API in a SvelteKit component:
 
 ```typescript
 // In a SvelteKit component or page
-import { getApiUrl } from '$lib/api';
+import { getApiUrl, apiFetch } from '$lib/api';
 import { RouteName } from '$lib/generated/routes';
 
 // Fetch languages from the API (type-safe)
-async function fetchLanguages() {
-    const url = getApiUrl(RouteName.LANGUAGES_API_GET_LANGUAGES_API, {});
-    const response = await fetch(url);
-    return await response.json();
+async function fetchLanguages(supabaseClient: SupabaseClient | null) {
+    return apiFetch({
+        supabaseClient,
+        routeName: RouteName.LANGUAGES_API_GET_LANGUAGES_API,
+        params: {}
+    });
 }
 
 // Fetch a specific source directory (with parameters)
-async function fetchSourceDir(target_language_code: string, sourcedir_slug: string) {
-    const url = getApiUrl(
-        RouteName.SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API, 
-        { target_language_code, sourcedir_slug }
-    );
-    const response = await fetch(url);
-    return await response.json();
+async function fetchSourceDir(supabaseClient: SupabaseClient | null, target_language_code: string, sourcedir_slug: string) {
+    return apiFetch({
+        supabaseClient,
+        routeName: RouteName.SOURCEDIR_API_SOURCEFILES_FOR_SOURCEDIR_API, 
+        params: { target_language_code, sourcedir_slug }
+    });
 }
 ```
+
+## Protected API Endpoints
+
+Some API endpoints require authentication. These are protected in the backend using:
+
+- `@api_auth_required` - Requires valid authentication or returns 401
+- `@api_auth_optional` - Works for anonymous users but provides additional features for authenticated users
+
+The frontend handles authentication-related API responses gracefully, showing appropriate UI for:
+- Login prompts when protected resources are accessed
+- Limited functionality for anonymous users
+- Error messages for failed authentication
 
 ## Common Endpoints
 

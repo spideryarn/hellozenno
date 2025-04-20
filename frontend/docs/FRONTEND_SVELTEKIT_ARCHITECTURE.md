@@ -82,6 +82,12 @@ The Flask development server:
 
 see `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md` for more information.
 
+## Authentication
+
+The application uses Supabase Authentication with the `@supabase/ssr` library for server-side rendering compatibility. Authentication state is initialized on the server and passed to the client, with a single client instance maintained per context.
+
+For detailed information about the authentication implementation, see [Authentication](./AUTH.md).
+
 ## SvelteKit State Management
 
 The application has been migrated from using the deprecated `$app/stores` module to the newer `$app/state` module, which is built on Svelte 5's runes API. This provides finer-grained reactivity and better performance:

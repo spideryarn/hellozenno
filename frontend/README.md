@@ -10,9 +10,11 @@ This project's documentation is organized into the following sections:
 - [Setup and Development](./docs/SETUP.md) - Installation and development instructions
 - [UI and Styling](./docs/STYLING.md) - Styling system and component usage
 - [API Integration](./docs/BACKEND_FLASK_API_INTEGRATION.md) - How to interact with the Flask backend, e.g. using `getApiUrl()`
+- [Authentication](./docs/AUTH.md) - Supabase authentication integration with SvelteKit
 - [Site Organization](./docs/SITE_ORGANISATION.md) - Overall site structure and routing
 - [Sourcefile Pages](./docs/SOURCEFILE_PAGES.md) - Structure and implementation of sourcefile pages
-- `frontend/docs/AUTH.md`
+- [Enhanced Text](./docs/ENHANCED_TEXT.md) - Interactive text with word tooltips
+- [Search](./docs/SEARCH.md) - Unified search implementation across site
 
 ## Project Status and Roadmap
 
