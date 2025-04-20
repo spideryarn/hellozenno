@@ -922,30 +922,35 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
 
         # ---- Filename Generation using Title ---- START ----
         # Generate filename from title, fallback to URL-based name
-        filename_base = slugify(extracted_title)
-        if not filename_base or filename_base == "-":
+        if not extracted_title or extracted_title == "-":
             # Fallback if title is missing or unusable
             timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
             sanitized_url_part = slugify(
                 url.split("//")[-1].split("/")[0], max_length=50
             )
-            filename = f"url_{sanitized_url_part}_{timestamp}.html"
+            # Use .txt for fallback as well
+            filename = f"url_{sanitized_url_part}_{timestamp}.txt"
         else:
-            # Use title for filename, add .html extension
-            filename = f"{filename_base}.html"
+            # Use the extracted title directly, ensuring it ends with .txt
+            filename = extracted_title
+            if not filename.lower().endswith(".txt"):
+                filename += ".txt"
 
         # Check for potential collision before calling helper (optional but safer)
         if (
             Sourcefile.select()
             .where(
                 (Sourcefile.sourcedir == sourcedir_entry)
-                & (Sourcefile.filename == filename)
+                & (Sourcefile.filename == filename)  # Check exact filename
             )
             .exists()
         ):
-            # Simple collision handling: add timestamp to title-based filename
-            timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-            filename = f"{slugify(extracted_title)}_{timestamp}.html"
+            # Collision handling: append timestamp to the original title-based filename
+            timestamp = datetime.now().strftime(
+                "%Y%m%d_%H%M%S"
+            )  # Use full year for clarity
+            base, ext = os.path.splitext(filename)
+            filename = f"{base} ({timestamp}){ext}"
         # ---- Filename Generation using Title ---- END ----
 
         # Prepare data for helper function
