@@ -1,54 +1,36 @@
 # Architecture
 
-The Hello Zenno application uses a hybrid architecture:
+The Hello Zenno application uses a hybrid architecture, combining a SvelteKit frontend for the user interface with a Flask backend serving as a data API.
+
+## Key Architectural Components
 
 ```
-Hello Zenno
+Hello Zenno/
+├── backend/ (Flask API)
+│   ├── api/index.py      # Main Flask application entry point
+│   ├── views/            # API endpoints definitions
+│   └── ...               # Models, utils, etc.
 │
-├── Flask Backend (API)
-│   ├── api/index.py         # Main Flask application entry point
-│   ├── views/               # API endpoints and controllers
-│   │   ├── languages_api.py # Language-related APIs
-│   │   ├── sentence_api.py  # Sentence-related APIs
-│   │   └── ...              # Other API modules
-│   ├── utils/               # Shared utilities
-│   │   ├── lang_utils.py    # Language processing utilities
-│   │   ├── url_registry.py  # URL type registry generation
-│   │   └── ...              # Other utility modules
-│   └── db_models.py         # Database models
-│
-└── SvelteKit Frontend
+└── frontend/ (SvelteKit App)
+    ├── svelte.config.js  # SvelteKit framework configuration
+    ├── vite.config.js    # Vite build tool configuration
     ├── src/
-    │   ├── routes/          # SvelteKit routes and pages
-    │   │   ├── languages/   # Languages listing page
-    │   │   └── language/    # Language-specific pages
-    │   │       ├── [target_language_code]/
-    │   │       │   ├── sources/      # Source materials for a language
-    │   │       │   └── sentence/     # Individual sentence view
-    │   │       │       └── [slug]/   # Dynamic sentence route
-    │   │   ├── lib/            # Shared libraries and components
-    │   │   │   ├── api.ts      # Type-safe API communication layer
-    │   │   │   ├── generated/  # Auto-generated TypeScript files
-    │   │   │   │   └── routes.ts  # Type definitions for API routes
-    │   │   │   ├── components/ # Reusable Svelte components
-    │   │   │   │   └── Sentence.svelte   # Sentence component
-    │   │   │   │   └── Card.svelte       # Card component
-    │   │   │   │   └── SourceItem.svelte # Source item component
-    │   │   │   └── utils.ts    # Utility functions
-    │   │   └── app.html        # SvelteKit app template
-    │   └── static/             # Static assets
-    │       ├── css/
-    │       │   ├── base.css            # Base CSS imports
-    │       │   ├── theme.css           # Theme styling
-    │       │   ├── theme-variables.css # Theme variables
-    │       │   ├── components.css      # Component-specific styles
-    │       │   └── extern/             # External CSS libraries
-    │       └── js/
-    │           └── extern/             # External JS libraries
+    │   ├── app.html        # HTML shell template
+    │   ├── hooks.server.js # Server-side request hooks (e.g., for auth)
+    │   ├── routes/         # Application pages and API endpoints (See SITE_ORGANISATION.md)
+    │   ├── lib/            # Shared modules, components, utilities
+    │   │   ├── api.ts      # Type-safe API communication layer
+    │   │   ├── generated/  # Auto-generated files (e.g., API types)
+    │   │   ├── components/ # Reusable Svelte components
+    │   │   ├── stores/     # Application state management
+    │   │   └── types/      # Custom TypeScript types
+    │   └── static/         # Static assets (CSS, images, fonts)
     └── ...
 ```
 
-## Flask to SvelteKit Migration
+For a detailed breakdown of user-facing pages and their routes, see the [Site Organization](./SITE_ORGANISATION.md) document.
+
+## Flask to SvelteKit Migration Rationale
 
 This project represents a transition from a Flask/Jinja/Svelte application to a SvelteKit frontend with a Flask API backend. The migration follows these principles:
 
@@ -66,21 +48,23 @@ This project represents a transition from a Flask/Jinja/Svelte application to a 
 
 5. **Type Safety**: uses Flask-generated TypeScript definitions for all API routes
 
-## SvelteKit development server
+## SvelteKit Development Environment
 
 The SvelteKit development server (`scripts/local/run_sveltekit.sh`):
-- Is being run by the user separately, on port 5173, and generates logs in `logs/frontend.log`
-- see code in `frontend/src`
+- Is typically run by the user separately (e.g., via `npm run dev` or a script).
+- Uses Vite for fast Hot Module Replacement (HMR).
+- Configuration is managed in `svelte.config.js` and `vite.config.js`.
+- Logs are usually output to the console or configured location (e.g., `logs/frontend.log`).
 
+## Flask API Backend Integration
 
-## Flask API
+The SvelteKit frontend communicates exclusively with the Flask backend via API calls.
 
-The Flask development server:
-- Is being run by the user separately, on port 3000, and generates logs in `logs/backend.log`
-- It generates type definitions for routes in `frontend/src/lib/generated/routes.ts`
-- see code in `views/`
+- **API Location**: Flask runs separately (e.g., on port 3000) serving endpoints under `/api/...`. Logs are typically in `logs/backend.log`.
+- **Type Safety**: The Flask backend generates TypeScript type definitions for its API routes (`frontend/src/lib/generated/routes.ts`). This ensures type-safe communication using utilities like `apiFetch` in `frontend/src/lib/api.ts`.
+- **No Direct DB Access**: The frontend never accesses the database directly; all data operations go through the Flask API.
 
-see `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md` for more information.
+See [Flask API Integration](./BACKEND_FLASK_API_INTEGRATION.md) for more details on the API contract and communication patterns.
 
 ## Authentication
 
@@ -90,10 +74,7 @@ For detailed information about the authentication implementation, see [Authentic
 
 ## SvelteKit State Management
 
-The application has been migrated from using the deprecated `$app/stores` module to the newer `$app/state` module, which is built on Svelte 5's runes API. This provides finer-grained reactivity and better performance:
-
-- `import { page } from '$app/stores'` → `import { page } from '$app/state'`
-- `$page.data` → `page.data` (no $ prefix needed)
+The application utilizes Svelte 5's runes for state management, primarily through SvelteKit's built-in `$app/state` module for page data and potentially custom stores located in `src/lib/stores/` for global or cross-component state.
 
 The migration was performed using the SvelteKit migration tool: `npx sv migrate app-state`
 
