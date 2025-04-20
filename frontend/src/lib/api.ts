@@ -382,3 +382,7 @@ export async function getLemmaMetadata(
         throw error; 
     }
 }
+
+if (!API_BASE_URL) {
+    throw new Error('API_BASE_URL is undefined. In production, check that VITE_API_URL is set in environment variables.');
+}

@@ -1,5 +1,7 @@
 <script lang="ts">
   import WordformCard from '$lib/components/WordformCard.svelte';
+  import SourcefileFooter from './SourcefileFooter.svelte';
+  import type { Navigation } from '$lib/types/sourcefile';
   
   interface Wordform {
     wordform: string;
@@ -12,9 +14,16 @@
   
   export let wordforms: Wordform[] = [];
   export let target_language_code: string;
+  // Add navigation props for bottom navigation
+  export let navigation: Navigation = undefined as unknown as Navigation;
+  export let sourcedir_slug: string = '';
+  export let sourcefile_slug: string = '';
+  
+  // Reference to the container element for height measurement
+  let wordsContainerElement: HTMLElement;
 </script>
 
-<div class="words-container">
+<div class="words-container" bind:this={wordsContainerElement}>
   <h2>Words ({wordforms.length})</h2>
   
   {#if wordforms.length === 0}
@@ -33,6 +42,16 @@
         </div>
       {/each}
     </div>
+    
+    <SourcefileFooter 
+      {navigation}
+      {target_language_code}
+      {sourcedir_slug}
+      {sourcefile_slug}
+      view="words"
+      contentRef={wordsContainerElement}
+      minContentHeight={500}
+    />
   {/if}
 </div>
 
@@ -70,4 +89,6 @@
     font-style: italic;
     margin-top: 1rem;
   }
+  
+  
 </style> 

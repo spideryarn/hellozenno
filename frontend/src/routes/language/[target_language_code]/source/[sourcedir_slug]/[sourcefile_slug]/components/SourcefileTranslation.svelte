@@ -1,14 +1,22 @@
 <script lang="ts">
-  import type { Sourcefile } from '$lib/types/sourcefile';
+  import type { Sourcefile, Navigation } from '$lib/types/sourcefile';
+  import SourcefileFooter from './SourcefileFooter.svelte';
   
   export let sourcefile: Sourcefile;
   export let text_english: string | null = null;
+  export let navigation: Navigation = undefined as unknown as Navigation;
+  export let target_language_code: string = '';
+  export let sourcedir_slug: string = '';
+  export let sourcefile_slug: string = '';
+  
+  // Reference to the container element for height measurement
+  let translationContentElement: HTMLElement;
   
   // Split the translation into paragraphs if available
   $: translationParagraphs = text_english ? text_english.split('\n\n') : [];
 </script>
 
-<div class="translation-content">
+<div class="translation-content" bind:this={translationContentElement}>
   <h2>Translation</h2>
   <div class="translated-text">
     {#if text_english}
@@ -21,6 +29,16 @@
       <p class="no-content"><em>No translation available</em></p>
     {/if}
   </div>
+  
+  <SourcefileFooter 
+    {navigation}
+    {target_language_code}
+    {sourcedir_slug}
+    {sourcefile_slug}
+    view="translation"
+    contentRef={translationContentElement}
+    minContentHeight={500}
+  />
 </div>
 
 <style>

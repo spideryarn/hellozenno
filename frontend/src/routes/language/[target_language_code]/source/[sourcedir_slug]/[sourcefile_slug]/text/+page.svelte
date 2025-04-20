@@ -63,5 +63,8 @@
     text_english={sourcefile.text_english}
     recognized_words={recognizedWords}
     {target_language_code}
+    {navigation}
+    {sourcedir_slug}
+    {sourcefile_slug}
   />
 </SourcefileLayout> 

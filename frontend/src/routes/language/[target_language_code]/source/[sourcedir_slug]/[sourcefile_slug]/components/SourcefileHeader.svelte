@@ -13,11 +13,6 @@
   import { getPageUrl } from '$lib/navigation';
   import { onMount } from 'svelte';
   import { 
-    CaretDoubleLeft, 
-    CaretDoubleRight, 
-    CaretLeft, 
-    CaretRight, 
-    ArrowUp, 
     Trash, 
     Image, 
     Download,
@@ -27,6 +22,7 @@
     PencilSimple,
     FolderOpen
   } from 'phosphor-svelte';
+  import NavButtons from './NavButtons.svelte';
   import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
   import { page } from '$app/stores';
   import type { SupabaseClient } from '@supabase/supabase-js';
@@ -579,78 +575,12 @@
     
     <div class="section navigation-section">
       <div class="section-divider"></div>
-      <div class="navigation-buttons">
-        {#if navigation.is_first}
-          <span class="button disabled" title="First file">
-            <CaretDoubleLeft size={16} weight="bold" />
-          </span>
-        {:else if firstSourcefileUrl}
-          <a 
-            href={firstSourcefileUrl}
-            class="button"
-            data-sveltekit-reload
-            title="First file: '{navigation.first_filename || 'Unknown'}'"
-          >
-            <CaretDoubleLeft size={16} weight="bold" />
-          </a>
-        {/if}
-        
-        {#if navigation.is_first}
-          <span class="button disabled" title="Previous file">
-            <CaretLeft size={16} weight="bold" />
-          </span>
-        {:else if prevSourcefileUrl}
-          <a 
-            href={prevSourcefileUrl}
-            class="button"
-            data-sveltekit-reload
-            title="Previous file: '{navigation.prev_filename || 'Unknown'}'"
-          >
-            <CaretLeft size={16} weight="bold" />
-          </a>
-        {/if}
-        
-        <a 
-          href={sourcedirUrl}
-          class="button"
-          data-sveltekit-reload
-          title="Up to directory: '{navigation.sourcedir_path || sourcedir_slug}'"
-        >
-          <ArrowUp size={16} weight="bold" />
-        </a>
-        
-        {#if navigation.is_last}
-          <span class="button disabled" title="Next file">
-            <CaretRight size={16} weight="bold" />
-          </span>
-        {:else if nextSourcefileUrl}
-          <a 
-            href={nextSourcefileUrl}
-            class="button"
-            data-sveltekit-reload
-            title="Next file: '{navigation.next_filename || 'Unknown'}'"
-          >
-            <CaretRight size={16} weight="bold" />
-          </a>
-        {/if}
-
-        {#if navigation.is_last}
-          <span class="button disabled" title="Last file">
-            <CaretDoubleRight size={16} weight="bold" />
-          </span>
-        {:else if lastSourcefileUrl}
-          <a 
-            href={lastSourcefileUrl}
-            class="button"
-            data-sveltekit-reload
-            title="Last file: '{navigation.last_filename || 'Unknown'}'"
-          >
-            <CaretDoubleRight size={16} weight="bold" />
-          </a>
-        {/if}
-        
-        <span class="file-position">({navigation.current_position}/{navigation.total_files})</span>
-      </div>
+      <NavButtons 
+        {navigation}
+        {target_language_code}
+        {sourcedir_slug}
+        {sourcefile_slug}
+      />
     </div>
   </div>
 </div>

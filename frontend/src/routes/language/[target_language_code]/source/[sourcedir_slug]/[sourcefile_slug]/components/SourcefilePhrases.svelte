@@ -1,5 +1,7 @@
 <script lang="ts">
   import PhraseCard from '$lib/components/PhraseCard.svelte';
+  import SourcefileFooter from './SourcefileFooter.svelte';
+  import type { Navigation } from '$lib/types/sourcefile';
   
   interface Phrase {
     id: number;
@@ -11,9 +13,16 @@
   
   export let phrases: Phrase[] = [];
   export let target_language_code: string;
+  // Add navigation props for bottom navigation
+  export let navigation: Navigation = undefined as unknown as Navigation;
+  export let sourcedir_slug: string = '';
+  export let sourcefile_slug: string = '';
+  
+  // Reference to the container element for height measurement
+  let phrasesContainerElement: HTMLElement;
 </script>
 
-<div class="phrases-container">
+<div class="phrases-container" bind:this={phrasesContainerElement}>
   <h2>Phrases ({phrases.length})</h2>
   
   {#if phrases.length === 0}
@@ -31,6 +40,16 @@
         </div>
       {/each}
     </div>
+    
+    <SourcefileFooter 
+      {navigation}
+      {target_language_code}
+      {sourcedir_slug}
+      {sourcefile_slug}
+      view="phrases"
+      contentRef={phrasesContainerElement}
+      minContentHeight={500}
+    />
   {/if}
 </div>
 
@@ -68,4 +87,6 @@
     font-style: italic;
     margin-top: 1rem;
   }
+  
+  
 </style> 

@@ -22,3 +22,6 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL ||
 if (!API_BASE_URL) {
     throw new Error('API_BASE_URL is undefined. In production, check that VITE_API_URL is set in environment variables.');
 }
+
+export const SITE_NAME = "Hello Zenno";
+export const TAGLINE = "AI-powered dictionary & listening practice";

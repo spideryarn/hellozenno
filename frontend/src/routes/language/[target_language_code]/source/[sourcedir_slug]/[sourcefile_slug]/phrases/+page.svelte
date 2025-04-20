@@ -2,6 +2,7 @@
   import type { PageData } from './$types';
   import { PhraseCard } from '$lib';
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
+  import SourcefilePhrases from '../components/SourcefilePhrases.svelte';
   
   export let data: PageData;
   
@@ -34,24 +35,13 @@
   activeTab="phrases"
   {data}
 >
-  <h2>Phrases ({phrases.length})</h2>
-  
-  {#if phrases.length === 0}
-    <p class="no-content"><em>No phrases available for this file yet. Try processing the file first.</em></p>
-  {:else}
-    <div class="phrase-grid">
-      {#each phrases as phrase}
-        <div class={phrase.new_in_file ? 'new-phrase' : ''}>
-          <PhraseCard
-            phrase={phrase.phrase}
-            translations={phrase.translations}
-            slug={phrase.slug || phrase.phrase.replace(/\s+/g, '-')}
-            target_language_code={target_language_code}
-          />
-        </div>
-      {/each}
-    </div>
-  {/if}
+  <SourcefilePhrases
+    {phrases}
+    {target_language_code}
+    {navigation}
+    {sourcedir_slug}
+    {sourcefile_slug}
+  />
 </SourcefileLayout>
 
 <style>

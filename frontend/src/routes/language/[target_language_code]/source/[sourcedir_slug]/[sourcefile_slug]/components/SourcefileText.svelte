@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import type { Sourcefile } from '$lib/types/sourcefile';
+  import type { Sourcefile, Navigation } from '$lib/types/sourcefile';
   import EnhancedText from '$lib/components/EnhancedText.svelte';
+  import { getPageUrl } from '$lib/navigation';
+  import SourcefileFooter from './SourcefileFooter.svelte';
   
   export const sourcefile: Sourcefile = undefined as unknown as Sourcefile;
   export let enhanced_text: string | null = null;
@@ -19,12 +21,19 @@
   // VERY IMPORTANT: target_language_code is required by EnhancedText for generating API URLs
   // Previously named target_language_code, renamed for consistency with API
   export let target_language_code: string;
+  // Add navigation props for bottom navigation
+  export let navigation: Navigation = undefined as unknown as Navigation;
+  export let sourcedir_slug: string = '';
+  export let sourcefile_slug: string = '';
 
   // Debug flag - set to true to see what data is available
   const debug = import.meta.env.DEV && false;
   
   // Reference to the EnhancedText component instance
   let enhancedTextComponent: EnhancedText;
+  // Show bottom navigation only when text is long enough
+  let showBottomNav = false;
+  let textContentElement: HTMLElement;
   
   // Function to handle the processing complete event
   function handleProcessingComplete(event: CustomEvent) {
@@ -59,16 +68,68 @@
         setTimeout(() => {
           console.log('Manually refreshing tooltips after data update');
           enhancedTextComponent.refreshTooltips();
+          // Check if we need to show bottom navigation after content update
+          checkContentHeight();
         }, 200);
       }
     }
   }
+  
+  // Function to check if content is tall enough to warrant bottom navigation
+  function checkContentHeight() {
+    if (textContentElement) {
+      // Show bottom nav if content height is greater than 800px (arbitrary threshold - adjust as needed)
+      const threshold = 800;
+      showBottomNav = textContentElement.offsetHeight > threshold;
+    }
+  }
+  
+  // Generate navigation URLs using getPageUrl
+  $: sourcedirUrl = navigation && getPageUrl('sourcedir', {
+    target_language_code,
+    sourcedir_slug
+  });
+
+  // Prepare navigation URLs only if the corresponding slugs exist
+  $: firstSourcefileUrl = navigation?.first_slug ? 
+    getPageUrl('sourcefile_text', {
+      target_language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.first_slug
+    }) : undefined;
+    
+  $: prevSourcefileUrl = navigation?.prev_slug ? 
+    getPageUrl('sourcefile_text', {
+      target_language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.prev_slug
+    }) : undefined;
+    
+  $: nextSourcefileUrl = navigation?.next_slug ? 
+    getPageUrl('sourcefile_text', {
+      target_language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.next_slug
+    }) : undefined;
+    
+  $: lastSourcefileUrl = navigation?.last_slug ? 
+    getPageUrl('sourcefile_text', {
+      target_language_code,
+      sourcedir_slug,
+      sourcefile_slug: navigation.last_slug
+    }) : undefined;
   
   // Add and remove event listeners for the custom event
   onMount(() => {
     // Only run in browser environment, not during SSR
     if (typeof document !== 'undefined') {
       document.addEventListener('processingComplete', handleProcessingComplete as EventListener);
+      
+      // Check if we need to show bottom navigation based on content height
+      setTimeout(checkContentHeight, 500);
+      
+      // Add resize listener to handle window size changes
+      window.addEventListener('resize', checkContentHeight);
     }
   });
   
@@ -76,11 +137,12 @@
     // Only run in browser environment, not during SSR
     if (typeof document !== 'undefined') {
       document.removeEventListener('processingComplete', handleProcessingComplete as EventListener);
+      window.removeEventListener('resize', checkContentHeight);
     }
   });
 </script>
 
-<div class="text-content">
+<div class="text-content" bind:this={textContentElement}>
   <h2>Text</h2>
   
   {#if debug}
@@ -123,6 +185,15 @@
   {:else}
     <p class="no-content">No text available</p>
   {/if}
+  
+  <SourcefileFooter 
+    {navigation}
+    {target_language_code}
+    {sourcedir_slug}
+    {sourcefile_slug}
+    view="text"
+    contentRef={textContentElement}
+  />
 </div>
 
 <style>
@@ -151,6 +222,7 @@
     border-radius: 4px;
     font-family: monospace;
   }
+  
   
   /* Responsive styling for different screen sizes */
   @media (max-width: 768px) {

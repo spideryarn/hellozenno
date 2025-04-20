@@ -36,5 +36,9 @@
   <SourcefileTranslation 
     {sourcefile}
     text_english={sourcefile.text_english}
+    {navigation}
+    {target_language_code}
+    {sourcedir_slug}
+    {sourcefile_slug}
   />
 </SourcefileLayout> 

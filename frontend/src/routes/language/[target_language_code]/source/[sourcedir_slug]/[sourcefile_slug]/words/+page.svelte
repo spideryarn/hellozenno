@@ -2,6 +2,7 @@
   import type { PageData } from './$types';
   import { WordformCard } from '$lib';
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
+  import SourcefileWords from '../components/SourcefileWords.svelte';
   
   export let data: PageData;
   
@@ -34,25 +35,13 @@
   activeTab="words"
   {data}
 >
-  <h2>Words ({wordforms.length})</h2>
-  
-  {#if wordforms.length === 0}
-    <p class="no-content"><em>No words available for this file yet. Try processing the file first.</em></p>
-  {:else}
-    <div class="wordform-grid">
-      {#each wordforms as wordform}
-        <div class={wordform.new_in_file ? 'new-word' : ''}>
-          <WordformCard
-            wordform={wordform.wordform}
-            translations={wordform.translations}
-            part_of_speech={wordform.pos}
-            lemma={wordform.lemma}
-            target_language_code={target_language_code}
-          />
-        </div>
-      {/each}
-    </div>
-  {/if}
+  <SourcefileWords
+    {wordforms}
+    {target_language_code}
+    {navigation}
+    {sourcedir_slug}
+    {sourcefile_slug}
+  />
 </SourcefileLayout>
 
 <style>
