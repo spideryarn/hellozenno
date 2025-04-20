@@ -1,5 +1,5 @@
 from typing import TypedDict
-from flask import abort
+from flask import abort, g
 from peewee import DoesNotExist, prefetch
 import unicodedata
 from werkzeug.exceptions import NotFound
@@ -7,6 +7,7 @@ from werkzeug.exceptions import NotFound
 from db_models import Sourcedir, Sourcefile, SourcefileWordform, Wordform, Lemma
 from utils.lang_utils import get_language_name
 from utils.sourcefile_utils import _get_sourcefile_entry
+from .exceptions import AuthenticationRequiredForGenerationError
 
 
 class WordPreview(TypedDict):
@@ -98,9 +99,9 @@ def get_sourcedir_lemmas(target_language_code: str, sourcedir_slug: str) -> list
     simple_query = (
         Lemma.select(Lemma.lemma)
         .distinct()
-        .join(Wordform, on=(Wordform.lemma_entry == Lemma.id))
-        .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
-        .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
+        .join(Wordform, on=Wordform.lemma_entry)
+        .join(SourcefileWordform, on=SourcefileWordform.wordform)
+        .join(Sourcefile, on=SourcefileWordform.sourcefile)
         .where(
             (Lemma.target_language_code == target_language_code)
             & (Sourcefile.sourcedir == sourcedir)
@@ -138,8 +139,8 @@ def get_sourcefile_lemmas(
     simple_query = (
         Lemma.select(Lemma.lemma)
         .distinct()
-        .join(Wordform, on=(Wordform.lemma_entry == Lemma.id))
-        .join(SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id))
+        .join(Wordform, on=Wordform.lemma_entry)
+        .join(SourcefileWordform, on=SourcefileWordform.wordform)
         .where(
             (Lemma.target_language_code == target_language_code)
             & (SourcefileWordform.sourcefile == sourcefile)
@@ -249,7 +250,15 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
         result = get_wordform_metadata(target_language_code, wordform)
         return {"status": "found", "data": result}
     except DoesNotExist:
-        # If not found, use quick search to get metadata
+        # Wordform not found. Generation/AI search is needed.
+        # Check if user is logged in.
+        if not hasattr(g, "user") or g.user is None:
+            logger.warning(f"Auth required for wordform generation: '{wordform}'")
+            raise AuthenticationRequiredForGenerationError(
+                "Authentication required to search for or generate wordform details."
+            )
+
+        # User is logged in, proceed with AI search/generation
         logger.info(f"Wordform '{wordform}' not found, generating with AI...")
         search_result, _ = quick_search_for_wordform(wordform, target_language_code, 1)
 

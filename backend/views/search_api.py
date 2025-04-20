@@ -10,6 +10,10 @@ from utils.search_utils import prepare_search_landing_data, get_wordform_redirec
 from utils.word_utils import find_or_create_wordform
 from utils.lang_utils import get_language_name
 
+# Import auth decorator and exception
+from utils.auth_utils import api_auth_optional
+from utils.exceptions import AuthenticationRequiredForGenerationError
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -48,6 +52,7 @@ def search_word_api(target_language_code: str, wordform: str):
 
 
 @search_api_bp.route("/<target_language_code>/unified_search")
+@api_auth_optional  # Auth is needed if wordform generation is triggered
 def unified_search_api(target_language_code: str):
     """
     Unified search endpoint that handles all search cases in one response.
@@ -88,6 +93,7 @@ def unified_search_api(target_language_code: str):
     try:
         # Use the existing find_or_create_wordform function
         # This handles all the complex search logic and fallbacks
+        # It may raise AuthenticationRequiredForGenerationError
         result = find_or_create_wordform(target_language_code, query)
 
         # Build a consistent response structure
@@ -100,6 +106,18 @@ def unified_search_api(target_language_code: str):
         }
 
         return jsonify(response)
+    except AuthenticationRequiredForGenerationError:
+        # Handle the case where generation requires login
+        error_response = {
+            "status": "authentication_required",
+            "query": query,
+            "target_language_code": target_language_code,
+            "target_language_name": get_language_name(target_language_code),
+            "error": "Authentication required to search for or generate wordform details",
+            "authentication_required_for_generation": True,
+            "data": {},
+        }
+        return jsonify(error_response), 401
     except Exception as e:
         # Log and return a clear error message
         logger.exception(f"Error in unified search: {e}")

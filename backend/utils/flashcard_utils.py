@@ -7,7 +7,7 @@ from peewee import DoesNotExist
 from db_models import Sourcedir, Sourcefile, SourcefileWordform, Sentence
 from utils.lang_utils import get_language_name
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
-from utils.audio_utils import ensure_model_audio_data
+from utils.audio_utils import ensure_model_audio_data, get_or_create_sentence_audio
 from utils.sentence_utils import get_random_sentence
 from flask import url_for
 
@@ -114,20 +114,18 @@ def get_flashcard_sentence_data(
     # Default audio status flag
     audio_requires_login = False
 
-    # Pre-generate audio if needed
-    if not sentence.audio_data:
-        try:
-            ensure_model_audio_data(
-                model=sentence,
-                should_add_delays=True,
-                verbose=1,
-            )
-        except AuthenticationRequiredForGenerationError:
-            # Set flag if audio generation requires login
-            audio_requires_login = True
-        except Exception as e:
-            # Log other errors but continue - audio can be generated on demand
-            print(f"Error pre-generating audio: {e}")
+    # Attempt to get or generate audio using the new utility
+    try:
+        audio_data, audio_requires_login = get_or_create_sentence_audio(
+            sentence_model=sentence, should_add_delays=True, verbose=1
+        )
+    except Exception as e:
+        # Log audio generation errors but continue, as audio can be generated on demand
+        print(f"Error getting/generating audio for Sentence {sentence.id}: {e}")
+        # If an unexpected error occurred (not AuthenticationRequired),
+        # audio_requires_login remains False, but audio_data will be None
+        # The frontend should handle the case where audio_url is present but audio fails to load.
+        audio_data = None  # Ensure audio_data is None if there was an error
 
     sourcefile_entry = None
     sourcedir_entry = None
@@ -164,11 +162,15 @@ def get_flashcard_sentence_data(
         "text": sentence.sentence,
         "translation": sentence.translation,
         "lemma_words": sentence.lemma_words,
-        "audio_url": url_for(
-            "sentence_api.get_sentence_audio_api",
-            target_language_code=target_language_code,
-            sentence_id=sentence.id,
-        ),
+        "audio_url": (
+            url_for(
+                "sentence_api.get_sentence_audio_api",
+                target_language_code=target_language_code,
+                sentence_id=sentence.id,
+            )
+            if audio_data
+            else None
+        ),  # Only provide URL if audio data exists or could be generated
         "audio_requires_login": audio_requires_login,
         "metadata": {
             "target_language_code": target_language_code,

@@ -10,6 +10,8 @@ from utils.flashcard_utils import (
 )
 from views.flashcard_views import flashcard_views_bp
 
+# Import auth decorator
+from utils.auth_utils import api_auth_optional
 
 from flask import jsonify, request, url_for, Blueprint
 from peewee import DoesNotExist
@@ -21,6 +23,7 @@ flashcard_api_bp = Blueprint("flashcard_api", __name__, url_prefix="/api/lang")
 @flashcard_api_bp.route(
     "/<target_language_code>/flashcards/sentence/<slug>", methods=["GET"]
 )
+@api_auth_optional  # Auth is optional here
 def flashcard_sentence_api(target_language_code: str, slug: str):
     """JSON API endpoint for a specific sentence."""
     sourcefile_slug = request.args.get("sourcefile")

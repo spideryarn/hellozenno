@@ -191,6 +191,58 @@ def ensure_audio_data(
         return audio_data
 
 
+def get_or_create_sentence_audio(
+    sentence_model,
+    should_add_delays: bool = True,
+    should_play: bool = False,
+    verbose: int = 0,
+) -> tuple[Optional[bytes], bool]:
+    """Get or create audio for a Sentence, checking auth for creation.
+
+    Args:
+        sentence_model: Sentence instance
+        should_add_delays: Whether to add delays between sentences
+        should_play: Whether to play the audio
+        verbose: Verbosity level
+
+    Returns:
+        tuple: (audio_data, requires_login)
+               audio_data is None and requires_login is True if generation is needed but user is not logged in.
+    """
+    if sentence_model.audio_data:
+        return sentence_model.audio_data, False  # Audio exists, no login required
+
+    # Generation is needed
+    if not hasattr(g, "user") or g.user is None:
+        # No user logged in, cannot generate
+        if verbose >= 1:
+            print(
+                f"Skipping audio generation for Sentence {sentence_model.id}: User not logged in."
+            )
+        return None, True  # Indicate login is required
+
+    # User is logged in, proceed with generation
+    if verbose >= 1:
+        print(f"Generating audio for Sentence: {sentence_model.id}")
+
+    if not sentence_model.sentence:
+        raise ValueError("No text available for audio generation")
+
+    # Generate audio
+    audio_data = ensure_audio_data(
+        text=sentence_model.sentence,
+        should_add_delays=should_add_delays,
+        should_play=should_play,
+        verbose=verbose,
+    )
+
+    # Save audio data to the model
+    sentence_model.audio_data = audio_data
+    sentence_model.save()
+
+    return audio_data, False  # Audio generated, no login required now
+
+
 def ensure_model_audio_data(
     model: Union["Sentence", "Sourcefile"],  # type: ignore
     should_add_delays: bool = True,
@@ -207,24 +259,60 @@ def ensure_model_audio_data(
 
     Raises:
         AuthenticationRequiredForGenerationError: If generation needed for a Sentence and user is not logged in.
+        -> THIS IS NOW HANDLED BY get_or_create_sentence_audio for Sentences
     """
     if not model.audio_data:
-        if not hasattr(g, "user") or g.user is None:
-            raise AuthenticationRequiredForGenerationError(
-                "User must be logged in to generate audio."
+        # Generation is required. Check if it's a Sentence and call the new function.
+        # For Sourcefile, assume auth is handled upstream (e.g., by @api_auth_required)
+        if hasattr(model, "sentence"):  # Check if it's a Sentence model
+            audio_data, requires_login = get_or_create_sentence_audio(
+                sentence_model=model,
+                should_add_delays=should_add_delays,
+                should_play=should_play,
+                verbose=verbose,
             )
+            if requires_login:
+                # This case should ideally not be hit if calling this function directly,
+                # as it implies auth wasn't checked. Log a warning.
+                print(
+                    f"Warning: ensure_model_audio_data called for Sentence {model.id} without prior auth check."
+                )
+                # We can't raise AuthenticationRequiredForGenerationError here as the function signature is void
+                # The calling context needs to handle the requires_login flag if using get_or_create_sentence_audio
+                return  # Stop processing if login is required
+            # If audio_data is None and requires_login is False, something went wrong in generation
+            if audio_data is None and not requires_login:
+                print(
+                    f"Warning: Audio generation failed for Sentence {model.id} even with auth."
+                )
+                return  # Stop processing
+            # Audio was successfully generated (or existed already indirectly), model is saved inside get_or_create
+            return
 
-        print(f"Generating audio for {model.__class__.__name__}: {model.id}")
-        # Get text based on model type
-        text = model.sentence if hasattr(model, "sentence") else model.text_target
-        if not text:
-            raise ValueError("No text available for audio generation")
+        # If it's not a Sentence (e.g., Sourcefile), proceed with original logic
+        # Assume auth is handled by the calling endpoint decorator (@api_auth_required)
+        else:
+            if not hasattr(g, "user") or g.user is None:
+                # This shouldn't happen if the calling endpoint uses @api_auth_required
+                print(
+                    f"Warning: ensure_model_audio_data called for non-Sentence model without user context."
+                )
+                # Raise an error or just return, depending on desired strictness
+                raise Exception(
+                    "Auth context missing for non-Sentence audio generation"
+                )
 
-        # Generate audio
-        model.audio_data = ensure_audio_data(
-            text=text,
-            should_add_delays=should_add_delays,
-            should_play=should_play,
-            verbose=verbose,
-        )
-        model.save()
+            print(f"Generating audio for {model.__class__.__name__}: {model.id}")
+            # Get text based on model type
+            text = model.sentence if hasattr(model, "sentence") else model.text_target
+            if not text:
+                raise ValueError("No text available for audio generation")
+
+            # Generate audio
+            model.audio_data = ensure_audio_data(
+                text=text,
+                should_add_delays=should_add_delays,
+                should_play=should_play,
+                verbose=verbose,
+            )
+            model.save()

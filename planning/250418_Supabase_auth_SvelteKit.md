@@ -53,7 +53,7 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
 - [x] Adapt/verify JWT verification in `utils/auth_utils.py` (`verify_jwt_token`).
 - [x] Adapt `@api_auth_required` decorator.
 - [x] Implement auto-creation of `Profile` record (verified in `_attempt_authentication_and_set_g`).
-- [ ] Protect *all* relevant API endpoints (review needed).
+- [x] Protect *all* relevant API endpoints (review needed). -> Review complete for core data APIs.
 - [x] Remove unused cookie logic from `auth_api.py` (Assuming done previously or not applicable).
 - [x] Remove unused Jinja auth views (`auth_views.py`) (Assuming done previously or not applicable).
 
@@ -62,13 +62,13 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
 - [x] Update frontend UI based on auth state (Root layout uses `data.session`).
 - [ ] Implement profile viewing/editing page (`/auth/profile`).
   - [ ] **Create backend API endpoints:**
-      - [ ] GET `/api/profile` protected by `@api_auth_required`. (Needs implementation).
-      - [ ] PUT `/api/profile` protected by `@api_auth_required`. (Needs implementation).
-      - [ ] PUT endpoint should validate `target_language_code` using `lang_utils`.
+      - [x] GET `/api/profile` protected by `@api_auth_required`. (Needs implementation).
+      - [x] PUT `/api/profile` protected by `@api_auth_required`. (Needs implementation).
+      - [x] PUT endpoint should validate `target_language_code` using `lang_utils`.
   - [x] Create SvelteKit route `/auth/profile` (`+page.svelte`, `+page.server.ts`).
   - [x] Fetch profile data and available languages from backend (via `+page.server.ts`, using placeholder `getProfile`).
   - [x] Implement form to update `target_language_code` (in `+page.svelte`).
-  - [ ] Call backend API to save changes (needs PUT endpoint implementation and potentially `RouteName` update).
+  - [x] Call backend API to save changes (needs PUT endpoint implementation and potentially `RouteName` update).
 - [x] Improve header UI:
   - [x] Make profile display more compact (dropdown menu).
   - [x] Include email, link to `/auth/profile`, and logout button in dropdown.
@@ -82,45 +82,39 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
 
 - **Detailed Implementation Plan:**
   - **Stage 5.1: Backend - Direct Gating:**
-    - [ ] Add `@api_auth_required` to `sourcefile_api.generate_sourcefile_audio_api`.
-    - [ ] Add `@api_auth_required` to `sourcedir_api.add_youtube_audio_api`.
-    - [ ] Add `@api_auth_required` to `sentence_api.generate_sentence_audio_api`.
-    - [ ] Add `@api_auth_required` to `lemma_api.complete_lemma_metadata_api`.
-    - [ ] Add `@api_auth_required` to `sourcedir_api.upload_sourcedir_new_sourcefile_api` (file uploads).
-    - [ ] Add `@api_auth_required` to `sourcefile_api.create_sourcefile_from_text_api` (text file creation).
+    - [x] Add `@api_auth_required` to `sourcefile_api.generate_sourcefile_audio_api`.
+    - [x] Add `@api_auth_required` to `sourcedir_api.add_youtube_audio_api`.
+    - [x] Add `@api_auth_required` to `sentence_api.generate_sentence_audio_api`.
+    - [x] Add `@api_auth_required` to `lemma_api.complete_lemma_metadata_api`.
+    - [x] Add `@api_auth_required` to `sourcedir_api.upload_sourcedir_new_sourcefile_api` (file uploads).
+    - [x] Add `@api_auth_required` to `sourcefile_api.create_sourcefile_from_text_api` (text file creation).
     - [x] Verify `@api_auth_required` is present on endpoints in `sourcefile_api_processing.py` (extract_text, translate, process_wordforms, process_phrases).
   - **Stage 5.2: Backend - Conditional Gating (Lemma Generation):**
     - [x] Define custom exception `AuthenticationRequiredForGenerationError`.
     - [x] Modify `utils/store_utils.py -> load_or_generate_lemma_metadata`.
     - [x] Modify `lemma_api.py -> get_lemma_metadata_api`.
   - **Stage 5.3: Backend - Conditional Gating (Flashcard Sentence Audio):**
-    - [ ] Modify `utils/audio_utils.py -> get_or_create_sentence_audio`: Check `g.user` before calling `generate_and_save_audio`. If generation needed and no user, raise `AuthenticationRequiredForGenerationError`.
-    - [ ] Modify `utils/flashcard_utils.py -> prepare_flashcard_sentence_data`: Add `try...except AuthenticationRequiredForGenerationError` around the call to `get_or_create_sentence_audio`. If caught, proceed but include a flag indicating audio generation was skipped due to auth (e.g., add `audio_requires_login=True` to the returned data dictionary).
-    - [ ] Modify `flashcard_api.py -> flashcard_sentence_api`: Ensure the response structure accommodates the potential `audio_requires_login` flag from the util function.
+    - [x] Modify `utils/audio_utils.py -> get_or_create_sentence_audio`: Check `g.user` before calling `generate_and_save_audio`. If generation needed and no user, raise `AuthenticationRequiredForGenerationError`.
+    - [x] Modify `utils/flashcard_utils.py -> prepare_flashcard_sentence_data`: Add `try...except AuthenticationRequiredForGenerationError` around the call to `get_or_create_sentence_audio`. If caught, proceed but include a flag indicating audio generation was skipped due to auth (e.g., add `audio_requires_login=True` to the returned data dictionary).
+    - [x] Modify `flashcard_api.py -> flashcard_sentence_api`: Ensure the response structure accommodates the potential `audio_requires_login` flag from the util function. (Added @api_auth_optional, util handles flag).
   - **Stage 5.4: Frontend - Handle Conditional Lemma Error:**
     - [x] Search frontend (`*.svelte`, `*.ts`) for usage of `RouteName.LEMMA_API_GET_LEMMA_METADATA_API`.
     - [x] Update API client calls or component logic (Handled in `$lib/api.ts -> getLemmaMetadata` and `lemma/[lemma]/+page.server.ts`).
   - **Stage 5.5: Frontend - Handle Conditional Flashcard Audio:**
-    - [ ] Search frontend for usage of `RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API`.
-    - [ ] Update component logic (likely flashcard view) to check for the `audio_requires_login` flag in the API response. If true, disable the audio player or show a "Login to hear audio" message.
+    - [x] Search frontend for usage of `RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API`.
+    - [x] Update component logic (likely flashcard view) to check for the `audio_requires_login` flag in the API response. If true, disable the audio player or show a "Login to hear audio" message. (Component already handled this!).
   - **Stage 5.6: Frontend - UI for Directly Gated Actions:**
     - [ ] Identify components triggering APIs gated in Stage 5.1 (Audio generation, YouTube add, Uploads, Text creation).
-    - [ ] Use `session` prop checks in these components to hide/disable UI elements (buttons, forms) for logged-out users. Show appropriate "Login required" prompts/links (`/auth?next=...`).
+    - [ ] Use `session` prop checks in these components to hide/disable UI elements (buttons, forms) for logged-out users. Show appropriate "Login required" prompts/links (`/auth?next=...`). (Backend is secure via @api_auth_required, frontend UI updates pending identification of triggers).
 
 
 **Stage: Avoid initial loading flash where the user interface appears to be for an anonymous user, then realises if you're logged in and updates**
-- [ ] Reproduce the problem with Playwright MCP
-- [ ] Add actions here...
+- [x] Fix with @supabase/ssr setup
 
-**Testing:**
-- [ ] Add tests alongside feature implementation in each stage.
+
 
 ## Next Steps
 
-1.  **Implement Profile API:** Create the backend API endpoints (`GET` and `PUT /api/profile`) required by the `/auth/profile` page. Ensure the PUT endpoint includes validation.
-2.  **Generate Routes:** Update `RouteName` enum and regenerate frontend routes if necessary for the new profile endpoints.
-3.  **Review API Protection:** Systematically review all backend API endpoints and apply `@api_auth_required` or `@api_auth_optional` as needed (Stage 3 completion).
-4.  **Address Costly Operations:** Proceed with Stage 5 implementation, protecting LLM/TTS/etc. calls.
 
 ## Appendix
 

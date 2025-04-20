@@ -13,6 +13,12 @@ from db_models import Wordform
 from utils.word_utils import get_word_preview, get_wordform_metadata
 from utils.lang_utils import get_language_name
 
+# Import auth decorator
+from utils.auth_utils import api_auth_optional
+
+# Import exception
+from utils.exceptions import AuthenticationRequiredForGenerationError
+
 # Create a blueprint with standardized prefix
 wordform_api_bp = Blueprint("wordform_api", __name__, url_prefix="/api/lang/word")
 
@@ -67,6 +73,7 @@ def wordforms_list_api(target_language_code: str):
 
 
 @wordform_api_bp.route("/<target_language_code>/wordform/<wordform>")
+@api_auth_optional  # Generation might be needed, so check auth
 def get_wordform_metadata_api(target_language_code: str, wordform: str):
     """Get metadata for a wordform and its lemma.
 
@@ -88,21 +95,40 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
     logger.info(
         f"API request for wordform '{wordform}' in language '{target_language_code}'"
     )
-    result = find_or_create_wordform(target_language_code, wordform)
-    logger.info(f"Wordform processing complete with status: {result['status']}")
+    try:
+        result = find_or_create_wordform(target_language_code, wordform)
+        logger.info(f"Wordform processing complete with status: {result['status']}")
 
-    # Handle different status responses
-    if result["status"] == "found":
-        # For both existing and newly created wordforms
-        return jsonify(result["data"])
-    elif result["status"] == "multiple_matches":
-        # For multiple potential matches
-        return jsonify(result["data"])
-    elif result["status"] == "redirect":
-        # Only used as a fallback now
-        return jsonify(result["data"])
-    else:  # invalid
-        # For invalid wordforms
-        response = jsonify(result["data"])
-        response.status_code = 404
-        return response
+        # Handle different status responses
+        if result["status"] == "found":
+            # For both existing and newly created wordforms
+            return jsonify(result["data"])
+        elif result["status"] == "multiple_matches":
+            # For multiple potential matches
+            return jsonify(result["data"])
+        elif result["status"] == "redirect":
+            # Only used as a fallback now
+            return jsonify(result["data"])
+        else:  # invalid
+            # For invalid wordforms
+            response = jsonify(result["data"])
+            response.status_code = 404
+            return response
+
+    except AuthenticationRequiredForGenerationError:
+        # Handle the case where generation requires login
+        error_data = {
+            "error": "Authentication Required",
+            "description": "Authentication required to search for or generate wordform details",
+            "target_language_code": target_language_code,
+            "target_language_name": get_language_name(target_language_code),
+            "authentication_required_for_generation": True,  # Add a flag for frontend
+            "wordform": wordform,  # Include the original wordform searched
+        }
+        return jsonify(error_data), 401
+    except Exception as e:
+        logger.exception(f"Error getting wordform metadata for '{wordform}': {e}")
+        return (
+            jsonify({"error": "Failed to process wordform", "description": str(e)}),
+            500,
+        )
