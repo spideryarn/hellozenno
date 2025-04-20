@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { PageData } from './$types';  
-  import { Card, MetadataCard } from '$lib';
+  import { Card, MetadataCard, LemmaDetails } from '$lib';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { SITE_NAME } from '$lib/config';
   import { truncate, generateMetaDescription } from '$lib/utils';
+  import { page } from '$app/stores'; // To access auth session
   
   export let data: PageData;
   const { wordformData } = data;
@@ -18,6 +19,9 @@
   $: target_language_code = isValidData ? wordformData.target_language_code : '';
   $: target_language_name = isValidData ? wordformData.target_language_name : '';
   $: metadata = isValidData ? wordformData.metadata : null;
+  
+  // Access session from the page store
+  $: session = $page.data.session;
   
   // Generate API URL for delete action only if we have valid data
   $: deleteUrl = isValidData ? getApiUrl(RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW, {
@@ -132,29 +136,27 @@
       </div>
       
       <div class="col-md-6">
-        {#if lemma_metadata && Object.keys(lemma_metadata).length > 0}
-          <Card title="Dictionary Form Information">
-            <div class="text-center mb-3">
-              <a href="/language/{target_language_code}/lemma/{lemma_metadata.lemma}" 
-                class="btn btn-lg btn-primary hz-foreign-text fw-bold">
-                {lemma_metadata.lemma}
-              </a>
-            </div>
-            
-            {#if wordform_metadata.possible_misspellings && wordform_metadata.possible_misspellings.length > 0}
-              <div class="possible-misspellings mb-3">
-                <p><strong>Possible Corrections:</strong></p>
-                <ul class="list-group">
-                  {#each wordform_metadata.possible_misspellings as misspelling}
-                    <li class="list-group-item hz-foreign-text">{misspelling}</li>
-                  {/each}
-                </ul>
-              </div>
-            {/if}
+        <!-- Show possible misspellings if they exist -->
+        {#if wordform_metadata && wordform_metadata.possible_misspellings && wordform_metadata.possible_misspellings.length > 0}
+          <Card title="Possible Corrections" className="mb-4">
+            <ul class="list-group">
+              {#each wordform_metadata.possible_misspellings as misspelling}
+                <li class="list-group-item hz-foreign-text">{misspelling}</li>
+              {/each}
+            </ul>
           </Card>
         {/if}
       </div>
     </div>
+    
+    <!-- Lemma details shown below the wordform details -->
+    {#if lemma_metadata}
+      <LemmaDetails 
+        lemma_metadata={lemma_metadata} 
+        {target_language_code}
+        {session}
+      />
+    {/if}
   {/if}
 </div>
 

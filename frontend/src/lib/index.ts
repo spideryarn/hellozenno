@@ -6,6 +6,8 @@ export { default as Sentence } from "./components/Sentence.svelte";
 export { default as SourceItem } from "./components/SourceItem.svelte";
 export { default as WordformCard } from "./components/WordformCard.svelte";
 export { default as LemmaCard } from "./components/LemmaCard.svelte";
+export { default as LemmaContent } from "./components/LemmaContent.svelte";
+export { default as LemmaDetails } from "./components/LemmaDetails.svelte";
 export { default as MetadataCard } from "./components/MetadataCard.svelte";
 export { default as PhraseCard } from "./components/PhraseCard.svelte";
 export { default as SentenceCard } from "./components/SentenceCard.svelte";
