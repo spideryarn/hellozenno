@@ -11,7 +11,7 @@ from utils.word_utils import find_or_create_wordform
 from utils.lang_utils import get_language_name
 
 # Import auth decorator and exception
-from utils.auth_utils import api_auth_optional
+from utils.auth_utils import api_auth_optional, api_auth_required
 from utils.exceptions import AuthenticationRequiredForGenerationError
 
 # Configure logging
@@ -52,7 +52,7 @@ def search_word_api(target_language_code: str, wordform: str):
 
 
 @search_api_bp.route("/<target_language_code>/unified_search")
-@api_auth_optional  # Auth is needed if wordform generation is triggered
+@api_auth_required  # Changed from optional to required to enforce authentication
 def unified_search_api(target_language_code: str):
     """
     Unified search endpoint that handles all search cases in one response.

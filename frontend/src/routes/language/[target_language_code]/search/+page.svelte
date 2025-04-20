@@ -46,6 +46,13 @@
   // This is a client-side search function to be used only when needed
   // (like when the user navigates directly to the page with a query parameter)
   async function handleClientSearch(searchQuery: string) {
+    // If not logged in, redirect to auth page immediately
+    if (!data.session) {
+      const nextUrl = `${$page.url.pathname}${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`;
+      goto(`/auth?next=${encodeURIComponent(nextUrl)}`);
+      return;
+    }
+    
     loading = true;
     
     try {
@@ -65,8 +72,16 @@
           goto(`/language/${data.target_language_code}/wordform/${encodeURIComponent(wordform)}`);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Client-side search error:', error);
+      
+      // Check if this is an authentication error (401)
+      if (error.status === 401) {
+        const nextUrl = `${$page.url.pathname}${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`;
+        goto(`/auth?next=${encodeURIComponent(nextUrl)}`);
+        return;
+      }
+      
       result = {
         status: 'error',
         query: searchQuery,
@@ -89,6 +104,13 @@
         target_language_name: data.langName,
         data: {}
       };
+      return;
+    }
+    
+    // If not logged in, redirect to auth page with this page as the next URL
+    if (!data.session) {
+      const nextUrl = `${$page.url.pathname}?q=${encodeURIComponent(query)}`;
+      goto(`/auth?next=${encodeURIComponent(nextUrl)}`);
       return;
     }
     
@@ -159,9 +181,18 @@
       >
         <ClipboardText size={16} />
       </button>
-      <button type="submit" class="btn btn-primary" disabled={loading}>
-        {loading ? 'Searching...' : 'Search'}
-      </button>
+      
+      <!-- Show login button for anonymous users, search button for logged in users -->
+      {#if data.session}
+        <button type="submit" class="btn btn-primary" disabled={loading}>
+          {loading ? 'Searching...' : 'Search'}
+        </button>
+      {:else}
+        <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}${query ? `?q=${encodeURIComponent(query)}` : ''}`} 
+           class="btn btn-primary">
+          Login to Search
+        </a>
+      {/if}
     </div>
   </form>
   
@@ -184,6 +215,13 @@
               <li>English words to find {data.langName || 'foreign language'} translations</li>
               <li>Word forms and dictionary forms (lemmas)</li>
             </ul>
+            
+            {#if !data.session}
+              <div class="alert alert-info mt-3">
+                <strong>Authentication Required</strong>
+                <p class="mb-0">You need to be logged in to use the search feature. This helps us manage AI usage costs.</p>
+              </div>
+            {/if}
           </div>
         </div>
       

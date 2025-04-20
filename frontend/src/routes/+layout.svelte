@@ -1,6 +1,6 @@
 <script lang="ts">
   // Import necessary functions and stores
-  import { onMount } from 'svelte';
+  import { onMount, setContext } from 'svelte';
   import { invalidateAll } from '$app/navigation'; // Use invalidateAll for simplicity
   import { page } from '$app/stores'; 
   import type { LayoutData } from './$types'; // Import the type for LayoutData
@@ -9,6 +9,11 @@
   // Get data passed from +layout.ts
   export let data: LayoutData;
   $: ({ supabase, session } = data); // Destructure supabase and session reactively
+  
+  // Set Supabase client in context for child components to access
+  $: if (supabase) {
+    setContext('supabase', supabase);
+  }
 
   // Handle auth state changes on the client
   onMount(() => {
