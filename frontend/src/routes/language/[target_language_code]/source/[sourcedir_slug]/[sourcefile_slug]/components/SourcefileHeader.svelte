@@ -29,6 +29,7 @@
   } from 'phosphor-svelte';
   import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
   import { page } from '$app/stores';
+  import type { SupabaseClient } from '@supabase/supabase-js';
   
   export let sourcefile: Sourcefile;
   export const sourcedir: Sourcedir = undefined as unknown as Sourcedir;
@@ -39,7 +40,12 @@
   export let sourcedir_slug: string;
   export let sourcefile_slug: string;
   export let available_sourcedirs: any[] = [];
-  export let data: any; // Add data prop to receive layout data
+  export let data: {
+    supabase?: SupabaseClient;
+    session?: any;
+    user?: any;
+    [key: string]: any;
+  }; // Add data prop to receive layout data including supabase client
   
   // Variables for sourcedir dropdown
   let moveError = '';
@@ -69,8 +75,11 @@
   onMount(() => {
     // Make sure sourcefile and its type are available and NOT youtube_audio
     if (sourcefile && sourcefile.sourcefile_type && sourcefile.sourcefile_type !== 'youtube_audio') {
-       processingQueue = new SourcefileProcessingQueue(
-        null, // Pass null for supabase client as it's not available on the client
+      // Get supabase client from the client-side data
+      const supabaseClient = data.supabase;
+      
+      processingQueue = new SourcefileProcessingQueue(
+        supabaseClient, // Pass the supabase client from data
         target_language_code,
         sourcedir_slug,
         sourcefile_slug,
@@ -547,7 +556,8 @@
           </button>
         </div>
         {#if $processingState.error}
-          <span class="error-message">{$processingState.error}</span>
+          <!-- Use {@html} to allow rendered HTML links in error messages -->
+          <span class="error-message">{@html $processingState.error}</span>
         {/if}
       {:else}
         <div class="process-controls login-prompt">

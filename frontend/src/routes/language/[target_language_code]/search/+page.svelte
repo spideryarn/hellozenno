@@ -5,8 +5,12 @@
   import type { SearchResult } from '$lib/types';
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
+  import { getContext } from 'svelte';
+  import type { SupabaseClient } from '@supabase/supabase-js';
   
   export let data: PageData;
+  // Get supabase client from context if available
+  const supabase = getContext<SupabaseClient>('supabase');
   
   let query = data.query || '';
   let result: SearchResult | null = data.initialResult || null;
@@ -22,7 +26,7 @@
     
     // If we have a query parameter but no valid search result, perform the search
     if (urlQuery && (!result || result.status === 'empty_query')) {
-      handleSearch();
+      handleClientSearch(urlQuery);
     }
     
     // If no query and no result, show empty state
@@ -37,6 +41,43 @@
     }
   });
   
+  // This is a client-side search function to be used only when needed
+  // (like when the user navigates directly to the page with a query parameter)
+  async function handleClientSearch(searchQuery: string) {
+    loading = true;
+    
+    try {
+      // Use the supabase client from context if available
+      result = await unifiedSearch(supabase, data.target_language_code, searchQuery);
+      
+      // Handle direct navigation for single matches
+      if (result.status === 'redirect') {
+        goto(`/language/${data.target_language_code}/wordform/${result.data.redirect_to}`);
+      } else if (result.status === 'found') {
+        const wordform = result.data.wordform_metadata.wordform;
+        const lemma = result.data.wordform_metadata.lemma;
+        
+        if (wordform === lemma) {
+          goto(`/language/${data.target_language_code}/lemma/${encodeURIComponent(lemma)}`);
+        } else {
+          goto(`/language/${data.target_language_code}/wordform/${encodeURIComponent(wordform)}`);
+        }
+      }
+    } catch (error) {
+      console.error('Client-side search error:', error);
+      result = {
+        status: 'error',
+        query: searchQuery,
+        target_language_code: data.target_language_code,
+        target_language_name: data.langName,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        data: {}
+      };
+    } finally {
+      loading = false;
+    }
+  }
+  
   async function handleSearch() {
     if (!query.trim()) {
       result = {
@@ -49,34 +90,10 @@
       return;
     }
     
-    loading = true;
-    
-    // Immediately perform the search without updating the URL first
-    result = await unifiedSearch(data.target_language_code, query);
-    
-    // Handle direct navigation for single matches without showing the search results first
-    if (result.status === 'redirect') {
-      // Go directly to the wordform page for redirect status
-      goto(`/language/${data.target_language_code}/wordform/${result.data.redirect_to}`);
-    } else if (result.status === 'found') {
-      // For exact matches, go directly to the appropriate page
-      const wordform = result.data.wordform_metadata.wordform;
-      const lemma = result.data.wordform_metadata.lemma;
-      
-      if (wordform === lemma) {
-        goto(`/language/${data.target_language_code}/lemma/${encodeURIComponent(lemma)}`);
-      } else {
-        goto(`/language/${data.target_language_code}/wordform/${encodeURIComponent(wordform)}`);
-      }
-    } else {
-      // For other statuses (multiple_matches, invalid, etc.), update URL and show results
-      goto(`/language/${data.target_language_code}/search?q=${encodeURIComponent(query)}`, { 
-        replaceState: true,
-        keepFocus: true,
-        noScroll: true
-      });
-      loading = false;
-    }
+    // Update the URL to include the query parameter
+    // This will trigger a server-side load with the query parameter
+    // The server-side load already has access to the session via locals
+    goto(`/language/${data.target_language_code}/search?q=${encodeURIComponent(query)}`);
   }
 </script>
 

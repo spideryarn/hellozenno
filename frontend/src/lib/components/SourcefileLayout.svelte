@@ -83,7 +83,7 @@
     {sourcedir_slug}
     {sourcefile_slug}
     {available_sourcedirs}
-    {data}
+    data={{ ...data, session: data.session, supabase: data.supabase }}
   />
   
   <NavTabs {tabs} />

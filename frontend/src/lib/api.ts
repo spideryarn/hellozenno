@@ -57,18 +57,20 @@ export async function apiFetch<T extends RouteName, R = any>({
     const url = getApiUrl(routeName, params);
     
     // Use the passed supabaseClient. It might be null or undefined.
-    const clientToUse = supabaseClient; 
     const headers = new Headers(options.headers);
-    let accessToken: string | null = null;
-
+    
     // Only try to get session if we have a non-null client instance
-    if (clientToUse) { 
-      const { data: { session } } = await clientToUse.auth.getSession();
-      accessToken = session?.access_token ?? null;
-    }
-
-    if (accessToken) {
-        headers.set('Authorization', `Bearer ${accessToken}`);
+    if (supabaseClient) {
+      try {
+        const { data } = await supabaseClient.auth.getSession();
+        const session = data.session;
+        if (session?.access_token) {
+          headers.set('Authorization', `Bearer ${session.access_token}`);
+        }
+      } catch (sessionError) {
+        console.warn('Error getting session:', sessionError);
+        // Continue without auth token
+      }
     }
     // Ensure Content-Type is set if not already present (optional, good practice for POST/PUT)
     // if (!headers.has('Content-Type') && (options.method === 'POST' || options.method === 'PUT')) {
@@ -262,18 +264,20 @@ export async function unifiedSearch(
         // unified_search might not be in RouteName, construct URL manually
         const url = `${API_BASE_URL}/api/lang/${langCode}/unified_search?q=${encodeURIComponent(query)}`;
         
-        // Directly use apiFetch logic for this custom endpoint
-        const clientToUse = supabaseClient;
+        // Use proper error handling around getSession call
         const headers = new Headers();
-        let accessToken: string | null = null;
-
-        if (clientToUse) {
-            const { data: { session } } = await clientToUse.auth.getSession();
-            accessToken = session?.access_token ?? null;
-        }
-
-        if (accessToken) {
-            headers.set('Authorization', `Bearer ${accessToken}`);
+        
+        if (supabaseClient) {
+            try {
+                const { data } = await supabaseClient.auth.getSession();
+                const session = data.session;
+                if (session?.access_token) {
+                    headers.set('Authorization', `Bearer ${session.access_token}`);
+                }
+            } catch (sessionError) {
+                console.warn('Error getting session:', sessionError);
+                // Continue without auth token
+            }
         }
 
         const response = await fetch(url, { headers });

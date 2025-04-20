@@ -212,13 +212,24 @@ export class SourcefileProcessingQueue {
       // Use the stored supabaseClient instance
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
       let accessToken: string | null = null;
+      
       if (this.supabaseClient) {
-          const { data: { session } } = await this.supabaseClient.auth.getSession();
-          accessToken = session?.access_token ?? null;
+        try {
+          const { data } = await this.supabaseClient.auth.getSession();
+          accessToken = data?.session?.access_token ?? null;
+          console.log('Got access token:', accessToken ? 'Yes (token available)' : 'No (null token)');
+        } catch (error) {
+          console.error('Error getting Supabase session:', error);
+        }
+      } else {
+        console.warn('No Supabase client available for authentication');
       }
       
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
+        console.log('Added Authorization header with Bearer token');
+      } else {
+        console.warn('No access token available, request will be unauthenticated');
       }
 
       const response = await fetch(step.apiEndpoint, {
@@ -238,7 +249,12 @@ export class SourcefileProcessingQueue {
         console.error(`Error in ${step.type} response:`, errorData);
 
         if (response.status === 401) {
-           throw new Error(errorData.error || 'Unauthorized. Please log in again.');
+          console.error('Unauthorized error response:', errorData);
+          const loginUrl = `/auth?next=${encodeURIComponent(window.location.pathname)}`;
+          const errorMsg = 'Unauthorized. You may need to log in again.';
+          
+          // Provide a clearer error message with a login link
+          throw new Error(`${errorMsg} Please <a href="${loginUrl}">log in</a> to process this file.`);
         }
 
         // Handle duplicate key errors gracefully (as warnings)

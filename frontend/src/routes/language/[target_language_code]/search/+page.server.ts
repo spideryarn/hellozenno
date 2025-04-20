@@ -3,21 +3,31 @@ import type { PageServerLoad } from "./$types";
 import { getSearchLandingData } from "$lib/api";
 import { API_BASE_URL } from "$lib/config";
 
-export const load: PageServerLoad = async ({ params, url, fetch }) => {
+export const load: PageServerLoad = async ({ params, url, fetch, locals }) => {
     const { target_language_code } = params;
     const query = url.searchParams.get("q") || "";
+    const { supabase } = locals; // Extract supabase from locals
 
     try {
         // Fetch landing page data from API first to get language name
-        const data = await getSearchLandingData(target_language_code);
+        // Pass supabase client to ensure auth token is included if available
+        const data = await getSearchLandingData(supabase, target_language_code);
         const langName = data.target_language_name;
         
         // If there's a query parameter, check if we should redirect directly
         if (query) {
             try {
                 // Use the API base URL for consistency
+                // Add authorization header if user is logged in
+                const headers = new Headers();
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.access_token) {
+                    headers.set('Authorization', `Bearer ${session.access_token}`);
+                }
+
                 const response = await fetch(
-                    `${API_BASE_URL}/api/lang/${target_language_code}/unified_search?q=${encodeURIComponent(query)}`
+                    `${API_BASE_URL}/api/lang/${target_language_code}/unified_search?q=${encodeURIComponent(query)}`,
+                    { headers }
                 );
                 
                 if (response.ok) {
