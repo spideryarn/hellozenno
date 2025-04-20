@@ -84,7 +84,7 @@
                 console.error('Signup error:', error);
             } else {
                 // Signup successful (Supabase may require email confirmation)
-                alert('Signup successful! Check your email for confirmation if required.');
+                // alert('Signup successful! Check your email for confirmation if required.');
                 // Auth state change listener in layout should trigger invalidate
                 await goto(data.nextUrl);
             }
