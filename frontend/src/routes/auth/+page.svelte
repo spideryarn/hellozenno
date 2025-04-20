@@ -5,6 +5,7 @@
     import { goto } from '$app/navigation';
     import { AuthApiError } from '@supabase/supabase-js';
     import type { SupabaseClient } from '@supabase/supabase-js'; // Import type
+    import { redirectBasedOnProfile } from '$lib/navigation';
 
     export let data: PageData;
     // Get the supabase client passed from the root layout
@@ -41,9 +42,8 @@
                 }
                 console.error('Login error:', error);
             } else {
-                // Login successful, redirect
-                // Auth state change listener in layout should trigger invalidate
-                await goto(data.nextUrl);
+                // Login successful, redirect based on profile
+                await redirectBasedOnProfile(supabase, data.nextUrl);
             }
         } catch (err: any) {
             errorMessage = err.message || 'An unexpected error occurred during login.';
@@ -83,10 +83,8 @@
                 }
                 console.error('Signup error:', error);
             } else {
-                // Signup successful (Supabase may require email confirmation)
-                // alert('Signup successful! Check your email for confirmation if required.');
-                // Auth state change listener in layout should trigger invalidate
-                await goto(data.nextUrl);
+                // Signup successful, redirect based on profile
+                await redirectBasedOnProfile(supabase, data.nextUrl);
             }
         } catch (err: any) {
             errorMessage = err.message || 'An unexpected error occurred during signup.';

@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 
-const DEFAULT_REDIRECT = '/profile'; // Or '/' as preferred default
 const AUTH_PATH = '/auth';
+const DEFAULT_REDIRECT = '/profile';
 
 export const load = (({ url }) => {
     const nextParam = url.searchParams.get('next');

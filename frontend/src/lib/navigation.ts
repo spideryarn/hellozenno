@@ -19,6 +19,7 @@ export type PageType =
   | 'lemmas'
   | 'phrases'
   | 'sentences'
+  | 'sources'
   | 'search';
 
 /**
@@ -30,6 +31,50 @@ export type PageType =
  * @param query Optional query parameters
  * @returns The full URL string for client-side navigation
  */
+
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { goto } from '$app/navigation';
+import { apiFetch } from './api';
+import { RouteName } from './generated/routes';
+
+/**
+ * Handles post-authentication redirection based on user profile
+ * If the user has a target language set, redirects to that language's sources page
+ * Otherwise, falls back to the provided URL
+ * 
+ * @param supabaseClient The Supabase client instance
+ * @param fallbackUrl URL to redirect to if no target language is set
+ * @returns Promise resolving when redirection is complete
+ */
+export async function redirectBasedOnProfile(
+  supabaseClient: SupabaseClient | null,
+  fallbackUrl: string
+): Promise<void> {
+  if (!supabaseClient) {
+    await goto(fallbackUrl);
+    return;
+  }
+
+  try {
+    const profile = await apiFetch({
+      supabaseClient,
+      routeName: RouteName.PROFILE_API_GET_PROFILE_API,
+      params: {},
+      options: { method: 'GET' }
+    });
+    
+    // If user has a target language set, redirect to sources page
+    if (profile && profile.target_language_code) {
+      await goto(getPageUrl('sources', { target_language_code: profile.target_language_code }));
+    } else {
+      await goto(fallbackUrl);
+    }
+  } catch (err) {
+    // Fall back to the original redirect if profile fetch fails
+    console.error('Error fetching profile for redirection:', err);
+    await goto(fallbackUrl);
+  }
+}
 export function getPageUrl(
   page: PageType,
   params: Record<string, string | undefined>,
@@ -57,6 +102,9 @@ export function getPageUrl(
       break;
     case 'search':
       url = `/language/${params.target_language_code}/search`;
+      break;
+    case 'sources':
+      url = `/language/${params.target_language_code}/sources`;
       break;
     
     // Source directory/file pages

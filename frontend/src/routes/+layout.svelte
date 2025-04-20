@@ -140,7 +140,13 @@
   <header class="bg-dark py-3">
     <nav class="container">
       <div class="d-flex justify-content-between align-items-center">
-        <a href="/" class="text-decoration-none" title="Hello Zenno">
+        <a 
+          href={session ? (data.profile?.target_language_code 
+            ? `/language/${data.profile.target_language_code}/sources` 
+            : "/auth/profile") 
+            : "/"} 
+          class="text-decoration-none" 
+          title="Hello Zenno">
           <img src="/logo.png" alt="Hello Zenno" class="logo-image" />
         </a>
         <div class="d-flex align-items-center">
