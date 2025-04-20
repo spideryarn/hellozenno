@@ -141,10 +141,7 @@
     <nav class="container">
       <div class="d-flex justify-content-between align-items-center">
         <a 
-          href={session ? (data.profile?.target_language_code 
-            ? `/language/${data.profile.target_language_code}/sources` 
-            : "/auth/profile") 
-            : "/"} 
+          href="/languages" 
           class="text-decoration-none" 
           title="Hello Zenno">
           <img src="/logo.png" alt="Hello Zenno" class="logo-image" />
