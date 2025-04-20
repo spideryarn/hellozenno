@@ -4,6 +4,7 @@
   import { invalidateAll } from '$app/navigation'; // Use invalidateAll for simplicity
   import { page } from '$app/stores'; 
   import type { LayoutData } from './$types'; // Import the type for LayoutData
+  import { SITE_NAME, TAGLINE } from '$lib/config'; // Added Import
 
   // Get data passed from +layout.ts
   export let data: LayoutData;
@@ -47,6 +48,11 @@
   }
 
 </script>
+
+<!-- Add the svelte:head block for the title -->
+<svelte:head>
+  <title>{SITE_NAME} - {TAGLINE}</title>
+</svelte:head>
 
 <style>
   /* Add basic styles for custom dropdown */
