@@ -3,7 +3,7 @@ import { getApiUrl } from "$lib/api";
 import type { PageServerLoad } from "./$types";
 import { RouteName } from "$lib/generated/routes";
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch, locals: { supabase, session } }) => {
     const { target_language_code, sourcedir_slug, sourcefile_slug } = params;
 
     try {
@@ -43,6 +43,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             sourcedir_slug,
             sourcefile_slug,
             available_sourcedirs, // Add available sourcedirs for dropdown
+            session, // Add session for auth data (not the supabase client)
         };
     } catch (err: unknown) {
         console.error("Error loading words data:", err);

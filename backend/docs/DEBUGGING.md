@@ -4,8 +4,6 @@ see `docs/DATABASE.md` for info on how to inspect the database
 
 see `docs/FRONTEND_DEBUGGING.md`
 
-see `.cursor/rules/cursor-tools.mdc` for browser automation (i.e. `cursor-tools browser ...`)
-
 ## Local Development Logs
 
 ### Flask Logs
@@ -23,6 +21,10 @@ grep -i error logs/backend.log
 
 see `frontend/docs/FRONTEND_DEBUGGING.md`
 
+There is a corresponding `logs/frontend.log`
+
+But you'll need Playwright MCP to view the browser console errors for a page.
+
 
 ## Running Flask dev server
 
@@ -32,7 +34,7 @@ see `frontend/docs/FRONTEND_DEBUGGING.md`
 ./scripts/local/run_backend.sh
 ```
 
-## Vercel Logs
+## Vercel Logs for debugging production
 
 Annoyingly, there doesn't seem to be a good way to access production logs programmatically.
 

@@ -70,7 +70,7 @@
     // Make sure sourcefile and its type are available and NOT youtube_audio
     if (sourcefile && sourcefile.sourcefile_type && sourcefile.sourcefile_type !== 'youtube_audio') {
        processingQueue = new SourcefileProcessingQueue(
-        data.supabase,
+        null, // Pass null for supabase client as it's not available on the client
         target_language_code,
         sourcedir_slug,
         sourcefile_slug,

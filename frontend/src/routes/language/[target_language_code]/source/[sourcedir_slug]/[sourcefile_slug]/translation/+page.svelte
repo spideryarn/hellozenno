@@ -31,6 +31,7 @@
   {language_name}
   {available_sourcedirs}
   activeTab="translation"
+  {data}
 >
   <SourcefileTranslation 
     {sourcefile}

@@ -32,6 +32,7 @@
   {language_name}
   {available_sourcedirs}
   activeTab="phrases"
+  {data}
 >
   <h2>Phrases ({phrases.length})</h2>
   

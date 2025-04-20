@@ -60,6 +60,7 @@
   {language_name}
   {available_sourcedirs}
   activeTab="audio"
+  {data}
 >
   <SourcefileAudioTab 
     {audioUrl}

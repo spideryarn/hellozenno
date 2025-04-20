@@ -32,6 +32,7 @@
   {language_name}
   {available_sourcedirs}
   activeTab="words"
+  {data}
 >
   <h2>Words ({wordforms.length})</h2>
   
