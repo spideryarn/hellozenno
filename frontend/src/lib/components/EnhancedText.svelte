@@ -126,7 +126,7 @@
     // Always create a tooltip, even if data is minimal or missing
     let content = `
       <div class="tippy-content">
-        <h4><a href="${lemmaLink}" class="tooltip-lemma-link">${lemma}</a></h4>
+        <h4><a href="${lemmaLink}" class="tooltip-lemma-link" target="_blank">${lemma}</a></h4>
     `;
     
     if (data?.translations && data.translations.length > 0) {
@@ -143,7 +143,7 @@
     }
     
     // Add a view details link at the bottom
-    content += `<p class="view-details"><a href="${lemmaLink}">View full details →</a></p>`;
+    content += `<p class="view-details"><a href="${lemmaLink}" target="_blank">View full details →</a></p>`;
     
     // Only add debug info in non-production environments
     if (import.meta.env.DEV) {
@@ -172,9 +172,9 @@
     // Show a more helpful error message with the word itself
     let errorContent = `
       <div class="tippy-content">
-        <h4><a href="${lemmaLink}" class="tooltip-lemma-link">${word}</a></h4>
+        <h4><a href="${lemmaLink}" class="tooltip-lemma-link" target="_blank">${word}</a></h4>
         <p class="translation error"><em>Error loading word information</em></p>
-        <p class="view-details"><a href="${lemmaLink}">Try view details →</a></p>
+        <p class="view-details"><a href="${lemmaLink}" target="_blank">Try view details →</a></p>
     `;
     
     // Only add debug info in non-production environments
@@ -441,6 +441,7 @@
           class="word-link"
           data-word={segment.word}
           data-lemma={String(segment.lemma || '')}
+          target="_blank"
         >
           {segment.text}
         </a>
