@@ -6,6 +6,7 @@
     import { AuthApiError } from '@supabase/supabase-js';
     import type { SupabaseClient } from '@supabase/supabase-js'; // Import type
     import { redirectBasedOnProfile } from '$lib/navigation';
+    import { SITE_NAME } from '$lib/config';
 
     export let data: PageData;
     // Get the supabase client passed from the root layout
@@ -95,6 +96,10 @@
     }
 
 </script>
+
+<svelte:head>
+    <title>Login / Sign Up | {SITE_NAME}</title>
+</svelte:head>
 
 <h1>Authentication</h1>
 

@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { get_language_name } from '$lib/utils';
   import { dev } from '$app/environment';
+  import { SITE_NAME } from '$lib/config';
   
   let languageName = '';
   let languageCode = '';
@@ -30,7 +31,7 @@
 </script>
 
 <svelte:head>
-  <title>{page.status} - {page.error?.message || 'Page Not Found'} - Hello Zenno</title>
+  <title>{page.status} | {page.error?.message || 'Page Not Found'} | {SITE_NAME}</title>
 </svelte:head>
 
 <div class="container">

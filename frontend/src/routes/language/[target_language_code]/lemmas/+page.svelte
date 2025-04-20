@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-  <title>Lemmas - {data.language_name}</title>
+  <title>Lemmas | {data.language_name} | Hello Zenno</title>
 </svelte:head>
 
 <div class="container mt-4">

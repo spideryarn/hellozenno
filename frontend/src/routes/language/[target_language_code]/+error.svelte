@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { get_language_name } from '$lib/utils';
   import { dev } from '$app/environment';
+  import { SITE_NAME } from '$lib/config';
   
   let languageName = '';
 
@@ -18,7 +19,7 @@
 </script>
 
 <svelte:head>
-  <title>{page.status} - Error - {languageName || page.params.target_language_code?.toUpperCase() || ''} - Hello Zenno</title>
+  <title>{page.status} | {page.error?.message || 'Error'} | {languageName || page.params.target_language_code?.toUpperCase() || ''} | {SITE_NAME}</title>
 </svelte:head>
 
 <div class="row justify-content-center mt-5">

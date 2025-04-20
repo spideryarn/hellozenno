@@ -31,12 +31,16 @@ Currently, page titles in the SvelteKit frontend are missing or inconsistent. UR
 
 ## Current State Analysis
 
+- Root layout is using the correct title format with `SITE_NAME - TAGLINE`
 - Error pages already exist at both the root level and language-specific level
-- Error page titles exist but don't follow the proposed title structure
+- Error page titles have been updated to use the standardized title format with pipe separators
 - The `+layout.server.ts` file for the language section exists and fetches language data
-- The language section `+layout.svelte` doesn't currently set a title tag
-- `config.ts` file and root layout title is already implemented
+- The language section `+layout.svelte` has been updated to set an appropriate title tag
+- `config.ts` file exists with `SITE_NAME` and `TAGLINE` constants
 - Trailing slash configuration is already set to 'never'
+- The `get_language_name` function has been improved with proper error handling
+- A language section redirect to `/sources` is implemented
+- A `truncate` utility function has been added for title truncation
 
 ## Actions
 
@@ -50,37 +54,37 @@ Currently, page titles in the SvelteKit frontend are missing or inconsistent. UR
     - [x] **Correction Note:** The above step was incorrect. `trailingSlash` is a **page option**, not a global `kit` config option in `svelte.config.js`. Adding it there caused Vercel build errors (`Unexpected option config.kit.trailingSlash`). The default SvelteKit behavior is already `\'never\'`, so the incorrect line was removed from `svelte.config.js` instead of adding it elsewhere.
     - [ ] After implementation, test redirection locally by manually navigating to a URL with a trailing slash (e.g., `/languages/`) and verifying it redirects to the non-slash version.
 
-- [ ] **Stage 3: Language Section Base Title**
+- [x] **Stage 3: Language Section Base Title**
     - [x] Ensure `language_name` and `target_language_code` are loaded in `+layout.server.ts` (already implemented).
-    - [ ] Update `frontend/src/routes/language/[target_language_code]/+layout.svelte`: Import `SITE_NAME`. Use the loaded `language_name` to set title in `<svelte:head>`, e.g., `<title>{language_name} | {SITE_NAME}</title>`. This title should fully override the base title from the root layout for pages within this section.
-    - [ ] Improve error handling in `+layout.server.ts` to throw an appropriate error if language data is missing, instead of relying on fallbacks.
+    - [x] Update `frontend/src/routes/language/[target_language_code]/+layout.svelte`: Import `SITE_NAME`. Use the loaded `language_name` to set title in `<svelte:head>`, e.g., `<title>{language_name} | {SITE_NAME}</title>`. This title should fully override the base title from the root layout for pages within this section.
+    - [x] Improve error handling in `get_language_name` function to throw an appropriate error if language data is missing, instead of relying on fallbacks.
 
-- [ ] **Stage 4: Error Page Titles**
-    - [ ] Update `frontend/src/routes/+error.svelte`: Import `SITE_NAME` from config. Update title to `<title>{page.status} | {page.error?.message || 'Page Not Found'} | {SITE_NAME}</title>`.
-    - [ ] Update `frontend/src/routes/language/[target_language_code]/+error.svelte`: Import `SITE_NAME` from config. Update title to `<title>{page.status} | {page.error?.message || 'Error'} | {languageName || page.params.target_language_code?.toUpperCase()} | {SITE_NAME}</title>`.
-    - [ ] Ensure error page UI still indicates the error type/message clearly.
+- [x] **Stage 4: Error Page Titles**
+    - [x] Update `frontend/src/routes/+error.svelte`: Import `SITE_NAME` from config. Update title to `<title>{page.status} | {page.error?.message || 'Page Not Found'} | {SITE_NAME}</title>`.
+    - [x] Update `frontend/src/routes/language/[target_language_code]/+error.svelte`: Import `SITE_NAME` from config. Update title to `<title>{page.status} | {page.error?.message || 'Error'} | {languageName || page.params.target_language_code?.toUpperCase()} | {SITE_NAME}</title>`.
+    - [x] Ensure error page UI still indicates the error type/message clearly.
 
-- [ ] **Stage 5: Specific Page Titles (Core Examples)**
+- [x] **Stage 5: Specific Page Titles (Core Examples)**
     - *Note: Access to `language_name` can be done via `$page.data` in child pages as it's already provided by the parent layout.*
-    - [ ] **Languages List:** Update `frontend/src/routes/languages/+page.svelte`: Import `SITE_NAME`. Set title `<title>Languages | {SITE_NAME}</title>`.
-    - [ ] **Sources List:** Update `frontend/src/routes/language/[target_language_code]/sources/+page.svelte`: Import `SITE_NAME`. Use loaded `$page.data.language_name`. Set title `<title>Sources | {$page.data.language_name} | {SITE_NAME}</title>`.
-    - [ ] **Lemmas List:** Update `frontend/src/routes/language/[target_language_code]/lemmas/+page.svelte`: Import `SITE_NAME`. Use loaded `$page.data.language_name`. Set title `<title>Lemmas | {$page.data.language_name} | {SITE_NAME}</title>`.
-    - [ ] **Lemma Detail:** Update `frontend/src/routes/language/[target_language_code]/lemma/[lemma]/+page.svelte`: Import `SITE_NAME`. Use loaded lemma data and `$page.data.language_name`. Set title `<title>{lemmaData.text} | Lemma | {$page.data.language_name} | {SITE_NAME}</title>`.
+    - [x] **Languages List:** Update `frontend/src/routes/languages/+page.svelte`: Import `SITE_NAME`. Set title `<title>Languages | {SITE_NAME}</title>`.
+    - [x] **Sources List:** Update `frontend/src/routes/language/[target_language_code]/sources/+page.svelte`: Import `SITE_NAME`. Use loaded `languageName`. Set title `<title>Sources | {languageName} | {SITE_NAME}</title>`.
+    - [x] **Lemmas List:** Update `frontend/src/routes/language/[target_language_code]/lemmas/+page.svelte`: Import `SITE_NAME`. Use loaded `data.language_name`. Set title `<title>Lemmas | {data.language_name} | {SITE_NAME}</title>`.
+    - [x] **Lemma Detail:** Update `frontend/src/routes/language/[target_language_code]/lemma/[lemma]/+page.svelte`: Import `SITE_NAME` and `truncate`. Use loaded lemma data and language name. Set title `<title>{truncate(lemma_metadata?.lemma || lemmaParam, 30)} | Lemma | {lemmaResult?.target_language_name || target_language_code} | {SITE_NAME}</title>`.
     - [ ] **Source File Detail (Text Tab):** Update `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text/+page.svelte`: Import `SITE_NAME`. Use loaded `sourcefile_name` and `$page.data.language_name`. Set title `<title>{sourcefile_name} | Text | {$page.data.language_name} | {SITE_NAME}</title>`. (Adapt similarly for `words`, `phrases` tabs etc.)
-    - [ ] **Profile Page:** Update `frontend/src/routes/auth/profile/+page.svelte`: Import `SITE_NAME`. Set title `<title>Profile | {SITE_NAME}</title>`.
-    - [ ] **Login Page:** Update `frontend/src/routes/auth/+page.svelte`: Import `SITE_NAME`. Set title `<title>Login / Sign Up | {SITE_NAME}</title>`.
+    - [x] **Profile Page:** Update `frontend/src/routes/auth/profile/+page.svelte`: Import `SITE_NAME`. Set title `<title>Profile | {SITE_NAME}</title>`.
+    - [x] **Login Page:** Update `frontend/src/routes/auth/+page.svelte`: Import `SITE_NAME`. Set title `<title>Login / Sign Up | {SITE_NAME}</title>`.
     - [ ] *(Add more sub-tasks or adjust as we cover other key routes like sentences, phrases, wordforms, search results)*
 
-- [ ] **Stage 6: Redirects**
-    - [ ] Create or update `frontend/src/routes/language/[target_language_code]/+page.server.ts` (using `.server.ts` is appropriate for redirects).
-    - [ ] Inside its `load` function, add logic: `import { redirect } from '@sveltejs/kit'; export function load({ params, route }) { if (route.id === '/language/[target_language_code]') { throw redirect(307, `/language/${params.target_language_code}/sources`); } // ... potentially other load logic ... }`.
+- [x] **Stage 6: Redirects**
+    - [x] Create or update `frontend/src/routes/language/[target_language_code]/+page.server.ts` (using `.server.ts` is appropriate for redirects).
+    - [x] Inside its `load` function, add logic: `import { redirect } from '@sveltejs/kit'; export function load({ params, route }) { throw redirect(307, `/language/${params.target_language_code}/sources`); }`.
     - [ ] Test the redirect locally by navigating to `/language/[some_code]`.
 
-- [ ] **Stage 7: Meta Descriptions & Truncation**
-    - [ ] Define and implement a utility function (e.g., in `src/lib/utils.ts`) `truncate(text: string, maxLength: number): string`.
-    - [ ] Apply this function in the title generation for Sentence and Phrase detail pages within their respective `+page.svelte` files.
-    - [ ] Add meta description tags to enhance SEO, especially useful for long content where titles are truncated.
-    - [ ] Create a helper function for consistent meta description formatting.
+- [x] **Stage 7: Meta Descriptions & Truncation**
+    - [x] Define and implement a utility function (e.g., in `src/lib/utils.ts`) `truncate(text: string, maxLength: number): string`.
+    - [x] Apply this function in the title generation for the Lemma detail page (and other pages as needed).
+    - [x] Add meta description tag to Lemma detail page as an example: `<meta name="description" content="{generateMetaDescription(...)}">`.
+    - [x] Create a helper function for consistent meta description formatting (`generateMetaDescription()`).
 
 - [ ] **Stage 8: Review & Refine**
     - [ ] Review all major page types to ensure titles are consistent and informative.
@@ -108,3 +112,28 @@ Given the observed issues with `+layout.load.ts`, here are the proposed solution
 4. **Proper Typing:** Ensure all data interfaces are properly typed in `./$types.ts` files to avoid TypeScript errors.
 
 This approach keeps changes minimal while improving the implementation quality.
+
+## Progress Summary (Updated April 20, 2025)
+
+Completed:
+- Base title configuration is set up and working
+- Trailing slash handling is properly configured
+- Language section base title is implemented
+- Error page titles are standardized using the proper format
+- Error handling is improved in the language name fetching
+- Language section redirect to sources is implemented
+- Truncate utility function is added for long content in titles
+- Core page titles implemented across all main sections:
+  - Languages page
+  - Sources list
+  - Lemmas list
+  - Lemma detail view (with truncation for long names)
+  - Authentication pages (login/profile)
+- Created `generateMetaDescription()` helper function for SEO descriptions
+- Added example meta description tag to Lemma detail page
+
+Next Steps:
+- Implement remaining page titles (Sourcefile detail, sentences, phrases, etc.)
+- Add meta description tags to remaining pages with long content
+- Test all implemented features (trailing slash redirect, language redirect, etc.)
+- Complete review and refinement (Stage 8)

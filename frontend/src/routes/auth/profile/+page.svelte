@@ -4,6 +4,7 @@
     import type { SupabaseClient } from '@supabase/supabase-js';
     import { apiFetch } from '$lib/api';
     import { RouteName } from '$lib/generated/routes';
+    import { SITE_NAME } from '$lib/config';
 
     export let data: PageData;
     let supabase: SupabaseClient | null = data.supabase;
@@ -64,6 +65,10 @@
     }
 
 </script>
+
+<svelte:head>
+    <title>Profile | {SITE_NAME}</title>
+</svelte:head>
 
 <h1>User Profile</h1>
 

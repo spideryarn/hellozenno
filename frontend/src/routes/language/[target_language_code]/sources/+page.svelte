@@ -5,6 +5,7 @@
   import SourceItem from '$lib/components/SourceItem.svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { SITE_NAME } from '$lib/config';
   
   export let data: PageData;
   
@@ -84,6 +85,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>Sources | {languageName} | {SITE_NAME}</title>
+</svelte:head>
 
 <h1 class="mb-4">{languageName} Sources</h1>
 

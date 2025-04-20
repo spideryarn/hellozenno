@@ -1,12 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores'; // Use $app/stores now
     import { goto } from '$app/navigation';
-    // import type { LayoutData } from './$types'; // Removed
-    // import { SITE_NAME } from '$lib/config'; // Removed
-
-    // Get data passed from +layout.load.ts // Removed
-    // export let data: LayoutData; // Removed
-    // $: ({ supabase, session, target_language_code, language_name } = data); // Removed
+    import { SITE_NAME } from '$lib/config';
 
     let searchQuery = '';
     
@@ -31,7 +26,9 @@
     }
 </script>
 
-<!-- Removed svelte:head block -->
+<svelte:head>
+    <title>{$page.data?.language_name || ''} | {SITE_NAME}</title>
+</svelte:head>
 
 <div class="container mt-2 mb-3">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">

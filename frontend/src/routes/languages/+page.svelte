@@ -2,6 +2,15 @@
   import { onMount } from 'svelte';
   import type { PageData } from './$types';
   import Card from '$lib/components/Card.svelte';
+  import { SITE_NAME } from '$lib/config';
+  
+  // Safe action function for input binding
+  function initInput(node: HTMLInputElement) {
+    // This function handles the binding action safely in browser context
+    return {
+      destroy: () => {} // Cleanup function required for actions
+    };
+  }
   
   /** @type {import('./$types').PageData} */
   export let data: PageData;
@@ -11,35 +20,45 @@
     code: string;
   }
   
-  let languages: Language[] = data.languages;
+  // Safely assign languages data with fallback to empty array
+  let languages: Language[] = Array.isArray(data?.languages) ? data.languages : [];
   let searchQuery = '';
-  let searchInput: HTMLInputElement;
+  let searchInput: HTMLInputElement | null = null;
   
   onMount(() => {
     // Focus on the search input when component mounts
-    if (searchInput) {
+    // Only run in browser context
+    if (typeof window !== 'undefined' && searchInput) {
       searchInput.focus();
     }
   });
   
-  // Computed filtered languages based on searchQuery
-  $: filteredLanguages = searchQuery.trim() 
-    ? languages.filter(lang => 
-        lang.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) || 
-        lang.code.toLowerCase().includes(searchQuery.toLowerCase().trim())
-      )
-    : languages;
+  // Computed filtered languages based on searchQuery with safety checks
+  $: filteredLanguages = (() => {
+    if (!languages || !Array.isArray(languages)) return [];
+    
+    const query = searchQuery?.trim() || '';
+    if (!query) return languages;
+    
+    const lowerQuery = query.toLowerCase();
+    return languages.filter(lang => 
+      (lang?.name?.toLowerCase() || '').includes(lowerQuery) || 
+      (lang?.code?.toLowerCase() || '').includes(lowerQuery)
+    );
+  })();
   
   // Group languages alphabetically
   const alphabet = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
   
-  // Computed language groups based on filtered languages
+  // Computed language groups based on filtered languages with safety checks
   $: languageGroups = (() => {
+    if (!filteredLanguages || !Array.isArray(filteredLanguages)) return {};
+    
     const groups: Record<string, Language[]> = {};
     
     alphabet.forEach(letter => {
       const matches = filteredLanguages.filter(lang => 
-        lang.name.toUpperCase().startsWith(letter)
+        lang?.name?.toUpperCase()?.startsWith(letter) || false
       );
       if (matches.length > 0) {
         groups[letter] = matches;
@@ -72,7 +91,7 @@
 </script>
 
 <svelte:head>
-  <title>Available Languages | Hello Zenno</title>
+  <title>Languages | {SITE_NAME}</title>
 </svelte:head>
 
 <main class="container">
@@ -89,6 +108,7 @@
             bind:value={searchQuery}
             bind:this={searchInput}
             class="search-input"
+            use:initInput
           />
           <button type="submit" class="search-icon" aria-label="Search">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

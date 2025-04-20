@@ -5,6 +5,8 @@
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/stores'; // Import page store for current URL
+  import { SITE_NAME } from '$lib/config';
+  import { truncate, generateMetaDescription } from '$lib/utils';
   // import Alert from '$lib/components/Alert.svelte'; // TODO: Fix path or create component
   // import UserDisplay from '$lib/components/UserDisplay.svelte'; // TODO: Fix path or create component
   
@@ -39,6 +41,14 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>{truncate(lemma_metadata?.lemma || lemmaParam, 30)} | Lemma | {lemmaResult?.target_language_name || target_language_code} | {SITE_NAME}</title>
+  <meta name="description" content="{generateMetaDescription(
+    lemma_metadata?.translations?.join('; ') || '',
+    `${lemma_metadata?.lemma || lemmaParam} - ${lemmaResult?.target_language_name || target_language_code} lemma`
+  )}">
+</svelte:head>
 
 <div class="container">
   <div class="row mb-4">
