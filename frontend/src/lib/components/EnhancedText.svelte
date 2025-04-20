@@ -120,13 +120,13 @@
     // Get the lemma from data or default to the word
     const lemma = data?.lemma || word;
     
-    // Create link to the lemma page - ensure proper encoding for URLs
-    const lemmaLink = `/language/${target_language_code}/lemma/${encodeURIComponent(lemma)}`;
+    // Create link to the WORD page - ensure proper encoding for URLs
+    const wordformLink = `/language/${target_language_code}/wordform/${encodeURIComponent(word)}`;
     
     // Always create a tooltip, even if data is minimal or missing
     let content = `
       <div class="tippy-content">
-        <h4><a href="${lemmaLink}" class="tooltip-lemma-link" target="_blank">${lemma}</a></h4>
+        <h4><a href="${wordformLink}" class="tooltip-lemma-link" target="_blank">${lemma}</a></h4>
     `;
     
     if (data?.translations && data.translations.length > 0) {
@@ -143,7 +143,7 @@
     }
     
     // Add a view details link at the bottom
-    content += `<p class="view-details"><a href="${lemmaLink}" target="_blank">View full details →</a></p>`;
+    content += `<p class="view-details"><a href="${wordformLink}" target="_blank">View details for '${word}' →</a></p>`;
     
     // Only add debug info in non-production environments
     if (import.meta.env.DEV) {
@@ -166,15 +166,15 @@
 
   // Helper to create error tooltip content  
   function createErrorContent(word: string, error?: any) {
-    // Create link to the lemma page - even for error cases, link to the word as lemma
-    const lemmaLink = `/language/${target_language_code}/lemma/${encodeURIComponent(word)}`;
+    // Create link to the WORD page - even for error cases, link to the word itself
+    const wordformLink = `/language/${target_language_code}/wordform/${encodeURIComponent(word)}`;
     
     // Show a more helpful error message with the word itself
     let errorContent = `
       <div class="tippy-content">
-        <h4><a href="${lemmaLink}" class="tooltip-lemma-link" target="_blank">${word}</a></h4>
+        <h4><a href="${wordformLink}" class="tooltip-lemma-link" target="_blank">${word}</a></h4>
         <p class="translation error"><em>Error loading word information</em></p>
-        <p class="view-details"><a href="${lemmaLink}" target="_blank">Try view details →</a></p>
+        <p class="view-details"><a href="${wordformLink}" target="_blank">Try view details for '${word}' →</a></p>
     `;
     
     // Only add debug info in non-production environments
@@ -440,7 +440,7 @@
           href={`/language/${target_language_code}/wordform/${encodeURIComponent(segment.word)}`}
           class="word-link"
           data-word={segment.word}
-          data-lemma={String(segment.lemma || '')}
+          data-lemma={String(segment.lemma ?? '')}
           target="_blank"
         >
           {segment.text}
