@@ -326,7 +326,7 @@ export async function getWordformWithSearch(
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             },
-            timeoutMs: 90000, // 90 second timeout to allow for synchronous wordform generation
+            timeoutMs: 60000, // 60 second timeout to allow for synchronous wordform generation
         });
         console.log(`API: Received result for ${wordform}:`, result);
         return result;
@@ -362,7 +362,8 @@ export async function getLemmaMetadata(
             options: {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
-            }
+            },
+            timeoutMs: 60000 // 60 seconds
         });
         console.log(`API: Received result for ${lemma}:`, result);
         return result;

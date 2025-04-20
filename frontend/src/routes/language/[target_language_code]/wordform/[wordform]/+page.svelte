@@ -6,6 +6,7 @@
   import { SITE_NAME } from '$lib/config';
   import { truncate, generateMetaDescription } from '$lib/utils';
   import { page } from '$app/stores'; // To access auth session
+  import { browser } from '$app/environment';
   
   export let data: PageData;
   const { wordformData } = data;
@@ -22,6 +23,11 @@
   
   // Access session from the page store
   $: session = $page.data.session;
+  
+  // Add debug logging for session status
+  $: if (browser) {
+    console.log('Wordform page - session status:', !!session);
+  }
   
   // Generate API URL for delete action only if we have valid data
   $: deleteUrl = isValidData ? getApiUrl(RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW, {
