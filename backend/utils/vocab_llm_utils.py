@@ -71,6 +71,68 @@ def extract_text_from_image(
     return txt_tgt, extra
 
 
+def extract_text_from_html(
+    html_content: str,  # HTML content as a string
+    target_language_name: str,
+    verbose: int = 1,
+) -> tuple[str, str, dict]:
+    """Extract the main title and text content from HTML using an LLM.
+
+    Expects LLM output format: TITLE----TEXT
+
+    Args:
+        html_content: The HTML content to process.
+        target_language_name: Full name of target language (e.g. "Greek")
+        verbose: Verbosity level
+
+    Returns:
+        Tuple of (extracted_title, extracted_text, extra_info)
+    """
+    if not isinstance(html_content, str):
+        raise TypeError(f"Expected html_content to be str, got {type(html_content)}")
+
+    llm_output, extra = generate_gpt_from_template(
+        client=anthropic_client,
+        prompt_template=get_prompt_template_path("extract_text_from_html"),
+        context_d={
+            "html_content": html_content,
+            "target_language_name": target_language_name,
+        },
+        response_json=False,
+        verbose=verbose - 1,
+    )
+    assert isinstance(llm_output, str), f"Expected str, got {type(llm_output)}"
+
+    # Parse the output: TITLE----TEXT
+    separator = "----"
+    if separator in llm_output:
+        parts = llm_output.split(separator, 1)
+        extracted_title = parts[0].strip()
+        extracted_text = parts[1].strip()
+    else:
+        # If separator is missing, assume the whole output is text and title is unknown
+        # Or maybe it's just a title? Let's assume it's text for now.
+        extracted_title = "-"  # Indicate unknown title
+        extracted_text = llm_output.strip()
+
+    # Handle cases where parts might be empty or just the placeholder
+    if not extracted_title:
+        extracted_title = "-"
+    if not extracted_text:
+        extracted_text = "-"
+
+    extra_info = {
+        "extracted_title": extracted_title,
+        "extracted_text": extracted_text,
+        "target_language_name": target_language_name,
+        "source_type": "html",
+        "function": "extract_text_from_html",
+        "llm_extra": extra,  # Include original LLM metadata
+    }
+    # Return title, text, and extra info separately
+    return extracted_title, extracted_text, extra_info
+
+
 def translate_to_english(inp: str, source_language_name: str, verbose: int = 1):
     """Translate text to English.
 

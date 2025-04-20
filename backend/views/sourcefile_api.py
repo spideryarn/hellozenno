@@ -48,16 +48,18 @@ from utils.sourcefile_utils import (
     _get_sourcefile_entry,
     get_sourcefile_details,
     process_sourcefile,
+    _create_text_sourcefile,
+    preprocess_html_for_llm,
 )
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.youtube_utils import YouTubeDownloadError, download_audio
 from slugify import slugify
 from utils.types import LanguageLevel
 from typing import get_args
-
-# Import the auth decorator
+import requests
+from utils.vocab_llm_utils import extract_text_from_html
+from utils.lang_utils import get_language_name
 from utils.auth_utils import api_auth_required
-
 
 # Create a blueprint with standardized prefix
 sourcefile_api_bp = Blueprint(
@@ -661,47 +663,49 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         if not text_target:
             return jsonify({"error": "Text content is required"}), 400
 
-        # Use the title directly as filename (with .txt extension)
+        # Prepare data for helper function
         filename = f"{title}.txt"
-
-        # Check if file already exists
-        if (
-            Sourcefile.select()
-            .where(
-                (Sourcefile.sourcedir == sourcedir_entry)
-                & (Sourcefile.filename == filename)
-            )
-            .exists()
-        ):
-            return jsonify({"error": f"File {filename} already exists"}), 409
-
-        # Create metadata with text format
         metadata = {"text_format": "plain"}
 
-        # Create sourcefile entry
-        sourcefile = Sourcefile.create(
-            sourcedir=sourcedir_entry,
-            filename=filename,
-            text_target=text_target,
-            text_english="",  # Will be populated during processing
-            metadata=metadata,
-            description=description,
-            sourcefile_type="text",
-        )
+        # Use helper to create sourcefile (handles collision)
+        try:
+            sourcefile = _create_text_sourcefile(
+                sourcedir_entry=sourcedir_entry,
+                filename=filename,
+                text_target=text_target,
+                description=description,
+                metadata=metadata,
+                sourcefile_type="text",
+            )
+        except ValueError as e:  # Catch collision error from helper
+            # Log the collision specifically
+            current_app.logger.error(
+                f"Filename collision error for {filename} in {sourcedir_slug}: {str(e)}"
+            )
+            return (
+                jsonify(
+                    {
+                        "error": f"File {filename} already exists or could not create unique name."
+                    }
+                ),
+                409,
+            )
 
         return (
             jsonify(
                 {
                     "message": "Successfully created file",
-                    "filename": filename,
+                    "filename": sourcefile.filename,  # Use filename from created object
                     "slug": sourcefile.slug,
                 }
             ),
             200,
         )
 
+    except DoesNotExist:
+        return jsonify({"error": "Target directory not found"}), 404
     except Exception as e:
-        print(f"Error in create_sourcefile_from_text: {str(e)}")
+        current_app.logger.error(f"Error in create_sourcefile_from_text: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -840,3 +844,147 @@ def generate_sourcefile_audio_api(
                 os.unlink(temp_file.name)
             except Exception as e:
                 current_app.logger.error(f"Error cleaning up temp file: {str(e)}")
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/create_from_url",
+    methods=["POST"],
+)
+@api_auth_required
+def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: str):
+    """Create a new sourcefile by fetching and extracting text from a URL."""
+    try:
+        # Get the sourcedir entry by slug
+        sourcedir_entry = _get_sourcedir_entry(target_language_code, sourcedir_slug)
+        # Get language name from the code, not the potentially unloaded relation
+        try:
+            target_language_name = get_language_name(target_language_code)
+        except LookupError:
+            return (
+                jsonify(
+                    {"error": f"Invalid target language code: {target_language_code}"}
+                ),
+                400,
+            )
+
+        # Get and validate parameters
+        data = request.get_json()
+        if not data or not data.get("url"):
+            return jsonify({"error": "URL is required"}), 400
+
+        url = data.get("url", "").strip()
+        if not url:
+            return jsonify({"error": "URL cannot be empty"}), 400
+
+        # Fetch HTML content from URL
+        try:
+            response = requests.get(url, timeout=15)  # 15 second timeout
+            response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+            html_content = response.text
+        except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"Failed to fetch URL {url}: {str(e)}")
+            return jsonify({"error": f"Failed to fetch URL: {str(e)}"}), 400
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error fetching URL {url}: {str(e)}")
+            return jsonify({"error": f"Error fetching URL: {str(e)}"}), 500
+
+        # --- Pre-process HTML using utility function --- START ---
+        try:
+            simplified_html = preprocess_html_for_llm(html_content)
+        except Exception as e:
+            # Handle exceptions raised by the preprocessing function
+            current_app.logger.error(
+                f"HTML preprocessing failed for URL {url}: {str(e)}"
+            )
+            return jsonify({"error": f"Failed to process HTML content: {str(e)}"}), 500
+        # --- Pre-process HTML using utility function --- END ---
+
+        # Extract title and text using LLM, passing the simplified HTML
+        try:
+            extracted_title, extracted_text, _ = extract_text_from_html(
+                html_content=simplified_html,  # Use simplified HTML
+                target_language_name=target_language_name,
+                verbose=1,  # Or adjust verbosity as needed
+            )
+            # Check if extracted text is meaningful
+            if not extracted_text or extracted_text == "-":
+                return (
+                    jsonify(
+                        {"error": "Could not extract meaningful text from the URL."}
+                    ),
+                    400,
+                )
+        except Exception as e:
+            current_app.logger.error(
+                f"LLM text extraction failed for URL {url}: {str(e)}"
+            )
+            return jsonify({"error": f"Text extraction failed: {str(e)}"}), 500
+
+        # ---- Filename Generation using Title ---- START ----
+        # Generate filename from title, fallback to URL-based name
+        filename_base = slugify(extracted_title)
+        if not filename_base or filename_base == "-":
+            # Fallback if title is missing or unusable
+            timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+            sanitized_url_part = slugify(
+                url.split("//")[-1].split("/")[0], max_length=50
+            )
+            filename = f"url_{sanitized_url_part}_{timestamp}.html"
+        else:
+            # Use title for filename, add .html extension
+            filename = f"{filename_base}.html"
+
+        # Check for potential collision before calling helper (optional but safer)
+        if (
+            Sourcefile.select()
+            .where(
+                (Sourcefile.sourcedir == sourcedir_entry)
+                & (Sourcefile.filename == filename)
+            )
+            .exists()
+        ):
+            # Simple collision handling: add timestamp to title-based filename
+            timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+            filename = f"{slugify(extracted_title)}_{timestamp}.html"
+        # ---- Filename Generation using Title ---- END ----
+
+        # Prepare data for helper function
+        metadata = {
+            "text_format": "plain",
+            "source_url": url,
+            "extracted_title": extracted_title,
+        }
+        description = f"Title: {extracted_title}\nUploaded from URL: {url}"
+
+        # Use helper to create sourcefile (collision check inside helper is removed)
+        try:
+            sourcefile = _create_text_sourcefile(
+                sourcedir_entry=sourcedir_entry,
+                filename=filename,  # Pass the determined filename
+                text_target=extracted_text,  # Pass only the extracted text
+                description=description,  # Pass updated description
+                metadata=metadata,  # Pass updated metadata
+                sourcefile_type="text",
+            )
+        except (
+            ValueError
+        ) as e:  # Catch potential errors from helper (though collision is removed)
+            current_app.logger.error(f"Error creating sourcefile for {url}: {str(e)}")
+            return jsonify({"error": f"Could not create sourcefile entry."}), 500
+
+        return (
+            jsonify(
+                {
+                    "message": "Successfully created file from URL",
+                    "filename": sourcefile.filename,  # Use filename from created object
+                    "slug": sourcefile.slug,
+                }
+            ),
+            200,
+        )
+
+    except DoesNotExist:
+        return jsonify({"error": "Target directory not found"}), 404
+    except Exception as e:
+        current_app.logger.error(f"Error in create_sourcefile_from_url: {str(e)}")
+        return jsonify({"error": str(e)}), 500

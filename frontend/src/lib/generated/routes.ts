@@ -71,6 +71,7 @@ export enum RouteName {
   SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API = "SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API",
   SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API = "SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API",
   SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API = "SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API",
+  SOURCEFILE_API_CREATE_SOURCEFILE_FROM_URL_API = "SOURCEFILE_API_CREATE_SOURCEFILE_FROM_URL_API",
   SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API = "SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API",
   SOURCEFILE_PROCESSING_API_TRANSLATE_API = "SOURCEFILE_PROCESSING_API_TRANSLATE_API",
   SOURCEFILE_PROCESSING_API_PROCESS_WORDFORMS_API = "SOURCEFILE_PROCESSING_API_PROCESS_WORDFORMS_API",
@@ -169,6 +170,7 @@ export const ROUTES = {
   SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/create_from_text",
   SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/youtube",
   SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/generate_audio",
+  SOURCEFILE_API_CREATE_SOURCEFILE_FROM_URL_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/create_from_url",
   SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/extract_text",
   SOURCEFILE_PROCESSING_API_TRANSLATE_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/translate",
   SOURCEFILE_PROCESSING_API_PROCESS_WORDFORMS_API: "/api/lang/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/process_wordforms",
@@ -267,6 +269,7 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEFILE_API_GENERATE_SOURCEFILE_AUDIO_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
+  [RouteName.SOURCEFILE_API_CREATE_SOURCEFILE_FROM_URL_API]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEFILE_PROCESSING_API_EXTRACT_TEXT_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_PROCESSING_API_TRANSLATE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.SOURCEFILE_PROCESSING_API_PROCESS_WORDFORMS_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };

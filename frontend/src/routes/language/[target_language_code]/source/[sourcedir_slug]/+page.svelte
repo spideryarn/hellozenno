@@ -1,16 +1,16 @@
 <script lang="ts">
   import type { PageData } from './$types';
-  import { getApiUrl } from '$lib/api';
+  import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { Spinner, Trash, ArrowUp } from 'phosphor-svelte';
   import { onMount } from 'svelte';
   import { DescriptionFormatted } from '$lib';
   import { page } from '$app/stores';
   
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
   
-  // Define login URL with redirect back to current page
-  $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
+  // Define login URL with redirect back to current page using $derived
+  const loginUrl = $derived(`/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`);
   
   // Initialize tooltips when the component is mounted
   onMount(() => {
@@ -42,17 +42,24 @@
   
   const { sourcedir, sourcefiles, target_language_code, language_name, has_vocabulary, supported_languages } = data;
   
-  let showCreateTextModal = false;
-  let showYoutubeModal = false;
-  let textTitle = '';
-  let textContent = '';
-  let textDescription = '';
-  let youtubeUrl = '';
-  let uploadProgress = false;
-  let uploadProgressValue = 0;
-  let isCreatingText = false;
-  let isDownloadingYoutube = false;
-  let isRenamingDir = false;
+  let showCreateTextModal = $state(false);
+  let showYoutubeModal = $state(false);
+  let textTitle = $state('');
+  let textContent = $state('');
+  let textDescription = $state('');
+  let youtubeUrl = $state('');
+  let uploadProgress = $state(false);
+  let uploadProgressValue = $state(0);
+  let isCreatingText = $state(false);
+  let isDownloadingYoutube = $state(false);
+  let isRenamingDir = $state(false);
+  
+  // New state for URL Upload Modal
+  let isUrlModalOpen = $state(false);
+  let urlToUpload = $state('');
+  let isUrlLoading = $state(false);
+  let urlErrorMessage = $state('');
+  let urlSuccessMessage = $state('');
   
   async function renameSourcedir() {
     if (isRenamingDir) return;
@@ -323,6 +330,67 @@
       isDownloadingYoutube = false; // Reset only on error, since on success we navigate away
     }
   }
+  
+  // URL Upload Modal Function
+  async function handleSubmitUrlUpload() {
+    urlErrorMessage = '';
+    urlSuccessMessage = '';
+
+    if (!$page.data.session) {
+      urlErrorMessage = 'Please log in to upload from a URL.';
+      return;
+    }
+    
+    if (!urlToUpload.trim()) {
+      urlErrorMessage = 'Please enter a valid URL.';
+      return;
+    }
+    
+    // Basic URL format check (doesn't guarantee validity but catches obvious errors)
+    try {
+      new URL(urlToUpload);
+    } catch (_) {
+      urlErrorMessage = 'Invalid URL format.';
+      return;
+    }
+
+    isUrlLoading = true;
+
+    try {
+      const result = await apiFetch({
+        routeName: RouteName.SOURCEFILE_API_CREATE_SOURCEFILE_FROM_URL_API,
+        params: {
+          target_language_code: target_language_code,
+          sourcedir_slug: sourcedir.slug
+        },
+        options: {
+          method: 'POST',
+          body: JSON.stringify({ url: urlToUpload }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        },
+        supabaseClient: data.supabase,
+      }) as {
+        message: string;
+        filename: string;
+        slug: string;
+      };
+
+      urlSuccessMessage = `Successfully created: ${result.filename}`;
+      urlToUpload = '';
+      setTimeout(() => {
+        isUrlModalOpen = false;
+        window.location.reload();
+      }, 1500);
+
+    } catch (error: any) {
+      console.error('URL Upload Error:', error);
+      urlErrorMessage = error?.body?.error || error?.message || 'An unexpected error occurred.';
+    } finally {
+      isUrlLoading = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -438,6 +506,7 @@
                 </div>
                 
                 <button class="btn btn-outline-primary me-2" on:click={() => showCreateTextModal = true}>Create From Text</button>
+                <button class="btn btn-outline-primary me-2" on:click={() => isUrlModalOpen = true}>Upload from URL</button>
                 <!-- Leave this commented. We've disabled it for now, but might want to try it again in the future. -->
                 <!-- <button class="btn btn-outline-primary" on:click={() => showYoutubeModal = true}>Upload YouTube Video</button> -->
               </div>
@@ -642,4 +711,49 @@
       </div>
     </div>
   </div>
+{/if}
+
+<!-- URL Upload Modal -->
+{#if isUrlModalOpen}
+<div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="urlUploadModalLabel" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="urlUploadModalLabel">Upload from URL</h5>
+        <button type="button" class="btn-close" aria-label="Close" on:click={() => isUrlModalOpen = false}></button>
+      </div>
+      <div class="modal-body">
+        {#if urlSuccessMessage}
+          <div class="alert alert-success" role="alert">{urlSuccessMessage}</div>
+        {/if}
+        {#if urlErrorMessage}
+          <div class="alert alert-danger" role="alert">{urlErrorMessage}</div>
+        {/if}
+        
+        <div class="mb-3">
+          <label for="urlInput" class="form-label">Enter URL:</label>
+          <input type="url" class="form-control" id="urlInput" bind:value={urlToUpload} placeholder="https://example.com/article" required use:focusOnMount>
+        </div>
+        
+        {#if isUrlLoading}
+          <div class="d-flex justify-content-center">
+            <Spinner size={32} />
+          </div>
+        {/if}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" on:click={() => isUrlModalOpen = false}>Cancel</button>
+        <button type="button" class="btn btn-primary" on:click={handleSubmitUrlUpload} disabled={isUrlLoading || !urlToUpload}>
+          {#if isUrlLoading}
+            <Spinner size={16} color="#fff" class="me-1" /> Uploading...
+          {:else}
+            Upload
+          {/if}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Backdrop for Modal -->
+<div class="modal-backdrop fade show"></div>
 {/if} 

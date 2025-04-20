@@ -2,8 +2,10 @@
 import os
 import tempfile
 import json
-from typing import Optional, cast
+from typing import Optional, cast, Dict, Any
 from pathlib import Path
+import random
+from bs4 import BeautifulSoup
 
 # Internal imports
 from config import (
@@ -27,6 +29,7 @@ from gjdutils.dt import dt_str
 from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
 from utils.misc_utils import pop_multi
+
 # Removed - no longer using asynchronous processing
 # from utils.parallelisation_utils import run_async
 from utils.sourcedir_utils import _get_sourcedir_entry, _get_navigation_info
@@ -582,14 +585,14 @@ def get_sourcefile_details(
         )
 
         result["phrases"] = phrases
-        
+
     # Add image specific data for image tab
     elif purpose == "image":
         # For image tab, we don't need to add additional data
         # The base result already includes filename, sourcefile_type, and other metadata
         # The actual image data is accessed through the view_sourcefile_vw endpoint
         pass
-        
+
     # Add audio specific data for audio tab
     elif purpose == "audio":
         # For audio tab, we don't need to add additional data
@@ -634,72 +637,155 @@ def process_sourcefile(
 
 def get_incomplete_lemmas_for_sourcefile(sourcefile_entry):
     """Get all incomplete lemmas associated with a sourcefile.
-    
+
     Returns a list of lemma objects that need their metadata completed.
-    
+
     Args:
         sourcefile_entry: Sourcefile object to find lemmas for
-        
+
     Returns:
         List of lemma objects that are incomplete and need metadata
     """
     # Find all wordforms associated with this sourcefile
-    sourcefile_wordforms = (
-        SourcefileWordform.select(SourcefileWordform.wordform)
-        .where(SourcefileWordform.sourcefile == sourcefile_entry)
+    sourcefile_wordforms = SourcefileWordform.select(SourcefileWordform.wordform).where(
+        SourcefileWordform.sourcefile == sourcefile_entry
     )
-    
+
     # Get unique wordform IDs
-    wordform_ids = [sw.wordform.id for sw in sourcefile_wordforms]
-    
+    wordform_ids = [sw.wordform.id for sw in sourcefile_wordforms]  # type: ignore
+
     if not wordform_ids:
         return []
-    
+
     # Get the lemmas from these wordforms that are incomplete
     incomplete_lemmas = (
         Lemma.select(Lemma)
         .join(Wordform)
-        .where(
-            (Wordform.id.in_(wordform_ids)) &
-            (Lemma.is_complete == False)
-        )
+        .where((Wordform.id.in_(wordform_ids)) & (Lemma.is_complete == False))
         .distinct()
     )
-    
+
     return list(incomplete_lemmas)
 
 
 def complete_lemma_metadata(lemma):
     """Complete metadata for a lemma.
-    
+
     Args:
         lemma: Lemma object to complete metadata for
-        
+
     Returns:
         Updated lemma object with complete metadata
     """
     if lemma.is_complete:
         return lemma
-    
+
     target_language_name = get_language_name(lemma.target_language_code)
-    
+
     # Generate full metadata
     try:
         metadata, _ = metadata_for_lemma_full(
-            lemma=lemma.lemma, 
-            target_language_name=target_language_name
+            lemma=lemma.lemma, target_language_name=target_language_name
         )
-        
+
         # Update lemma with new metadata
         for key, value in metadata.items():
             setattr(lemma, key, value)
-        
+
         # Mark as complete
         lemma.is_complete = True
         lemma.save()
-        
+
         return lemma
     except Exception as e:
         raise
 
     return sourcefile_entry
+
+
+def _create_text_sourcefile(
+    sourcedir_entry: Sourcedir,
+    filename: str,
+    text_target: str,
+    description: Optional[str],
+    metadata: Dict[str, Any],
+    sourcefile_type: str = "text",
+) -> Sourcefile:
+    """Helper function to create a text-based Sourcefile.
+
+    Assumes filename does not collide (collision should be checked beforehand if necessary).
+
+    Args:
+        sourcedir_entry: The Sourcedir object.
+        filename: The filename to use.
+        text_target: The text content.
+        description: Optional description text.
+        metadata: Metadata dictionary.
+        sourcefile_type: The type of sourcefile (default: "text").
+
+    Returns:
+        The created Sourcefile object.
+    """
+    # Removed collision check logic for simplicity
+    # Caller should handle collision checks if needed
+
+    # Create sourcefile entry
+    sourcefile = Sourcefile.create(
+        sourcedir=sourcedir_entry,
+        filename=filename,
+        text_target=text_target,
+        text_english="",  # Always initialize empty, populated during processing
+        metadata=metadata,
+        description=description,
+        sourcefile_type=sourcefile_type,
+    )
+
+    return sourcefile
+
+
+def preprocess_html_for_llm(html_content: str) -> str:
+    """Pre-process raw HTML to simplify it before sending to LLM.
+
+    Removes common non-content tags like script, style, nav, header, footer, etc.
+
+    Args:
+        html_content: Raw HTML string.
+
+    Returns:
+        Simplified HTML string.
+
+    Raises:
+        Exception: If BeautifulSoup parsing fails.
+    """
+    try:
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        # Tags to remove completely
+        tags_to_remove = [
+            "script",
+            "style",
+            "header",
+            "footer",
+            "nav",
+            "aside",
+            "form",
+            "button",
+            "iframe",
+            "link",
+            "meta",
+        ]
+        for tag_name in tags_to_remove:
+            for tag in soup.find_all(tag_name):
+                tag.decompose()  # Remove the tag and its content
+
+        # TODO: Consider removing elements by common ad/menu IDs/classes? (More fragile)
+        # Example: for el in soup.find_all(class_=re.compile(r'(ad|banner|menu|sidebar|popup)')): el.decompose()
+
+        # TODO: Consider stripping attributes like class, id, style? (Keep for now)
+        simplified_html = str(soup)  # Get the modified HTML as a string
+        return simplified_html
+
+    except Exception as e:
+        # Re-raise exception to be handled by the caller
+        # Include context about the failure
+        raise Exception(f"BeautifulSoup HTML pre-processing failed: {str(e)}") from e

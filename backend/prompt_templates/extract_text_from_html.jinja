@@ -1,0 +1,26 @@
+First, identify the main title of the article or content on the page.
+Second, extract the main textual content in {{ target_language_name }} from the HTML document below exactly as it appears.
+
+Output Format:
+1. Output the identified Title.
+2. Immediately follow the title with the separator: ----
+3. Immediately follow the separator with the main extracted {{ target_language_name }} text.
+
+Example Output:
+My Article Title----This is the first paragraph.\n\nThis is the second paragraph.
+
+Rules for Title:
+- If no clear title is found for the main content, output just "-" for the title part.
+
+Rules for Text Content:
+- Ignore HTML tags, navigation menus, headers, footers, sidebars, advertisements, scripts, styles, and other non-content elements.
+- Focus only on the primary article or body text.
+- Return only the extracted {{ target_language_name }} text, with no extra commentary or explanations.
+- Use "\n\n" to separate paragraphs. Do not try and preserve within-paragraph soft linebreaks or other formatting like bolding or italics.
+- If you encounter hyphenated words at line breaks within the *source* text, join them into a single word.
+- If no meaningful {{ target_language_name }} text content is found in the main body of the HTML, output just "-" for the text part (after the title and ---- separator).
+
+HTML Document:
+```html
+{{ html_content }}
+```
