@@ -4,6 +4,8 @@
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   
   export let data: PageData;
   
@@ -45,7 +47,7 @@
 </script>
 
 <svelte:head>
-  <title>{sourcefile.filename} | Audio | {sourcedir.path}</title>
+  <title>{truncate(sourcefile.filename, 30)} | Audio | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <SourcefileLayout

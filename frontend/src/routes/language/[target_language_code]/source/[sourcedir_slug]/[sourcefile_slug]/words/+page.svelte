@@ -3,6 +3,8 @@
   import { WordformCard } from '$lib';
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
   import SourcefileWords from '../components/SourcefileWords.svelte';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   
   export let data: PageData;
   
@@ -18,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>Words: {sourcefile.filename} | {sourcedir.path}</title>
+  <title>{truncate(sourcefile.filename, 30)} | Words | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <SourcefileLayout

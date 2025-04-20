@@ -3,6 +3,8 @@
   import { Card, MetadataCard } from '$lib';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate, generateMetaDescription } from '$lib/utils';
   
   export let data: PageData;
   const { wordformData } = data;
@@ -30,6 +32,16 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>{truncate(isValidData ? wordform_metadata.wordform : '', 30)} | Wordform | {target_language_name || target_language_code} | {SITE_NAME}</title>
+  {#if isValidData && wordform_metadata.translations}
+    <meta name="description" content="{generateMetaDescription(
+      wordform_metadata.translations.join('; '),
+      `${wordform_metadata.wordform} - ${target_language_name || target_language_code} wordform`
+    )}">
+  {/if}
+</svelte:head>
 
 <div class="container py-4">
   {#if !isValidData}

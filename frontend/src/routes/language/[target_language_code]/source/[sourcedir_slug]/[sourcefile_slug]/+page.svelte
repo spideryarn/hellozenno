@@ -10,6 +10,8 @@
   import SourcefileAudioTab from './components/SourcefileAudioTab.svelte';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   
   export let data: PageData;
   
@@ -101,7 +103,7 @@
 </script>
 
 <svelte:head>
-  <title>{sourcefile.filename} | {sourcedir.path}</title>
+  <title>{truncate(sourcefile.filename, 30)} | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <div class="container">

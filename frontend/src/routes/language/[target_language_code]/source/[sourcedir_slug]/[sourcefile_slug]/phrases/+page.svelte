@@ -3,6 +3,8 @@
   import { PhraseCard } from '$lib';
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
   import SourcefilePhrases from '../components/SourcefilePhrases.svelte';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   
   export let data: PageData;
   
@@ -18,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>Phrases: {sourcefile.filename} | {sourcedir.path}</title>
+  <title>{truncate(sourcefile.filename, 30)} | Phrases | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <SourcefileLayout

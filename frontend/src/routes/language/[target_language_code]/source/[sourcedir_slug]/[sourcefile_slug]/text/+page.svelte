@@ -2,6 +2,8 @@
   import type { PageData } from './$types';
   import SourcefileText from '../components/SourcefileText.svelte';
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate, generateMetaDescription } from '$lib/utils';
   
   export let data: PageData;
   
@@ -39,7 +41,11 @@
 </script>
 
 <svelte:head>
-  <title>{sourcefile.filename} | {sourcedir.path}</title>
+  <title>{truncate(sourcefile.filename, 30)} | Text | {language_name} | {SITE_NAME}</title>
+  <meta name="description" content="{generateMetaDescription(
+    sourcefile.text_english || sourcefile.text_target || '',
+    `${sourcefile.filename} - ${language_name} text source`
+  )}">
 </svelte:head>
 
 <SourcefileLayout

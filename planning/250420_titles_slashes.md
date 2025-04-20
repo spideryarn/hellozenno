@@ -70,10 +70,11 @@ Currently, page titles in the SvelteKit frontend are missing or inconsistent. UR
     - [x] **Sources List:** Update `frontend/src/routes/language/[target_language_code]/sources/+page.svelte`: Import `SITE_NAME`. Use loaded `languageName`. Set title `<title>Sources | {languageName} | {SITE_NAME}</title>`.
     - [x] **Lemmas List:** Update `frontend/src/routes/language/[target_language_code]/lemmas/+page.svelte`: Import `SITE_NAME`. Use loaded `data.language_name`. Set title `<title>Lemmas | {data.language_name} | {SITE_NAME}</title>`.
     - [x] **Lemma Detail:** Update `frontend/src/routes/language/[target_language_code]/lemma/[lemma]/+page.svelte`: Import `SITE_NAME` and `truncate`. Use loaded lemma data and language name. Set title `<title>{truncate(lemma_metadata?.lemma || lemmaParam, 30)} | Lemma | {lemmaResult?.target_language_name || target_language_code} | {SITE_NAME}</title>`.
-    - [ ] **Source File Detail (Text Tab):** Update `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text/+page.svelte`: Import `SITE_NAME`. Use loaded `sourcefile_name` and `$page.data.language_name`. Set title `<title>{sourcefile_name} | Text | {$page.data.language_name} | {SITE_NAME}</title>`. (Adapt similarly for `words`, `phrases` tabs etc.)
+    - [x] **Source File Detail (Text Tab):** Update `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/text/+page.svelte`: Import `SITE_NAME` and `truncate`. Use loaded `sourcefile.filename` and `language_name`. Set title `<title>{truncate(sourcefile.filename, 30)} | Text | {language_name} | {SITE_NAME}</title>`. (Similarly updated for `words`, `phrases`, `image`, `audio`, and `translation` tabs)
     - [x] **Profile Page:** Update `frontend/src/routes/auth/profile/+page.svelte`: Import `SITE_NAME`. Set title `<title>Profile | {SITE_NAME}</title>`.
     - [x] **Login Page:** Update `frontend/src/routes/auth/+page.svelte`: Import `SITE_NAME`. Set title `<title>Login / Sign Up | {SITE_NAME}</title>`.
-    - [ ] *(Add more sub-tasks or adjust as we cover other key routes like sentences, phrases, wordforms, search results)*
+    - [x] **Wordform Detail:** Updated `frontend/src/routes/language/[target_language_code]/wordform/[wordform]/+page.svelte`: Added title `<title>{truncate(wordform_metadata?.wordform, 30)} | Wordform | {target_language_name} | {SITE_NAME}</title>` and meta description.
+    - [ ] *(Add more sub-tasks or adjust as we cover other key routes like sentences, phrases, search results)*
 
 - [x] **Stage 6: Redirects**
     - [x] Create or update `frontend/src/routes/language/[target_language_code]/+page.server.ts` (using `.server.ts` is appropriate for redirects).
@@ -93,8 +94,6 @@ Currently, page titles in the SvelteKit frontend are missing or inconsistent. UR
 
 - [ ] **Stage 9: Future Enhancements (Optional)**
     - [ ] Add OpenGraph/Twitter meta tags for improved social media sharing.
-    - [ ] Implement structured data (JSON-LD) for rich results in search engines.
-    - [ ] Consider implementing breadcrumb navigation to complement the title structure.
 
 ## Approach to Layout Loading Issues
 
@@ -128,12 +127,16 @@ Completed:
   - Sources list
   - Lemmas list
   - Lemma detail view (with truncation for long names)
+  - Sourcefile detail views (text, words, phrases, image, audio, translation)
   - Authentication pages (login/profile)
 - Created `generateMetaDescription()` helper function for SEO descriptions
-- Added example meta description tag to Lemma detail page
+- Added meta description tags to:
+  - Lemma detail page
+  - Sourcefile text tab
+  - Wordform detail page
 
 Next Steps:
-- Implement remaining page titles (Sourcefile detail, sentences, phrases, etc.)
 - Add meta description tags to remaining pages with long content
-- Test all implemented features (trailing slash redirect, language redirect, etc.)
+- Test all implemented features (trailing slash redirect, language redirect)
 - Complete review and refinement (Stage 8)
+- Implement OpenGraph tags (optional Stage 9)

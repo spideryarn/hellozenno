@@ -2,6 +2,8 @@
   import type { PageData } from './$types';
   import SourcefileTranslation from '../components/SourcefileTranslation.svelte';
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   
   export let data: PageData;
   
@@ -16,7 +18,7 @@
 </script>
 
 <svelte:head>
-  <title>Translation: {sourcefile.filename} | {sourcedir.path}</title>
+  <title>{truncate(sourcefile.filename, 30)} | Translation | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <SourcefileLayout
