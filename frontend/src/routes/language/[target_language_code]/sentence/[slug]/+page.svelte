@@ -1,10 +1,17 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import Sentence from '$lib/components/Sentence.svelte';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   
   // Data from server-side load function
   export let data: PageData;
 </script>
+
+<svelte:head>
+  <title>{truncate(data.sentence.text, 30)} | Sentence | {data.sentence.target_language_code} | {SITE_NAME}</title>
+  <meta name="description" content="{data.sentence.translation || data.sentence.text}">
+</svelte:head>
 
 <div class="sentence-view">
   <div class="breadcrumbs">

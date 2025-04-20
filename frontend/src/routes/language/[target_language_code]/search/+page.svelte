@@ -8,6 +8,8 @@
   import { getContext } from 'svelte';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { X, ClipboardText } from 'phosphor-svelte';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   
   export let data: PageData;
   // Get supabase client from context if available
@@ -143,8 +145,8 @@
 <svelte:head>
   <title>
     {query 
-      ? `Search results for "${query}" - ${data.langName || 'Language'}`
-      : `Search ${data.langName || 'Language'}`}
+      ? `"${truncate(query, 20)}" | Search | ${data.langName} | ${SITE_NAME}`
+      : `Search | ${data.langName} | ${SITE_NAME}`}
   </title>
 </svelte:head>
 

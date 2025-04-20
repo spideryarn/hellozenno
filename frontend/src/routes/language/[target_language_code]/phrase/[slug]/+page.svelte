@@ -3,6 +3,8 @@
   import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/state';
   import { MetadataCard, Card } from '$lib';
+  import { SITE_NAME } from '$lib/config';
+  import { truncate } from '$lib/utils';
   import WordformCard from '$lib/components/WordformCard.svelte';
   import PhraseCard from '$lib/components/PhraseCard.svelte';
   
@@ -43,7 +45,8 @@
 </script>
 
 <svelte:head>
-  <title>{phrase.canonical_form} | Hello Zenno</title>
+  <title>{truncate(phrase.canonical_form, 30)} | Phrase | {data.language_name || languageCode} | {SITE_NAME}</title>
+  <meta name="description" content="{phrase.translations ? phrase.translations.join('; ') : ''} - {phrase.literal_translation || ''}">
 </svelte:head>
 
 <div class="container mt-4">

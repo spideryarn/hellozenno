@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Card from '$lib/components/Card.svelte';
   import { getPageUrl } from '$lib/navigation';
+  import { SITE_NAME } from '$lib/config';
   
   export let data;
   
@@ -60,7 +61,7 @@
 </script>
 
 <svelte:head>
-  <title>{language_name} Flashcards</title>
+  <title>Flashcards | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <div class="container my-4">

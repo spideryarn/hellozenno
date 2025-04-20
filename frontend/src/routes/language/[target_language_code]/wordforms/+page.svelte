@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { PageData } from './$types';
     import { WordformCard } from '$lib';
+    import { SITE_NAME } from '$lib/config';
     
     export let data: PageData;
     
@@ -9,7 +10,7 @@
 </script>
 
 <svelte:head>
-    <title>Wordforms - {language_name}</title>
+    <title>Wordforms | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <div class="container mt-4">

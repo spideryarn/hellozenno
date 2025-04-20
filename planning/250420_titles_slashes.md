@@ -74,7 +74,13 @@ Currently, page titles in the SvelteKit frontend are missing or inconsistent. UR
     - [x] **Profile Page:** Update `frontend/src/routes/auth/profile/+page.svelte`: Import `SITE_NAME`. Set title `<title>Profile | {SITE_NAME}</title>`.
     - [x] **Login Page:** Update `frontend/src/routes/auth/+page.svelte`: Import `SITE_NAME`. Set title `<title>Login / Sign Up | {SITE_NAME}</title>`.
     - [x] **Wordform Detail:** Updated `frontend/src/routes/language/[target_language_code]/wordform/[wordform]/+page.svelte`: Added title `<title>{truncate(wordform_metadata?.wordform, 30)} | Wordform | {target_language_name} | {SITE_NAME}</title>` and meta description.
-    - [ ] *(Add more sub-tasks or adjust as we cover other key routes like sentences, phrases, search results)*
+    - [x] **Wordforms List:** Updated `frontend/src/routes/language/[target_language_code]/wordforms/+page.svelte`: Added title `<title>Wordforms | {language_name} | {SITE_NAME}</title>`.
+    - [x] **Sentences List:** Updated `frontend/src/routes/language/[target_language_code]/sentences/+page.svelte`: Added title `<title>Sentences | {language_name} | {SITE_NAME}</title>`.
+    - [x] **Sentence Detail:** Updated `frontend/src/routes/language/[target_language_code]/sentence/[slug]/+page.svelte`: Added title `<title>{truncate(sentence.text, 30)} | Sentence | {target_language_code} | {SITE_NAME}</title>` and meta description.
+    - [x] **Phrases List:** Updated `frontend/src/routes/language/[target_language_code]/phrases/+page.svelte`: Added title `<title>Phrases | {language_name} | {SITE_NAME}</title>`.
+    - [x] **Phrase Detail:** Updated `frontend/src/routes/language/[target_language_code]/phrase/[slug]/+page.svelte`: Added title `<title>{truncate(phrase.canonical_form, 30)} | Phrase | {language_name} | {SITE_NAME}</title>` and meta description.
+    - [x] **Search Page:** Updated `frontend/src/routes/language/[target_language_code]/search/+page.svelte`: Added title `<title>\"${truncate(query, 20)}\" | Search | ${langName} | ${SITE_NAME}</title>`.
+    - [x] **Flashcards:** Updated `frontend/src/routes/language/[target_language_code]/flashcards/+page.svelte`: Added title `<title>Flashcards | {language_name} | {SITE_NAME}</title>`.
 
 - [x] **Stage 6: Redirects**
     - [x] Create or update `frontend/src/routes/language/[target_language_code]/+page.server.ts` (using `.server.ts` is appropriate for redirects).
@@ -125,18 +131,26 @@ Completed:
 - Core page titles implemented across all main sections:
   - Languages page
   - Sources list
-  - Lemmas list
-  - Lemma detail view (with truncation for long names)
+  - Lemmas list and detail
+  - Wordforms list and detail
+  - Sentences list and detail
+  - Phrases list and detail
   - Sourcefile detail views (text, words, phrases, image, audio, translation)
+  - Search pages
+  - Flashcards pages
   - Authentication pages (login/profile)
 - Created `generateMetaDescription()` helper function for SEO descriptions
 - Added meta description tags to:
   - Lemma detail page
   - Sourcefile text tab
   - Wordform detail page
+  - Sentence detail page
+  - Phrase detail page
 
 Next Steps:
-- Add meta description tags to remaining pages with long content
-- Test all implemented features (trailing slash redirect, language redirect)
+- Test all implemented features:
+  - Trailing slash redirect (navigate to a URL with trailing slash and verify it redirects)
+  - Language redirect (navigate to `/language/[code]` and verify it redirects to `/language/[code]/sources`)
+- Check for missing titles on any edge case pages
 - Complete review and refinement (Stage 8)
-- Implement OpenGraph tags (optional Stage 9)
+- Consider implementing OpenGraph tags for social sharing (optional Stage 9)

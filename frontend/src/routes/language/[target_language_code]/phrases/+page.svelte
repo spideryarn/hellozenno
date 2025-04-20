@@ -2,6 +2,7 @@
     import { PhraseCard } from '$lib';
     import type { Phrase } from '$lib/types';
     import { page } from '$app/state';
+    import { SITE_NAME } from '$lib/config';
     
     export let data: {
         phrases: Phrase[],
@@ -11,7 +12,7 @@
 </script>
 
 <svelte:head>
-    <title>{data.language_name} phrases and idioms - Hello Zenno</title>
+    <title>Phrases | {data.language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <div class="container my-5">

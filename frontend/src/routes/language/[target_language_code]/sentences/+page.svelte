@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { PageData } from './$types';
     import SentenceCard from '$lib/components/SentenceCard.svelte';
+    import { SITE_NAME } from '$lib/config';
     
     export let data: PageData;
     
@@ -9,7 +10,7 @@
 </script>
 
 <svelte:head>
-    <title>Sentences - {language_name}</title>
+    <title>Sentences | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
 <div class="container mt-4">
