@@ -224,6 +224,32 @@ def inspect_sourcefile_translation_api(
 
 
 @sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/image",
+    methods=["GET"],
+)
+def inspect_sourcefile_image_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get the image tab content of a sourcefile."""
+    return _inspect_sourcefile_core(
+        target_language_code, sourcedir_slug, sourcefile_slug, "image"
+    )
+
+
+@sourcefile_api_bp.route(
+    "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/audio",
+    methods=["GET"],
+)
+def inspect_sourcefile_audio_api(
+    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+):
+    """API endpoint to get the audio tab content of a sourcefile."""
+    return _inspect_sourcefile_core(
+        target_language_code, sourcedir_slug, sourcefile_slug, "audio"
+    )
+
+
+@sourcefile_api_bp.route(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process",
     methods=["POST"],
 )

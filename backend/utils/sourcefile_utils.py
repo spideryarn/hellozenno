@@ -434,14 +434,14 @@ def ensure_tricky_phrases(
 def get_sourcefile_details(
     sourcefile_entry: Sourcefile,
     target_language_code: str,
-    purpose="basic",  # "basic", "text", "words", "phrases", or "translation"
+    purpose="basic",  # "basic", "text", "words", "phrases", "translation", "image", or "audio"
 ):
     """Get details for a sourcefile based on the specific purpose needed.
 
     Args:
         sourcefile_entry: The Sourcefile object
         target_language_code: The language code
-        purpose: What the data will be used for ("basic", "text", "words", "phrases", or "translation")
+        purpose: What the data will be used for ("basic", "text", "words", "phrases", "translation", "image", or "audio")
 
     Returns:
         A dictionary with the data needed for the specified purpose
@@ -582,6 +582,20 @@ def get_sourcefile_details(
         )
 
         result["phrases"] = phrases
+        
+    # Add image specific data for image tab
+    elif purpose == "image":
+        # For image tab, we don't need to add additional data
+        # The base result already includes filename, sourcefile_type, and other metadata
+        # The actual image data is accessed through the view_sourcefile_vw endpoint
+        pass
+        
+    # Add audio specific data for audio tab
+    elif purpose == "audio":
+        # For audio tab, we don't need to add additional data
+        # The base result already includes filename, sourcefile_type, and other metadata
+        # The actual audio data is accessed through the play_sourcefile_audio_vw endpoint
+        pass
 
     return result
 
