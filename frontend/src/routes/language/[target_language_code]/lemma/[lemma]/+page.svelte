@@ -9,16 +9,24 @@
   // import UserDisplay from '$lib/components/UserDisplay.svelte'; // TODO: Fix path or create component
   
   export let data: PageData;
-  const { lemmaData, authError, target_language_code, target_language_name, metadata } = data;
+  // Destructure lemmaResult which contains the API response, and the separately passed params
+  const { lemmaResult, target_language_code, lemma: lemmaParam } = data; 
   
-  // Handle potential partial data in case of auth error
-  // The actual full metadata is nested within lemmaData if successful
-  const lemma_metadata = lemmaData?.lemma_metadata || lemmaData || {};
+  // Extract the actual lemma data and potential error from lemmaResult
+  const lemma_metadata = lemmaResult?.lemma_metadata || lemmaResult?.partial_lemma_metadata || {};
+  const authError = lemmaResult?.authentication_required_for_generation 
+                      ? lemmaResult.description 
+                      : null;
+  const notFoundError = lemmaResult?.error === 'Not Found'; // Check for 404 specifically
+  
+  // Extract the server-provided metadata (created/updated timestamps)
+  const metadata = lemmaResult?.metadata;
 
   // Define login URL with redirect back to current page
   $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
 
   // Generate API URL for delete action (only if lemma exists properly)
+  // Use lemma_metadata.lemma which should be populated if the request was successful
   const deleteUrl: string | undefined = lemma_metadata?.lemma ? getApiUrl(RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW, {
     target_language_code,
     lemma: lemma_metadata.lemma
@@ -38,7 +46,7 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
-          <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{target_language_name || target_language_code}</a></li>
+          <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{lemmaResult?.target_language_name || target_language_code}</a></li>
           <li class="breadcrumb-item"><a href="/language/{target_language_code}/lemmas">Lemmas</a></li>
           <li class="breadcrumb-item active" aria-current="page">{lemma_metadata?.lemma || 'Lemma'}</li>
         </ol>
@@ -138,7 +146,7 @@
       {#each lemma_metadata.related_words_phrases_idioms as related}
         <div class="col">
           <LemmaCard 
-            lemma={{ lemma: related }} 
+            lemma={related} 
             target_language_code={target_language_code} 
             showDetails={false} 
           />
@@ -154,7 +162,7 @@
       {#each lemma_metadata.synonyms as synonym}
         <div class="col">
           <LemmaCard 
-            lemma={{ lemma: synonym }} 
+            lemma={synonym} 
             target_language_code={target_language_code} 
             showDetails={false} 
           />
@@ -170,7 +178,7 @@
       {#each lemma_metadata.antonyms as antonym}
         <div class="col">
           <LemmaCard 
-            lemma={{ lemma: antonym }}
+            lemma={antonym}
             target_language_code={target_language_code} 
             showDetails={false} 
           />
