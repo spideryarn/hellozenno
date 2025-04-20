@@ -7,6 +7,7 @@
   import { page } from '$app/stores';
   import { getContext } from 'svelte';
   import type { SupabaseClient } from '@supabase/supabase-js';
+  import { X, ClipboardText } from 'phosphor-svelte';
   
   export let data: PageData;
   // Get supabase client from context if available
@@ -15,6 +16,7 @@
   let query = data.query || '';
   let result: SearchResult | null = data.initialResult || null;
   let loading = false;
+  let searchInput: HTMLInputElement;
   
   // Ensure query is properly set from URL on mount and perform search if needed
   onMount(() => {
@@ -95,6 +97,25 @@
     // The server-side load already has access to the session via locals
     goto(`/language/${data.target_language_code}/search?q=${encodeURIComponent(query)}`);
   }
+  
+  function clearSearch() {
+    query = '';
+    if (searchInput) {
+      searchInput.focus();
+    }
+  }
+  
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      query = text;
+      if (searchInput) {
+        searchInput.focus();
+      }
+    } catch (error) {
+      console.error('Failed to read clipboard:', error);
+    }
+  }
 </script>
 
 <svelte:head>
@@ -113,10 +134,31 @@
       <input 
         type="text" 
         bind:value={query} 
+        bind:this={searchInput}
         placeholder={`Enter a ${data.langName || ''} word to search...`}
         aria-label="Search term"
         class="form-control"
       />
+      {#if query}
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          aria-label="Clear search" 
+          title="Clear search"
+          on:click={clearSearch}
+        >
+          <X size={16} />
+        </button>
+      {/if}
+      <button 
+        type="button" 
+        class="btn btn-outline-secondary" 
+        aria-label="Paste from clipboard" 
+        title="Paste from clipboard"
+        on:click={pasteFromClipboard}
+      >
+        <ClipboardText size={16} />
+      </button>
       <button type="submit" class="btn btn-primary" disabled={loading}>
         {loading ? 'Searching...' : 'Search'}
       </button>
