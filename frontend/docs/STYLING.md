@@ -43,7 +43,7 @@ We provide reusable Svelte components to maintain consistent styling:
 - `SentenceCard.svelte`: For displaying sentence cards
 - `MetadataCard.svelte`: For displaying metadata information
 - `CollapsibleHeader.svelte`: Expandable header component with toggle functionality
-- ...
+- `LoadingSpinner.svelte`: For displaying a loading indicator
 
 ## Icons
 
