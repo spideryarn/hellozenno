@@ -117,10 +117,16 @@
 
   // Helper to create tooltip content
   function createTooltipContent(data: WordPreview, word: string) {
+    // Get the lemma from data or default to the word
+    const lemma = data?.lemma || word;
+    
+    // Create link to the lemma page - ensure proper encoding for URLs
+    const lemmaLink = `/language/${target_language_code}/lemma/${encodeURIComponent(lemma)}`;
+    
     // Always create a tooltip, even if data is minimal or missing
     let content = `
       <div class="tippy-content">
-        <h4>${data?.lemma || word}</h4>
+        <h4><a href="${lemmaLink}" class="tooltip-lemma-link">${lemma}</a></h4>
     `;
     
     if (data?.translations && data.translations.length > 0) {
@@ -135,6 +141,9 @@
     if (data?.etymology) {
       content += `<p class="etymology">${data.etymology}</p>`;
     }
+    
+    // Add a view details link at the bottom
+    content += `<p class="view-details"><a href="${lemmaLink}">View full details →</a></p>`;
     
     // Only add debug info in non-production environments
     if (import.meta.env.DEV) {
@@ -157,11 +166,15 @@
 
   // Helper to create error tooltip content  
   function createErrorContent(word: string, error?: any) {
+    // Create link to the lemma page - even for error cases, link to the word as lemma
+    const lemmaLink = `/language/${target_language_code}/lemma/${encodeURIComponent(word)}`;
+    
     // Show a more helpful error message with the word itself
     let errorContent = `
       <div class="tippy-content">
-        <h4>${word}</h4>
+        <h4><a href="${lemmaLink}" class="tooltip-lemma-link">${word}</a></h4>
         <p class="translation error"><em>Error loading word information</em></p>
+        <p class="view-details"><a href="${lemmaLink}">Try view details →</a></p>
     `;
     
     // Only add debug info in non-production environments
@@ -520,6 +533,32 @@
   
   :global(.tippy-content .translation.error) {
     color: #d97a27; /* Secondary color from theme for errors */
+  }
+  
+  /* Tooltip link styles */
+  :global(.tippy-content .tooltip-lemma-link) {
+    color: #4CAD53;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  :global(.tippy-content .tooltip-lemma-link:hover) {
+    text-decoration: underline;
+  }
+  
+  :global(.tippy-content .view-details) {
+    margin-top: 8px;
+    font-size: 13px;
+    text-align: right;
+  }
+  
+  :global(.tippy-content .view-details a) {
+    color: #4CAD53;
+    text-decoration: none;
+  }
+  
+  :global(.tippy-content .view-details a:hover) {
+    text-decoration: underline;
   }
   
   /* Responsive styling for different screen sizes */
