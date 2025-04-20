@@ -2,7 +2,8 @@
   import type { PageData } from './$types';
   import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import { Spinner, Trash, ArrowUp } from 'phosphor-svelte';
+  import { Trash, ArrowUp } from 'phosphor-svelte';
+  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { onMount } from 'svelte';
   import { DescriptionFormatted } from '$lib';
   import { page } from '$app/stores';
@@ -645,7 +646,7 @@
                   disabled={!textTitle.trim() || !textContent.trim() || isCreatingText}
                   title={!textTitle.trim() || !textContent.trim() ? "Please fill in both title and text content" : ""}>
             {#if isCreatingText}
-              <span class="me-2"><Spinner size={16} weight="bold" /></span>
+              <span class="me-2"><LoadingSpinner /></span>
               Creating...
             {:else}
               Create
@@ -701,7 +702,7 @@
                   disabled={!youtubeUrl.trim() || isDownloadingYoutube}
                   title={!youtubeUrl.trim() ? "Please enter a YouTube URL" : ""}>
             {#if isDownloadingYoutube}
-              <span class="me-2"><Spinner size={16} weight="bold" /></span>
+              <span class="me-2"><LoadingSpinner /></span>
               Downloading...
             {:else}
               Download Audio
@@ -717,7 +718,18 @@
 {#if isUrlModalOpen}
 <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog" aria-labelledby="urlUploadModalLabel" aria-modal="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
+    <div class="modal-content"
+         role="dialog" 
+         aria-labelledby="urlUploadModalLabel" 
+         tabindex="-1"
+         on:keydown|stopPropagation={(e) => {
+           if (e.key === 'Escape') {
+             isUrlModalOpen = false;
+           }
+           if (e.key === 'Enter' && urlToUpload.trim() && !isUrlLoading) {
+             handleSubmitUrlUpload();
+           }
+         }}>
       <div class="modal-header">
         <h5 class="modal-title" id="urlUploadModalLabel">Upload from URL</h5>
         <button type="button" class="btn-close" aria-label="Close" on:click={() => isUrlModalOpen = false}></button>
@@ -734,18 +746,12 @@
           <label for="urlInput" class="form-label">Enter URL:</label>
           <input type="url" class="form-control" id="urlInput" bind:value={urlToUpload} placeholder="https://example.com/article" required use:focusOnMount>
         </div>
-        
-        {#if isUrlLoading}
-          <div class="d-flex justify-content-center">
-            <Spinner size={32} />
-          </div>
-        {/if}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" on:click={() => isUrlModalOpen = false}>Cancel</button>
         <button type="button" class="btn btn-primary" on:click={handleSubmitUrlUpload} disabled={isUrlLoading || !urlToUpload}>
           {#if isUrlLoading}
-            <Spinner size={16} color="#fff" class="me-1" /> Uploading...
+            <LoadingSpinner style="width: 16px; height: 16px; color: #fff; margin-right: 0.25rem; vertical-align: text-bottom;" /> Uploading...
           {:else}
             Upload
           {/if}

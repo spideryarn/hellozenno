@@ -108,6 +108,7 @@ Custom CSS classes for consistent styling:
        <h5 id="modal-title">Modal Title</h5>
      </div>
      ```
+   - **Keyboard Shortcuts:** Implement common shortcuts like `Escape` to close and `Enter` (or `Ctrl+Enter` for multi-line inputs) to submit the primary action, attached to the modal content element. Ensure event propagation is stopped (`|stopPropagation`) if necessary.
 
 4. Form elements and focus management:
    - Avoid using `autofocus` attribute as it can be disruptive for screen reader users
