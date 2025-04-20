@@ -1,10 +1,19 @@
 import type { PageLoad } from './$types';
 
+const DEFAULT_REDIRECT = '/profile'; // Or '/' as preferred default
+const AUTH_PATH = '/auth';
+
 export const load = (({ url }) => {
-    // Get the 'next' query parameter, default to '/' if not present
-    const nextUrl = url.searchParams.get('next') || '/';
+    const nextParam = url.searchParams.get('next');
+    let validatedNextUrl = DEFAULT_REDIRECT; // Default to safe path
+
+    // Check if nextParam exists, starts with '/', doesn't start with '//', and isn't the auth path itself
+    if (nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') && nextParam !== AUTH_PATH) {
+        validatedNextUrl = nextParam; // Use the validated relative path
+    }
+    // Otherwise, validatedNextUrl remains DEFAULT_REDIRECT
 
     return {
-        nextUrl: nextUrl
+        nextUrl: validatedNextUrl
     };
 }) satisfies PageLoad; 
