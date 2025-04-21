@@ -109,6 +109,7 @@ export interface WordPreview {
     // Optional fields that may be present
     etymology?: string | null;
     translations?: string[]; // Some responses use array format
+    inflection_type?: string; // Grammatical information about the wordform
     
     // Debug information (only in development)
     _debug?: {

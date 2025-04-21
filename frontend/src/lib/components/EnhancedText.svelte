@@ -129,6 +129,7 @@
         <h4><a href="${wordformLink}" class="tooltip-lemma-link" target="_blank">${lemma}</a></h4>
     `;
     
+    // Show the wordform translation instead of lemma translation
     if (data?.translations && data.translations.length > 0) {
       content += `<p class="translation">${data.translations.join('; ')}</p>`;
     } else if (data?.translation) {
@@ -136,6 +137,11 @@
     } else {
       // Show a default message if no translation available
       content += `<p class="translation"><em>(translation not available)</em></p>`;
+    }
+    
+    // Show the inflection type if available
+    if (data?.inflection_type) {
+      content += `<p class="inflection-type"><em>${data.inflection_type}</em></p>`;
     }
     
     if (data?.etymology) {
@@ -516,6 +522,13 @@
   
   :global(.tippy-content .translation) {
     color: #e9e9e9; /* Light text color matching site */
+  }
+  
+  :global(.tippy-content .inflection-type) {
+    color: #d97a27; /* Use secondary orange color for inflection type */
+    font-style: italic;
+    font-size: 13px;
+    margin-top: 2px;
   }
   
   :global(.tippy-content .etymology) {

@@ -14,6 +14,7 @@ class WordPreview(TypedDict):
     lemma: str
     translation: str
     etymology: str | None
+    inflection_type: str | None
 
 
 def normalize_text(text: str) -> str:
@@ -79,6 +80,7 @@ def get_word_preview(target_language_code: str, word: str) -> WordPreview | None
             "; ".join(wordform.translations) if wordform.translations else ""
         ),
         "etymology": lemma_entry.etymology if lemma_entry else None,
+        "inflection_type": wordform.inflection_type,
     }
 
 
