@@ -43,6 +43,9 @@ N.B. Don't run things on production without being explicitly asked to.
 
 1. **Creating a Migration**
    ```bash
+   # Change to the backend directory first
+   cd backend
+   
    # Create a new migration file with the proper template
    python -m utils.migrate create your_migration_name
    ```
@@ -134,11 +137,11 @@ Note: No need to bind models to database - they're just used for schema definiti
    - Make a proposal for which indexes (informed by how we're querying that model) we'll need, but check with the user first
    - Wherever possible, use Peewee's built-in migration functions (e.g., `migrator.add_columns()`, `migrator.drop_columns()`)
    - When raw SQL is unavoidable, always use `migrator.sql()` - never use `database.execute_sql()`
-   - Use the `utils/migrate.py` wrapper or `scripts/local/migrate.sh` for running migrations
+   - Use the `utils/migrate.py` wrapper (from the backend directory) or `scripts/local/migrate.sh` for running migrations
 
 2. **Naming and Organization**
    - Use descriptive migration names
-   - Use `utils/migrate.py`, which will should generate sequential number prefixes, e.g., `001_initial_schema.py` for you
+   - Use `utils/migrate.py` (from the backend directory), which will generate sequential number prefixes, e.g., `001_initial_schema.py` for you
    - One logical change per migration
 
 3. **Error Handling**

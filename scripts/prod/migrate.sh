@@ -21,7 +21,7 @@ fi
 
 echo "Running migrations on Vercel database..."
 
-# Always run from the backend directory where utils/migrate.py is located
+# Always run from the backend directory
 cd "$PROJECT_ROOT/backend"
 
 # Run migrations with environment variables properly set
