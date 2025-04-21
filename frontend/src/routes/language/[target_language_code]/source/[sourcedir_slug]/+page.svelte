@@ -234,39 +234,71 @@
     uploadProgress = true;
     uploadProgressValue = 0;
     
+    // Track successful uploads count
+    let successCount = 0;
+    let errorCount = 0;
+    const totalFiles = files.length;
+    
     try {
-      const formData = new FormData();
+      // Process files sequentially to avoid payload size limits
+      // This maintains the ability for users to select multiple files at once
+      // while uploading them one by one to avoid Vercel's 4.5MB payload limit
       for (let i = 0; i < files.length; i++) {
-        formData.append('files[]', files[i]);
+        const file = files[i];
+        
+        // Update progress for each file
+        uploadProgressValue = Math.round((i / totalFiles) * 100);
+        
+        try {
+          // Create a new FormData for each file
+          const formData = new FormData();
+          formData.append('files[]', file);
+          
+          // Get headers with auth token
+          const headers = await createAuthHeaders('application/json');
+          headers.delete('Content-Type'); // Let the browser set the content type for FormData
+          headers.set('Accept', 'application/json');
+          
+          const response = await fetch(
+            getApiUrl(RouteName.SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API, {
+              target_language_code: target_language_code,
+              sourcedir_slug: sourcedir.slug
+            }),
+            {
+              method: 'POST',
+              body: formData,
+              headers: headers
+            }
+          );
+          
+          // Parse the response JSON
+          const responseData = await response.json().catch(() => ({}));
+          
+          if (response.ok) {
+            successCount++;
+          } else {
+            errorCount++;
+            console.error(`Error uploading ${file.name}: ${responseData.error || response.statusText}`);
+          }
+        } catch (fileError) {
+          errorCount++;
+          console.error(`Error uploading ${file.name}:`, fileError);
+        }
       }
       
-      // Get headers with auth token
-      const headers = await createAuthHeaders('application/json');
-      headers.delete('Content-Type'); // Let the browser set the content type for FormData
-      headers.set('Accept', 'application/json');
+      // Final progress update
+      uploadProgressValue = 100;
       
-      const response = await fetch(
-        getApiUrl(RouteName.SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API, {
-          target_language_code: target_language_code,
-          sourcedir_slug: sourcedir.slug
-        }),
-        {
-          method: 'POST',
-          body: formData,
-          headers: headers
+      // Report results and reload if any files were uploaded successfully
+      if (successCount > 0) {
+        if (errorCount > 0) {
+          alert(`Uploaded ${successCount} file(s) successfully. ${errorCount} file(s) failed.`);
         }
-      );
-      
-      // Parse the response JSON
-      const responseData = await response.json().catch(() => ({}));
-      
-      if (response.ok) {
-        // Successful upload - just reload the page
-        // The newly uploaded files will appear in the list
+        // Successful upload - reload the page to show newly uploaded files
         window.location.reload();
       } else {
-        // Show error message
-        throw new Error(responseData.error || `Upload failed with status: ${response.status}`);
+        // All files failed
+        throw new Error(`Failed to upload any files. Please try again with smaller files.`);
       }
     } catch (error) {
       // Only show alerts for errors since they're important
