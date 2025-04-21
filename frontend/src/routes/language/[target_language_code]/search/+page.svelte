@@ -8,6 +8,7 @@
   import { X, ClipboardText, MagnifyingGlass } from 'phosphor-svelte';
   import { SITE_NAME } from '$lib/config';
   import { truncate } from '$lib/utils';
+  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   
   export let data: PageData;
   // Get supabase client from data prop (passed from +layout.ts)
@@ -25,6 +26,11 @@
     
     // Update query with the URL parameter
     query = urlQuery;
+    
+    // Focus on search input (in addition to the autofocus attribute)
+    if (searchInput) {
+      searchInput.focus();
+    }
     
     // If we have a query parameter but no valid search result, perform the search
     if (urlQuery && (!result || result.status === 'empty_query')) {
@@ -142,7 +148,12 @@
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleSearch();
+      if (e.metaKey || e.ctrlKey) {
+        const url = `/language/${data.target_language_code}/search?q=${encodeURIComponent(query)}`;
+        window.open(url, '_blank');
+      } else {
+        handleSearch();
+      }
     } else if (e.key === 'Escape') {
       e.preventDefault();
       clearSearch();
@@ -174,7 +185,8 @@
   <form on:submit|preventDefault={handleSearch}>
     <div class="input-group mb-4">
       <div class="position-relative flex-grow-1">
-        <input 
+        <!-- svelte-ignore a11y_autofocus -->
+      <input 
           type="text" 
           bind:value={query} 
           bind:this={searchInput}
@@ -182,13 +194,14 @@
           aria-label="Search term"
           class="form-control"
           on:keydown={handleKeydown}
+          autofocus
           style="padding-right: 2.5rem; border-top-right-radius: 0; border-bottom-right-radius: 0;"
         />
-        <div style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
+        <div class="input-actions" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
           {#if query}
             <button 
               type="button"
-              style="background: none; border: none; color: var(--bs-gray-500); padding: 0.25rem; cursor: pointer;"
+              class="input-action-button" style="background: none; border: none; color: var(--bs-gray-500); padding: 0.25rem; cursor: pointer;"
               aria-label="Clear search" 
               title="Clear search"
               on:click={clearSearch}
@@ -198,7 +211,7 @@
           {:else if !loading}
             <button 
               type="button"
-              style="background: none; border: none; color: var(--bs-gray-500); padding: 0.25rem; cursor: pointer;"
+              class="input-action-button" style="background: none; border: none; color: var(--bs-gray-500); padding: 0.25rem; cursor: pointer;"
               aria-label="Paste from clipboard" 
               title="Paste from clipboard"
               on:click={pasteFromClipboard}
@@ -216,9 +229,7 @@
           style="margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0;"
         >
           {#if loading}
-            <div class="spinner-border spinner-border-sm" role="status" style="width: 16px; height: 16px;">
-              <span class="visually-hidden">Loading...</span>
-            </div>
+            <LoadingSpinner style="width: 16px; height: 16px;" />
           {:else}
             <MagnifyingGlass size={16} weight="bold" />
           {/if}
@@ -472,5 +483,14 @@
   
   .hz-foreign-text {
     font-family: var(--bs-font-sans-serif);
+  }
+
+  .input-action-button:hover {
+    color: var(--bs-gray-700);
+  }
+
+  .input-actions {
+    display: flex;
+    align-items: center;
   }
 </style>
