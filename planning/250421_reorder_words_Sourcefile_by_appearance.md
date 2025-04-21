@@ -19,34 +19,16 @@ Currently, words on the Sourcefile Words page (`/language/[lang]/source/[sourced
 
 ## Approaches Considered
 
-### Backend Approach
+### Backend Approach (PREFERRED)
 Modify the extraction process to track the actual position of words in text:
 - Pros: More accurate, consistent with database design
 - Cons: Requires reprocessing all existing files, more complex implementation
 
-### Frontend Approach
+### Frontend Approach (DISCARDED)
 Add sorting options directly in the UI:
 - Pros: No data migration needed, can be implemented quickly
 - Cons: Less accurate for complex texts, may have performance impact for very large texts
 
-## Actions
-
-- [ ] Create a frontend implementation with multiple sort options
-  - [ ] Update `/frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileWords.svelte` to add sort controls
-  - [ ] Implement sort options in the component:
-    - "Processing Order" (current default)
-    - "Alphabetical" (sort by wordform text)
-    - "Order in Text" (new feature)
-  - [ ] For "Order in Text" option:
-    - Fetch text content if not already available
-    - Scan text to find first occurrence of each word
-    - Sort wordforms array based on appearance position
-  - [ ] Add visual indicator showing current sort method
-  - [ ] Persist sort preference in local storage
-
-- [ ] Consider future backend implementation
-  - [ ] Evaluate feasibility of modifying `extract_tricky_words` in `vocab_llm_utils.py` to store positional data
-  - [ ] Design migration strategy for existing data
 
 ## Acceptance Criteria
 - Users can switch between different sorting methods for words
@@ -59,3 +41,9 @@ Add sorting options directly in the UI:
 - Full backend implementation with accurate positional tracking during processing
 - Apply similar sorting concepts to phrases tab
 - Add options to sort by frequency, difficulty, or other metadata
+
+## Actions
+
+perhaps a first stage would be to change the logic, so that new Sourcefiles are correct
+
+and then we could get round to fixing the older ones later?

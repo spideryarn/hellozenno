@@ -57,7 +57,8 @@
   .translated-text p {
     margin-bottom: 1rem;
     line-height: 1.6;
-    max-width: 65ch;
+    max-width: 70ch;
+    font-size: 1.2rem;
   }
   
   .no-content {
