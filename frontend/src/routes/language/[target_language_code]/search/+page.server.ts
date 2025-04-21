@@ -69,6 +69,11 @@ export const load: PageServerLoad = async ({ params, url, fetch, locals }) => {
                 } else {
                     console.error(`Server-side search error: ${response.status} ${response.statusText}`);
                     // Return an error result
+                    // Special handling for 401 status
+                    const errorMessage = response.status === 401 
+                        ? `401 UNAUTHORIZED` 
+                        : `Search error: ${response.status} ${response.statusText}`;
+                    
                     return {
                         target_language_code,
                         langName,
@@ -78,7 +83,7 @@ export const load: PageServerLoad = async ({ params, url, fetch, locals }) => {
                             query: query,
                             target_language_code: target_language_code,
                             target_language_name: langName,
-                            error: `Search error: ${response.status} ${response.statusText}`,
+                            error: errorMessage,
                             data: {}
                         },
                         has_query: true,

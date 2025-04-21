@@ -402,16 +402,33 @@
       
       <!-- Error state -->
       {:else if result.status === 'error'}
-        <div class="card mb-4">
-          <div class="card-header bg-danger text-white">
-            <h5 class="card-title mb-0">Search Error</h5>
+        {#if result.error && result.error.includes('401 UNAUTHORIZED')}
+          <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+              <h5 class="card-title mb-0">Login Required</h5>
+            </div>
+            <div class="card-body">
+              <p>You need to be logged in to use the search feature.</p>
+              <p>This helps us manage AI usage costs and provide better service.</p>
+              <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}${query ? `?q=${encodeURIComponent(query)}` : ''}`} 
+                 class="btn btn-primary mt-2">
+                Log in to Search
+              </a>
+            </div>
           </div>
-          <div class="card-body">
-            <p>Sorry, we encountered an error processing your search.</p>
-            <p class="text-danger">{result.error || 'Unknown error occurred'}</p>
-            <p>Please try again later or with a different search term.</p>
+        {:else}
+          <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+              <h5 class="card-title mb-0">Search Error</h5>
+            </div>
+            <div class="card-body">
+              <p>Sorry, we encountered an error processing your search.</p>
+              <p class="text-danger">{result.error || 'Unknown error occurred'}</p>
+              <p>Please try again later or with a different search term.</p>
+            </div>
           </div>
-        </div>
+        {/if}
+      
       {/if}
     </div>
   {/if}
