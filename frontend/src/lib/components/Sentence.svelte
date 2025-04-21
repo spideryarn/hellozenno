@@ -62,9 +62,9 @@
           </audio>
           
           <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(0.8)}>0.8x</button>
+            <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(0.85)}>0.85x</button>
             <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(1.0)}>1.0x</button>
-            <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(1.5)}>1.5x</button>
+            <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(1.2)}>1.2x</button>
           </div>
         </div>
       {/if}
