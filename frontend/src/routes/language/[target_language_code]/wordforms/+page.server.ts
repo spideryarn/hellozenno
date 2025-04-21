@@ -3,12 +3,12 @@ import type { PageServerLoad } from "./$types";
 import { getWordformsForLanguage } from "$lib/api";
 import { get_language_name } from "$lib/utils";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code } = params;
 
     try {
         // Fetch wordforms for the specified language
-        const wordforms = await getWordformsForLanguage(target_language_code);
+        const wordforms = await getWordformsForLanguage(locals.supabase, target_language_code);
 
         // Get language name for the title
         const language_name = await get_language_name(target_language_code);
