@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ params, url, fetch, locals }) => {
                 // Use the API base URL for consistency
                 // Add authorization header if user is logged in
                 const headers = new Headers();
-                const { data: { session } } = await supabase.auth.getSession();
+                const { session } = locals; // Use the validated session from locals
                 if (session?.access_token) {
                     headers.set('Authorization', `Bearer ${session.access_token}`);
                 }
