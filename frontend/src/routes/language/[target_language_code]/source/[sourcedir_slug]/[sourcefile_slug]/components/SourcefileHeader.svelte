@@ -75,7 +75,7 @@
       const supabaseClient = data.supabase;
       
       processingQueue = new SourcefileProcessingQueue(
-        supabaseClient, // Pass the supabase client from data
+        supabaseClient ?? null, // Pass null if undefined
         target_language_code,
         sourcedir_slug,
         sourcefile_slug,
@@ -603,7 +603,7 @@
 {/if}
 
 {#if $processingState.isProcessing && $processingState.totalSteps > 0}
-  <div class="processing-status" on:click={() => showDetailedProgress = !showDetailedProgress}>
+  <div class="processing-status">
     <div class="progress-container">
       <div class="progress-bar" style="width: {($processingState.progress / $processingState.totalSteps) * 100}%"></div>
     </div>
@@ -622,52 +622,11 @@
       {:else if $processingState.currentStep === 'phrases'}
         <span>Finding useful phrases... ({$processingState.progress}/{$processingState.totalSteps})</span>
       {:else if $processingState.currentStep === 'lemma_metadata'}
-        <span>Completing vocabulary details... ({$processingState.progress}/{$processingState.totalSteps})</span>
+        <span>{$processingState.description} ({$processingState.progress}/{$processingState.totalSteps})</span>
       {:else}
-        <span>Processing... ({$processingState.progress}/{$processingState.totalSteps})</span>
+        <span>{$processingState.description || 'Processing...'} ({$processingState.progress}/{$processingState.totalSteps})</span>
       {/if}
-      
-      <div class="progress-info-icon" title="Click for more details">
-        <Info size={16} weight="duotone" />
-      </div>
     </div>
-    
-    {#if showDetailedProgress}
-      <div class="detailed-progress">
-        <div class="detailed-progress-header">Processing Details</div>
-        <div class="detailed-progress-item">
-          <span class="detail-label">Current Step:</span>
-          <span class="detail-value">{$processingState.description || 'Processing'}</span>
-        </div>
-        <div class="detailed-progress-item">
-          <span class="detail-label">Progress:</span>
-          <span class="detail-value">{$processingState.progress} of {$processingState.totalSteps} steps completed ({Math.floor(($processingState.progress / $processingState.totalSteps) * 100)}%)</span>
-        </div>
-        {#if $processingState.totalIterations > 1}
-          <div class="detailed-progress-item">
-            <span class="detail-label">Current Run:</span>
-            <span class="detail-value">{$processingState.currentIteration} of {$processingState.totalIterations}</span>
-          </div>
-        {/if}
-        {#if pendingRuns > 0}
-          <div class="detailed-progress-item">
-            <span class="detail-label">Queued Runs:</span>
-            <span class="detail-value">{pendingRuns}</span>
-          </div>
-        {/if}
-        {#if $processingState.error}
-          <div class="detailed-progress-item error">
-            <span class="detail-label">Error:</span>
-            <span class="detail-value">{$processingState.error}</span>
-          </div>
-        {/if}
-        <div class="detailed-progress-footer">
-          <button class="close-details-btn" on:click|stopPropagation={() => showDetailedProgress = false}>
-            Close Details
-          </button>
-        </div>
-      </div>
-    {/if}
   </div>
 {/if}
 
