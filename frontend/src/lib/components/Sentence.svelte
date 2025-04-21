@@ -3,6 +3,8 @@
   import { MetadataCard } from '$lib';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
+  import { goto } from '$app/navigation';
+  import Trash from 'phosphor-svelte/lib/Trash';
   
   // Props for the Sentence component
   export let sentence: Sentence;
@@ -12,6 +14,7 @@
   // State for audio player
   let audioPlayer: HTMLAudioElement;
   let currentPlaybackRate: number = 1.0;
+  let isDeleting = false;
   
   // Function to set playback rate
   function setPlaybackRate(rate: number) {
@@ -26,17 +29,68 @@
     target_language_code: sentence.target_language_code,
     sentence_id: String(sentence.id)
   });
+  
+  // Function to handle sentence deletion
+  async function deleteSentence() {
+    if (!confirm('Are you sure you want to delete this sentence?')) {
+      return;
+    }
+    
+    isDeleting = true;
+    
+    try {
+      const deleteUrl = getApiUrl(RouteName.SENTENCE_API_DELETE_SENTENCE_API, {
+        target_language_code: sentence.target_language_code,
+        slug: sentence.slug
+      });
+      
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete: ${response.status} ${response.statusText}`);
+      }
+      
+      // Redirect to sentences list after successful deletion
+      goto(`/language/${sentence.target_language_code}/sentences`);
+    } catch (error) {
+      alert(`Error deleting sentence: ${error}`);
+      isDeleting = false;
+    }
+  }
 </script>
 
 <div class="container py-3">
   <div class="card">
     <div class="card-body">
-      <!-- Metadata -->
-      {#if metadata && (metadata.created_at || metadata.updated_at)}
-        <div class="text-end">
-          <MetadataCard {metadata} />
+      <!-- Metadata and Actions Row -->
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <!-- Delete Button -->
+        <div>
+          <button 
+            type="button" 
+            class="btn btn-outline-danger btn-sm" 
+            on:click={deleteSentence}
+            disabled={isDeleting}
+            aria-label="Delete sentence"
+          >
+            <Trash size={16} weight="bold" />
+            {#if isDeleting}
+              Deleting...
+            {:else}
+              Delete
+            {/if}
+          </button>
         </div>
-      {/if}
+        
+        <!-- Metadata -->
+        {#if metadata && (metadata.created_at || metadata.updated_at)}
+          <div>
+            <MetadataCard {metadata} />
+          </div>
+        {/if}
+      </div>
 
       <div class="mb-4">
         <div class="hz-foreign-text fs-4 mb-3">
