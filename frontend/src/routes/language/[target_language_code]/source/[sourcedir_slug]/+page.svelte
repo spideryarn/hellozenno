@@ -13,6 +13,35 @@
   // Define login URL with redirect back to current page using $derived
   const loginUrl = $derived(`/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`);
   
+  // Helper function to create headers with auth token
+  // TODO: Consider merging this with apiFetch functionality since apiFetch already handles auth headers
+  // and provides a more consistent interface for API calls
+  async function createAuthHeaders(contentType = 'application/json') {
+    const headers = new Headers();
+    
+    if (contentType) {
+      headers.set('Content-Type', contentType);
+    }
+    
+    headers.set('Accept', 'application/json');
+    
+    // Get the Supabase client from the page data
+    if (data.supabase) {
+      try {
+        const { data: sessionData } = await data.supabase.auth.getSession();
+        const session = sessionData.session;
+        if (session?.access_token) {
+          headers.set('Authorization', `Bearer ${session.access_token}`);
+        }
+      } catch (sessionError) {
+        console.warn('Error getting session:', sessionError);
+        // Continue without auth token
+      }
+    }
+    
+    return headers;
+  }
+  
   // Initialize tooltips when the component is mounted
   onMount(() => {
     // Initialize Bootstrap tooltips
@@ -71,6 +100,9 @@
       
       isRenamingDir = true;
       
+      // Get headers with auth token
+      const headers = await createAuthHeaders('application/json');
+      
       const response = await fetch(
         getApiUrl(RouteName.SOURCEDIR_API_RENAME_SOURCEDIR_API, {
           target_language_code: target_language_code,
@@ -78,9 +110,7 @@
         }),
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: JSON.stringify({ new_name: newName })
         }
       );
@@ -105,6 +135,9 @@
     }
     
     try {
+      // Get headers with auth token
+      const headers = await createAuthHeaders();
+      
       const response = await fetch(
         getApiUrl(RouteName.SOURCEDIR_API_DELETE_SOURCEDIR_API, {
           target_language_code: target_language_code,
@@ -112,6 +145,7 @@
         }),
         {
           method: 'DELETE',
+          headers: headers
         }
       );
       
@@ -132,6 +166,9 @@
     }
     
     try {
+      // Get headers with auth token
+      const headers = await createAuthHeaders();
+      
       const response = await fetch(
         getApiUrl(RouteName.SOURCEFILE_API_DELETE_SOURCEFILE_API, {
           target_language_code: target_language_code,
@@ -140,6 +177,7 @@
         }),
         {
           method: 'DELETE',
+          headers: headers
         }
       );
       
@@ -158,6 +196,9 @@
     const newLanguage = (event.target as HTMLSelectElement).value;
     
     try {
+      // Get headers with auth token
+      const headers = await createAuthHeaders('application/json');
+      
       const response = await fetch(
         getApiUrl(RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_LANGUAGE_API, {
           target_language_code: target_language_code,
@@ -165,9 +206,7 @@
         }),
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: JSON.stringify({ target_language_code: newLanguage })
         }
       );
@@ -201,6 +240,11 @@
         formData.append('files[]', files[i]);
       }
       
+      // Get headers with auth token
+      const headers = await createAuthHeaders('application/json');
+      headers.delete('Content-Type'); // Let the browser set the content type for FormData
+      headers.set('Accept', 'application/json');
+      
       const response = await fetch(
         getApiUrl(RouteName.SOURCEDIR_API_UPLOAD_SOURCEDIR_NEW_SOURCEFILE_API, {
           target_language_code: target_language_code,
@@ -209,14 +253,12 @@
         {
           method: 'POST',
           body: formData,
-          headers: {
-            'Accept': 'application/json'
-          }
+          headers: headers
         }
       );
       
       // Parse the response JSON
-      const data = await response.json().catch(() => ({}));
+      const responseData = await response.json().catch(() => ({}));
       
       if (response.ok) {
         // Successful upload - just reload the page
@@ -224,7 +266,7 @@
         window.location.reload();
       } else {
         // Show error message
-        throw new Error(data.error || `Upload failed with status: ${response.status}`);
+        throw new Error(responseData.error || `Upload failed with status: ${response.status}`);
       }
     } catch (error) {
       // Only show alerts for errors since they're important
@@ -256,6 +298,9 @@
     isCreatingText = true;
     
     try {
+      // Get headers with auth token
+      const headers = await createAuthHeaders('application/json');
+      
       const response = await fetch(
         getApiUrl(RouteName.SOURCEFILE_API_CREATE_SOURCEFILE_FROM_TEXT_API, {
           target_language_code: target_language_code,
@@ -263,9 +308,7 @@
         }),
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: JSON.stringify({
             title: textTitle.trim(),
             text_target: textContent.trim(),
@@ -305,6 +348,9 @@
     isDownloadingYoutube = true;
     
     try {
+      // Get headers with auth token
+      const headers = await createAuthHeaders('application/json');
+      
       const response = await fetch(
         getApiUrl(RouteName.SOURCEFILE_API_ADD_SOURCEFILE_FROM_YOUTUBE_API, {
           target_language_code: target_language_code,
@@ -312,9 +358,7 @@
         }),
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: JSON.stringify({ youtube_url: youtubeUrl.trim() })
         }
       );
