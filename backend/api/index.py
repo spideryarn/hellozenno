@@ -43,12 +43,12 @@ def create_app():
         app,
         resources={
             r"/api/*": {"origins": "*"},  # Allow all origins for API endpoints
-            r"/lang/*/flashcards/*": {
-                "origins": "*"
-            },  # Allow all origins for flashcard endpoints with new URL structure
-            r"/api/lang/*": {
-                "origins": "*"
-            },  # Allow all origins for language-related API endpoints
+            # r"/lang/*/flashcards/*": {
+            #     "origins": "*"
+            # },  # Allow all origins for flashcard endpoints with new URL structure
+            # r"/api/lang/*": {
+            #     "origins": "*"
+            # },  # Allow all origins for language-related API endpoints
         },
     )
 
