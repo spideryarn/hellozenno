@@ -18,7 +18,7 @@
             {/if}
         </div>
         
-        {#if $page.data?.target_language_code && $page.data?.language_name}
+        {#if $page.data?.target_language_code && $page.data?.language_name && !$page.url.pathname.includes('/search')}
             <SearchBarMini 
                 languageName={$page.data.language_name}
                 targetLanguageCode={$page.data.target_language_code}

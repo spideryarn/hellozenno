@@ -5,7 +5,7 @@
   import type { SearchResult } from '$lib/types';
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { X, ClipboardText } from 'phosphor-svelte';
+  import { X, ClipboardText, MagnifyingGlass } from 'phosphor-svelte';
   import { SITE_NAME } from '$lib/config';
   import { truncate } from '$lib/utils';
   
@@ -138,6 +138,26 @@
       console.error('Failed to read clipboard:', error);
     }
   }
+  
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      clearSearch();
+    }
+  }
+  
+  function handleSearchWithEvent(event: MouseEvent) {
+    // Check if Ctrl/Command key is pressed for "open in new tab" behavior
+    if (event.metaKey || event.ctrlKey) {
+      const url = `/language/${data.target_language_code}/search?q=${encodeURIComponent(query)}`;
+      window.open(url, '_blank');
+    } else {
+      handleSearch();
+    }
+  }
 </script>
 
 <svelte:head>
@@ -153,56 +173,67 @@
   
   <form on:submit|preventDefault={handleSearch}>
     <div class="input-group mb-4">
-      <input 
-        type="text" 
-        bind:value={query} 
-        bind:this={searchInput}
-        placeholder={`Enter a ${data.langName || ''} word to search...`}
-        aria-label="Search term"
-        class="form-control"
-      />
-      {#if query}
-        <button 
-          type="button" 
-          class="btn btn-outline-secondary" 
-          aria-label="Clear search" 
-          title="Clear search"
-          on:click={clearSearch}
-        >
-          <X size={16} />
-        </button>
-      {/if}
-      <button 
-        type="button" 
-        class="btn btn-outline-secondary" 
-        aria-label="Paste from clipboard" 
-        title="Paste from clipboard"
-        on:click={pasteFromClipboard}
-      >
-        <ClipboardText size={16} />
-      </button>
+      <div class="position-relative flex-grow-1">
+        <input 
+          type="text" 
+          bind:value={query} 
+          bind:this={searchInput}
+          placeholder={`Enter a ${data.langName || ''} word to search...`}
+          aria-label="Search term"
+          class="form-control"
+          on:keydown={handleKeydown}
+          style="padding-right: 2.5rem; border-top-right-radius: 0; border-bottom-right-radius: 0;"
+        />
+        <div style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
+          {#if query}
+            <button 
+              type="button"
+              style="background: none; border: none; color: var(--bs-gray-500); padding: 0.25rem; cursor: pointer;"
+              aria-label="Clear search" 
+              title="Clear search"
+              on:click={clearSearch}
+            >
+              <X size={16} />
+            </button>
+          {:else if !loading}
+            <button 
+              type="button"
+              style="background: none; border: none; color: var(--bs-gray-500); padding: 0.25rem; cursor: pointer;"
+              aria-label="Paste from clipboard" 
+              title="Paste from clipboard"
+              on:click={pasteFromClipboard}
+            >
+              <ClipboardText size={16} />
+            </button>
+          {/if}
+        </div>
+      </div>
       
       <!-- Show login button for anonymous users, search button for logged in users -->
       {#if data.session}
-        <button type="submit" class="btn btn-primary" disabled={loading}>
-          {loading ? 'Searching...' : 'Search'}
+        <button type="button" class="btn btn-primary" disabled={loading} 
+          on:click={handleSearchWithEvent}
+          style="margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0;"
+        >
+          {#if loading}
+            <div class="spinner-border spinner-border-sm" role="status" style="width: 16px; height: 16px;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          {:else}
+            <MagnifyingGlass size={16} weight="bold" />
+          {/if}
         </button>
       {:else}
         <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}${query ? `?q=${encodeURIComponent(query)}` : ''}`} 
-           class="btn btn-primary">
+           class="btn btn-primary"
+           style="margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0;">
           Login to Search
         </a>
       {/if}
     </div>
   </form>
   
-  {#if loading}
-    <div class="d-flex justify-content-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  {:else if result}
+  {#if result}
     <div class="search-results">
       <!-- Empty query state -->
       {#if result.status === 'empty_query'}

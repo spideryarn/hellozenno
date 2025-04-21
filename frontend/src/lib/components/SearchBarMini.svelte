@@ -67,10 +67,14 @@
 
   .form-control {
     padding-right: 2.5rem;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
   }
 
   .search-button {
-    margin-left: 0.25rem;
+    margin-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
 
   .input-actions {
@@ -98,7 +102,7 @@
 
 <div class="search-box">
   <div class="d-flex" id="top-search-form">
-    <div class="search-container flex-grow-1 me-2">
+    <div class="search-container flex-grow-1 me-0">
       <input 
         type="text" 
         placeholder={`Search ${languageName} words...`} 
