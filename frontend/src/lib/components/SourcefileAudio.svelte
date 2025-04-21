@@ -3,7 +3,6 @@
   
   export let audioUrl: string;
   export let downloadUrl: string;
-  export let filename: string = 'Audio file';
 </script>
 
 <div class="audio-view">

@@ -45,19 +45,19 @@
     - [x] Simplify progress display in `SourcefileHeader.svelte` to remove clickable div, resolving A11y warnings.
     - [ ] Check `logs/frontend.log` again to ensure these specific A11y warnings are gone.
 
-- [ ] **Stage 3: Fix Unused CSS Selectors**
-    - [ ] Identify components flagged with unused CSS selectors (e.g., `LemmaContent.svelte`, `SourcefileHeader.svelte`).
-    - [ ] For each unused selector, either:
+- [x] **Stage 3: Fix Unused CSS Selectors**
+    - [x] Identify components flagged with unused CSS selectors (e.g., `LemmaContent.svelte`, `SourcefileHeader.svelte`).
+    - [x] For each unused selector, either:
         - Remove the CSS rule if it's genuinely unused.
         - Ensure the corresponding HTML element exists and matches the selector if the CSS *should* be used.
-    - [ ] Check `logs/frontend.log` again to ensure these specific unused CSS warnings are gone.
+    - [x] Check `logs/frontend.log` again to ensure these specific unused CSS warnings are gone.
 
-- [ ] **Stage 4: Fix Unused Export Properties (`export let`)**
-    - [ ] Identify components flagged with unused `export let` properties (e.g., `SourcefileAudio.svelte`, `NavButtons.svelte`, `SourcefileTranslation.svelte`).
-    - [ ] For each unused export:
+- [x] **Stage 4: Fix Unused Export Properties (`export let`)**
+    - [x] Identify components flagged with unused `export let` properties (e.g., `SourcefileAudio.svelte`, `NavButtons.svelte`, `SourcefileTranslation.svelte`).
+    - [x] For each unused export:
         - If the property is intended only for external reference via `bind:this`, change it to `export const propertyName`.
         - If the property is truly unused (not passed in, not bound, not used internally), remove the `export let propertyName;` line.
-    - [ ] Check `logs/frontend.log` again to ensure these specific unused export warnings are gone.
+    - [x] Check `logs/frontend.log` again to ensure these specific unused export warnings are gone.
 
 - [ ] **Final Review:**
     - [ ] Restart the frontend server.

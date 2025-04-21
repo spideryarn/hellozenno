@@ -2,7 +2,6 @@
   import type { Sourcefile, Navigation } from '$lib/types/sourcefile';
   import SourcefileFooter from './SourcefileFooter.svelte';
   
-  export let sourcefile: Sourcefile;
   export let text_english: string | null = null;
   export let navigation: Navigation = undefined as unknown as Navigation;
   export let target_language_code: string = '';

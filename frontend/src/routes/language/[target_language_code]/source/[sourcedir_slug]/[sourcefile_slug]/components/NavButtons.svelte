@@ -8,11 +8,11 @@
     ArrowUp
   } from 'phosphor-svelte';
   import type { Navigation } from '$lib/types/sourcefile';
+  import type { PageType } from '$lib/navigation';
   
   export let navigation: Navigation;
   export let target_language_code: string;
   export let sourcedir_slug: string;
-  export let sourcefile_slug: string;
   export let view: string = 'text'; // Default view is 'text', can be 'words', 'phrases', etc.
   
   // Generate navigation URLs using getPageUrl
@@ -32,28 +32,28 @@
 
   // Prepare navigation URLs only if the corresponding slugs exist
   $: firstSourcefileUrl = navigation?.first_slug ? 
-    getPageUrl(routeName, {
+    getPageUrl(routeName as PageType, {
       target_language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.first_slug
     }) : undefined;
     
   $: prevSourcefileUrl = navigation?.prev_slug ? 
-    getPageUrl(routeName, {
+    getPageUrl(routeName as PageType, {
       target_language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.prev_slug
     }) : undefined;
     
   $: nextSourcefileUrl = navigation?.next_slug ? 
-    getPageUrl(routeName, {
+    getPageUrl(routeName as PageType, {
       target_language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.next_slug
     }) : undefined;
     
   $: lastSourcefileUrl = navigation?.last_slug ? 
-    getPageUrl(routeName, {
+    getPageUrl(routeName as PageType, {
       target_language_code,
       sourcedir_slug,
       sourcefile_slug: navigation.last_slug
