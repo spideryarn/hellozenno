@@ -140,6 +140,11 @@
             {#if currentStage >= 3}
               <div class="alert alert-info py-3">
                 <p class="text-center mb-0 fs-4">{data.translation}</p>
+                <div class="text-center mt-2">
+                  <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="btn btn-sm btn-outline-secondary">
+                    View full sentence page
+                  </a>
+                </div>
               </div>
             {/if}
           </div>
