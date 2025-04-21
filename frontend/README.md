@@ -28,12 +28,11 @@ See [planning/250329_SvelteKit.md](../planning/250329_SvelteKit.md) for the deta
 
 ## Quickstart
 
-```bash
-# Install dependencies
-npm install
+The user will run the development server in separate terminals with:
 
-# Start the development server
-./run_sveltekit.sh
+```
+./run_frontend.sh # runs on port 5173
+./run_backend.sh # runs on port 3000
 ```
 
 For more detailed setup instructions, see the [Setup and Development](./docs/SETUP.md) guide.
