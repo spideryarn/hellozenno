@@ -104,6 +104,7 @@ Located in `frontend/src/lib/components/`, these components provide common UI el
 | `MetadataSection.svelte` | A dedicated section for displaying metadata, often collapsible. |
 | `NavTabs.svelte` | Creates a tabbed navigation interface. |
 | `PhraseCard.svelte` | Displays a phrase and its translation in a card format. |
+| `SearchBarMini.svelte` | Provides a compact search interface used in language and sourcefile layouts. |
 | `SearchResults.svelte` | Formats and displays a list of search results. |
 | `Sentence.svelte` | Displays a full sentence with translation, audio controls, etc. |
 | `SentenceCard.svelte` | A compact card format for displaying a sentence snippet. |

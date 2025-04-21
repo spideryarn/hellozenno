@@ -20,6 +20,7 @@ export { default as SourcefileImage } from "./components/SourcefileImage.svelte"
 export { default as SourcefileAudio } from "./components/SourcefileAudio.svelte";
 export { default as NavTabs } from "./components/NavTabs.svelte";
 export { default as LoadingSpinner } from "./components/LoadingSpinner.svelte";
+export { default as SearchBarMini } from "./components/SearchBarMini.svelte";
 
 // Re-export utility functions
 export * from "./utils";

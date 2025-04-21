@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import SourcefileHeader from '../../routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileHeader.svelte';
-  import NavTabs from './NavTabs.svelte';
+  import { NavTabs, SearchBarMini } from '$lib';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -60,7 +60,7 @@
 </script>
 
 <div class="container py-4">
-  <div class="d-flex flex-column flex-md-row justify-content-start align-items-md-center gap-2 mb-3">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb mb-0">
         <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -71,6 +71,12 @@
         <li class="breadcrumb-item active" aria-current="page">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</li>
       </ol>
     </nav>
+    
+    <!-- Add search box using the reusable component -->
+    <SearchBarMini
+      languageName={language_name}
+      targetLanguageCode={target_language_code}
+    />
   </div>
   
   <SourcefileHeader 

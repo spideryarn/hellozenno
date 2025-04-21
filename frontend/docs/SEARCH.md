@@ -1,7 +1,5 @@
 # Search Functionality
 
-[THIS DOCUMENT MAY BE A LITTLE OUT OF DATE]
-
 This document provides a comprehensive overview of the search functionality in HelloZenno, comparing the legacy Flask/Jinja implementation with the new SvelteKit port. It outlines current functionality, implementation details, and remaining work to achieve feature parity.
 
 ## Search Behavior Overview
@@ -148,6 +146,10 @@ The SvelteKit search implementation now includes:
      - Multiple matches categorized by source
      - Suggestions for invalid words
      - English translation matches
+   - Added a reusable `SearchBarMini.svelte` component for consistent search experience:
+     - Used in both language layout and sourcefile pages
+     - Provides a compact search interface throughout the application
+     - Creates a consistent search experience across all pages
 
 4. **Server-Side Handling**:
    - Updated `+page.server.ts` to process search results and make proper routing decisions:
