@@ -9,12 +9,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     try {
         // Use our enhanced search function to handle various result types
-        console.log(`Loading wordform data for: ${wordform} in ${target_language_code}`);
         
         // Set a reasonable timeout for server-side rendering
         // This is important since we now wait for wordform generation to complete
         const data = await getWordformWithSearch(supabase, target_language_code, wordform);
-        console.log(`Received wordform data:`, data);
 
         // Handle different response types based on status
         if (data.status === 'found') {
@@ -39,7 +37,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             throw redirect(302, `/language/${target_language_code}/search/${encodeURIComponent(wordform)}`);
         } else {
             // For older API responses that don't have a status field
-            console.log(`No status field, using data as is:`, data);
+            // console.log(`No status field, using data as is:`, data);
             return {
                 wordformData: data,
             };

@@ -318,7 +318,6 @@ export async function getWordformWithSearch(
     wordform: string,
 ) {
     try {
-        console.log(`API: Fetching wordform ${wordform} in ${target_language_code}`);
         // Use the type-safe API fetch to get wordform metadata with a longer timeout
         // since wordform generation can take time
         const result = await apiFetch({
@@ -331,7 +330,6 @@ export async function getWordformWithSearch(
             },
             timeoutMs: 60000, // 60 second timeout to allow for synchronous wordform generation
         });
-        console.log(`API: Received result for ${wordform}:`, result);
         return result;
     } catch (error: any) {
         console.error(`API: Error fetching wordform ${wordform}:`, error);
@@ -357,7 +355,8 @@ export async function getLemmaMetadata(
     lemma: string
 ) {
     try {
-        console.log(`API: Fetching lemma ${lemma} in ${target_language_code}`);
+        // Use the type-safe API fetch to get lemma metadata with a longer timeout
+        // since lemma generation can take time
         const result = await apiFetch({
             supabaseClient,
             routeName: RouteName.LEMMA_API_GET_LEMMA_METADATA_API, 
@@ -366,9 +365,8 @@ export async function getLemmaMetadata(
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             },
-            timeoutMs: 60000 // 60 seconds
+            timeoutMs: 60000, // 60 seconds
         });
-        console.log(`API: Received result for ${lemma}:`, result);
         return result;
     } catch (error: any) {
         console.error(`API: Error fetching lemma ${lemma}:`, error);
