@@ -5,15 +5,13 @@
   import type { SearchResult } from '$lib/types';
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { getContext } from 'svelte';
-  import type { SupabaseClient } from '@supabase/supabase-js';
   import { X, ClipboardText } from 'phosphor-svelte';
   import { SITE_NAME } from '$lib/config';
   import { truncate } from '$lib/utils';
   
   export let data: PageData;
-  // Get supabase client from context if available
-  const supabase = getContext<SupabaseClient>('supabase');
+  // Get supabase client from data prop (passed from +layout.ts)
+  $: supabase = data.supabase;
   
   let query = data.query || '';
   let result: SearchResult | null = data.initialResult || null;
@@ -58,7 +56,7 @@
     loading = true;
     
     try {
-      // Use the supabase client from context if available
+      // Use the supabase client from the data prop
       result = await unifiedSearch(supabase, data.target_language_code, searchQuery);
       
       // Handle direct navigation for single matches

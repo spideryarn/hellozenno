@@ -264,18 +264,21 @@ export async function unifiedSearch(
         // unified_search might not be in RouteName, construct URL manually
         const url = `${API_BASE_URL}/api/lang/${langCode}/unified_search?q=${encodeURIComponent(query)}`;
         
-        // Use proper error handling around getSession call
+        // Use the passed supabaseClient to get the token
         const headers = new Headers();
         
         if (supabaseClient) {
             try {
-                const { data } = await supabaseClient.auth.getSession();
-                const session = data.session;
+                // Get session from the passed client to extract the token
+                const { data: { session } } = await supabaseClient.auth.getSession(); 
+                // Note: While this still calls getSession, it uses the potentially validated 
+                // client instance passed from the load function. The warning might still appear 
+                // here, but it aligns the pattern with apiFetch.
                 if (session?.access_token) {
                     headers.set('Authorization', `Bearer ${session.access_token}`);
                 }
             } catch (sessionError) {
-                console.warn('Error getting session:', sessionError);
+                console.warn('Error getting session in unifiedSearch:', sessionError);
                 // Continue without auth token
             }
         }

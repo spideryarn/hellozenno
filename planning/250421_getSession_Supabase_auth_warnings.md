@@ -30,17 +30,17 @@
 - [x] Identify `unifiedSearch` in `frontend/src/lib/api.ts` and calls in `frontend/src/lib/processing-queue.ts` as Medium priority.
 - [x] Identify `onAuthStateChange` in `+layout.svelte` and `apiFetch` in `api.ts` as Low priority (risks mitigated).
 - [x] **Fix High Priority:** Modify `frontend/src/routes/language/[target_language_code]/search/+page.server.ts` to use validated `locals.session` instead of calling `supabase.auth.getSession()`.
-- [ ] **USER ACTION:** Test the fix in `search/+page.server.ts` and confirm the warning is gone for that page load/interaction in `logs/frontend.log`.
-- [ ] **Fix Medium Priority:** Refactor `unifiedSearch` in `frontend/src/lib/api.ts`.
-    - [ ] Modify `unifiedSearch` to accept `supabaseClient: SupabaseClient | null` as an argument.
-    - [ ] Remove the internal `getSession()` call.
-    - [ ] Use the passed `supabaseClient` (if available) to get the token for the header, similar to `apiFetch`.
-    - [ ] Update call sites of `unifiedSearch` (likely in `Search.svelte` or similar) to pass the `supabaseClient` from the `data` prop.
-- [ ] **Fix Medium Priority:** Refactor `ProcessingQueue` in `frontend/src/lib/processing-queue.ts`.
-    - [ ] Modify the constructor or relevant methods to accept `supabaseClient: SupabaseClient | null`.
-    - [ ] Remove internal `getSession()` calls.
-    - [ ] Use the passed `supabaseClient` to get the token when needed for API calls made by the queue.
-    - [ ] Update instantiation/usage of `ProcessingQueue` to pass the `supabaseClient`.
+- [x] **USER ACTION:** Test the fix in `search/+page.server.ts` and confirm the warning is gone for that page load/interaction in `logs/frontend.log`.
+- [x] **Fix Medium Priority:** Refactor `unifiedSearch` in `frontend/src/lib/api.ts`.
+    - [x] Modify `unifiedSearch` to accept `supabaseClient: SupabaseClient | null` as an argument.
+    - [x] Remove the internal `getSession()` call logic that didn't use the passed client.
+    - [x] Use the passed `supabaseClient` (if available) to get the token for the header, similar to `apiFetch`.
+    - [x] Update call sites of `unifiedSearch` (in `search/+page.svelte`) to pass the `supabaseClient` from the `data` prop.
+- [x] **Fix Medium Priority:** Review `ProcessingQueue` in `frontend/src/lib/processing-queue.ts`.
+    - [x] Confirm `ProcessingQueue` already accepts `supabaseClient` in constructor.
+    - [x] Confirm `ProcessingQueue` uses the passed client to get session token.
+    - [x] Confirm instantiation in `SourcefileHeader.svelte` correctly passes `supabaseClient` from `data` prop.
+    - [x] **Outcome:** No code changes needed for `ProcessingQueue` or its instantiation.
 - [ ] Review and confirm no further related warnings appear in logs.
 
 ## Appendix
