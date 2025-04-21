@@ -11,11 +11,13 @@
   
   // State for audio player
   let audioPlayer: HTMLAudioElement;
+  let currentPlaybackRate: number = 1.0;
   
   // Function to set playback rate
   function setPlaybackRate(rate: number) {
     if (audioPlayer) {
       audioPlayer.playbackRate = rate;
+      currentPlaybackRate = rate;
     }
   }
   
@@ -62,9 +64,24 @@
           </audio>
           
           <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(0.85)}>0.85x</button>
-            <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(1.0)}>1.0x</button>
-            <button class="btn btn-sm btn-outline-secondary" on:click={() => setPlaybackRate(1.2)}>1.2x</button>
+            <button 
+              class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-secondary' : 'btn-outline-secondary'}" 
+              on:click={() => setPlaybackRate(0.85)}
+            >
+              0.85x
+            </button>
+            <button 
+              class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-secondary' : 'btn-outline-secondary'}" 
+              on:click={() => setPlaybackRate(1.0)}
+            >
+              1.0x
+            </button>
+            <button 
+              class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-secondary' : 'btn-outline-secondary'}" 
+              on:click={() => setPlaybackRate(1.2)}
+            >
+              1.2x
+            </button>
           </div>
         </div>
       {/if}
