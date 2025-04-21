@@ -3,12 +3,14 @@
   import SourcefileFooter from './SourcefileFooter.svelte';
   import type { Navigation } from '$lib/types/sourcefile';
   
+  // Updated interface to match the API response format
   interface Phrase {
-    id: number;
-    phrase: string;
-    translation: string;
-    frequency: number;
-    new_in_file: boolean;
+    canonical_form: string;
+    translations: string[];
+    slug: string;
+    centrality?: number;
+    ordering?: number;
+    new_in_file?: boolean;
   }
   
   export let phrases: Phrase[] = [];
@@ -32,9 +34,9 @@
       {#each phrases as phrase}
         <div class={phrase.new_in_file ? 'new-phrase' : ''}>
           <PhraseCard
-            phrase={phrase.phrase}
-            translations={[phrase.translation]}
-            slug={phrase.id.toString()}
+            phrase={phrase.canonical_form}
+            translations={phrase.translations || []}
+            slug={phrase.slug}
             {target_language_code}
           />
         </div>
