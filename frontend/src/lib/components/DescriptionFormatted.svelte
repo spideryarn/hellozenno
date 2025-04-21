@@ -54,6 +54,7 @@
 <div class="description-container">
   {#if isEditing}
     <div class="description-edit mb-3 p-3 border rounded">
+      <!-- svelte-ignore a11y_autofocus -->
       <textarea 
         class="form-control" 
         rows="3" 
