@@ -47,33 +47,5 @@
 </SourcefileLayout>
 
 <style>
-  .wordform-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-  
-  .new-word {
-    position: relative;
-  }
-  
-  .new-word::before {
-    content: "New";
-    position: absolute;
-    top: -0.5rem;
-    right: -0.5rem;
-    background-color: var(--bs-primary, #4CAD53);
-    color: white;
-    font-size: 0.75rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 1rem;
-    z-index: 1;
-  }
-  
-  .no-content {
-    color: var(--bs-secondary, #6c757d);
-    font-style: italic;
-    margin-top: 1rem;
-  }
+  /* Removed unused styles - handled by child component SourcefileWords */
 </style> 

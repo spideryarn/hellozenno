@@ -102,11 +102,6 @@
 </div>
 
 <style>
-  .hz-foreign-text {
-    font-family: 'Times New Roman', Times, serif;
-    font-style: italic;
-  }
-  
   .breadcrumb {
     background-color: rgba(0, 0, 0, 0.05);
     padding: 0.5rem 1rem;

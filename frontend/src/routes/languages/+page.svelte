@@ -245,17 +245,6 @@
     letter-spacing: -0.03em;
   }
   
-  .subtitle {
-    font-size: 1.3rem;
-    margin-bottom: 2rem;
-    opacity: 0.9;
-    position: relative;
-    z-index: 1;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
   .search-container {
     margin-bottom: 0.8rem;
     position: relative;
@@ -302,47 +291,6 @@
   form {
     position: relative;
     width: 100%;
-  }
-  
-  .stats {
-    display: flex;
-    justify-content: center;
-    gap: 3rem;
-    margin-top: 2rem;
-    position: relative;
-    z-index: 1;
-  }
-  
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    min-width: 120px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(5px);
-    transition: transform 0.3s ease;
-  }
-  
-  .stat-item:hover {
-    transform: translateY(-5px);
-  }
-  
-  .stat-number {
-    font-size: 2.2rem;
-    font-weight: bold;
-    background: linear-gradient(135deg, #4CAD53 0%, #D97A27 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    margin-top: 0.3rem;
   }
   
   .alphabet-nav {
@@ -464,10 +412,6 @@
       margin-bottom: 1rem;
     }
     
-    .subtitle {
-      font-size: 1.1rem;
-    }
-    
     .search-input {
       padding: 0.8rem 2.5rem 0.8rem 1.2rem;
       font-size: 1rem;
@@ -475,20 +419,6 @@
     
     .search-icon {
       right: 1rem;
-    }
-    
-    .stats {
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    
-    .stat-item {
-      min-width: 100px;
-      padding: 0.8rem 1rem;
-    }
-    
-    .stat-number {
-      font-size: 1.8rem;
     }
     
     .languages-grid {
@@ -523,10 +453,6 @@
     
     :global(.languages-grid .card) {
       height: 100px;
-    }
-    
-    .stat-item {
-      flex: 1 0 calc(50% - 1rem);
     }
   }
 </style> 

@@ -223,9 +223,4 @@
     font-style: italic;
     font-family: "Times New Roman", Times, serif;
   }
-  
-  .lemma-details-card {
-    border-top: 3px solid var(--bs-primary);
-    background-color: rgba(var(--bs-primary-rgb), 0.03);
-  }
 </style>

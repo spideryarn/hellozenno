@@ -685,17 +685,6 @@
     margin: 0 0.5rem;
   }
   
-  .navigation-buttons {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .file-position {
-    margin-left: 0.5rem;
-    white-space: nowrap;
-  }
-  
   .error-message {
     color: #d9534f;
     font-size: 0.9rem;
@@ -718,11 +707,6 @@
   
   .button:disabled {
     background-color: #cccccc;
-    cursor: not-allowed;
-  }
-  
-  .button.disabled {
-    background-color: #ccc;
     cursor: not-allowed;
   }
   
@@ -841,78 +825,6 @@
     }
   }
   
-  .progress-info-icon {
-    margin-left: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #4CAD53;
-    cursor: pointer;
-  }
-  
-  .detailed-progress {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-    font-size: 0.9rem;
-    border: 1px solid rgba(76, 173, 83, 0.2);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    animation: fadeIn 0.2s ease-in-out;
-  }
-  
-  .detailed-progress-header {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(76, 173, 83, 0.2);
-    color: #3c8c41;
-  }
-  
-  .detailed-progress-item {
-    display: flex;
-    margin-bottom: 0.4rem;
-    align-items: baseline;
-  }
-  
-  .detailed-progress-item.error {
-    color: #d9534f;
-  }
-  
-  .detail-label {
-    font-weight: 600;
-    width: 110px;
-    flex-shrink: 0;
-    color: #6c757d;
-  }
-  
-  .detail-value {
-    flex-grow: 1;
-  }
-  
-  .detailed-progress-footer {
-    margin-top: 0.75rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(76, 173, 83, 0.2);
-    text-align: center;
-  }
-  
-  .close-details-btn {
-    background-color: transparent;
-    color: #4CAD53;
-    border: 1px solid #4CAD53;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .close-details-btn:hover {
-    background-color: #4CAD53;
-    color: white;
-  }
-  
   .processing-status {
     cursor: pointer;
   }
@@ -942,10 +854,6 @@
       width: 100%;
     }
     
-    .iterations-control {
-      margin-bottom: 0.3rem;
-    }
-    
     .button {
       width: 100%;
       justify-content: center;
@@ -959,19 +867,6 @@
     .expanded-operations-divider span {
       font-size: 0.8rem;
       padding: 0 0.5rem;
-    }
-    
-    .detailed-progress {
-      padding: 0.5rem;
-    }
-    
-    .detail-label {
-      width: 90px;
-      font-size: 0.85rem;
-    }
-    
-    .detail-value {
-      font-size: 0.85rem;
     }
   }
   

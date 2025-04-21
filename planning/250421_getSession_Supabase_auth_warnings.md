@@ -43,6 +43,32 @@
     - [x] **Outcome:** No code changes needed for `ProcessingQueue` or its instantiation.
 - [ ] Review and confirm no further related warnings appear in logs.
 
-## Appendix
+## Appendix: Decision on Remaining Warnings (2025-04-21)
 
-N/A
+After further investigation, we've decided to **accept the remaining low-priority warnings** related to client-side `getSession()` calls for the following reasons:
+
+1. **Technical context:** Supabase doesn't provide a global configuration option to disable these warnings. The official workaround is to call `getUser()` before every `getSession()` call.
+
+2. **Impact assessment:**
+   - Client-side `getSession()` calls appear in:
+     - `apiFetch()` in `api.ts` (high frequency - used in most API calls)
+     - `unifiedSearch()` in `api.ts` (medium frequency - used in search operations)
+     - `createAuthHeaders()` in sourcedir pages (medium frequency)
+     - `processSingleStep()` in `processing-queue.ts` (low frequency)
+   - Adding `getUser()` would affect an estimated 75-90% of all API requests
+
+3. **Cost-benefit analysis:**
+   - **Costs:** Adding `getUser()` would require an additional network round-trip to Supabase servers for each `getSession()` call, increasing latency and potentially degrading user experience
+   - **Benefits:** Cleaner logs without warnings, following Supabase's "ideal" pattern
+
+4. **Alignment with principles:**
+   - Our coding principles prioritize simplicity, debuggability, and avoiding over-engineering
+   - The security risk is already mitigated by our architecture (all server-side code properly validates sessions)
+   - Adding extra API calls solely to suppress warnings without changing functionality would be over-engineering
+
+5. **Long-term plan:**
+   - For now, we will accept these warnings as "noise" in the logs
+   - If Supabase adds a configuration option to disable these warnings in the future, we'll adopt it
+   - If these warnings cause other issues with log monitoring or debugging, we'll reconsider this decision
+
+This approach prioritizes performance and simplicity over warning-free logs, which aligns with our project's core principles.
