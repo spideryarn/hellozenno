@@ -526,7 +526,7 @@
         <div class="language-selector">
           <label for="language-select" class="me-2">Language:</label>
           <select id="language-select" class="form-select form-select-sm d-inline-block w-auto" 
-                  value={target_language_code} on:change={handleLanguageChange}>
+                  value={target_language_code} onchange={handleLanguageChange}>
             {#each supported_languages as lang}
               <option value={lang.code} selected={lang.code === target_language_code}>
                 {lang.name}
@@ -551,10 +551,10 @@
       
       <!-- Directory actions -->
       <div class="btn-group mb-4">
-        <button class="btn btn-outline-secondary" on:click={renameSourcedir}>
+        <button class="btn btn-outline-secondary" onclick={renameSourcedir}>
           Rename Directory
         </button>
-        <button class="btn btn-outline-danger" on:click={deleteSourcedir}>
+        <button class="btn btn-outline-danger" onclick={deleteSourcedir}>
           <Trash size={16} weight="bold" class="me-1" /> Delete Directory
         </button>
       </div>
@@ -567,10 +567,10 @@
             <div class="row mb-3">
               <div class="col">
                 <label for="fileInput" class="btn btn-outline-primary me-2">Upload Image Files</label>
-                <input type="file" id="fileInput" class="d-none" multiple accept="image/*" on:change={handleFileSelect}>
+                <input type="file" id="fileInput" class="d-none" multiple accept="image/*" onchange={handleFileSelect}>
                 
                 <label for="audioInput" class="btn btn-outline-primary me-2">Upload Audio Files</label>
-                <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" on:change={handleFileSelect}>
+                <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" onchange={handleFileSelect}>
                 
                 <div class="d-inline-block position-relative me-2">
                   <label for="textInput" class="btn btn-outline-primary" 
@@ -579,13 +579,13 @@
                          title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">
                     Upload Text Files
                   </label>
-                  <input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" on:change={handleFileSelect}>
+                  <input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" onchange={handleFileSelect}>
                 </div>
                 
-                <button class="btn btn-outline-primary me-2" on:click={() => showCreateTextModal = true}>Create From Text</button>
-                <button class="btn btn-outline-primary me-2" on:click={() => isUrlModalOpen = true}>Upload from URL</button>
+                <button class="btn btn-outline-primary me-2" onclick={() => showCreateTextModal = true}>Create From Text</button>
+                <button class="btn btn-outline-primary me-2" onclick={() => isUrlModalOpen = true}>Upload from URL</button>
                 <!-- Leave this commented. We've disabled it for now, but might want to try it again in the future. -->
-                <!-- <button class="btn btn-outline-primary" on:click={() => showYoutubeModal = true}>Upload YouTube Video</button> -->
+                <!-- <button class="btn btn-outline-primary" onclick={() => showYoutubeModal = true}>Upload YouTube Video</button> -->
               </div>
             </div>
             
@@ -661,7 +661,7 @@
           </div>
           
           <button class="btn btn-sm btn-outline-danger" 
-                  on:click={() => deleteSourcefile(file.slug)}
+                  onclick={() => deleteSourcefile(file.slug)}
                   title="Delete this file"
                   aria-label="Delete file {file.filename}">
             <Trash size={16} weight="bold" />
@@ -680,13 +680,14 @@
            role="dialog"
            aria-labelledby="create-text-modal-title"
            tabindex="-1"
-           on:keydown|stopPropagation={(e) => {
+           onkeydown={(e) => {
+             e.stopPropagation(); // Explicitly stop propagation
              if (e.key === 'Escape') closeCreateTextModal();
              if (e.key === 'Enter' && e.ctrlKey && textTitle.trim() && textContent.trim() && !isCreatingText) submitCreateText();
            }}>
         <div class="modal-header">
           <h5 class="modal-title" id="create-text-modal-title">Create Sourcefile from Text</h5>
-          <button type="button" class="btn-close" aria-label="Close" on:click={closeCreateTextModal}></button>
+          <button type="button" class="btn-close" aria-label="Close" onclick={closeCreateTextModal}></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
@@ -714,11 +715,11 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" on:click={closeCreateTextModal} disabled={isCreatingText}>
+          <button type="button" class="btn btn-outline-secondary" onclick={closeCreateTextModal} disabled={isCreatingText}>
             Cancel
           </button>
           <button type="button" class="btn btn-success" 
-                  on:click={submitCreateText} 
+                  onclick={submitCreateText} 
                   disabled={!textTitle.trim() || !textContent.trim() || isCreatingText}
                   title={!textTitle.trim() || !textContent.trim() ? "Please fill in both title and text content" : ""}>
             {#if isCreatingText}
@@ -742,13 +743,14 @@
            role="dialog"
            aria-labelledby="youtube-modal-title"
            tabindex="-1"
-           on:keydown|stopPropagation={(e) => {
+           onkeydown={(e) => {
+             e.stopPropagation(); // Explicitly stop propagation
              if (e.key === 'Escape') closeYoutubeModal();
              if (e.key === 'Enter' && youtubeUrl.trim() && !isDownloadingYoutube) downloadYoutube();
            }}>
         <div class="modal-header">
           <h5 class="modal-title" id="youtube-modal-title">Download YouTube Audio</h5>
-          <button type="button" class="btn-close" aria-label="Close" on:click={closeYoutubeModal}></button>
+          <button type="button" class="btn-close" aria-label="Close" onclick={closeYoutubeModal}></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
@@ -770,11 +772,11 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" on:click={closeYoutubeModal} disabled={isDownloadingYoutube}>
+          <button type="button" class="btn btn-outline-secondary" onclick={closeYoutubeModal} disabled={isDownloadingYoutube}>
             Cancel
           </button>
           <button type="button" class="btn btn-primary" 
-                  on:click={downloadYoutube} 
+                  onclick={downloadYoutube} 
                   disabled={!youtubeUrl.trim() || isDownloadingYoutube}
                   title={!youtubeUrl.trim() ? "Please enter a YouTube URL" : ""}>
             {#if isDownloadingYoutube}
@@ -798,7 +800,8 @@
          role="dialog" 
          aria-labelledby="urlUploadModalLabel" 
          tabindex="-1"
-         on:keydown|stopPropagation={(e) => {
+         onkeydown={(e) => {
+           e.stopPropagation(); // Explicitly stop propagation
            if (e.key === 'Escape') {
              isUrlModalOpen = false;
            }
@@ -808,7 +811,7 @@
          }}>
       <div class="modal-header">
         <h5 class="modal-title" id="urlUploadModalLabel">Upload from URL</h5>
-        <button type="button" class="btn-close" aria-label="Close" on:click={() => isUrlModalOpen = false}></button>
+        <button type="button" class="btn-close" aria-label="Close" onclick={() => isUrlModalOpen = false}></button>
       </div>
       <div class="modal-body">
         {#if urlSuccessMessage}
@@ -824,8 +827,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" on:click={() => isUrlModalOpen = false}>Cancel</button>
-        <button type="button" class="btn btn-primary" on:click={handleSubmitUrlUpload} disabled={isUrlLoading || !urlToUpload}>
+        <button type="button" class="btn btn-secondary" onclick={() => isUrlModalOpen = false}>Cancel</button>
+        <button type="button" class="btn btn-primary" onclick={handleSubmitUrlUpload} disabled={isUrlLoading || !urlToUpload}>
           {#if isUrlLoading}
             <LoadingSpinner style="width: 16px; height: 16px; color: #fff; margin-right: 0.25rem; vertical-align: text-bottom;" /> Uploading...
           {:else}
