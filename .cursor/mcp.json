@@ -1,6 +1,6 @@
 {
     "mcpServers": {
-        "Supabase_local": {
+        "Supabase_db_local": {
             "command": "npx",
             "args": [
                 "-y",
