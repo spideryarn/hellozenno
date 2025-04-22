@@ -74,7 +74,7 @@ import { getApiUrl, apiFetch } from '$lib/api';
           routeName: RouteName.LEMMA_API_IGNORE_LEMMA_API,
           params: {
             target_language_code: data.metadata.target_language_code,
-            lemma: encodeURIComponent(lemma)
+            lemma: lemma
           },
           options: {
             method: 'POST',
