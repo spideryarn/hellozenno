@@ -4,13 +4,21 @@
   import X from 'phosphor-svelte/lib/X';
   import ClipboardText from 'phosphor-svelte/lib/ClipboardText';
   import LoadingSpinner from './LoadingSpinner.svelte';
+  import { onMount } from 'svelte';
   
   export let languageName: string;
   export let targetLanguageCode: string;
+  export let autofocus: boolean = false;
   
   let searchQuery = '';
   let searchInput: HTMLInputElement;
   let isSearching = false;
+  
+  onMount(() => {
+    if (autofocus && searchInput) {
+      searchInput.focus();
+    }
+  });
   
   async function handleSearch(event: MouseEvent | KeyboardEvent) {
     if (!searchQuery.trim()) return;
@@ -103,6 +111,7 @@
 <div class="search-box">
   <div class="d-flex" id="top-search-form">
     <div class="search-container flex-grow-1 me-0">
+      <!-- svelte-ignore a11y_autofocus -->
       <input 
         type="text" 
         placeholder={`Search ${languageName} words...`} 
