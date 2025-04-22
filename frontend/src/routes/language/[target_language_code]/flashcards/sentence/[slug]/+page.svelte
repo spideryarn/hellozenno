@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Card from '$lib/components/Card.svelte';
-  import { KeyReturn } from 'phosphor-svelte';
+  import { KeyReturn, XCircle } from 'phosphor-svelte';
   import { getPageUrl } from '$lib/navigation';
 import { getApiUrl, apiFetch } from '$lib/api';
   import { page } from '$app/stores'; // Import page store for current URL
@@ -178,28 +178,30 @@ import { getApiUrl, apiFetch } from '$lib/api';
           <div class="col-12">
             <!-- Audio player (always visible, but may be disabled) -->
             {#if data.audio_requires_login}
-              <Alert type="info" class="mb-3">
+              <Alert type="info" className="mb-3">
                 Audio generation requires login.
                 <a href={loginUrl} class="btn btn-sm btn-primary ms-2">Login</a>
               </Alert>
-              <!-- Render a disabled player or just omit -->
-              <audio id="audio-player" src={data.audio_url} controls disabled class="w-100 mb-3"></audio>
+              <!-- Render a disabled-looking player without controls -->
+              <audio id="audio-player" src={data.audio_url} class="w-100 mb-3" style="opacity: 0.5; pointer-events: none;"></audio>
             {:else}
               <audio id="audio-player" src={data.audio_url} controls class="w-100 mb-3"></audio>
             {/if}
             
             <!-- Sentence (visible in stage 2+) -->
             {#if currentStage >= 2}
-              <div class="alert alert-primary py-4">
-                <h3 class="text-center font-weight-bold fs-2">{data.text}</h3>
+              <!-- Replaced alert with a styled div -->
+              <div class="flashcard-content-box border rounded p-4 mb-3 bg-body-tertiary">
+                <h3 class="text-center font-weight-bold fs-2 mb-0">{data.text}</h3>
               </div>
             {/if}
             
             <!-- Translation (visible in stage 3) -->
             {#if currentStage >= 3}
-              <div class="alert alert-info py-3">
+              <!-- Replaced alert with a styled div -->
+              <div class="flashcard-content-box border rounded p-3 mb-3 bg-body-tertiary">
                 <p class="text-center mb-0 fs-4">{data.translation}</p>
-                <div class="text-center mt-2">
+                <div class="text-center mt-3">
                   <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="btn btn-sm btn-outline-secondary">
                     View full sentence page
                   </a>
@@ -213,22 +215,31 @@ import { getApiUrl, apiFetch } from '$lib/api';
                     <div class="alert alert-success mt-3">{ignoreSuccess}</div>
                   {/if}
                   
-                  <!-- Show lemma words with ignore buttons -->
+                  <!-- Show lemma words with ignore buttons (Revised Style) -->
                   {#if data.lemma_words && data.lemma_words.length > 0}
-                    <div class="mt-3">
-                      <p class="mb-2">Words in this sentence:</p>
-                      <div class="d-flex flex-wrap justify-content-center gap-2">
-                        {#each data.lemma_words as lemma}
-                          <div class="d-flex align-items-center bg-light p-2 rounded">
-                            <span class="me-2">{lemma}</span>
-                            <button 
-                              class="btn btn-sm btn-outline-danger" 
-                              title="Ignore this word in future flashcards"
+                    <div class="mt-4 pt-3 border-top">
+                      <p class="mb-2 text-muted small">Words in this sentence:</p>
+                      <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+                        {#each data.lemma_words as lemma, i}
+                          <div class="d-inline-flex align-items-center">
+                            <span class="fs-6 me-1">{lemma}</span>
+                            <button
+                              class="btn btn-link p-0 border-0 text-secondary lh-1 ignore-btn"
+                              title={`Ignore "${lemma}" in future flashcards`}
                               on:click={() => ignoreLemma(lemma)}
-                              disabled={isIgnoring}>
-                              {isIgnoring ? 'Ignoring...' : 'Ignore'}
+                              disabled={isIgnoring}
+                            >
+                              {#if isIgnoring}
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                              {:else}
+                                <XCircle size={16} weight="regular" />
+                              {/if}
                             </button>
                           </div>
+                          <!-- Optional: Add separator if needed, e.g., if not wrapping well -->
+                          <!-- {#if i < data.lemma_words.length - 1}
+                            <span class="text-muted mx-1">•</span>
+                          {/if} -->
                         {/each}
                       </div>
                     </div>
@@ -276,4 +287,20 @@ import { getApiUrl, apiFetch } from '$lib/api';
       </Card>
     </div>
   </div>
-</div> 
+</div>
+
+<style>
+  .ignore-btn {
+    opacity: 0.6;
+    transition: opacity 0.2s ease-in-out;
+  }
+  .ignore-btn:hover,
+  .ignore-btn:focus {
+    opacity: 1;
+    color: var(--bs-danger) !important; /* Use theme danger color on hover */
+  }
+  /* Optional: Style for the content boxes if needed beyond Bootstrap */
+  .flashcard-content-box {
+    /* Add custom styles if bg-body-tertiary and border aren't enough */
+  }
+</style> 
