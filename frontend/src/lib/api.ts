@@ -65,7 +65,9 @@ export async function apiFetch<T extends RouteName, R = any>({
         const { data } = await supabaseClient.auth.getSession();
         const session = data.session;
         if (session?.access_token) {
-          headers.set('Authorization', `Bearer ${session.access_token}`);
+          // Trim any whitespace or newlines from the token
+          const cleanToken = session.access_token.trim();
+          headers.set('Authorization', `Bearer ${cleanToken}`);
         }
       } catch (sessionError) {
         console.warn('Error getting session:', sessionError);
@@ -275,7 +277,9 @@ export async function unifiedSearch(
                 // client instance passed from the load function. The warning might still appear 
                 // here, but it aligns the pattern with apiFetch.
                 if (session?.access_token) {
-                    headers.set('Authorization', `Bearer ${session.access_token}`);
+                    // Trim any whitespace or newlines from the token
+                    const cleanToken = session.access_token.trim();
+                    headers.set('Authorization', `Bearer ${cleanToken}`);
                 }
             } catch (sessionError) {
                 console.warn('Error getting session in unifiedSearch:', sessionError);
