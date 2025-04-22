@@ -130,21 +130,21 @@ def decide_environment_and_load_dotenv_file():
 env_file = decide_environment_and_load_dotenv_file()
 
 # Database configuration
-DATABASE_URL = get_env_var_and_track("DATABASE_URL", SecretStr)  # type: ignore
+DATABASE_URL = get_env_var_and_track("DATABASE_URL", SecretStr).strip()  # type: ignore
 
 # API Keys
-CLAUDE_API_KEY = get_env_var_and_track("CLAUDE_API_KEY", SecretStr)
-OPENAI_API_KEY = get_env_var_and_track("OPENAI_API_KEY", SecretStr)
-ELEVENLABS_API_KEY = get_env_var_and_track("ELEVENLABS_API_KEY", SecretStr)
+CLAUDE_API_KEY = get_env_var_and_track("CLAUDE_API_KEY", SecretStr).strip()
+OPENAI_API_KEY = get_env_var_and_track("OPENAI_API_KEY", SecretStr).strip()
+ELEVENLABS_API_KEY = get_env_var_and_track("ELEVENLABS_API_KEY", SecretStr).strip()
 
 # Flask configuration
-FLASK_SECRET_KEY = get_env_var_and_track("FLASK_SECRET_KEY", SecretStr).get_secret_value()  # type: ignore
+FLASK_SECRET_KEY = get_env_var_and_track("FLASK_SECRET_KEY", SecretStr).get_secret_value().strip()  # type: ignore
 
 # Local to prod configuration
 USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ignore
 
 # Supabase configuration
-SUPABASE_JWT_SECRET = get_env_var_and_track("SUPABASE_JWT_SECRET", SecretStr)  # type: ignore
+SUPABASE_JWT_SECRET = get_env_var_and_track("SUPABASE_JWT_SECRET", SecretStr).strip()  # type: ignore
 
 # # Validate we processed all required variables
 # if env_file == ENV_FILE_LOCAL:
