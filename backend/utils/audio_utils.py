@@ -166,7 +166,7 @@ def ensure_audio_data(
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=True) as temp_file:
         outloud_elevenlabs(
             text=text_with_delays,
-            api_key=ELEVENLABS_API_KEY.get_secret_value(),
+            api_key=ELEVENLABS_API_KEY.get_secret_value().strip(),
             mp3_filen=temp_file.name,
             bot_name=selected_voice,
         )

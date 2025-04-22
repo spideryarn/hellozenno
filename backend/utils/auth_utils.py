@@ -44,7 +44,7 @@ def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
         # Specify HS256 algorithm and verify audience 'authenticated'
         payload = jwt.decode(
             token,
-            SUPABASE_JWT_SECRET.get_secret_value(),  # Use the imported secret
+            SUPABASE_JWT_SECRET.get_secret_value().strip(),  # Use the imported secret
             algorithms=["HS256"],  # Use HS256 algorithm
             audience="authenticated",  # Verify audience
             options={
