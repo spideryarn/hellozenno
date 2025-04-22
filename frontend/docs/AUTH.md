@@ -131,3 +131,35 @@ When troubleshooting authentication problems:
 4. Inspect the JWT token using a tool like jwt.io to validate claims
 5. Check the backend logs (logs/backend.log) for JWT verification errors
 6. Verify that environment variables for Supabase are set correctly
+
+## Important Implementation Details
+
+### API Calls in Server Routes
+
+When implementing SvelteKit server routes (`+server.ts`), **always use** `apiFetch` rather than raw `fetch()`:
+
+```typescript
+// BAD - may forward unwanted headers including potentially sensitive tokens
+const response = await fetch(apiUrl);
+
+// BETTER - explicit headers, but still not preferred
+const response = await fetch(apiUrl, {
+    method: 'GET',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+});
+
+// BEST - use apiFetch with the server Supabase client
+const data = await apiFetch({
+    supabaseClient: locals.supabase, // Server-side Supabase client from locals
+    routeName: RouteName.SOME_API_ENDPOINT,
+    params: apiParams,
+    options: { method: 'GET' }
+});
+```
+
+Using raw fetch without explicit headers can cause SvelteKit to automatically forward headers from the incoming request, potentially including sensitive tokens or malformed values that cause "Illegal header value" errors in production.
+
+Using `apiFetch` ensures consistent error handling, proper authentication, and type safety across the codebase.

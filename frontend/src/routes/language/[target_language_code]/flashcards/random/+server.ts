@@ -1,10 +1,10 @@
 import { redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { getApiUrl } from "$lib/api";
+import { getApiUrl, apiFetch } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
 import { API_BASE_URL } from "$lib/config";
 
-export const GET: RequestHandler = async ({ params, url, fetch }) => {
+export const GET: RequestHandler = async ({ params, url, locals, fetch }) => {
     const { target_language_code } = params;
 
     // Get query parameters for filtering
@@ -21,39 +21,21 @@ export const GET: RequestHandler = async ({ params, url, fetch }) => {
     }
 
     try {
-        // Make the API request using type-safe URL generation
-        const apiUrl = getApiUrl(RouteName.FLASHCARD_API_RANDOM_FLASHCARD_API, {
-            target_language_code: target_language_code,
+        // Create params object for apiFetch
+        const apiParams: any = { target_language_code };
+        if (sourcefile) apiParams.sourcefile = sourcefile;
+        if (sourcedir) apiParams.sourcedir = sourcedir;
+
+        console.log(`Fetching random flashcard from API using apiFetch`);
+
+        // Use apiFetch instead of raw fetch
+        const data = await apiFetch({
+            supabaseClient: locals.supabase, // Server-side Supabase client from locals
+            routeName: RouteName.FLASHCARD_API_RANDOM_FLASHCARD_API,
+            params: apiParams,
+            options: { method: 'GET' }
         });
 
-        // Add query parameters if any
-        const fullUrl = queryParams.toString()
-            ? `${apiUrl}?${queryParams.toString()}`
-            : apiUrl;
-
-        console.log(`Fetching random flashcard from API: ${fullUrl}`);
-
-        const response = await fetch(fullUrl);
-
-        if (!response.ok) {
-            // If API returns an error, handle it
-            const errorText = await response.text();
-            console.error(`API error (${response.status}): ${errorText}`);
-
-            try {
-                const errorData = JSON.parse(errorText);
-                throw new Error(
-                    errorData.error || `API error: ${response.status}`,
-                );
-            } catch (parseError) {
-                throw new Error(
-                    `Failed to parse API error response: ${errorText}`,
-                );
-            }
-        }
-
-        // Get the data and redirect to the sentence page
-        const data = await response.json();
         console.log(`Received data from API:`, data);
 
         if (!data.slug) {
