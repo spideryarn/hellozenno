@@ -111,21 +111,26 @@ Custom CSS classes for consistent styling:
    - **Keyboard Shortcuts:** Implement common shortcuts like `Escape` to close and `Enter` (or `Ctrl+Enter` for multi-line inputs) to submit the primary action, attached to the modal content element. Ensure event propagation is stopped (`|stopPropagation`) if necessary.
 
 4. Form elements and focus management:
-   - Avoid using `autofocus` attribute as it can be disruptive for screen reader users
-   - Instead, use the `use:focusOnMount` action from Svelte or focus elements programmatically
+   - When using autofocus (which is sometimes necessary for a good UX), add a svelte-ignore comment to avoid accessibility warnings
    - Example:
      ```svelte
-     <!-- Instead of this -->
-     <input autofocus />
-     
-     <!-- Use this -->
      <script>
        import { onMount } from 'svelte';
        let input;
-       onMount(() => input.focus());
+       export let autofocus = false;
+       
+       onMount(() => {
+         if (autofocus && input) {
+           input.focus();
+         }
+       });
      </script>
+     
+     <!-- svelte-ignore a11y_autofocus -->
      <input bind:this={input} />
      ```
+   - Prefer making autofocus configurable via props rather than hardcoded
+   - Ensure autofocus is only used on the main content area of a page, not in modals or popups
 
 ## How to Use
 
