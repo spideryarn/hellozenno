@@ -200,7 +200,7 @@ def get_flashcard_sentence_data(
 
 
 def get_random_flashcard_data(
-    target_language_code: str, sourcefile_slug=None, sourcedir_slug=None
+    target_language_code: str, sourcefile_slug=None, sourcedir_slug=None, profile=None
 ):
     """
     Get data for a random sentence flashcard.
@@ -210,6 +210,7 @@ def get_random_flashcard_data(
         target_language_code: The target language code
         sourcefile_slug: Optional sourcefile slug to filter by
         sourcedir_slug: Optional sourcedir slug to filter by
+        profile: Optional Profile model to filter out ignored lemmas
 
     Returns:
         Dictionary with random sentence data or error information
@@ -246,6 +247,7 @@ def get_random_flashcard_data(
     sentence_data = get_random_sentence(
         target_language_code=target_language_code,
         required_lemmas=lemmas if lemmas else None,
+        profile=profile,
     )
 
     if not sentence_data:

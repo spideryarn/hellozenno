@@ -48,6 +48,7 @@ def flashcard_sentence_api(target_language_code: str, slug: str):
 
 
 @flashcard_api_bp.route("/<target_language_code>/flashcards/random", methods=["GET"])
+@api_auth_optional  # Auth is optional here
 def random_flashcard_api(target_language_code: str):
     """JSON API endpoint for a random sentence."""
     from loguru import logger
@@ -58,12 +59,18 @@ def random_flashcard_api(target_language_code: str):
     logger.info(
         f"Fetching random flashcard: language={target_language_code}, sourcefile={sourcefile_slug}, sourcedir={sourcedir_slug}"
     )
+    
+    # Get profile from auth context if available
+    profile = None
+    if hasattr(request, "auth") and request.auth and hasattr(request.auth, "profile"):
+        profile = request.auth.profile
 
     # Use the shared utility function
     data = get_random_flashcard_data(
         target_language_code=target_language_code,
         sourcefile_slug=sourcefile_slug,
         sourcedir_slug=sourcedir_slug,
+        profile=profile,
     )
 
     # Handle error responses with proper status codes

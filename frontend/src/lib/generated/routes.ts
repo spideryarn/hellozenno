@@ -51,6 +51,9 @@ export enum RouteName {
   LEMMA_API_LEMMAS_LIST_API = "LEMMA_API_LEMMAS_LIST_API",
   LEMMA_API_GET_LEMMA_METADATA_API = "LEMMA_API_GET_LEMMA_METADATA_API",
   LEMMA_API_COMPLETE_LEMMA_METADATA_API = "LEMMA_API_COMPLETE_LEMMA_METADATA_API",
+  LEMMA_API_IGNORE_LEMMA_API = "LEMMA_API_IGNORE_LEMMA_API",
+  LEMMA_API_UNIGNORE_LEMMA_API = "LEMMA_API_UNIGNORE_LEMMA_API",
+  LEMMA_API_GET_IGNORED_LEMMAS_API = "LEMMA_API_GET_IGNORED_LEMMAS_API",
   PHRASE_API_PHRASES_LIST_API = "PHRASE_API_PHRASES_LIST_API",
   PHRASE_API_PHRASE_PREVIEW_API = "PHRASE_API_PHRASE_PREVIEW_API",
   PHRASE_API_GET_PHRASE_METADATA_API = "PHRASE_API_GET_PHRASE_METADATA_API",
@@ -150,6 +153,9 @@ export const ROUTES = {
   LEMMA_API_LEMMAS_LIST_API: "/api/lang/lemma/{target_language_code}/lemmas",
   LEMMA_API_GET_LEMMA_METADATA_API: "/api/lang/lemma/{target_language_code}/lemma/{lemma}/metadata",
   LEMMA_API_COMPLETE_LEMMA_METADATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/complete_metadata",
+  LEMMA_API_IGNORE_LEMMA_API: "/api/lang/lemma/{target_language_code}/{lemma}/ignore",
+  LEMMA_API_UNIGNORE_LEMMA_API: "/api/lang/lemma/{target_language_code}/{lemma}/unignore",
+  LEMMA_API_GET_IGNORED_LEMMAS_API: "/api/lang/lemma/{target_language_code}/ignored",
   PHRASE_API_PHRASES_LIST_API: "/api/lang/phrase/{target_language_code}/phrases",
   PHRASE_API_PHRASE_PREVIEW_API: "/api/lang/phrase/{target_language_code}/preview/{phrase}",
   PHRASE_API_GET_PHRASE_METADATA_API: "/api/lang/phrase/{target_language_code}/detail/{slug}",
@@ -249,6 +255,9 @@ export type RouteParams = {
   [RouteName.LEMMA_API_LEMMAS_LIST_API]: { target_language_code: string };
   [RouteName.LEMMA_API_GET_LEMMA_METADATA_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API]: { target_language_code: string; lemma: string };
+  [RouteName.LEMMA_API_IGNORE_LEMMA_API]: { target_language_code: string; lemma: string };
+  [RouteName.LEMMA_API_UNIGNORE_LEMMA_API]: { target_language_code: string; lemma: string };
+  [RouteName.LEMMA_API_GET_IGNORED_LEMMAS_API]: { target_language_code: string };
   [RouteName.PHRASE_API_PHRASES_LIST_API]: { target_language_code: string };
   [RouteName.PHRASE_API_PHRASE_PREVIEW_API]: { target_language_code: string; phrase: string };
   [RouteName.PHRASE_API_GET_PHRASE_METADATA_API]: { target_language_code: string; slug: string };

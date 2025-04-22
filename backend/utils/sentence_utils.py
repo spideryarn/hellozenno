@@ -2,7 +2,7 @@ from typing import Optional
 import random
 
 from utils.audio_utils import ensure_audio_data
-from db_models import Sentence, Lemma, SentenceLemma, Wordform
+from db_models import Sentence, Lemma, SentenceLemma, Wordform, Profile, ProfileLemma
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import (
     anthropic_client,
@@ -117,6 +117,7 @@ def get_random_sentence(
     target_language_code: str,
     required_lemmas: Optional[list[str]] = None,
     generate_missing_audio: bool = True,
+    profile: Optional[Profile] = None,
 ) -> Optional[dict]:
     """Get a random sentence with its metadata.
 
@@ -125,6 +126,7 @@ def get_random_sentence(
         required_lemmas: Optional list of lemmas that must be used in the sentence.
                         Will match sentences containing at least one of these lemmas.
         generate_missing_audio: Whether to generate audio if missing. Defaults to True.
+        profile: Optional Profile model to filter out ignored lemmas.
 
     Returns:
         Optional[Dict]: Random sentence metadata or None if no matching sentences found
@@ -135,13 +137,32 @@ def get_random_sentence(
 
     if required_lemmas:
         # Filter sentences using database JOIN to find those with matching lemmas
-        query = (
+        base_query = (
             query.join(SentenceLemma)
             .join(Lemma)
             .where(Lemma.lemma.in_(required_lemmas))
-            .distinct()
-        )  # Avoid duplicates if sentence has multiple matching lemmas
+        )
 
+        # If profile is provided, exclude ignored lemmas
+        if profile:
+            # Modified query that excludes ignored lemmas
+            query = (
+                base_query
+                .where(
+                    ~(
+                        (SentenceLemma.lemma << ProfileLemma.select(ProfileLemma.lemma)
+                         .where(
+                             (ProfileLemma.profile == profile) & 
+                             (ProfileLemma.ignored_dt.is_null(False))
+                         ))
+                    )
+                )
+                .distinct()
+            )
+        else:
+            # Use the base query without ignoring lemmas
+            query = base_query.distinct()
+    
     # Get total count for random selection
     count = query.count()
     if count == 0:

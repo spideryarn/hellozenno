@@ -3,8 +3,10 @@
   import Card from '$lib/components/Card.svelte';
   import { KeyReturn } from 'phosphor-svelte';
   import { getPageUrl } from '$lib/navigation';
+import { getApiUrl, apiFetch } from '$lib/api';
   import { page } from '$app/stores'; // Import page store for current URL
   import Alert from '$lib/components/Alert.svelte'; // Import Alert
+  import { RouteName } from '$lib/generated/routes';
   
   export let data;
   
@@ -12,6 +14,9 @@
   $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
   
   let currentStage = 1; // 1: Audio only, 2: Show sentence, 3: Show translation
+  let isIgnoring = false; // Track if we're currently ignoring a lemma
+  let ignoreError = ''; // Store any error messages during ignore operation
+  let ignoreSuccess = ''; // Store success message after ignoring
   
   function nextStage() {
     if (currentStage < 3) {
@@ -48,6 +53,60 @@
       window.location.href = `${baseUrl}?${params.toString()}`;
     } else {
       window.location.href = baseUrl;
+    }
+  }
+  
+  // Function to ignore a lemma
+  async function ignoreLemma(lemma: string) {
+    try {
+      // Reset status messages
+      ignoreError = '';
+      ignoreSuccess = '';
+      isIgnoring = true;
+      
+      // Get the supabase client from parent layout data
+      const supabaseClient = $page.data.supabase;
+      
+      try {
+        // Use apiFetch to handle auth properly per the AUTH.md pattern
+        const result = await apiFetch({
+          supabaseClient,
+          routeName: RouteName.LEMMA_API_IGNORE_LEMMA_API,
+          params: {
+            target_language_code: data.metadata.target_language_code,
+            lemma: encodeURIComponent(lemma)
+          },
+          options: {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        });
+        
+        // Success! Show message briefly and then load next sentence
+        ignoreSuccess = result.message || `☑️ Ignored "${lemma}" successfully`;
+        
+        // After a short delay, load a new flashcard
+        setTimeout(() => {
+          nextSentence();
+        }, 500);
+      } catch (error: any) {
+        // Handle 401 unauthorized error
+        if (error.status === 401) {
+          ignoreError = 'Please login to ignore words';
+          setTimeout(() => {
+            window.location.href = loginUrl;
+          }, 1500);
+          return;
+        }
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error ignoring lemma:', error);
+      ignoreError = error instanceof Error ? error.message : 'Failed to ignore lemma';
+    } finally {
+      isIgnoring = false;
     }
   }
   
@@ -144,6 +203,36 @@
                   <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="btn btn-sm btn-outline-secondary">
                     View full sentence page
                   </a>
+                  
+                  <!-- Status messages for ignoring lemmas -->
+                  {#if ignoreError}
+                    <div class="alert alert-danger mt-3">{ignoreError}</div>
+                  {/if}
+                  
+                  {#if ignoreSuccess}
+                    <div class="alert alert-success mt-3">{ignoreSuccess}</div>
+                  {/if}
+                  
+                  <!-- Show lemma words with ignore buttons -->
+                  {#if data.lemma_words && data.lemma_words.length > 0}
+                    <div class="mt-3">
+                      <p class="mb-2">Words in this sentence:</p>
+                      <div class="d-flex flex-wrap justify-content-center gap-2">
+                        {#each data.lemma_words as lemma}
+                          <div class="d-flex align-items-center bg-light p-2 rounded">
+                            <span class="me-2">{lemma}</span>
+                            <button 
+                              class="btn btn-sm btn-outline-danger" 
+                              title="Ignore this word in future flashcards"
+                              on:click={() => ignoreLemma(lemma)}
+                              disabled={isIgnoring}>
+                              {isIgnoring ? 'Ignoring...' : 'Ignore'}
+                            </button>
+                          </div>
+                        {/each}
+                      </div>
+                    </div>
+                  {/if}
                 </div>
               </div>
             {/if}

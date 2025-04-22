@@ -880,6 +880,63 @@ class Profile(BaseModel):
             return profile, True
 
 
+class ProfileLemma(BaseModel):
+    """Junction table between Profile and Lemma for tracking user-specific lemma preferences."""
+
+    profile = ForeignKeyField(Profile, backref="profile_lemmas", on_delete="CASCADE")
+    lemma = ForeignKeyField(Lemma, backref="profile_lemmas", on_delete="CASCADE")
+    ignored_dt = DateTimeField(null=True)  # When the lemma was ignored (NULL = not ignored)
+
+    class Meta:
+        indexes = ((("profile", "lemma"), True),)  # Unique index
+
+    @classmethod
+    def ignore_lemma(cls, profile: Profile, lemma: Lemma) -> "ProfileLemma":
+        """Ignore a lemma for a profile.
+        
+        Args:
+            profile: Profile model
+            lemma: Lemma model
+            
+        Returns:
+            The ProfileLemma junction object
+        """
+        profile_lemma, created = cls.get_or_create(
+            profile=profile,
+            lemma=lemma,
+        )
+        
+        # Set ignored_dt to current time if not already set
+        if not profile_lemma.ignored_dt:
+            profile_lemma.ignored_dt = datetime.now()
+            profile_lemma.save()
+            
+        return profile_lemma
+        
+    @classmethod
+    def unignore_lemma(cls, profile: Profile, lemma: Lemma) -> bool:
+        """Unignore a lemma for a profile.
+        
+        Args:
+            profile: Profile model
+            lemma: Lemma model
+            
+        Returns:
+            True if the lemma was unignored, False if it wasn't ignored
+        """
+        try:
+            profile_lemma = cls.get(
+                profile=profile,
+                lemma=lemma,
+                ignored_dt__is_null=False,
+            )
+            profile_lemma.ignored_dt = None
+            profile_lemma.save()
+            return True
+        except DoesNotExist:
+            return False
+
+
 def get_models():
     """Return all models for database initialization"""
     return [
@@ -896,4 +953,5 @@ def get_models():
         SourcefileWordform,
         SourcefilePhrase,
         Profile,
+        ProfileLemma,
     ]  # Order matters for foreign key dependencies

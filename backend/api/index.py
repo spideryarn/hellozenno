@@ -38,9 +38,10 @@ def create_app():
         ),
     )
 
-    # Enable CORS for API and flashcard endpoints
+    # Enable CORS for API endpoints
     CORS(
         app,
+        supports_credentials=True,
         resources={
             r"/api/*": {"origins": "*"},  # Allow all origins for API endpoints
             # r"/lang/*/flashcards/*": {

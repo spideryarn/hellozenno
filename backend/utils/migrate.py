@@ -24,7 +24,7 @@ def list_migrations():
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: ./utils/migrate.py [create|migrate|list]")
+        print("Usage: ./utils/migrate.py [create|migrate|list|rollback]")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -42,7 +42,18 @@ if __name__ == "__main__":
         for migration in router.diff:
             print(f"⋯ {migration}")
         print()
+    elif command == "rollback":
+        # Rollback the latest migration
+        if router.done:
+            latest_migration = router.done[-1]
+            print(f"Rolling back migration: {latest_migration}")
+            
+            # The rollback method calls the rollback function in the migration file
+            router.rollback()
+            print(f"Successfully rolled back {latest_migration}")
+        else:
+            print("No migrations to roll back.")
     else:
         print(f"Unknown command: {command}")
-        print("Available commands: create, migrate, list")
+        print("Available commands: create, migrate, list, rollback")
         sys.exit(1)
