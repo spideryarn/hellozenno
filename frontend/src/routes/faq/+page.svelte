@@ -14,49 +14,193 @@
     history.replaceState(null, document.title, window.location.pathname + window.location.search);
   }
   
-  // Simplified FAQ data structure
-  const faqs = [
+  // FAQ data grouped by categories
+  const faqCategories = [
     {
-      id: "who-is-hello-zenno-for",
-      question: "Who is Hello Zenno for?",
-      answer: "Intermediate+ learners who can already parse simple sentences but need vocabulary depth & listening speed. Hello Zenno is designed for learners at roughly A2 level and above who want to expand their vocabulary and improve listening comprehension by working with authentic materials."
+      id: "general",
+      title: "General Information",
+      faqs: [
+        {
+          id: "what-is-hello-zenno",
+          question: "What is Hello Zenno?",
+          answer: "Hello Zenno is an open-source web application for intermediate and advanced language learners, designed to assist with vocabulary acquisition and listening practice through AI-generated content. It focuses on helping learners expand vocabulary and improve listening comprehension by working with authentic source materials and AI-generated audio."
+        },
+        {
+          id: "who-is-hello-zenno-for",
+          question: "Who is Hello Zenno for?",
+          answer: "Intermediate-ish learners who can already parse simple sentences but need vocabulary depth & listening speed. Hello Zenno is designed for learners at roughly A2 level and above who want to expand their vocabulary and improve listening comprehension by working with authentic materials."
+        },
+        {
+          id: "is-hello-zenno-a-complete-language-course",
+          question: "Is this a complete language course?",
+          answer: "No. Hello Zenno is a supplementary tool focused specifically on vocabulary acquisition and listening practice within the context of reading authentic source materials. It assumes you're learning grammar and other aspects of the language through other means (teachers, courses, textbooks). For a more complete solution, try <a href=\"https://www.memrise.com\" target=\"_blank\" rel=\"noopener\">Memrise</a>."
+        },
+        {
+          id: "does-hello-zenno-teach-grammar",
+          question: "Does it teach grammar?",
+          answer: "No. Think of Zenno as a reading/listening exoskeleton—pair it with your favourite grammar source. Hello Zenno is a supplementary tool focused specifically on vocabulary acquisition and listening practice."
+        },
+        {
+          id: "philosophy-behind-hello-zenno",
+          question: "What's the philosophy behind Hello Zenno?",
+          answer: "Hello Zenno is built on several key principles: authentic material-centered learning with real content, comprehension before production (influenced by Krashen's theories), rich contextual understanding of vocabulary, etymology as a memory aid, and progressive listening practice."
+        }
+      ]
     },
     {
-      id: "is-hello-zenno-really-free",
-      question: "Is it really free?",
-      answer: "Browsing & basic use are free. AI‑generated content (dictionary entries, audio) currently run on Greg's credits; heavy users may be asked to plug in their own API key to keep it sustainable."
+      id: "features",
+      title: "Features & Functionality",
+      faqs: [
+        {
+          id: "what-makes-the-dictionary-special",
+          question: "What makes the dictionary special?",
+          answer: "Instead of static definitions, Hello Zenno uses AI to generate rich dictionary entries dynamically as you encounter words. These include etymology (word origins, often a great memory aid!), example sentences showing context, comparisons with similar words, and difficulty indicators."
+        },
+        {
+          id: "how-does-hello-zenno-work-with-source-materials",
+          question: "How does Hello Zenno work with source materials?",
+          answer: "You can upload various types of content including text, photos of text, URLs, or audio files, and Hello Zenno will highlight words it thinks you'll struggle with because they're difficult. You can hover over these words to learn them in context, with rich dictionary entries that include etymology, mnemonics, example sentences, and comparisons with similar words."
+        },
+        {
+          id: "how-does-hello-zenno-determine-difficult-words",
+          question: "How does Hello Zenno determine which words might be difficult?",
+          answer: "Hello Zenno uses large language models to make judgments based on word difficulty, frequency, how commonly it appears in the particular source file, and how easy the word would be to guess from context. You can press 'Process this file' to find more words if you need additional help."
+        },
+        {
+          id: "how-does-search-work",
+          question: "How does the search functionality work?",
+          answer: "Hello Zenno features a flexible AI-generated search that's robust to spelling mistakes. You can search in English or in the target language, and it will present multiple results if there are multiple matches. This makes it slower but more flexible than traditional dictionaries."
+        },
+        {
+          id: "how-does-the-listening-practice-work",
+          question: "How does the audio flashcard / listening practice work?",
+          answer: "We call it dynamic contextual dictation or \"audio flashcards.\" You can scope the practice to a language, folder, or individual source file. The system finds challenging words in that content and generates example sentences for each, along with audio. It plays the audio for a sentence, and you can listen repeatedly, reveal the transcription, and then the translation. Your task is to understand what's being said, though there are no scores or feedback mechanisms yet. This focused listening practice helps bridge the gap between reading comprehension and auditory understanding."
+        }
+      ]
     },
     {
-      id: "does-hello-zenno-teach-grammar",
-      question: "Does it teach grammar?",
-      answer: "No. Think of Zenno as a reading/listening exoskeleton—pair it with your favourite grammar source. Hello Zenno is a supplementary tool focused specifically on vocabulary acquisition and listening practice."
+      id: "technical",
+      title: "Technical & Access",
+      faqs: [
+        {
+          id: "which-languages-are-supported",
+          question: "Which languages are supported?",
+          answer: "Any language an LLM can handle confidently (30+ today). If your language isn't listed, open an issue or join the \"centaur-sourcing\" experiment to help cover generation costs."
+        },
+        {
+          id: "is-hello-zenno-really-free",
+          question: "Is it really free?",
+          answer: "Browsing & basic use are free. AI‑generated content (dictionary entries, audio) currently run on Greg's credits; heavy users may be asked to plug in their own API key to keep it sustainable."
+        },
+        {
+          id: "can-i-keep-my-source-files-private",
+          question: "Can I keep my source files private?",
+          answer: "Right now everything you upload is visible to other users, so only use public‑domain or shareable source materials. Private uploads are on the roadmap."
+        },
+        {
+          id: "what-tech-stack-is-used",
+          question: "What technology stack is Hello Zenno built on?",
+          answer: "Hello Zenno uses Anthropic Claude Sonnet 3.7, a cutting-edge LLM, for generating content. It uses Eleven Labs for audio generation. The backend is built with Python Flask, and the frontend uses SvelteKit. The application is hosted on Vercel with Supabase for the database."
+        },
+        {
+          id: "mobile-apps-offline",
+          question: "Are there plans for mobile apps or offline functionality?",
+          answer: "There are currently no immediate plans for mobile apps or offline functionality. The web app could potentially be accessed via mobile browsers, but a dedicated mobile app is not on the immediate roadmap. Offline functionality is challenging due to the AI-generation component of the application."
+        },
+        {
+          id: "ai-reliability",
+          question: "How reliable is the AI-generated content?",
+          answer: "The AI-generated content is generally high quality, especially for well-supported languages. However, all dictionary content is AI-generated, so there is a small risk of inaccuracies. Users are encouraged to report any issues they find through GitHub issues."
+        }
+      ]
     },
     {
-      id: "which-languages-are-supported",
-      question: "Which languages are supported?",
-      answer: "Any language an LLM can handle confidently (30+ today). If your language isn't listed, open an issue or join the \"centaur‑sourcing\" experiment to help cover generation costs."
+      id: "usage",
+      title: "Using Hello Zenno",
+      faqs: [
+        {
+          id: "getting-started",
+          question: "How should I get started with Hello Zenno?",
+          answer: "The best way to start is to select the language you're learning and check if there are already source materials at your desired difficulty level. Alternatively, you can add your own content by pasting a URL, uploading images, audio files, or typing in text directly. After processing, you can start reading with hover-enabled dictionary support or try the audio flashcards feature."
+        },
+        {
+          id: "user-journey",
+          question: "What's the typical user journey?",
+          answer: "First, select the language you're learning. Then, either browse existing source materials or add your own by creating a source folder and adding files to it. Hello Zenno will extract text (if necessary), translate it, and highlight potentially difficult words. You can hover over these words to see their meanings, and click for full dictionary entries. You can also practice with audio flashcards generated from the difficult words in your materials."
+        },
+        {
+          id: "reporting-bugs",
+          question: "How can I report bugs or give feedback?",
+          answer: "The best way to report bugs or provide feedback is by opening an issue on GitHub at <a href=\"https://github.com/spideryarn/hellozenno/issues\" target=\"_blank\" rel=\"noopener\">github.com/spideryarn/hellozenno/issues</a>."
+        },
+        {
+          id: "tracking-progress",
+          question: "Does Hello Zenno track my learning progress?",
+          answer: "No, Hello Zenno doesn't have progress tracking features. You can ignore words you've learned so they don't appear in your flashcards any more."
+        }
+      ]
     },
     {
-      id: "can-i-keep-my-texts-private",
-      question: "Can I keep my texts private?",
-      answer: "Right now everything you upload is visible to other users, so only use public‑domain or shareable texts. Private uploads are on the roadmap."
+      id: "community",
+      title: "Community & Future",
+      faqs: [
+        {
+          id: "what-is-centaur-sourcing",
+          question: "What is 'centaur-sourcing'?",
+          answer: "Centaur-sourcing is a concept where humans and AI collaborate to create resources that would be impossible for either to create alone. In Hello Zenno, this refers to users potentially pooling their API keys and resources to generate rich dictionary entries and learning materials for languages they're interested in, making them available to the wider community."
+        },
+        {
+          id: "how-participate-centaur-sourcing",
+          question: "How can I participate in centaur-sourcing?",
+          answer: "The main way to participate currently would be by contributing your API key to help cover the costs of AI generation for languages you're interested in. In the future, there may be more ways for language experts to review and improve AI-generated content."
+        },
+        {
+          id: "open-api-plans",
+          question: "Is there a plan for an open API?",
+          answer: "There are plans to potentially make the read-only part of the API freely available for developers to build upon. This would allow other applications to leverage the rich dictionary entries and audio content generated through centaur-sourcing."
+        },
+        {
+          id: "biggest-challenges",
+          question: "What are the biggest challenges for Hello Zenno?",
+          answer: "Besides AI costs, the current challenges include complexity of the interface, generation speed (especially for full metadata for words), and content sourcing considerations. The project is looking for collaborators to help address these challenges."
+        },
+        {
+          id: "future-plans",
+          question: "What future features are planned?",
+          answer: "Future plans include generating sentences that use multiple words from a source file in novel combinations, private uploading options for copyrighted materials, and enhanced community features to support the centaur-sourcing concept."
+        }
+      ]
     },
     {
-      id: "what-makes-the-dictionary-special",
-      question: "What makes the dictionary special?",
-      answer: "Instead of static definitions, Hello Zenno uses AI to generate rich dictionary entries dynamically as you encounter words. These include etymology (word origins, often a great memory aid!), example sentences showing context, comparisons with similar words, and difficulty indicators."
-    },
-    {
-      id: "how-does-the-listening-practice-work",
-      question: "How does the listening practice work?",
-      answer: "We call it dynamic contextual dictation or \"audio flashcards.\" When you practice for a text you've added, the system generates audio snippets of example sentences using the challenging words from that text. You listen, try to understand, and can then reveal the transcription and translation."
-    },
-    {
-      id: "is-hello-zenno-a-complete-language-course",
-      question: "Is this a complete language course?",
-      answer: "No. Hello Zenno is a supplementary tool focused specifically on vocabulary acquisition and listening practice within the context of reading authentic materials. It assumes you're learning grammar and other aspects of the language through other means (teachers, courses, textbooks). For a more complete solution, try <a href=\"https://www.memrise.com\" target=\"_blank\" rel=\"noopener\">Memrise</a>."
+      id: "misconceptions",
+      title: "Common Misconceptions",
+      faqs: [
+        {
+          id: "not-for-beginners",
+          question: "Is Hello Zenno suitable for beginners?",
+          answer: "Hello Zenno is not designed for complete beginners. It works best for learners who already have basic grammar knowledge and vocabulary (roughly A2 level or above) and want to expand their skills using authentic materials."
+        },
+        {
+          id: "not-complete-solution",
+          question: "Is Hello Zenno a complete language learning solution?",
+          answer: "No, Hello Zenno doesn't pretend to be a complete language learning solution. It focuses specifically on vocabulary acquisition in context and listening practice. You'll still need other resources for grammar, speaking practice, and beginner-level instruction."
+        },
+        {
+          id: "not-offline",
+          question: "Can I use Hello Zenno offline?",
+          answer: "No, Hello Zenno requires an internet connection as it relies on AI generation for many of its features. There are currently no plans for offline functionality."
+        },
+        {
+          id: "privacy-misconceptions",
+          question: "Are my uploaded source files private?",
+          answer: "No, currently all uploaded content is public and visible to all users. Only upload public domain or freely shareable source materials. There are plans to add private upload options in the future."
+        }
+      ]
     }
   ];
+  
+  // Flatten categories for the ToC and page rendering
+  const allFaqs = faqCategories.flatMap(category => category.faqs);
 </script>
 
 <svelte:head>
@@ -94,37 +238,50 @@
           <!-- Table of Contents -->
           <div class="card toc-card mb-4 p-4">
             <h2 class="h4 mb-3">Table of Contents</h2>
-            <ul class="toc-list">
-              {#each faqs as faq}
-                <li>
-                  <a href="#{faq.id}" class="toc-link">
-                    {faq.question}
-                  </a>
-                </li>
+            <div class="categories-toc">
+              {#each faqCategories as category}
+                <div class="category-section mb-3">
+                  <h3 class="h5 mb-2">{category.title}</h3>
+                  <ul class="toc-list">
+                    {#each category.faqs as faq}
+                      <li>
+                        <a href="#{faq.id}" class="toc-link">
+                          {faq.question}
+                        </a>
+                      </li>
+                    {/each}
+                  </ul>
+                </div>
               {/each}
-            </ul>
+            </div>
           </div>
           
-          <!-- FAQ list - all visible -->
+          <!-- FAQ list - all visible and categorized -->
           <div class="faq-list">
-            {#each faqs as faq}
-              <div class="faq-item" id={faq.id}>
-                <div class="faq-header">
-                  <h2 class="h4 faq-question mb-1 text-primary-green">
-                    <a href="#{faq.id}" class="anchor-link">#</a>
-                    {faq.question}
-                  </h2>
-                  <button 
-                    class="btn-back-to-top" 
-                    on:click={scrollToTop} 
-                    aria-label="Back to top"
-                  >
-                    <ArrowUp size={20} weight="fill" />
-                  </button>
-                </div>
-                <div class="faq-answer">
-                  {@html faq.answer}
-                </div>
+            {#each faqCategories as category}
+              <div id={category.id} class="category-container mb-4">
+                <h2 class="h3 category-title mb-3 text-primary-green">{category.title}</h2>
+                
+                {#each category.faqs as faq}
+                  <div class="faq-item" id={faq.id}>
+                    <div class="faq-header">
+                      <h3 class="h4 faq-question mb-1 text-primary-green">
+                        <a href="#{faq.id}" class="anchor-link">#</a>
+                        {faq.question}
+                      </h3>
+                      <button 
+                        class="btn-back-to-top" 
+                        on:click={scrollToTop} 
+                        aria-label="Back to top"
+                      >
+                        <ArrowUp size={20} weight="fill" />
+                      </button>
+                    </div>
+                    <div class="faq-answer">
+                      {@html faq.answer}
+                    </div>
+                  </div>
+                {/each}
               </div>
             {/each}
           </div>
@@ -196,31 +353,66 @@
     border-radius: 8px;
   }
   
+  .categories-toc {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-gap: 1.5rem;
+  }
+  
+  .category-section h3 {
+    color: var(--hz-color-primary-green);
+    border-bottom: 1px solid var(--hz-color-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
   .toc-list {
     list-style-type: none;
     padding-left: 0;
     margin-bottom: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    grid-gap: 0.75rem;
   }
   
   .toc-list li {
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
   }
   
   .toc-link {
-    color: var(--hz-color-primary-green);
+    color: var(--hz-color-text);
     text-decoration: none;
     transition: all 0.2s ease;
     display: inline-block;
     padding: 0.25rem 0;
+    font-size: 0.9rem;
   }
   
   .toc-link:hover {
+    color: var(--hz-color-primary-green);
     text-decoration: underline;
     opacity: 0.8;
     transform: translateX(3px);
+  }
+  
+  /* Category styling */
+  .category-container {
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--hz-color-border);
+  }
+  
+  .category-title {
+    margin-bottom: 1.5rem;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .category-title::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--hz-color-primary-green);
+    border-radius: 3px;
   }
   
   /* FAQ styling */
@@ -317,6 +509,11 @@
       position: relative;
       left: 0;
       margin-right: 0.5rem;
+    }
+    
+    .categories-toc {
+      grid-template-columns: 1fr;
+      grid-gap: 1rem;
     }
   }
 </style>
