@@ -107,7 +107,7 @@
                 class="accordion-collapse collapse {openQuestions[faq.id] ? 'show' : ''}"
               >
                 <div class="accordion-body faq-answer">
-                  {faq.answer}
+                  {@html faq.answer}
                 </div>
               </div>
             </div>
