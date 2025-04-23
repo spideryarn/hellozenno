@@ -36,6 +36,16 @@ The Flask API runs on port 3000 and generates logs in `logs/backend.log`.
 
 The SvelteKit frontend runs on port 5173 and generates logs in `logs/frontend.log`.
 
+### Dependency Management
+
+#### Svelte 5 Compatibility
+
+The frontend build script includes `--legacy-peer-deps` to bypass peer dependency conflicts with packages that haven't been updated for Svelte 5 yet:
+
+- **svelte-lightbox**: Requires Svelte 3/4 but we use Svelte 5. The flag allows installation despite the version mismatch.
+- Monitor for runtime issues with these packages as they weren't designed for Svelte 5.
+- When these packages add Svelte 5 support, we can remove the flag.
+
 ### Testing
 ```bash
 pytest  # Run all tests
