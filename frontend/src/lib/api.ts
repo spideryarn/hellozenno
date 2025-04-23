@@ -115,9 +115,15 @@ export async function apiFetch<T extends RouteName, R = any>({
 
 /**
  * Fetch all available languages
+ * 
+ * @deprecated Use `getLanguages` from `language-utils.ts` instead which uses static data
  */
 export async function getLanguages(supabaseClient?: SupabaseClient | null) {
-    return apiFetch({ supabaseClient, routeName: RouteName.LANGUAGES_API_GET_LANGUAGES_API, params: {} });
+    // Import here to avoid circular dependencies
+    const { getLanguages: getStaticLanguages } = await import('./language-utils');
+    
+    // Use the static data instead of making an API call
+    return getStaticLanguages();
 }
 
 /**

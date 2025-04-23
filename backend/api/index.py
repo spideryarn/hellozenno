@@ -21,6 +21,7 @@ from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
 from utils.url_registry import generate_route_registry, generate_typescript_routes
+from utils.language_data_generator import generate_typescript_language_data
 
 # Configure logging with loguru
 setup_logging(log_to_file=True, max_lines=200)
@@ -165,10 +166,15 @@ def create_app():
                 "route_registry": route_registry,
             }
 
-        # In development mode, generate TypeScript routes file
+        # In development mode, generate TypeScript routes and language data files
         if not app.config["IS_PRODUCTION"]:
+            # Generate routes
             ts_output_path = generate_typescript_routes(app)
             logger.info(f"Generated TypeScript routes at {ts_output_path}")
+            
+            # Generate language data
+            lang_output_path = generate_typescript_language_data(app)
+            logger.info(f"Generated TypeScript language data at {lang_output_path}")
 
     # Register error handlers
     @app.errorhandler(404)
@@ -219,13 +225,29 @@ def create_app():
         # For web requests, return the error template or a basic error
         return "Internal Server Error", 500
 
-    # Added CLI command to generate routes
+    # Added CLI commands for TypeScript file generation
     @app.cli.command("generate-routes-ts")
     def generate_routes_ts_command():
         """Generate TypeScript route definitions from Flask app.url_map."""
         with app.app_context():
             ts_output_path = generate_typescript_routes(app)
         logger.info(f"Generated TypeScript routes at {ts_output_path}")
+    
+    @app.cli.command("generate-language-data")
+    def generate_language_data_command():
+        """Generate TypeScript language data from application config."""
+        with app.app_context():
+            lang_output_path = generate_typescript_language_data(app)
+        logger.info(f"Generated TypeScript language data at {lang_output_path}")
+    
+    @app.cli.command("generate-all-ts")
+    def generate_all_ts_command():
+        """Generate all TypeScript files (routes and language data)."""
+        with app.app_context():
+            ts_output_path = generate_typescript_routes(app)
+            lang_output_path = generate_typescript_language_data(app)
+        logger.info(f"Generated TypeScript routes at {ts_output_path}")
+        logger.info(f"Generated TypeScript language data at {lang_output_path}")
 
     logger.info("Application initialized successfully")
     return app

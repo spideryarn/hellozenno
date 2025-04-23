@@ -1,36 +1,17 @@
 // Helper function to get language name from language code
-// This now uses the API instead of hardcoded values
-import { getApiUrl } from "./api";
-import { RouteName } from "./generated/routes";
+// This is now a redirect to language-utils.ts which uses static data when possible
 import { error } from '@sveltejs/kit';
+import { get_language_name as getLanguageNameFromUtils } from './language-utils';
 
+/**
+ * @deprecated Use get_language_name from language-utils.ts which uses static data first
+ */
 export async function get_language_name(
     target_language_code: string,
     customFetch?: typeof fetch,
 ): Promise<string> {
-    const fetchFunc = customFetch || fetch;
     try {
-        const response = await fetchFunc(
-            getApiUrl(RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API, {
-                target_language_code: target_language_code,
-            }),
-        );
-        
-        if (!response.ok) {
-            // Throw a SvelteKit error with appropriate status code
-            throw error(
-                response.status, 
-                `Language not found: ${target_language_code}`
-            );
-        }
-        
-        const data = await response.json();
-        
-        if (!data.name) {
-            throw error(404, `Invalid language data received for: ${target_language_code}`);
-        }
-        
-        return data.name;
+        return await getLanguageNameFromUtils(target_language_code, customFetch);
     } catch (err) {
         // If it's already a SvelteKit error, just rethrow it
         if (err && typeof err === 'object' && 'status' in err) {
