@@ -122,35 +122,35 @@
           </div>
           <div class="col-md-6">
             <div class="row text-start">
-              <div class="col-12 mb-4">
+              <div class="col-12 mb-2">
                 <div class="feature-item">
                   <i class="ph-fill ph-book-open me-2 text-primary-green"></i>
                   <span class="feature-text">Context‑aware dictionary with etymology and mnemonics</span>
                 </div>
               </div>
               
-              <div class="col-12 mb-4">
+              <div class="col-12 mb-2">
                 <div class="feature-item">
                   <i class="ph-fill ph-magnifying-glass me-2 text-primary-green"></i>
                   <span class="feature-text">Fuzzy bilingual search (typos welcome)</span>
                 </div>
               </div>
               
-              <div class="col-12 mb-4">
+              <div class="col-12 mb-2">
                 <div class="feature-item">
                   <i class="ph-fill ph-translate me-2 text-primary-green"></i>
                   <span class="feature-text"><a href="/languages">30+ languages supported</a></span>
                 </div>
               </div>
               
-              <div class="col-12 mb-4">
+              <div class="col-12 mb-2">
                 <div class="feature-item">
                   <i class="ph-fill ph-code me-2 text-primary-green"></i>
                   <span class="feature-text"><a href="https://github.com/spideryarn/hellozenno">Open‑source</a> & free (login required for generating new content)</span>
                 </div>
               </div>
                             
-              <div class="col-12 mb-4">
+              <div class="col-12 mb-2">
                 <div class="feature-item">
                   <i class="ph-fill ph-brain me-2 text-primary-green"></i>
                   <span class="feature-text">Powered by <a href="https://claude.ai/">Claude Sonnet 3.7 AI</a><span>
@@ -341,7 +341,7 @@
   }
   
   .feature-card:hover {
-    transform: translateY(-5px);
+    /* Removed transform to prevent lightbox positioning issues */
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
   }
   
@@ -383,8 +383,8 @@
   .feature-item {
     background-color: var(--bs-card-bg);
     border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
