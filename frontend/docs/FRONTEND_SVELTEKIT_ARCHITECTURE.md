@@ -80,3 +80,26 @@ The migration was performed using the SvelteKit migration tool: `npx sv migrate 
 
 This change ensures compatibility with future SvelteKit versions, as `$app/stores` will be removed in SvelteKit 3.
 
+## Special Routing Features
+
+### Languages Page Redirection
+
+The `/languages` page supports a `next` query parameter for directing users to feature-specific pages after language selection:
+
+```
+/languages?next=flashcards
+```
+
+After selecting a language, users will be redirected to that language's flashcards page rather than the default sources page. This is particularly useful for marketing materials and blog posts targeting specific features.
+
+Valid `next` parameter values include:
+- `flashcards` - Language flashcards
+- `lemmas` - Dictionary lemmas list
+- `phrases` - Multi-word expressions
+- `search` - Search interface
+- `sentences` - Example sentences
+- `sources` - Source texts (default)
+- `wordforms` - Word forms list
+
+Implementation details can be found in `/planning/250423_redirect_query_param_languages_page.md`.
+

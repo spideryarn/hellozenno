@@ -215,10 +215,15 @@
           
           <div class="col-lg-6">
             <div>
-              <LightboxImage 
-                src="/img/marketing/flashcard_screenshot.png" 
-                alt="Flashcard interface for practicing listening - it plays the sentence without any text, and then you can progressively reveal more help" 
-                className="img-fluid rounded shadow-lg" />
+              <a href="/languages?next=flashcards" class="flashcard-link">
+                <LightboxImage 
+                  src="/img/marketing/flashcard_screenshot.png" 
+                  alt="Flashcard interface for practicing listening - it plays the sentence without any text, and then you can progressively reveal more help" 
+                  className="img-fluid rounded shadow-lg" />
+                <div class="flashcard-overlay">
+                  <div class="flashcard-overlay-text">Try Flashcards →</div>
+                </div>
+              </a>
             </div>
           </div>
         </div>
@@ -493,6 +498,41 @@
   .alien-avatars-container img:hover {
     transform: translateY(-5px);
     box-shadow: 0 12px 32px rgba(198, 169, 240, 0.4);
+  }
+  
+  /* Flashcard link styling */
+  .flashcard-link {
+    display: block;
+    position: relative;
+    text-decoration: none;
+    color: white;
+    border-radius: 0.375rem;
+    overflow: hidden;
+  }
+  
+  .flashcard-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(0deg, rgba(69, 193, 135, 0.9) 0%, rgba(69, 193, 135, 0.6) 100%);
+    padding: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .flashcard-overlay-text {
+    font-weight: 600;
+    font-size: 1.25rem;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  .flashcard-link:hover .flashcard-overlay {
+    transform: translateY(0);
   }
   
   

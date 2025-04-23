@@ -3,6 +3,14 @@
   import type { PageData } from './$types';
   import Card from '$lib/components/Card.svelte';
   import { SITE_NAME } from '$lib/config';
+  import { getPageUrl } from '$lib/navigation';
+  import type { PageType } from '$lib/navigation';
+  
+  // Define our custom PageData interface
+  interface LanguagesPageData extends PageData {
+    languages: any[];
+    nextDestination: PageType;
+  }
   
   // Safe action function for input binding
   function initInput(node: HTMLInputElement) {
@@ -12,8 +20,8 @@
     };
   }
   
-  /** @type {import('./$types').PageData} */
-  export let data: PageData;
+  /** @type {LanguagesPageData} */
+  export let data: LanguagesPageData;
   
   interface Language {
     name: string;
@@ -25,13 +33,20 @@
   let searchQuery = '';
   let searchInput: HTMLInputElement | null = null;
   
+  // Get the next destination from the data prop (passed from server)
+  let nextDestination: PageType = data.nextDestination || 'sources';
+  
   onMount(() => {
     // Focus on the search input when component mounts
-    // Only run in browser context
     if (typeof window !== 'undefined' && searchInput) {
       searchInput.focus();
     }
   });
+  
+  // Function to get the URL for a language card
+  function getLanguageUrl(languageCode: string): string {
+    return getPageUrl(nextDestination, { target_language_code: languageCode });
+  }
   
   // Computed filtered languages based on searchQuery with safety checks
   $: filteredLanguages = (() => {
@@ -161,7 +176,7 @@
             <Card 
               title={language.name}
               subtitle={language.code}
-              linkUrl="/language/{language.code}/sources"
+              linkUrl={getLanguageUrl(language.code)}
               className="language-card"
             >
               <div class="card-background-letter" style="color: {getColorForLanguage(language.code)};">

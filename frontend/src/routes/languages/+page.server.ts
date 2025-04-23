@@ -1,24 +1,35 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { getApiUrl } from "$lib/api";
-import { RouteName } from "$lib/generated/routes";
+import type { PageType } from "$lib/navigation";
+import { getLanguages } from "$lib/language-utils";
 
-export const load: PageServerLoad = async ({ fetch }) => {
+// Valid destination pages that require a language code
+const validDestinations: PageType[] = [
+    'flashcards',
+    'lemmas',
+    'phrases',
+    'search',
+    'sentences',
+    'sources',
+    'wordforms'
+];
+
+export const load: PageServerLoad = async ({ url }) => {
     try {
-        // Use the type-safe getApiUrl function instead of hardcoded URL
-        const url = getApiUrl(RouteName.LANGUAGES_API_GET_LANGUAGES_API, {});
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(
-                `API returned ${response.status}: ${response.statusText}`,
-            );
+        // Get and validate the 'next' query parameter
+        const nextParam = url.searchParams.get('next');
+        let nextDestination: PageType = 'sources'; // Default destination
+        
+        if (nextParam && validDestinations.includes(nextParam as PageType)) {
+            nextDestination = nextParam as PageType;
         }
-
-        const data = await response.json();
+        
+        // Use the generated static language data instead of API call
+        const languages = getLanguages();
 
         return {
-            languages: data,
+            languages,
+            nextDestination
         };
     } catch (err) {
         console.error("Failed to load languages:", err);
