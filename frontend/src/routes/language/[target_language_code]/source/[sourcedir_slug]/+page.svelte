@@ -435,7 +435,7 @@
     <!-- Up & Practice Buttons -->
     <div class="d-flex gap-2">
       <a href="/language/{target_language_code}/sources" 
-          class="button"
+          class="btn btn-action"
           data-sveltekit-reload
           title="Back to Sources">
         <ArrowUp size={16} weight="bold" class="me-1" /> Up
@@ -497,16 +497,16 @@
             </a>
             <div class="d-flex mt-1 flex-wrap">
               {#if file.metadata.has_audio}
-                <span class="badge bg-primary me-2"><i class="bi bi-volume-up me-1"></i> Audio</span>
+                <span class="badge hz-badge-audio me-2"><i class="bi bi-volume-up me-1"></i> Audio</span>
               {/if}
               {#if file.metadata.wordform_count > 0}
-                <span class="badge bg-success me-2"><i class="bi bi-book me-1"></i> Words: {file.metadata.wordform_count}</span>
+                <span class="badge hz-badge-word-count me-2"><i class="bi bi-book me-1"></i> Words: {file.metadata.wordform_count}</span>
               {/if}
               {#if file.metadata.phrase_count > 0}
-                <span class="badge bg-warning text-dark me-2"><i class="bi bi-chat-quote me-1"></i> Phrases: {file.metadata.phrase_count}</span>
+                <span class="badge hz-badge-phrase-count me-2"><i class="bi bi-chat-quote me-1"></i> Phrases: {file.metadata.phrase_count}</span>
               {/if}
               {#if file.metadata.duration}
-                <span class="badge bg-secondary me-2">
+                <span class="badge hz-badge-duration me-2">
                   <i class="bi bi-clock me-1"></i>
                   {Math.floor(file.metadata.duration / 60)}:{(file.metadata.duration % 60).toString().padStart(2, '0')}
                 </span>
@@ -703,31 +703,12 @@
 {/if} 
 
 <style>
-  /* Add styles for the .button class copied from NavButtons.svelte */
-  .button {
-    background-color: #4CAD53;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    white-space: nowrap;
-  }
-
-  /* Optional: Style for disabled state if needed later */
-  .button.disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
+    /* File icon styling */
 
   /* Existing styles... */
   .file-icon i {
     font-size: 1.5rem; /* Adjust as needed */
-    color: #6c757d;
+    color: var(--hz-color-text-secondary);
     margin-bottom: 0.5rem;
   }
 

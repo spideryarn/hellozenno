@@ -68,6 +68,36 @@ If things don't make sense or seem like a bad idea, ask questions or discuss rat
     *   Using the "Up" button.
     *   Verify the file list displays correctly.
 
-## Appendix
+## Appendix - Speculative Ideas
 
-*   _(Add example data, screenshots, or other context as needed)_
+### Color System Improvements
+* Create a consistent color system for all buttons and UI elements
+* Replace all hardcoded color values with theme variables
+* Standardize button styles across the application
+* Create clear visual distinction between primary, secondary, and destructive actions
+
+### Grid Component Implementation
+* Consider implementing AG-Grid (community version) for a more structured listing
+* Benefits include built-in sorting, filtering, and consistent styling
+* Alternative options: MUI Data Grid or Kendo UI Grid
+* If a third-party grid is too heavy, create a custom table component that follows our design system
+
+### Visual Consistency Improvements
+* Apply consistent spacing between elements using Bootstrap spacing utilities
+* Use consistent icon weights across all Phosphor icons
+* Standardize badge colors based on semantic meaning (e.g., words count = green, phrases = gold)
+* Create visual hierarchy through consistent spacing and sizing
+
+### Design System Additions
+* Add a "table/grid" component to the design system documentation
+* Create a "SourcefileCard" component for consistent file display
+* Define standard badge colors and usages in theme-variables.css
+* Document button hierarchy and usage patterns
+
+### Centralized Styling Approach
+* Move all hardcoded styles to theme-variables.css and theme.css
+* Create specific utility classes for common patterns
+* Define consistent button variations in one place
+* Establish a pattern library for common UI elements
+
+The current listing UI needs attention to create a cohesive experience that matches the rest of the application's design language, similar to how the header was improved.

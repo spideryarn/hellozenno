@@ -45,6 +45,12 @@
     /* Shadow Effects */
     --hz-shadow-primary-green: 0 4px 12px rgba(102, 154, 115, 0.25);
     --hz-shadow-primary-green-lg: 0 6px 16px rgba(102, 154, 115, 0.35);
+    
+    /* Badge Colors - For consistent semantic meaning */
+    --hz-color-badge-word-count: var(--hz-color-primary-green);
+    --hz-color-badge-phrase-count: var(--hz-color-accent-gold);
+    --hz-color-badge-audio: var(--hz-color-primary-green);
+    --hz-color-badge-duration: #6c757d; /* Bootstrap secondary */
 
     /* Font Families (Reference from STYLING.md) */
     --hz-font-main: Georgia, serif;
