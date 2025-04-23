@@ -66,14 +66,15 @@
         word: word
       });
       console.log(`- Using type-safe URL: ${url}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(`- Error generating type-safe URL:`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       return {
         lemma: word,
         translation: "(translation not available - URL generation error)",
         etymology: null,
         _debug: {
-          error: `URL generation error: ${error.message}`
+          error: `URL generation error: ${errorMessage}`
         }
       } as WordPreview;
     }
@@ -172,7 +173,7 @@
   }
 
   // Helper to create error tooltip content  
-  function createErrorContent(word: string, error?: any) {
+  function createErrorContent(word: string, error?: unknown) {
     // Create link to the WORD page - even for error cases, link to the word itself
     const wordformLink = `/language/${target_language_code}/wordform/${encodeURIComponent(word)}`;
     
@@ -193,7 +194,7 @@
           target_language_code: target_language_code, 
           word: word 
         });
-      } catch (urlError) {
+      } catch (urlError: unknown) {
         const urlErrorMessage = (urlError instanceof Error) ? urlError.message : String(urlError);
         urlForDebug = `Error: ${urlErrorMessage}`; // Use processed error message
       }
@@ -447,7 +448,7 @@
           href={`/language/${target_language_code}/wordform/${encodeURIComponent(segment.word)}`}
           class="word-link"
           data-word={segment.word}
-          data-lemma={segment.lemma || ''}
+          data-lemma={segment.lemma ?? ''}
           target="_blank"
         >
           {segment.text}
