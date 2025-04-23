@@ -139,7 +139,7 @@
   }
   
   .button {
-    background-color: #4CAD53;
+    background-color: var(--hz-color-primary-green);
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 4px;

@@ -702,7 +702,7 @@
   }
   
   .button {
-    background-color: #4CAD53;
+    background-color: var(--hz-color-primary-green);
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 4px;
@@ -724,7 +724,7 @@
     margin-top: 0.5rem;
     margin-bottom: 1.5rem;
     padding: 0.5rem;
-    background-color: rgba(76, 173, 83, 0.1);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
     border-radius: 4px;
   }
   
@@ -738,22 +738,22 @@
   
   .progress-bar {
     height: 100%;
-    background-color: #4CAD53;
+    background-color: var(--hz-color-primary-green);
     transition: width 0.3s ease;
   }
   
   .progress-text {
     margin-top: 0.5rem;
     font-size: 0.9rem;
-    color: #4CAD53;
+    color: var(--hz-color-primary-green);
   }
   
   .iteration-indicator {
     font-weight: bold;
     margin-bottom: 0.3rem;
     font-size: 0.85rem;
-    color: #3c8c41;
-    background-color: rgba(76, 173, 83, 0.1);
+    color: var(--hz-color-primary-green-dark);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
     padding: 2px 6px;
     border-radius: 4px;
     display: inline-block;
@@ -764,7 +764,7 @@
     font-size: 0.85rem;
     font-weight: bold;
     color: #fff;
-    background-color: #3c8c41;
+    background-color: var(--hz-color-primary-green-dark);
     padding: 2px 6px;
     border-radius: 4px;
     display: inline-block;
@@ -774,14 +774,14 @@
     margin-top: 0.5rem;
     margin-bottom: 1rem;
     padding: 0.5rem;
-    background-color: rgba(76, 173, 83, 0.1);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
     border-radius: 4px;
-    border-left: 3px solid #4CAD53;
+    border-left: 3px solid var(--hz-color-primary-green);
     animation: fadeIn 0.5s ease-in-out;
   }
   
   .notification-text {
-    color: #4CAD53;
+    color: var(--hz-color-primary-green);
     font-size: 0.9rem;
   }
   
@@ -789,9 +789,9 @@
     margin-top: 0.5rem;
     margin-bottom: 1rem;
     padding: 0.5rem 1rem;
-    background-color: rgba(76, 173, 83, 0.1);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
     border-radius: 4px;
-    border-left: 3px solid #4CAD53;
+    border-left: 3px solid var(--hz-color-primary-green);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -804,7 +804,7 @@
   }
   
   .success-icon {
-    color: #4CAD53;
+    color: var(--hz-color-primary-green);
     font-size: 1.2rem;
     font-weight: bold;
     margin-right: 0.5rem;
