@@ -79,6 +79,10 @@
 
   async function fetchRows() {
     if (!loadData) return;
+    // If we already have serverRows for this state, skip
+    if (!isLoading && serverRows.length && page === 1 && !sortField && !filterField) {
+      return;
+    }
     isLoading = true;
     try {
       const { rows: fetchedRows, total: fetchedTotal } = await loadData({
@@ -96,8 +100,15 @@
     }
   }
 
-  // reactively fetch when relevant state changes
+  // reactively fetch when page / sort / filter changes
   $: if (loadData) {
+    // reference deps so Svelte re-runs this statement when they change
+    page;
+    pageSize;
+    sortField;
+    sortDir;
+    filterField;
+    filterValue;
     fetchRows();
   }
 
