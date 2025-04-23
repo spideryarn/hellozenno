@@ -214,12 +214,11 @@
           </div>
           
           <div class="col-lg-6">
-            <div class="flashcard-screenshot-wrapper">
+            <div>
               <LightboxImage 
                 src="/img/marketing/flashcard_screenshot.png" 
-                alt="Flashcard interface" 
-                className="img-fluid rounded shadow-lg" 
-                href="/languages" />
+                alt="Flashcard interface for practicing listening - it plays the sentence without any text, and then you can progressively reveal more help" 
+                className="img-fluid rounded shadow-lg" />
             </div>
           </div>
         </div>
@@ -496,20 +495,5 @@
     box-shadow: 0 12px 32px rgba(198, 169, 240, 0.4);
   }
   
-  /* Flashcard screenshot styling */
-  .flashcard-screenshot-wrapper {
-    position: relative;
-    padding: 1rem;
-  }
-  
-  .flashcard-screenshot-wrapper img {
-    border: 1px solid rgba(69, 193, 135, 0.2);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .flashcard-screenshot-wrapper img:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
-  }
   
 </style>
