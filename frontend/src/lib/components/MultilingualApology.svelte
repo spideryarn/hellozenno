@@ -50,13 +50,14 @@
 
 <div class={`multilingual-apology ${className}`}>
   {#each selectedApologies as apology, i}
-    <span 
+    <a 
+      href={`/language/${apology.code}/search?q=${encodeURIComponent(apology.text)}`}
       class={`apology-item ${apology.code !== 'en' ? 'hz-foreign-text' : ''}`} 
       lang={apology.code} 
-      title={apology.language}
+      title={`${apology.language}: "${apology.text}"`}
     >
       {apology.text}
-    </span>
+    </a>
     {#if i < selectedApologies.length - 1}
       <span class="apology-separator">·</span>
     {/if}
@@ -75,11 +76,14 @@
   .apology-item {
     display: inline-block;
     transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
   }
   
   .apology-item:hover {
     color: var(--hz-color-text-main);
     transform: scale(1.05);
+    text-decoration: underline;
   }
   
   .apology-separator {
