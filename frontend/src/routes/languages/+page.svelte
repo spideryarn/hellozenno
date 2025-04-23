@@ -90,13 +90,13 @@
   // Function to get a color for a language card based on the language code (deterministic)
   function getColorForLanguage(code: string): string {
     const colors = [
-      '#4CAD53', // Primary green
-      '#D97A27', // Secondary orange
-      '#3F88C5', // Blue
-      '#8C4799', // Purple
-      '#E94F37', // Red
-      '#44BBA4', // Teal
-      '#F6AE2D'  // Yellow
+      'var(--hz-color-primary-green)', // Primary green
+      'var(--hz-color-accent-lavender)', // Lavender
+      'var(--hz-color-accent-sky-blue)', // Sky blue
+      'var(--hz-color-accent-gold)', // Gold
+      '#537E5C', // Darker green
+      '#B0A0D0', // Lighter lavender
+      '#80B0D0'  // Lighter blue
     ];
     
     // Simple hash function to get a consistent color for each language
@@ -110,6 +110,7 @@
 </svelte:head>
 
 <main class="container">
+  <div class="page-background"></div>
   <div class="hero-section">
     <div class="hero-content">
       <h1>Pick the language you are learning</h1>
@@ -178,6 +179,7 @@
               subtitle={language.code}
               linkUrl={getLanguageUrl(language.code)}
               className="language-card"
+              cardColor={getColorForLanguage(language.code)}
             >
               <div class="card-background-letter" style="color: {getColorForLanguage(language.code)};">
                 {language.name.charAt(0)}
@@ -195,6 +197,22 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem 1rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .page-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 20%, rgba(102, 154, 115, 0.05) 0%, transparent 70%),
+      radial-gradient(circle at 80% 80%, rgba(208, 192, 232, 0.05) 0%, transparent 70%);
+    opacity: 0.7;
+    z-index: -1;
+    pointer-events: none;
   }
   
   .hero-section {
@@ -218,9 +236,10 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(76, 173, 83, 0.15) 0%, rgba(217, 122, 39, 0.15) 100%);
+    background: linear-gradient(135deg, rgba(102, 154, 115, 0.25) 0%, rgba(208, 192, 232, 0.25) 100%);
     z-index: 1;
     overflow: hidden;
+    backdrop-filter: blur(30px);
   }
   
   .hero-bg::before {
@@ -231,10 +250,33 @@
     width: 200%;
     height: 200%;
     background-image: 
-      radial-gradient(circle at 30% 30%, rgba(76, 173, 83, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 70% 70%, rgba(217, 122, 39, 0.08) 0%, transparent 50%);
+      radial-gradient(circle at 30% 30%, rgba(102, 154, 115, 0.2) 0%, transparent 60%),
+      radial-gradient(circle at 70% 70%, rgba(208, 192, 232, 0.2) 0%, transparent 60%);
     animation: rotate 60s linear infinite;
     z-index: -1;
+  }
+  
+  .hero-bg::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, 
+      var(--hz-color-primary-green), 
+      var(--hz-color-accent-lavender),
+      var(--hz-color-accent-sky-blue),
+      var(--hz-color-accent-gold),
+      var(--hz-color-primary-green));
+    background-size: 400% 100%;
+    animation: moveGradient 10s ease infinite;
+  }
+  
+  @keyframes moveGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
   
   @keyframes rotate {
@@ -252,7 +294,7 @@
     margin-bottom: 1.6rem;
     position: relative;
     z-index: 1;
-    background: linear-gradient(135deg, #4CAD53 0%, #D97A27 100%);
+    background: linear-gradient(135deg, var(--hz-color-primary-green) 0%, var(--hz-color-accent-lavender) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -273,18 +315,19 @@
     width: 100%;
     padding: 1rem 3rem 1rem 1.5rem;
     border-radius: 50px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    background: rgba(18, 18, 18, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(18, 18, 18, 0.5);
     font-size: 1.1rem;
     color: var(--bs-body-color);
     transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
   }
   
   .search-input:focus {
     outline: none;
-    border-color: #4CAD53;
-    box-shadow: 0 0 0 3px rgba(76, 173, 83, 0.3);
+    border-color: var(--hz-color-primary-green);
+    box-shadow: 0 0 0 3px rgba(var(--hz-color-primary-green-rgb), 0.3);
   }
   
   .search-icon {
@@ -356,38 +399,80 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 12px;
     color: white;
     font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    margin-right: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin-right: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .letter-badge::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .letter-badge:hover::after {
+    opacity: 1;
   }
   
   .languages-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  :global(.languages-grid .card) {
+    background: rgba(30, 30, 30, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    height: 140px;
+    position: relative;
+    backdrop-filter: blur(5px);
+  }
+  
+  :global(.languages-grid .card-body) {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
   }
   
   /* Card styling is managed in the Card component */
   
   .card-background-letter {
     position: absolute;
-    right: -10px;
-    bottom: -25px;
-    font-size: 7rem;
+    right: 5px;
+    bottom: 10px;
+    font-size: 5.5rem;
     font-weight: bold;
-    opacity: 0.2;
+    opacity: 0.3;
     z-index: 0;
     line-height: 0.8;
     transition: opacity 0.3s ease, transform 0.3s ease;
+    background: linear-gradient(135deg, currentColor 50%, transparent 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
   }
   
   :global(.card:hover) .card-background-letter {
-    opacity: 0.3;
-    transform: scale(1.1);
+    opacity: 0.5;
+    transform: scale(1.05);
   }
   
   .no-results {
@@ -445,9 +530,9 @@
     }
     
     .card-background-letter {
-      font-size: 6rem;
-      right: -10px;
-      bottom: -20px;
+      font-size: 4.5rem;
+      right: 5px;
+      bottom: 5px;
     }
     
     .letter-badge {
