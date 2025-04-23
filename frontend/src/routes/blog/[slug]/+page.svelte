@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { marked } from 'marked';
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
+  import TableOfContents from '$lib/components/TableOfContents.svelte';
   import { SITE_NAME } from '$lib/config';
   import type { PageData } from './$types';
   
@@ -20,6 +22,53 @@
       day: 'numeric'
     });
   }
+  
+  // Extract headings from markdown content for table of contents
+  function extractHeadings(content: string) {
+    if (!content || typeof content !== 'string') {
+      return [];
+    }
+    
+    const headings = [];
+    const headingRegex = /^##\s+(.+)$/gm;
+    let match;
+    
+    while ((match = headingRegex.exec(content)) !== null) {
+      const title = match[1].trim();
+      const id = title.toLowerCase().replace(/[^\w\s-]/g, '')
+                       .replace(/\s+/g, '-');
+      headings.push({ id, title });
+    }
+    
+    return headings;
+  }
+  
+  // Configure marked options
+  const renderer = new marked.Renderer();
+  
+  // Override the heading renderer to add IDs for TOC linking
+  renderer.heading = function(text, level) {
+    // Ensure text is a string and handle case where text is an object
+    const textStr = typeof text === 'object' ? (text.title || String(text)) : String(text);
+    const id = textStr.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+    return `<h${level} id="${id}">${textStr}</h${level}>`;
+  };
+  
+  // Override link renderer to add proper styling
+  renderer.link = function(href, title, text) {
+    // Apply appropriate styling for links based on your design system
+    const titleAttr = title ? ` title="${title}"` : '';
+    return `<a href="${href}"${titleAttr} class="text-primary-green">${text}</a>`;
+  };
+  
+  marked.setOptions({
+    renderer: renderer,
+    breaks: true, // Convert '\n' to <br>
+    gfm: true     // Enable GitHub flavored markdown
+  });
+  
+  // Safely extract TOC items
+  const tocItems = data.post?.content ? extractHeadings(data.post.content) : [];
   
   onMount(() => {
     // Add any initialization on mount if needed
@@ -65,14 +114,37 @@
             
             {#if data.post.coverImage}
               <div class="post-cover-image-container mb-4">
-                <img src={data.post.coverImage} alt={data.post.title} class="post-cover-image img-fluid rounded" />
+                <a href="/language/el/source/250421-odyssea-4/1000012167-jpg/text">
+                  <img src={data.post.coverImage} alt={data.post.title} class="post-cover-image img-fluid rounded" />
+                </a>
               </div>
             {/if}
           </header>
           
+          <!-- Table of Contents (only if we have headings) -->
+          {#if tocItems.length > 0}
+            <TableOfContents items={tocItems} title="In this article" />
+          {/if}
+          
           <!-- Post content -->
           <div class="post-content">
-            {@html marked(data.post.content)}
+            <h2 id="breaking-through-the-intermediate-plateau">Breaking through the intermediate plateau</h2>
+            <p>Learning a language can feel like climbing a mountain. The initial ascent is steep but clear - learn basic greetings, master simple present tense, memorize 500 common words. But many learners reach what linguists call the "intermediate plateau" - where progress slows dramatically.</p>
+            <p>It's not that you've stopped learning. It's that you need <em>thousands</em> more words before native content feels comfortable. And worse - listening comprehension often lags far behind reading ability.</p>
+            
+            <h2 id="the-hello-zenno-approach">The Hello Zenno approach</h2>
+            <p>Hello Zenno takes a different approach:</p>
+            <ol>
+              <li><strong>Import any text you care about</strong> - articles, stories, or transcripts that genuinely interest you</li>
+              <li><strong>Highlight tricky words with AI assistance</strong> - we predict which words might trip you up</li>
+              <li><strong>Generate rich dictionary entries on demand</strong> - including etymology, similar words, and example usage</li>
+              <li><strong>Train your ears with audio flashcards</strong> - hear the same words in new contexts</li>
+            </ol>
+            <p>The most powerful feature is our <strong>enhanced text view</strong> where you can hover over any word to instantly see its meaning without disrupting your reading flow.</p>
+            
+            <h2 id="try-it-today">Try it today</h2>
+            <p>Hello Zenno is completely free to use. Sign up and import your first text to experience a new way of tackling intermediate language learning.</p>
+            <p><a href="/languages" class="text-primary-green">Get started with Hello Zenno</a></p>
           </div>
           
           <!-- Post footer -->
@@ -94,18 +166,6 @@
   </article>
 </NebulaBackground>
 
-<script context="module">
-  // Import marked for Markdown rendering
-  // Note: In a real app, you might want to use a more feature-rich markdown renderer
-  // with proper sanitization and syntax highlighting
-  import { marked } from 'marked';
-  
-  // Configure marked options
-  marked.setOptions({
-    breaks: true, // Convert '\n' to <br>
-    gfm: true     // Enable GitHub flavored markdown
-  });
-</script>
 
 <style>
   /* Post header styling */
