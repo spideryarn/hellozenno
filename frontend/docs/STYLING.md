@@ -71,6 +71,7 @@ We provide reusable Svelte components to maintain consistent styling:
 - `MetadataCard.svelte`: For displaying metadata information
 - `CollapsibleHeader.svelte`: Expandable header component with toggle functionality
 - `LoadingSpinner.svelte`: For displaying a loading indicator
+- `LightboxImage.svelte`: For displaying images that can be clicked to view in a fullscreen lightbox overlay
 
 ## Custom CSS Classes
 
@@ -273,3 +274,19 @@ Use subtle animations to enhance user experience without being distracting:
   <!-- Feature content -->
 </div>
 ```
+
+6. For lightbox images:
+
+```svelte
+<script>
+  import LightboxImage from '$lib/components/LightboxImage.svelte';
+</script>
+
+<!-- Basic usage - clicking opens fullscreen lightbox -->
+<LightboxImage 
+  src="/path/to/image.png" 
+  alt="Descriptive alt text" 
+  className="feature-img" />
+```
+
+**Important Note**: The LightboxImage component should only be used for screenshots and detailed images where it's important for users to see the full-size version. It works best for non-clickable images - if you need the image to be a link, use a regular `<a>` tag with an `<img>` instead.

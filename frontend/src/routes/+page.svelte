@@ -1,6 +1,7 @@
 <script lang="ts">
   // Home page component
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
+  import LightboxImage from '$lib/components/LightboxImage.svelte';
   import { SITE_NAME, TAGLINE } from '$lib/config';
 </script>
 
@@ -10,7 +11,7 @@
 </svelte:head>
 
 <!-- Hero section with nebula background -->
-<NebulaBackground image="nebula2">
+<NebulaBackground>
   <section class="hero-section">
     <div class="container-fluid px-0">
       <div class="container py-5">
@@ -23,13 +24,13 @@
             
             <!-- Main headline -->
             <h1 class="display-3 fw-bold mb-3 hero-title">
-              Read, <span class="text-mint">hear</span> & <strong>remember</strong><br/>
+              Read, <span class="text-primary-green">hear</span> & <strong>remember</strong><br/>
               real‑world language without getting stuck
             </h1>
             
             <!-- Subheadline -->
             <p class="lead mb-5 subtitle">
-              A friendly AI reading & listening toolkit for intermediate learners
+                AI-powered dictionary & listening practice for intermediate learners
             </p>
             
             <!-- CTA Button -->
@@ -47,12 +48,7 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8 text-center">
-        <h2 class="section-title mb-4">Why so many of us stall at the intermediate plateau</h2>
-        <div class="text-center mb-4">
-          <a href="/languages" class="image-link" aria-label="Get started with Hello Zenno">
-            <img src="/img/marketing/lost in translation.png" alt="Lost in translation" class="problem-img img-fluid rounded mb-4" style="max-width: 70%;" />
-          </a>
-        </div>
+        <h2 class="section-title mb-4">Why do we stall at the intermediate plateau?</h2>
         <p class="section-text mb-5">
           Once the beginner courses end, native texts feel overwhelming and listening races ahead of our ears. 
           Hello Zenno gives you gentle "crutches" so you can glide through articles, novels or podcasts and keep the momentum.
@@ -75,17 +71,18 @@
               <div class="feature-number">1</div>
               <img src="/img/marketing/import_text.png" alt="Import text" class="feature-img mb-3" />
               <h3 class="feature-title">Import any text or audio</h3>
-              <p class="feature-description">Paste a URL, upload a photo/PDF or drop an MP3.</p>
+              <p class="feature-description">Paste a URL, upload a photo, or an MP3</p>
             </div>
           </div>
           
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">2</div>
-              <a href="/languages" class="image-link" aria-label="See word highlighting in action">
-                <img src="/img/marketing/word_highlighting.png" alt="Word highlighting" class="feature-img mb-3" />
-              </a>
-              <h3 class="feature-title">Zenno flags tricky words</h3>
+              <LightboxImage 
+                src="/img/marketing/word_highlighting.png" 
+                alt="Word highlighting" 
+                className="feature-img mb-3" />
+              <h3 class="feature-title">Zenno helps with tricky words</h3>
               <p class="feature-description">An AI model predicts which words might trip you up and builds rich dictionary entries.</p>
             </div>
           </div>
@@ -93,9 +90,11 @@
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">3</div>
-              <a href="/languages" class="image-link" aria-label="Try audio training">
-                <img src="/img/marketing/audio_training1.png" alt="Audio training" class="feature-img mb-3" />
-              </a>
+              <LightboxImage 
+                src="/img/marketing/audio_training1.png" 
+                alt="Audio training" 
+                className="feature-img mb-3" 
+                href="/languages" />
               <h3 class="feature-title">Train your ears</h3>
               <p class="feature-description">Auto‑generated sentences and natural‑sounding audio help you recognise new words at speed.</p>
             </div>
@@ -125,43 +124,36 @@
             <div class="row text-start">
               <div class="col-12 mb-4">
                 <div class="feature-item">
-                  <i class="ph-fill ph-book-open me-2 text-mint"></i>
+                  <i class="ph-fill ph-book-open me-2 text-primary-green"></i>
                   <span class="feature-text">Context‑aware dictionary with etymology and mnemonics</span>
                 </div>
               </div>
               
               <div class="col-12 mb-4">
                 <div class="feature-item">
-                  <i class="ph-fill ph-magnifying-glass me-2 text-mint"></i>
+                  <i class="ph-fill ph-magnifying-glass me-2 text-primary-green"></i>
                   <span class="feature-text">Fuzzy bilingual search (typos welcome)</span>
                 </div>
               </div>
               
               <div class="col-12 mb-4">
                 <div class="feature-item">
-                  <i class="ph-fill ph-translate me-2 text-mint"></i>
-                  <span class="feature-text">30+ languages supported</span>
+                  <i class="ph-fill ph-translate me-2 text-primary-green"></i>
+                  <span class="feature-text"><a href="/languages">30+ languages supported</a></span>
                 </div>
               </div>
               
               <div class="col-12 mb-4">
                 <div class="feature-item">
-                  <i class="ph-fill ph-code me-2 text-mint"></i>
-                  <span class="feature-text">Open‑source & free (login required for AI content)</span>
+                  <i class="ph-fill ph-code me-2 text-primary-green"></i>
+                  <span class="feature-text"><a href="https://github.com/spideryarn/hellozenno">Open‑source</a> & free (login required for generating new content)</span>
                 </div>
               </div>
-              
+                            
               <div class="col-12 mb-4">
                 <div class="feature-item">
-                  <i class="ph-fill ph-globe me-2 text-mint"></i>
-                  <span class="feature-text">Web first – works on laptop or mobile browser</span>
-                </div>
-              </div>
-              
-              <div class="col-12 mb-4">
-                <div class="feature-item">
-                  <i class="ph-fill ph-brain me-2 text-mint"></i>
-                  <span class="feature-text">Powered by Claude Sonnet 3.7 AI</span>
+                  <i class="ph-fill ph-brain me-2 text-primary-green"></i>
+                  <span class="feature-text">Powered by <a href="https://claude.ai/">Claude Sonnet 3.7 AI</a><span>
                 </div>
               </div>
             </div>
@@ -210,7 +202,7 @@
                 <div class="col-md-4 d-flex align-items-center justify-content-center">
                   <div class="getting-started-step">
                     <div class="step-number">3</div>
-                    <div class="step-text">Hover, listen,<br/>keep reading</div>
+                    <div class="step-text">Read, hover, listen</div>
                   </div>
                 </div>
               </div>
@@ -223,9 +215,11 @@
           
           <div class="col-lg-6">
             <div class="flashcard-screenshot-wrapper">
-              <a href="/languages" class="image-link" aria-label="Try flashcards">
-                <img src="/img/marketing/flashcard_screenshot.png" alt="Flashcard interface" class="img-fluid rounded shadow-lg" />
-              </a>
+              <LightboxImage 
+                src="/img/marketing/flashcard_screenshot.png" 
+                alt="Flashcard interface" 
+                className="img-fluid rounded shadow-lg" 
+                href="/languages" />
             </div>
           </div>
         </div>
@@ -251,26 +245,6 @@
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="py-4">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-8 text-center">
-        <div class="footer-links">
-          <a href="https://github.com/spideryarn/hellozenno" target="_blank" rel="noopener" class="footer-link">GitHub</a>
-          <span class="footer-divider">·</span>
-          <a href="/blog" class="footer-link">Blog</a>
-          <span class="footer-divider">·</span>
-          <a href="/privacy" class="footer-link">Privacy</a>
-          <span class="footer-divider">·</span>
-          <a href="/faq" class="footer-link">FAQ</a>
-          <span class="footer-divider">·</span>
-          <a href="mailto:hellozenno@gregdetre.com" class="footer-link">Contact</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
 </NebulaBackground>
 
 <style>
@@ -324,29 +298,29 @@
     color: #d7dadd;
   }
   
-  .text-mint {
-    color: #45C187;
+  .text-primary-green {
+    color: var(--hz-color-primary-green);
   }
   
   .cta-button {
     position: relative;
     z-index: 2;
-    background-color: #45C187;
-    border-color: #45C187;
-    box-shadow: 0 4px 12px rgba(69, 193, 135, 0.25);
+    background-color: var(--hz-color-primary-green);
+    border-color: var(--hz-color-primary-green);
+    box-shadow: var(--hz-shadow-primary-green);
     transition: all 0.3s ease;
   }
   
   .cta-button:hover {
-    background-color: #60D3A0;
-    border-color: #60D3A0;
+    background-color: var(--hz-color-primary-green-light);
+    border-color: var(--hz-color-primary-green-light);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(69, 193, 135, 0.35);
+    box-shadow: var(--hz-shadow-primary-green-lg);
   }
   
   /* Section styling */
   .section-title {
-    color: #45C187;
+    color: var(--hz-color-primary-green);
     font-weight: 700;
     margin-bottom: 1.5rem;
   }
@@ -376,7 +350,7 @@
     position: absolute;
     top: -10px;
     left: -10px;
-    background-color: #45C187;
+    background-color: var(--hz-color-primary-green);
     color: white;
     width: 36px;
     height: 36px;
@@ -395,9 +369,6 @@
     border-radius: 8px;
   }
   
-  .feature-icon {
-    color: #45C187;
-  }
   
   .feature-title {
     font-weight: 600;
@@ -442,7 +413,7 @@
   }
   
   .step-number {
-    background-color: #45C187;
+    background-color: var(--hz-color-primary-green);
     color: white;
     width: 50px;
     height: 50px;
@@ -494,17 +465,6 @@
     background-color: rgba(69, 193, 135, 0.1);
   }
   
-  /* Problem section */
-  .problem-img {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(69, 193, 135, 0.2);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .problem-img:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 12px 24px rgba(69, 193, 135, 0.25);
-  }
   
   /* Language globe styling */
   .language-globe-wrapper {
@@ -552,25 +512,4 @@
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
   }
   
-  /* Footer */
-  .footer-links {
-    color: #6c757d;
-    font-size: 0.9rem;
-  }
-  
-  .footer-link {
-    color: #6c757d;
-    text-decoration: none;
-    transition: color 0.2s;
-    padding: 0 0.5rem;
-  }
-  
-  .footer-link:hover {
-    color: #45C187;
-    text-decoration: underline;
-  }
-  
-  .footer-divider {
-    color: #6c757d;
-  }
 </style>
