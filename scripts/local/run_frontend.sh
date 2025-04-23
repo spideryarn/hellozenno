@@ -30,7 +30,9 @@ trap cleanup EXIT INT TERM
 echo "Starting SvelteKit development server (logs in $LOG_FILE and stdout)..."
 cd "$PROJECT_ROOT/frontend"
 # Set strict mode with SVELTE_WARNINGS_STRICT to catch unused CSS selectors during development
-SVELTE_WARNINGS_STRICT=true npm run dev 2>&1 | tee -a "$LOG_FILE" &
+# SVELTE_WARNINGS_STRICT=true npm run dev 2>&1 | tee -a "$LOG_FILE" &
+
+SVELTE_WARNINGS_STRICT=true node --trace-deprecation node_modules/.bin/vite dev 2>&1 | tee -a "$LOG_FILE" &
 SVELTEKIT_PID=$!
 
 # Monitor the SvelteKit process
