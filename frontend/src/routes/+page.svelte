@@ -24,13 +24,13 @@
             
             <!-- Main headline -->
             <h1 class="display-3 fw-bold mb-3 hero-title">
-              Read, <span class="text-primary-green">hear</span> & <strong>remember</strong><br/>
+              <span class="text-primary-green">Read, hear & remember</span><br/>
               real‑world language without getting stuck
             </h1>
             
             <!-- Subheadline -->
             <p class="lead mb-5 subtitle">
-                AI-powered dictionary & listening practice for intermediate learners
+                AI-powered reading assistance & listening practice for intermediate learners
             </p>
             
             <!-- CTA Button -->
