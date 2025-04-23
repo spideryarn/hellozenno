@@ -5,6 +5,7 @@
   import { page } from '$app/stores'; 
   import type { LayoutData } from './$types'; // Import the type for LayoutData
   import { SITE_NAME, TAGLINE } from '$lib/config'; // Added Import
+  import NebulaBackground from '$lib/components/NebulaBackground.svelte';
 
   // Get data passed from +layout.ts
   export let data: LayoutData;
@@ -51,7 +52,6 @@
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
   }
-
 </script>
 
 <!-- Add the svelte:head block for the title -->
@@ -167,84 +167,90 @@
   .footer-divider {
     color: #6c757d;
   }
+  
+  /* Make sure header and footer are above the nebula background */
+  header, footer {
+    position: relative;
+    z-index: 100;
+  }
 </style>
 
-<div class="d-flex flex-column min-vh-100">
-  <header class="bg-dark py-3" style="position: relative; z-index: 100;">
-    <nav class="container">
-      <div class="d-flex justify-content-between align-items-center">
-        <a 
-          href="/" 
-          class="text-decoration-none" 
-          title="Hello Zenno">
-          <img src="/logo.png" alt="Hello Zenno" class="logo-image" />
-        </a>
-        <div class="d-flex align-items-center">
-          <a href="/languages" class="text-decoration-none text-white ms-3">Languages</a>
-          <a href="/about" class="text-decoration-none text-white ms-3">About</a>
-          
-          <!-- Auth Status: Use reactive `session` from data -->
-          {#if session}
-            <!-- Custom Svelte Dropdown for logged-in user -->
-            <div class="profile-dropdown ms-3"> 
-              <button
-                class="btn btn-sm btn-secondary"
-                type="button"
-                aria-haspopup="true"
-                aria-expanded={isMenuOpen}
-                on:click={toggleMenu}
-              >
-                <i class="fas fa-user"></i> Profile
-              </button>
-              {#if isMenuOpen} 
-              <ul class="profile-menu" aria-labelledby="profileDropdownMenuButton"> 
-                <!-- Use session.user.email -->
-                <li><h6 class="dropdown-header">{session.user.email}</h6></li>
-                <li><a class="dropdown-item" href="/auth/profile">Edit Profile</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                  <button class="dropdown-item" type="button" on:click={() => { handleLogout(); isMenuOpen = false; }}>
-                    Logout
-                  </button>
-                </li>
-              </ul>
-              {/if}
-            </div>
-          {:else}
-            <!-- Login Button for logged-out user -->
-            <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}`} class="btn btn-sm btn-primary ms-3">Login / Sign Up</a>
-          {/if}
-        </div>
-      </div>
-    </nav>
-  </header>
-  
-  <main class="flex-grow-1 py-4">
-    <slot />
-  </main>
-  
-  <footer class="bg-dark py-4 text-center" style="position: relative; z-index: 100;">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="footer-links mb-3">
-            <a href="https://github.com/spideryarn/hellozenno" target="_blank" rel="noopener" class="footer-link">GitHub</a>
-            <span class="footer-divider">·</span>
-            <a href="/blog" class="footer-link">Blog</a>
-            <span class="footer-divider">·</span>
-            <a href="/about" class="footer-link">About</a>
-            <span class="footer-divider">·</span>
-            <a href="/privacy" class="footer-link">Privacy</a>
-            <span class="footer-divider">·</span>
-            <a href="/faq" class="footer-link">FAQ</a>
-            <span class="footer-divider">·</span>
-            <a href="mailto:hellozenno@gregdetre.com" class="footer-link">Contact</a>
+<NebulaBackground>
+  <div class="d-flex flex-column min-vh-100">
+    <header class="bg-dark py-3">
+      <nav class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <a 
+            href="/" 
+            class="text-decoration-none" 
+            title="Hello Zenno">
+            <img src="/logo.png" alt="Hello Zenno" class="logo-image" />
+          </a>
+          <div class="d-flex align-items-center">
+            <a href="/languages" class="text-decoration-none text-white ms-3">Languages</a>
+            <a href="/about" class="text-decoration-none text-white ms-3">About</a>
+            
+            <!-- Auth Status: Use reactive `session` from data -->
+            {#if session}
+              <!-- Custom Svelte Dropdown for logged-in user -->
+              <div class="profile-dropdown ms-3"> 
+                <button
+                  class="btn btn-sm btn-secondary"
+                  type="button"
+                  aria-haspopup="true"
+                  aria-expanded={isMenuOpen}
+                  on:click={toggleMenu}
+                >
+                  <i class="fas fa-user"></i> Profile
+                </button>
+                {#if isMenuOpen} 
+                <ul class="profile-menu" aria-labelledby="profileDropdownMenuButton"> 
+                  <!-- Use session.user.email -->
+                  <li><h6 class="dropdown-header">{session.user.email}</h6></li>
+                  <li><a class="dropdown-item" href="/auth/profile">Edit Profile</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <button class="dropdown-item" type="button" on:click={() => { handleLogout(); isMenuOpen = false; }}>
+                      Logout
+                    </button>
+                  </li>
+                </ul>
+                {/if}
+              </div>
+            {:else}
+              <!-- Login Button for logged-out user -->
+              <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}`} class="btn btn-sm btn-primary ms-3">Login / Sign Up</a>
+            {/if}
           </div>
-          <p class="mb-0 text-white-50">{TAGLINE}</p>
+        </div>
+      </nav>
+    </header>
+    
+    <main class="flex-grow-1 py-4">
+      <slot />
+    </main>
+    
+    <footer class="bg-dark py-4 text-center">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <div class="footer-links mb-3">
+              <a href="https://github.com/spideryarn/hellozenno" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+              <span class="footer-divider">·</span>
+              <a href="/blog" class="footer-link">Blog</a>
+              <span class="footer-divider">·</span>
+              <a href="/about" class="footer-link">About</a>
+              <span class="footer-divider">·</span>
+              <a href="/privacy" class="footer-link">Privacy</a>
+              <span class="footer-divider">·</span>
+              <a href="/faq" class="footer-link">FAQ</a>
+              <span class="footer-divider">·</span>
+              <a href="mailto:hellozenno@gregdetre.com" class="footer-link">Contact</a>
+            </div>
+            <p class="mb-0 text-white-50">{TAGLINE}</p>
+          </div>
         </div>
       </div>
-    </div>
-  </footer>
-</div>
-
-<!-- Remove the global style as it's now in our CSS files --> 
+    </footer>
+  </div>
+</NebulaBackground>

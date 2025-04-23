@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import NebulaBackground from '$lib/components/NebulaBackground.svelte';
   import { SITE_NAME } from '$lib/config';
   
   // For now, let's go back to the inline SVG approach since it works 
@@ -43,207 +42,203 @@
   <meta name="description" content="Learn about Hello Zenno, an open-source project providing AI-powered dictionary and listening practice for language learners." />
 </svelte:head>
 
-<NebulaBackground>
-  <!-- Hero section -->
-  <section class="hero-section">
-    <div class="container-fluid px-0">
-      <div class="container py-4">
-        <div class="row justify-content-center">
-          <div class="col-12 text-center">
-            <h1 class="display-4 fw-bold mb-2 hero-title">
-              About <span class="text-primary-green">Hello Zenno</span>
-            </h1>
-            <p class="lead mb-3 subtitle">
-              Meet the human (& friendly alien) behind our language learning assistant
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Founder section -->
-  <section class="py-4">
-    <div class="container">
-      <div class="row justify-content-center align-items-center">
-        <div class="col-lg-4 text-center mb-4 mb-lg-0">
-          <div class="alien-avatars-container">
-            <img src="/img/marketing/alien_avatars1.png" alt="Hello Zenno alien avatars" class="img-fluid rounded" style="max-width: 300px;" />
-          </div>
-        </div>
-        <div class="col-lg-8">
-          <div class="card p-4 founder-card shadow">
-            <h2 class="mb-3">The Story Behind Hello Zenno</h2>
-            <p class="founder-intro">
-              Hello Zenno began as a personal quest to crack intermediate Greek.
+<!-- Hero section -->
+<section class="hero-section">
+  <div class="container-fluid px-0">
+    <div class="container py-4">
+      <div class="row justify-content-center">
+        <div class="col-12 text-center">
+          <h1 class="display-4 fw-bold mb-2 hero-title">
+            About <span class="text-primary-green">Hello Zenno</span>
+          </h1>
+          <p class="lead mb-3 subtitle">
+            Meet the human (& friendly alien) behind our language learning assistant
           </p>
-            
-            <blockquote class="blockquote mt-4 p-3">
-              <p class="mb-0">
-                "I've always dreamed of a tool that would help me <em>read stories in another language</em> with the help of a magic dictionary, 
-                then hammer the same words into my ears."
-              </p>
-            </blockquote>
-          </div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Philosophy section -->
-  <section class="py-5 content-section">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-10">
-          <h2 class="section-title text-center mb-4">Our Philosophy</h2>
+<!-- Founder section -->
+<section class="py-4">
+  <div class="container">
+    <div class="row justify-content-center align-items-center">
+      <div class="col-lg-4 text-center mb-4 mb-lg-0">
+        <div class="alien-avatars-container">
+          <img src="/img/marketing/alien_avatars1.png" alt="Hello Zenno alien avatars" class="img-fluid rounded" style="max-width: 300px;" />
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card p-4 founder-card shadow">
+          <h2 class="mb-3">The Story Behind Hello Zenno</h2>
+          <p class="founder-intro">
+            Hello Zenno began as a personal quest to crack intermediate Greek.
+        </p>
           
-          <div class="row">
-            <div class="col-md-4 mb-4">
-              <div class="feature-card h-100">
-                <div class="text-center mb-3">
-                  <div class="text-primary-green">
-                    {@html BrainCircuitIcon()}
-                  </div>
-                </div>
-                <h3 class="feature-title text-center">Comprehension before production</h3>
-                <p class="feature-description">
-                  Inspired by Krashen's theories, we emphasize understanding before speaking. 
-                  This allows you to build a strong foundation by absorbing language naturally.
-                </p>
-              </div>
-            </div>
-            
-            <div class="col-md-4 mb-4">
-              <div class="feature-card h-100">
-                <div class="text-center mb-3">
-                  <div class="text-primary-green">
-                    {@html BookOpenIcon()}
-                  </div>
-                </div>
-                <h3 class="feature-title text-center">Etymology sticks</h3>
-                <p class="feature-description">
-                  Stories of word origins forge powerful memory hooks. By understanding how words evolved,
-                  you create lasting connections between languages and concepts.
-                </p>
-              </div>
-            </div>
-            
-            <div class="col-md-4 mb-4">
-              <div class="feature-card h-100">
-                <div class="text-center mb-3">
-                  <div class="text-primary-green">
-                    {@html CodeIcon()}
-                  </div>
-                </div>
-                <h3 class="feature-title text-center">Open knowledge</h3>
-                <p class="feature-description">
-                  Our code and (where licensing allows) data are public. We believe in sharing resources
-                  to enable community-driven language learning innovation.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Timeline section -->
-  <section class="py-5 content-section">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-10">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="section-title mb-0">The Road So Far</h2>
-            <button 
-              class="btn btn-sm btn-outline-secondary" 
-              on:click={() => showTimeline = !showTimeline}
-              aria-label={showTimeline ? "Hide timeline" : "Show timeline"}
-            >
-              {showTimeline ? "Hide" : "Show"}
-            </button>
-          </div>
-          
-          {#if showTimeline}
-            <div class="timeline-container">
-              <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                  <div class="timeline-date">2024</div>
-                  <div class="timeline-title">First MVP open‑sourced on GitHub</div>
-                  <div class="timeline-description">
-                    The first public release of Hello Zenno, making AI-assisted language learning
-                    available to everyone.
-                  </div>
-                </div>
-              </div>
-              
-              <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                  <div class="timeline-date">2025</div>
-                  <div class="timeline-title">30 languages live; dynamic dictation v2</div>
-                  <div class="timeline-description">
-                    Expanded language support and improved audio training features for a more
-                    comprehensive learning experience.
-                  </div>
-                </div>
-              </div>
-              
-              <div class="timeline-item future">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                  <div class="timeline-date">2025</div>
-                  <div class="timeline-title">Community "centaur‑sourcing" pilot</div>
-                  <div class="timeline-description">
-                    Launching collaborative human+AI content creation to build richer,
-                    more accurate language resources together.
-                  </div>
-                </div>
-              </div>
-            </div>
-          {/if}
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Contribute section -->
-  <section class="py-5 content-section">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-8 text-center">
-          <div class="card p-4 contribute-card border-0 shadow">
-            <div class="text-center mb-3">
-              <div class="text-primary-green">
-                {@html GithubLogoIcon()}
-              </div>
-            </div>
-            <h3 class="section-title mb-3">Want to co‑build?</h3>
-            <p class="mb-4">
-              Hello Zenno is an open-source project and welcomes contributions from developers, language
-              enthusiasts, and anyone passionate about improving language learning.
+          <blockquote class="blockquote mt-4 p-3">
+            <p class="mb-0">
+              "I've always dreamed of a tool that would help me <em>read stories in another language</em> with the help of a magic dictionary, 
+              then hammer the same words into my ears."
             </p>
-            <a 
-              href="https://github.com/spideryarn/hellozenno" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              class="btn btn-primary btn-lg px-4 rounded-pill"
-            >
-              Contribute on GitHub
-            </a>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Philosophy section -->
+<section class="py-5 content-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <h2 class="section-title text-center mb-4">Our Philosophy</h2>
+        
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div class="feature-card h-100">
+              <div class="text-center mb-3">
+                <div class="text-primary-green">
+                  {@html BrainCircuitIcon()}
+                </div>
+              </div>
+              <h3 class="feature-title text-center">Comprehension before production</h3>
+              <p class="feature-description">
+                Inspired by Krashen's theories, we emphasize understanding before speaking. 
+                This allows you to build a strong foundation by absorbing language naturally.
+              </p>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="feature-card h-100">
+              <div class="text-center mb-3">
+                <div class="text-primary-green">
+                  {@html BookOpenIcon()}
+                </div>
+              </div>
+              <h3 class="feature-title text-center">Etymology sticks</h3>
+              <p class="feature-description">
+                Stories of word origins forge powerful memory hooks. By understanding how words evolved,
+                you create lasting connections between languages and concepts.
+              </p>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="feature-card h-100">
+              <div class="text-center mb-3">
+                <div class="text-primary-green">
+                  {@html CodeIcon()}
+                </div>
+              </div>
+              <h3 class="feature-title text-center">Open knowledge</h3>
+              <p class="feature-description">
+                Our code and (where licensing allows) data are public. We believe in sharing resources
+                to enable community-driven language learning innovation.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </section>
-</NebulaBackground>
+  </div>
+</section>
+
+<!-- Timeline section -->
+<section class="py-5 content-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="section-title mb-0">The Road So Far</h2>
+          <button 
+            class="btn btn-sm btn-outline-secondary" 
+            on:click={() => showTimeline = !showTimeline}
+            aria-label={showTimeline ? "Hide timeline" : "Show timeline"}
+          >
+            {showTimeline ? "Hide" : "Show"}
+          </button>
+        </div>
+        
+        {#if showTimeline}
+          <div class="timeline-container">
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <div class="timeline-date">2024</div>
+                <div class="timeline-title">First MVP open‑sourced on GitHub</div>
+                <div class="timeline-description">
+                  The first public release of Hello Zenno, making AI-assisted language learning
+                  available to everyone.
+                </div>
+              </div>
+            </div>
+            
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <div class="timeline-date">2025</div>
+                <div class="timeline-title">30 languages live; dynamic dictation v2</div>
+                <div class="timeline-description">
+                  Expanded language support and improved audio training features for a more
+                  comprehensive learning experience.
+                </div>
+              </div>
+            </div>
+            
+            <div class="timeline-item future">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <div class="timeline-date">2025</div>
+                <div class="timeline-title">Community "centaur‑sourcing" pilot</div>
+                <div class="timeline-description">
+                  Launching collaborative human+AI content creation to build richer,
+                  more accurate language resources together.
+                </div>
+              </div>
+            </div>
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contribute section -->
+<section class="py-5 content-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 text-center">
+        <div class="card p-4 contribute-card border-0 shadow">
+          <div class="text-center mb-3">
+            <div class="text-primary-green">
+              {@html GithubLogoIcon()}
+            </div>
+          </div>
+          <h3 class="section-title mb-3">Want to co‑build?</h3>
+          <p class="mb-4">
+            Hello Zenno is an open-source project and welcomes contributions from developers, language
+            enthusiasts, and anyone passionate about improving language learning.
+          </p>
+          <a 
+            href="https://github.com/spideryarn/hellozenno" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="btn btn-primary btn-lg px-4 rounded-pill"
+          >
+            Contribute on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- Footer is in the layout -->
 
 <style>
-  /* Removed full viewport nebula background - now using NebulaBackground component */
-  
   /* Hero section styling */
   .hero-section {
     position: relative;
@@ -417,8 +412,6 @@
     box-shadow: 0 12px 32px rgba(208, 192, 232, 0.4);
   }
   
-  /* Footer styles moved to layout */
-
   /* Media queries for responsive design */
   @media (max-width: 768px) {
     .timeline-container::before {
