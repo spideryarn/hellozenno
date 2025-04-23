@@ -23,7 +23,7 @@
     <div class="mb-2">
       <h3 class="mb-0">
         <a
-          href="/language/{languageCode}/sources"
+          href={sourceUrl}
           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center hz-source-item-hover"
         >
           {displayName || name}

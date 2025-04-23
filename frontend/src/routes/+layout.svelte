@@ -174,7 +174,7 @@
     <nav class="container">
       <div class="d-flex justify-content-between align-items-center">
         <a 
-          href="/languages" 
+          href="/" 
           class="text-decoration-none" 
           title="Hello Zenno">
           <img src="/logo.png" alt="Hello Zenno" class="logo-image" />
@@ -240,7 +240,7 @@
             <span class="footer-divider">·</span>
             <a href="mailto:hellozenno@gregdetre.com" class="footer-link">Contact</a>
           </div>
-          <p class="mb-0 text-white-50">Hello Zenno - Learn foreign words with a magical AI dictionary</p>
+          <p class="mb-0 text-white-50">{TAGLINE}</p>
         </div>
       </div>
     </div>
