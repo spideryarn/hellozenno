@@ -170,7 +170,7 @@
 </style>
 
 <div class="d-flex flex-column min-vh-100">
-  <header class="bg-dark py-3">
+  <header class="bg-dark py-3" style="position: relative; z-index: 100;">
     <nav class="container">
       <div class="d-flex justify-content-between align-items-center">
         <a 
@@ -223,7 +223,7 @@
     <slot />
   </main>
   
-  <footer class="bg-dark py-4 text-center">
+  <footer class="bg-dark py-4 text-center" style="position: relative; z-index: 100;">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-lg-8">

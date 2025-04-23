@@ -12,6 +12,7 @@
 
     /* Background & Surface */
     --hz-color-background: #0b0b0e;
+    --hz-color-background-rgb: 11, 11, 14;
     /* Near-black Background */
     --hz-color-surface: #1e1e1e;
     /* Dark Gray Surface (Cards) */
@@ -25,8 +26,10 @@
 
     /* Text Colors */
     --hz-color-text-main: #f8f9fa;
+    --hz-color-text-main-rgb: 248, 249, 250;
     /* Near-white Main Text */
     --hz-color-text-secondary: #d7dadd;
+    --hz-color-text-secondary-rgb: 215, 218, 221;
     /* Light Gray Secondary Text */
 
     /* Accent Colors (Pastel Palette) */

@@ -12,7 +12,7 @@ body {
 }
 
 .text-white-50 {
-    color: rgba(248, 249, 250, 0.5) !important;
+    color: rgba(var(--hz-color-text-main-rgb, 248, 249, 250), 0.5) !important;
 }
 
 /* Card theme overrides */
@@ -24,7 +24,7 @@ body {
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--hz-shadow-primary-green-lg);
 }
 
 /* List group theme overrides */
@@ -46,14 +46,14 @@ h6 {
 /* Form controls */
 .form-control,
 .form-select {
-    background-color: #2a2a2a;
-    border-color: #444;
+    background-color: var(--hz-color-surface);
+    border-color: var(--hz-color-border);
     color: var(--hz-color-text-main);
 }
 
 .form-control:focus,
 .form-select:focus {
-    background-color: #333;
+    background-color: var(--hz-color-surface);
     color: var(--hz-color-text-main);
     border-color: var(--hz-color-primary-green);
     box-shadow: var(--hz-shadow-primary-green);
@@ -118,7 +118,7 @@ h6 {
 
 .hz-language-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--hz-shadow-primary-green);
 }
 
 .hz-language-item .card-title {
@@ -138,12 +138,12 @@ h6 {
     height: 100%;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--hz-shadow-primary-green);
 }
 
 .feature-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--hz-shadow-primary-green-lg);
 }
 
 .feature-number {
@@ -151,7 +151,7 @@ h6 {
     top: -10px;
     left: -10px;
     background-color: var(--hz-color-primary-green);
-    color: white;
+    color: var(--hz-color-text-main);
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -181,13 +181,13 @@ h6 {
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--hz-shadow-primary-green);
     transition: transform 0.2s ease;
 }
 
 .feature-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--hz-shadow-primary-green-lg);
 }
 
 .feature-text {
@@ -198,7 +198,7 @@ h6 {
 .getting-started-card {
     background-color: var(--hz-color-surface);
     border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--hz-shadow-primary-green-lg);
 }
 
 .getting-started-step {
@@ -207,7 +207,7 @@ h6 {
 
 .step-number {
     background-color: var(--hz-color-primary-green);
-    color: white;
+    color: var(--hz-color-text-main);
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -227,7 +227,7 @@ h6 {
 
 /* Footer styling */
 .footer-link {
-    color: #6c757d;
+    color: var(--hz-color-text-secondary);
     text-decoration: none;
     transition: color 0.2s;
     padding: 0 0.5rem;
@@ -265,7 +265,7 @@ h6 {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(11, 11, 14, 0.75);
+    background-color: rgba(var(--hz-color-background-rgb, 11, 11, 14), 0.75);
 }
 
 .hero-title {

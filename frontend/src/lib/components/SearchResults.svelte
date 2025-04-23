@@ -190,6 +190,6 @@
   /* Add a subtle hover effect for list items */
   .list-group-item:hover {
     /* Use primary green with low alpha */
-    background-color: rgba(var(--hz-color-primary-green-rgb, 102, 154, 115), 0.1);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
   }
 </style>

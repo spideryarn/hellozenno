@@ -21,19 +21,19 @@
   
   <div class="d-flex gap-2">
     <button
-      class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-primary' : 'btn-outline-secondary'}" // Primary active, Secondary outline inactive
+      class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-primary' : 'btn-outline-secondary'}"
       on:click={() => setPlaybackRate(0.85)}
     >
       0.85x
     </button>
     <button
-      class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-primary' : 'btn-outline-secondary'}" // Primary active, Secondary outline inactive
+      class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-primary' : 'btn-outline-secondary'}"
       on:click={() => setPlaybackRate(1.0)}
     >
       1.0x
     </button>
     <button
-      class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-primary' : 'btn-outline-secondary'}" // Primary active, Secondary outline inactive
+      class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-primary' : 'btn-outline-secondary'}"
       on:click={() => setPlaybackRate(1.2)}
     >
       1.2x
@@ -49,7 +49,7 @@
   }
   
   .audio-container {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--hz-color-surface-transparent-15);
     border-radius: 4px;
     padding: 1rem;
   }
@@ -57,6 +57,7 @@
   h3 {
     font-size: 1rem;
     margin-bottom: 1rem;
+    color: var(--hz-color-text-main);
   }
   
   .audio-player {
@@ -69,8 +70,8 @@
   }
   
   .button {
-    background-color: #4CAD53;
-    color: white;
+    background-color: var(--hz-color-primary-green);
+    color: var(--hz-color-text-main);
     padding: 0.5rem 1rem;
     border-radius: 4px;
     text-decoration: none;
@@ -82,6 +83,7 @@
   }
   
   .download-button {
-    background-color: #0275d8;
+    background-color: var(--hz-color-accent-sky-blue);
+    color: var(--hz-color-surface);
   }
 </style>
