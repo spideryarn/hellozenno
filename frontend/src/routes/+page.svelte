@@ -1,15 +1,18 @@
 <script lang="ts">
   // Home page component
+  import NebulaBackground from '$lib/components/NebulaBackground.svelte';
+  import { SITE_NAME, TAGLINE } from '$lib/config';
 </script>
 
 <svelte:head>
-  <title>Hello Zenno - AI Language Learning Assistant</title>
+  <title>{SITE_NAME} - {TAGLINE}</title>
+  <meta name="description" content="HelloZenno helps intermediate language learners read, hear, and remember real-world language without getting stuck. AI-powered dictionary and listening practice." />
 </svelte:head>
 
 <!-- Hero section with nebula background -->
-<section class="hero-section">
-  <div class="container-fluid px-0">
-    <div class="nebula-bg">
+<NebulaBackground image="nebula2">
+  <section class="hero-section">
+    <div class="container-fluid px-0">
       <div class="container py-5">
         <div class="row justify-content-center">
           <div class="col-12 text-center">
@@ -37,8 +40,7 @@
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
 <!-- Problem/Insight section -->
 <section class="py-5 bg-dark">
@@ -269,30 +271,18 @@
     </div>
   </div>
 </footer>
+</NebulaBackground>
 
 <style>
   /* Hero section styling */
   .hero-section {
     position: relative;
-  }
-  
-  .nebula-bg {
-    background-image: url('/img/marketing/homepage_hero_background_nebula2.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     padding: 100px 0;
-    position: relative;
   }
   
-  .nebula-bg::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(11, 11, 14, 0.75);
+  /* Remove bg-dark from sections since we have the nebula background */
+  :global(.bg-dark) {
+    background-color: transparent !important;
   }
   
   .logo-container {

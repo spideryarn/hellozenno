@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import NebulaBackground from '$lib/components/NebulaBackground.svelte';
+  import { SITE_NAME } from '$lib/config';
   
   // Define record to track open questions
   let openQuestions: Record<string, boolean> = {};
@@ -58,11 +60,29 @@
 </script>
 
 <svelte:head>
-  <title>Frequently Asked Questions - Hello Zenno</title>
+  <title>FAQ | {SITE_NAME}</title>
+  <meta name="description" content="Frequently asked questions about Hello Zenno, the AI-powered language learning assistant focusing on vocabulary acquisition and listening practice." />
 </svelte:head>
 
-<!-- Full Viewport Nebula Background -->
-<div class="nebula-bg-wrapper">
+<!-- The nebula background starts here - testing if it's rendering -->
+<div style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #FF0000;
+  background-image: url('/img/marketing/homepage_hero_background_nebula1.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: -1;
+">
+</div>
+
+<!-- Original NebulaBackground component here -->
+<NebulaBackground>
   <!-- FAQ Hero Section -->
   <section class="hero-section">
     <div class="container-fluid px-0">
@@ -144,41 +164,9 @@
       </div>
     </div>
   </section>
-</div>
+</NebulaBackground>
 
 <style>
-  /* Full viewport nebula background */
-  .nebula-bg-wrapper {
-    position: relative;
-    min-height: 100vh;
-    background-image: url('/img/marketing/homepage_hero_background_nebula1.png');
-    background-size: cover;
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    z-index: 0;
-    margin-top: 0;
-    padding-top: 0;
-  }
-  
-  /* Gradient overlay - made fainter by increasing overlay opacity */
-  .nebula-bg-wrapper::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(11, 11, 14, 0.7) 0%,    /* 70% opaque at the top (more visible background) */
-      rgba(11, 11, 14, 0.6) 25%,   /* 60% opacity at 25% */
-      rgba(11, 11, 14, 0.5) 50%,   /* 50% opacity at 50% */
-      rgba(11, 11, 14, 0.4) 100%   /* 40% opacity for the rest */
-    );
-    z-index: -1; /* Behind the content */
-  }
-  
   /* Hero section styling - modified to start at the top */
   .hero-section {
     position: relative;

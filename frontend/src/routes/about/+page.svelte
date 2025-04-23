@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import NebulaBackground from '$lib/components/NebulaBackground.svelte';
+  import { SITE_NAME } from '$lib/config';
   
   // For now, let's go back to the inline SVG approach since it works 
   // and fixes the SSR issue with phosphor-svelte
@@ -37,11 +39,11 @@
 </script>
 
 <svelte:head>
-  <title>About Hello Zenno - AI Language Learning Assistant</title>
+  <title>About | {SITE_NAME}</title>
+  <meta name="description" content="Learn about Hello Zenno, an open-source project providing AI-powered dictionary and listening practice for language learners." />
 </svelte:head>
 
-<!-- Wrap the entire page content in nebula background -->
-<div class="nebula-bg-wrapper">
+<NebulaBackground>
   <!-- Hero section -->
   <section class="hero-section">
     <div class="container-fluid px-0">
@@ -235,42 +237,12 @@
       </div>
     </div>
   </section>
-</div>
+</NebulaBackground>
 
 <!-- Footer is in the layout -->
 
 <style>
-  /* Full viewport nebula background */
-  .nebula-bg-wrapper {
-    position: relative;
-    min-height: 100vh;
-    background-image: url('/img/marketing/homepage_hero_background_nebula1.png');
-    background-size: cover;
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    z-index: 0;
-    margin-top: 0;
-    padding-top: 0;
-  }
-  
-  /* Gradient overlay - made fainter by increasing overlay opacity */
-  .nebula-bg-wrapper::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(11, 11, 14, 0.7) 0%,    /* 70% opaque at the top (more visible background) */
-      rgba(11, 11, 14, 0.6) 25%,   /* 60% opacity at 25% */
-      rgba(11, 11, 14, 0.5) 50%,   /* 50% opacity at 50% */
-      rgba(11, 11, 14, 0.4) 100%   /* 40% opacity for the rest */
-    );
-    z-index: -1; /* Behind the content */
-  }
+  /* Removed full viewport nebula background - now using NebulaBackground component */
   
   /* Hero section styling */
   .hero-section {

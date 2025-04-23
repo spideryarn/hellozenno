@@ -95,6 +95,31 @@ We provide reusable Svelte components to maintain consistent styling:
 - `.hz-section-header`: For section headings
 - `.hz-btn-primary`: For primary buttons (uses `var(--hz-color-primary-green)`)
 
+## Page Titles
+
+Page titles should follow a consistent structure for better SEO and user experience:
+
+### Title Structure Patterns
+
+- **Language-specific pages**: `[Specific Content] | [Page Type] | [Language Name] | [Site Name]`
+  - Example: `καλημέρα | Lemma | Greek | Hello Zenno`
+  - Example: `Sources | Greek | Hello Zenno`
+
+- **General pages**: `[Page Name] | [Site Name]`
+  - Example: `Languages | Hello Zenno`
+  - Example: `FAQ | Hello Zenno`
+
+- **Home page**: `[Site Name] - [Tagline]`
+  - Example: `Hello Zenno - AI-powered dictionary & listening practice`
+
+### Implementation Guidelines
+
+- Use the constants `SITE_NAME` and `TAGLINE` from `frontend/src/lib/config.ts` for consistency
+- Long content titles (like sentences) should be truncated using the `truncate()` utility function
+- Set titles within a `<svelte:head>` tag in your component
+- Title information should be passed from server to client components as needed
+- URL trailing slashes are set to `never` so canonical URLs don't have trailing slashes
+
 ## Icons
 
 The application uses Phosphor icons for a consistent iconography system. 
