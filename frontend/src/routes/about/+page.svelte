@@ -73,15 +73,17 @@
         <div class="card p-4 founder-card shadow">
           <h2 class="mb-3">The Story Behind Hello Zenno</h2>
           <p class="founder-intro">
-            Hello Zenno began as <strong>Greg Detre's</strong> personal quest to crack intermediate Greek. 
-            Greg holds a PhD in computational neuroscience from Princeton, where he used machine learning & fMRI to study how we forget. 
-            He later co‑founded <strong>Memrise</strong>, now a 70 million‑user language app.
+            Hello Zenno began as a personal quest to crack intermediate Greek from one of the co-founders of <a href="https://www.memrise.com" target="_blank" rel="noopener">Memrise</a>.
+            <br>
+            <br>
+            <a href="https://www.gregdetre.com/startups/" target="_blank" rel="noopener">Greg</a> holds a PhD in computational neuroscience from Princeton, where he used machine learning & fMRI to study how we forget. 
+            He later co‑founded <strong><a href="https://www.memrise.com" target="_blank" rel="noopener">Memrise</a></strong>, now a 70 million‑user language app.
           </p>
           
           <blockquote class="blockquote mt-4 p-3">
             <p class="mb-0">
-              "I wanted a tool that let me <em>read what I love</em> with the help of a magic dictionary, 
-              then hammer the same words into my ears. When I couldn't find one, I built it."
+              "I've always dreamed of a tool that would help me <em>read stories in another language</em> with the help of a magic dictionary, 
+              then hammer the same words into my ears."
             </p>
           </blockquote>
         </div>
@@ -132,7 +134,7 @@
             <div class="feature-card h-100">
               <div class="text-center mb-3">
                 <div class="text-primary-green">
-                  <Code size={48} weight="fill" />
+                  {@html CodeIcon()}
                 </div>
               </div>
               <h3 class="feature-title text-center">Open knowledge</h3>
@@ -216,7 +218,7 @@
         <div class="card p-4 contribute-card border-0 shadow">
           <div class="text-center mb-3">
             <div class="text-primary-green">
-              <GithubLogo size={48} weight="fill" />
+              {@html GithubLogoIcon()}
             </div>
           </div>
           <h3 class="section-title mb-3">Want to co‑build?</h3>
