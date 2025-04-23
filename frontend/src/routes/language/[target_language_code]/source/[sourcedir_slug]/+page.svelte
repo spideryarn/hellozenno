@@ -9,6 +9,7 @@
   import { onMount } from 'svelte';
   import { DescriptionFormatted, SourcedirHeader } from '$lib';
   import { page } from '$app/stores';
+  import DataGrid from '$lib/components/DataGrid.svelte';
   
   let { data }: { data: PageData } = $props();
   
@@ -92,6 +93,18 @@
   let isUrlLoading = $state(false);
   let urlErrorMessage = $state('');
   let urlSuccessMessage = $state('');
+  
+  // Column configuration for DataGrid v1
+  const columns = [
+    { id: 'filename', header: 'Filename', accessor: (row: any) => row.filename },
+    { id: 'sourcefile_type', header: 'Type' },
+    { id: 'wordform_count', header: 'Words', accessor: (row: any) => row.metadata?.wordform_count ?? 0, width: 80, class: 'text-end' },
+  ];
+  
+  function handleRowClick(event: CustomEvent<any>) {
+    const row = event.detail;
+    window.location.href = `/language/${target_language_code}/source/${sourcedir.slug}/${row.slug}`;
+  }
   
   async function deleteSourcefile(slug: string) {
     if (!confirm('Are you sure you want to delete this sourcefile? This action cannot be undone.')) {
@@ -468,61 +481,18 @@
     </div>
   </div>
 
-  <!-- Files list -->
+  <!-- Files list (DataGrid v1) -->
   <h2 class="mb-3">Source Files</h2>
-  
+
   {#if sourcefiles.length === 0}
     <div class="alert alert-info">No files in this directory.</div>
   {:else}
-    <div class="list-group">
-      {#each sourcefiles as file}
-        <div class="list-group-item d-flex align-items-center">
-          <div class="file-icon me-3">
-            {#if file.sourcefile_type === 'text'}
-              <i class="bi bi-file-text fs-4"></i>
-            {:else if file.sourcefile_type === 'audio'}
-              <i class="bi bi-file-music fs-4"></i>
-            {:else if file.sourcefile_type === 'image'}
-              <i class="bi bi-file-image fs-4"></i>
-            {:else if file.sourcefile_type === 'youtube_audio'}
-              <i class="bi bi-youtube fs-4"></i>
-            {:else}
-              <i class="bi bi-file fs-4"></i>
-            {/if}
-          </div>
-          
-          <div class="flex-grow-1">
-            <a href="/language/{target_language_code}/source/{sourcedir.slug}/{file.slug}" class="text-decoration-none fs-5">
-              {file.filename}
-            </a>
-            <div class="d-flex mt-1 flex-wrap">
-              {#if file.metadata.has_audio}
-                <span class="badge hz-badge-audio me-2"><i class="bi bi-volume-up me-1"></i> Audio</span>
-              {/if}
-              {#if file.metadata.wordform_count > 0}
-                <span class="badge hz-badge-word-count me-2"><i class="bi bi-book me-1"></i> Words: {file.metadata.wordform_count}</span>
-              {/if}
-              {#if file.metadata.phrase_count > 0}
-                <span class="badge hz-badge-phrase-count me-2"><i class="bi bi-chat-quote me-1"></i> Phrases: {file.metadata.phrase_count}</span>
-              {/if}
-              {#if file.metadata.duration}
-                <span class="badge hz-badge-duration me-2">
-                  <i class="bi bi-clock me-1"></i>
-                  {Math.floor(file.metadata.duration / 60)}:{(file.metadata.duration % 60).toString().padStart(2, '0')}
-                </span>
-              {/if}
-            </div>
-          </div>
-          
-          <button class="btn btn-sm btn-outline-danger" 
-                  onclick={() => deleteSourcefile(file.slug)}
-                  title="Delete this file"
-                  aria-label="Delete file {file.filename}">
-            <Trash size={16} weight="bold" />
-          </button>
-        </div>
-      {/each}
-    </div>
+    <DataGrid
+      {columns}
+      rows={sourcefiles}
+      pageSize={100}
+      on:rowClick={handleRowClick}
+    />
   {/if}
 </div>
 
