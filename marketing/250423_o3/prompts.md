@@ -48,3 +48,32 @@ I'm British, so let's use British spelling, and e.g. 'tricky' instead of 'tough'
 And maybe we should have some kind of contact email address which I guess would be hellozenno@gregdetre.com
 
 Can you generate a list of all the images that might be helpful to generate, with detailed instructions/context/prompts that I can paste directly into an AI image-generator? All we have at the moment is the logo.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+> Ok, we've updated the homepage
+
+  For background, read marketing/MARKETING_EXPLAINER_NOTES.md and README.md and frontend/README.md
+
+  Have a look at marketing/250423_o3/ and marketing/250423_o3/site_images_designs/
+
+  Let's do the About page next - see marketing/250423_o3/about.md - feel free to improve on that as you see fit.
+
+  Try and keep a consistent aesthetic with the homepage
+
+  Ask if you have questions
+
+  Follow frontend/docs/STYLING.md and rules/CODING-PRINCIPLES.md
