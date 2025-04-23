@@ -47,7 +47,9 @@
       <div class="col-lg-8 text-center">
         <h2 class="section-title mb-4">Why so many of us stall at the intermediate plateau</h2>
         <div class="text-center mb-4">
-          <img src="/img/marketing/lost in translation.png" alt="Lost in translation" class="problem-img img-fluid rounded mb-4" style="max-width: 70%;" />
+          <a href="/languages" class="image-link" aria-label="Get started with Hello Zenno">
+            <img src="/img/marketing/lost in translation.png" alt="Lost in translation" class="problem-img img-fluid rounded mb-4" style="max-width: 70%;" />
+          </a>
         </div>
         <p class="section-text mb-5">
           Once the beginner courses end, native texts feel overwhelming and listening races ahead of our ears. 
@@ -78,7 +80,9 @@
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">2</div>
-              <img src="/img/marketing/word_highlighting.png" alt="Word highlighting" class="feature-img mb-3" />
+              <a href="/languages" class="image-link" aria-label="See word highlighting in action">
+                <img src="/img/marketing/word_highlighting.png" alt="Word highlighting" class="feature-img mb-3" />
+              </a>
               <h3 class="feature-title">Zenno flags tricky words</h3>
               <p class="feature-description">An AI model predicts which words might trip you up and builds rich dictionary entries.</p>
             </div>
@@ -87,7 +91,9 @@
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">3</div>
-              <img src="/img/marketing/audio_training1.png" alt="Audio training" class="feature-img mb-3" />
+              <a href="/languages" class="image-link" aria-label="Try audio training">
+                <img src="/img/marketing/audio_training1.png" alt="Audio training" class="feature-img mb-3" />
+              </a>
               <h3 class="feature-title">Train your ears</h3>
               <p class="feature-description">Auto‑generated sentences and natural‑sounding audio help you recognise new words at speed.</p>
             </div>
@@ -108,7 +114,9 @@
         <div class="row align-items-center mb-5">
           <div class="col-md-6">
             <div class="language-globe-wrapper mb-4 mb-md-0">
-              <img src="/img/marketing/language_selection_hero_globe.png" alt="Language selection globe" class="img-fluid rounded" />
+              <a href="/languages" class="image-link" aria-label="Browse languages">
+                <img src="/img/marketing/language_selection_hero_globe.png" alt="Language selection globe" class="img-fluid rounded" />
+              </a>
             </div>
           </div>
           <div class="col-md-6">
@@ -159,7 +167,9 @@
         </div>
         
         <div class="alien-avatars-container text-center mt-5">
-          <img src="/img/marketing/alien_avatars1.png" alt="Alien avatars" class="img-fluid rounded" style="max-width: 350px;" />
+          <a href="/languages" class="image-link" aria-label="Explore Hello Zenno">
+            <img src="/img/marketing/alien_avatars1.png" alt="Alien avatars" class="img-fluid rounded" style="max-width: 350px;" />
+          </a>
         </div>
         
         <p class="small text-white-50 mt-3">
@@ -211,7 +221,9 @@
           
           <div class="col-lg-6">
             <div class="flashcard-screenshot-wrapper">
-              <img src="/img/marketing/flashcard_screenshot.png" alt="Flashcard interface" class="img-fluid rounded shadow-lg" />
+              <a href="/languages" class="image-link" aria-label="Try flashcards">
+                <img src="/img/marketing/flashcard_screenshot.png" alt="Flashcard interface" class="img-fluid rounded shadow-lg" />
+              </a>
             </div>
           </div>
         </div>
@@ -464,6 +476,32 @@
     background-color: var(--bs-card-bg);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Image links */
+  .image-link {
+    display: inline-block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .image-link::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(69, 193, 135, 0);
+    border-radius: 0.375rem;
+    transition: background-color 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .image-link:hover::after {
+    background-color: rgba(69, 193, 135, 0.1);
   }
   
   /* Problem section */
