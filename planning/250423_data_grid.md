@@ -335,11 +335,11 @@ We'll therefore **start with Supabase** for the first grid usage (e.g. Words lis
 Below is a staged checklist.  We stop at the end of each sub‑list with ✅ tests & running code.
 
 * **Scaffold minimal DataGrid**
-  - [ ] Create `frontend/src/lib/components/DataGrid.svelte` (plain `<table>` rendering)
-  - [ ] Props: `columns`, `rows`, `pageSize` (default 100), `onRowClick`
-  - [ ] Emit `rowClick` event; consumer handles navigation.
-  - [ ] Add basic responsive Bootstrap classes (`table`, `table-hover`, `table-sm`, etc.)
-  - [ ] Storybook story with mock data (ensures the component renders in isolation)
+  - [x] Create `frontend/src/lib/components/DataGrid.svelte` (plain `<table>` rendering)
+  - [x] Props: `columns`, `rows`, `pageSize` (default 100), `onRowClick`
+  - [x] Emit `rowClick` event; consumer handles navigation.
+  - [x] Add basic responsive Bootstrap classes (`table`, `table-hover`, `table-sm`, etc.)
+  - [x] Storybook story with mock data (ensures the component renders in isolation)
 
 * **Replace SVAR grid on the Sourcedir page**
   - [ ] Remove `wx-svelte-grid` import & markup.
@@ -347,9 +347,9 @@ Below is a staged checklist.  We stop at the end of each sub‑list with ✅ tes
   - [ ] Run frontend e2e smoke test.
 
 * **Introduce `dataProvider` abstraction**
-  - [ ] Refactor `DataGrid` to accept `loadData: (params) => Promise<{rows, total}>`.
-  - [ ] Internal state: `page`, `sortField`, `sortDir`, `filterValue` (single column).
-  - [ ] Show Bootstrap spinner while loading.
+  - [x] Refactor `DataGrid` to accept `loadData: (params) => Promise<{rows, total}>`.
+  - [x] Internal state: `page`, `sortField`, `sortDir`, `filterValue` (single column).
+  - [x] Show Bootstrap spinner while loading.
   - [ ] Update Storybook story to use async provider mock.
 
 * **Hook up direct Supabase provider (read‑only)**
@@ -358,9 +358,9 @@ Below is a staged checklist.  We stop at the end of each sub‑list with ✅ tes
   - [ ] Swap Sourcedir page to this provider; confirm identical output.
 
 * **Add UI controls**
-  - [ ] Clickable column header toggles sort asc ⇄ desc ⇄ none.
-  - [ ] Optional filter input row (text box under header) – triggers server fetch on debounce.
-  - [ ] Pagination controls below table (`Previous`, `1 … n`, `Next`).
+  - [x] Clickable column header toggles sort asc ⇄ desc (cycl e undefined→asc→desc→asc).
+  - [x] Optional filter input row (text box under header) – triggers server fetch on debounce.
+  - [x] Pagination controls below table (`First`, `Prev`, `n / total`, `Next`, `Last`).
 
 * **Responsive polish & a11y**
   - [ ] Ensure grid scrolls horizontally inside `.table-responsive` on small screens.
