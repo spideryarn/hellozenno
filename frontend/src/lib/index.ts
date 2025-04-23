@@ -18,6 +18,7 @@ export { default as DescriptionSection } from "./components/DescriptionSection.s
 export { default as FileOperationsSection } from "./components/FileOperationsSection.svelte";
 export { default as DirectoryOperationsSection } from "./components/DirectoryOperationsSection.svelte";
 export { default as SourcedirHeader } from "./components/SourcedirHeader.svelte";
+export { default as SourcedirGrid } from "./components/SourcedirGrid.svelte";
 export { default as SourcefileImage } from "./components/SourcefileImage.svelte";
 export { default as SourcefileAudio } from "./components/SourcefileAudio.svelte";
 export { default as NavTabs } from "./components/NavTabs.svelte";

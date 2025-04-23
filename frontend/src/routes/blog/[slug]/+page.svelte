@@ -144,7 +144,7 @@
             
             <h2 id="try-it-today">Try it today</h2>
             <p>Hello Zenno is completely free to use. Sign up and import your first text to experience a new way of tackling intermediate language learning.</p>
-            <p><a href="/languages" class="text-primary-green">Get started with Hello Zenno</a></p>
+
           </div>
           
           <!-- Post footer -->

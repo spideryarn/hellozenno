@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
+  import TableOfContents from '$lib/components/TableOfContents.svelte';
   import { SITE_NAME } from '$lib/config';
   import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
   
@@ -236,25 +237,7 @@
         <div class="col-lg-10">
           
           <!-- Table of Contents -->
-          <div class="card toc-card mb-4 p-4">
-            <h2 class="h4 mb-3">Table of Contents</h2>
-            <div class="categories-toc">
-              {#each faqCategories as category}
-                <div class="category-section mb-3">
-                  <h3 class="h5 mb-2">{category.title}</h3>
-                  <ul class="toc-list">
-                    {#each category.faqs as faq}
-                      <li>
-                        <a href="#{faq.id}" class="toc-link">
-                          {faq.question}
-                        </a>
-                      </li>
-                    {/each}
-                  </ul>
-                </div>
-              {/each}
-            </div>
-          </div>
+          <TableOfContents categories={faqCategories} />
           
           <!-- FAQ list - all visible and categorized -->
           <div class="faq-list">
@@ -346,51 +329,7 @@
     color: var(--hz-color-primary-green);
   }
   
-  /* Table of Contents styling */
-  .toc-card {
-    background-color: var(--hz-color-surface);
-    border: 1px solid var(--hz-color-border);
-    border-radius: 8px;
-  }
-  
-  .categories-toc {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    grid-gap: 1.5rem;
-  }
-  
-  .category-section h3 {
-    color: var(--hz-color-primary-green);
-    border-bottom: 1px solid var(--hz-color-border);
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .toc-list {
-    list-style-type: none;
-    padding-left: 0;
-    margin-bottom: 0;
-  }
-  
-  .toc-list li {
-    margin-bottom: 0.5rem;
-  }
-  
-  .toc-link {
-    color: var(--hz-color-text);
-    text-decoration: none;
-    transition: all 0.2s ease;
-    display: inline-block;
-    padding: 0.25rem 0;
-    font-size: 0.9rem;
-  }
-  
-  .toc-link:hover {
-    color: var(--hz-color-primary-green);
-    text-decoration: underline;
-    opacity: 0.8;
-    transform: translateX(3px);
-  }
+  /* Table of Contents styling moved to TableOfContents.svelte component */
   
   /* Category styling */
   .category-container {
@@ -510,10 +449,6 @@
       left: 0;
       margin-right: 0.5rem;
     }
-    
-    .categories-toc {
-      grid-template-columns: 1fr;
-      grid-gap: 1rem;
-    }
+    /* categories-toc styles moved to TableOfContents.svelte */
   }
 </style>
