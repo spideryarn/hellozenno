@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import SourcefileHeader from '../../routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileHeader.svelte';
-  import { NavTabs, SearchBarMini } from '$lib';
+  import { NavTabs } from '$lib';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -72,11 +72,7 @@
       </ol>
     </nav>
     
-    <!-- Add search box using the reusable component -->
-    <SearchBarMini
-      languageName={language_name}
-      targetLanguageCode={target_language_code}
-    />
+    <!-- Search box is now provided by the parent language layout -->
   </div>
   
   <SourcefileHeader 

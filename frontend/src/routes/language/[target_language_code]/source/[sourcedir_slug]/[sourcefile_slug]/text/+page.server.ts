@@ -76,7 +76,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             phrasesData,
             stats, // Add the stats object
             target_language_code,
-            language_name: textData.language_name || "",
+            // Remove language_name here to allow parent layout's value to be used
             sourcedir_slug,
             sourcefile_slug,
             // Add the new structured data format

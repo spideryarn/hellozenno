@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getWordformsForLanguage } from "$lib/api";
 import { get_language_name } from "$lib/utils";
+import { get_language_name } from '$lib/utils';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code } = params;

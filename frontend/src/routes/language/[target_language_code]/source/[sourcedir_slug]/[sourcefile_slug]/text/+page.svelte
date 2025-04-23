@@ -4,6 +4,7 @@
   import SourcefileLayout from '$lib/components/SourcefileLayout.svelte';
   import { SITE_NAME } from '$lib/config';
   import { truncate, generateMetaDescription } from '$lib/utils';
+  import { page } from '$app/stores';
   
   export let data: PageData;
   
@@ -15,11 +16,13 @@
     target_language_code, 
     sourcedir_slug, 
     sourcefile_slug, 
-    language_name,
     recognizedWords,  // New structured data
     enhanced_text,    // Legacy HTML data
     available_sourcedirs // Available sourcedirs for dropdown
   } = data;
+  
+  // Use language_name from parent layout data (via page store)
+  const language_name = $page.data.language_name;
   
   // Extract needed data
   const sourcefile = textData.sourcefile;
