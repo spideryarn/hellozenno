@@ -147,7 +147,7 @@
         {
           id: "what-is-centaur-sourcing",
           question: "What is 'centaur-sourcing'?",
-          answer: "Centaur-sourcing is a concept where humans and AI collaborate to create resources that would be impossible for either to create alone. In Hello Zenno, this refers to users potentially pooling their API keys and resources to generate rich dictionary entries and learning materials for languages they're interested in, making them available to the wider community."
+          answer: "Centaur-sourcing is where humans and AI collaborate at scale to create things that would be very hard for either to create alone. Think of it by analogy with crowdsourcing, where a large groups of people have built the astonishing modern-day intellectual cathedral that is the Wikipedia. How could AI help with such efforts? In Hello Zenno, one potential idea would be for users to pool their API keys and resources to AI-generate rich dictionary entries and learning materials for languages they're interested in, making them available to the wider community. And then, of course, we'd need people to play the critical role of checking, confirming, improving and generally playing an editorial role."
         },
         {
           id: "how-participate-centaur-sourcing",
