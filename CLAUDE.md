@@ -1,113 +1,192 @@
 # HelloZenno Project Reference
 
-To understand more about the purpose of the app, see `./README.md`
+## 1. Application Purpose
 
-## Project Architecture
+HelloZenno is an AI-powered language learning application for intermediate/advanced learners that provides:
+- Interactive vocabulary exploration with rich dictionary metadata 
+- Enhanced text with hover explanations for unfamiliar words
+- Audio generation for words and sentences
+- Flashcards and listening practice exercises
 
-HelloZenno has transitioned from a Flask/Jinja/Svelte application to a SvelteKit/TypeScript frontend with a Flask API and Supabase backend:
+For more details, see `./README.md`
 
-see `frontend/docs/README.md` for a good high-level intro, and references to other files.
+## 2. Project Architecture
 
-## Coding
+HelloZenno uses a SvelteKit/TypeScript frontend with a Flask API backend and Supabase for authentication and database:
 
-**Core principles**
-
-- Prioritise simplicity, debuggability, and readability. Try to keep things concise, don't over-comment, over-log, or over-engineer.
-- Aim to keep changes minimal, and focused on the task at hand.
-- Fix the root cause in a clean way, rather than bandaids/hacks.
-- By default, raise errors early, clearly & fatally. Prefer not to wrap in try/except.
-- Aim to reuse code, and use sub-functions to make long/complex functions clearer.
-- Comment sparingly - reserve it for explaining surprising or confusing sections.
-- Always start simple, get a v1 working, and then gradually add complexity.
-- If things don't make sense or seem like a bad idea, ask questions or discuss rather than just going along with it.
-
+```
+┌─────────────────────┐      ┌─────────────────────┐      ┌─────────────────────┐
+│                     │      │                     │      │                     │
+│  SvelteKit Frontend │◄────►│    Flask Backend    │◄────►│ Supabase PostgreSQL │
+│                     │      │                     │      │                     │
+└─────────────────────┘      └─────────────────────┘      └─────────────────────┘
+        ▲                              ▲                            ▲
+        │                              │                            │
+        ▼                              │                            │
+┌─────────────────────┐               │                            │
+│                     │               │                            │
+│  Supabase Auth      │◄──────────────┴────────────────────────────┘
+│                     │
+└─────────────────────┘
+```
 
 - **Backend (Flask + PostgreSQL)**
   - `api/index.py` - Main Flask application entry point
   - `views/` - Route handlers and API functions
   - `utils/` - Helper functions
-  - `db_models.py` - Database models (using Peewee ORM)
+  - See `backend/docs/MODELS.md` for database schema overview
+  - `db_models.py` - for detailed definition of database models (using Peewee ORM)
   - `migrations/` - Database migration scripts
-
+  
 - **SvelteKit Frontend**
-  - See `frontend/README.md` for detailed documentation
-  - Documentation for specific aspects:
-    - `frontend/docs/SETUP.md` - Installation and development
-    - `frontend/docs/STYLING.md` - Bootstrap theming and component usage
-    - `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` - Architecture overview
-    - `frontend/docs/AUTH.md` for info on login/signup, and especially auth_optional/auth_required
-    - `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md` - API integration
-  - Structure:
-    - `frontend/src/routes/` - SvelteKit routes and pages
-    - `frontend/src/lib/components/` - Reusable Svelte components
-    - `frontend/src/lib/generated/routes.ts` - Auto-generated API route types
-    - `frontend/static/` - Static assets and CSS
+  - `frontend/src/routes/` - SvelteKit routes and pages
+  - `frontend/src/lib/components/` - Reusable Svelte components
+  - `frontend/src/lib/generated/routes.ts` - Auto-generated API route types
+  - `frontend/static/` - Static assets and CSS
+  - See `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` for architecture overview
 
-## Development Guidelines
+## 3. Coding Principles
 
-### Database
-- see `DATABASE.md`, and also use the Supabase MCP (read-only)
-- see `MIGRATIONS.md` before creating or running migrations
+- Prioritise simplicity, debuggability, and readability
+- Keep changes minimal and focused on the task at hand
+- Fix root causes cleanly rather than applying bandaids
+- Raise errors early, clearly & fatally; avoid excessive try/except
+- Use sub-functions to make long/complex functions clearer
+- Comment sparingly - only explain surprising or confusing sections
+- Start simple, get v1 working, then add complexity
+- Question things that don't make sense rather than proceeding blindly
 
-### Logging
-- **Backend logs**: `/logs/backend.log` (managed by Loguru via LimitingFileWriter)
-- **SvelteKit logs**: `/logs/frontend.log` (captured from SvelteKit development server)
-- Use the `loguru` library for Python logging: see `utils/logging_utils.py` and `scripts/local/run_backend.sh` (backend) and `scripts/local/run_frontend.sh` (frontend)
+## 4. Development Guidelines
 
-### Frontend Components
+### 4.1 Authentication
 
-#### SvelteKit Component Library
+HelloZenno uses Supabase Authentication with JWT tokens:
 
-The SvelteKit frontend uses reusable Bootstrap-styled components.
+- Frontend: Uses `@supabase/ssr` for server-side rendering compatibility
+- Backend: Uses decorators in `auth_utils.py` to protect routes:
+  - `@api_auth_required`: Requires valid JWT token
+  - `@api_auth_optional`: Checks token if present but allows anonymous access
 
-see `frontend/docs/SITE_ORGANISATION.md` and `frontend/docs/STYLING.md` for detailed component usage.
+See `frontend/docs/AUTH.md` for comprehensive details on auth implementation.
+
+### 4.2 Environment Setup
+
+Configuration uses environment files:
+- `.env.local` - Local development
+- `.env.testing` - Test environment
+- `.env.prod` - Production environment
+
+Required variables include database connection, Supabase keys, and API endpoints.
+
+### 4.3 Database & Migrations
+
+- Always follow `backend/docs/MIGRATIONS.md`
+- PostgreSQL via Supabase, accessed through Peewee ORM
+- Migrations managed via `peewee-migrate`
+- Always run migrations through scripts, never modify directly
+
+```bash
+# Run migrations locally
+./scripts/local/migrate.sh
+
+# Check applied migrations
+./scripts/local/migrations_list.sh
+
+# Connect to database with nice formatting
+psql -d hellozenno_development -P pager=off -x auto
+```
+
+See `backend/docs/DATABASE.md` and `backend/docs/MIGRATIONS.md` for details.
+
+### 4.4 Logging
+
+- **Backend logs**: `/logs/backend.log` (Loguru)
+- **SvelteKit logs**: `/logs/frontend.log`
+
+Import and use logger in Python code:
+```python
+from loguru import logger
+logger.info("Message")
+```
+
+See `backend/docs/DEBUGGING.md` for troubleshooting tips.
+
+### 4.5 Frontend Development
+
+#### UI Components & Styling
+
+HelloZenno uses Bootstrap with a custom dark theme and a component library:
+
+- `Card.svelte`, `Sentence.svelte`, `EnhancedText.svelte`, etc.
+- Custom CSS variables in `theme-variables.css` (always use `--hz-color-*` variables)
+- Phosphor icons with consistent sizing and weights
+
+See `frontend/docs/STYLING.md` and `frontend/docs/SITE_ORGANISATION.md` for details.
 
 #### Type-Safe API Integration
 
-The SvelteKit frontend uses type-safe API integration with the Flask backend:
+```typescript
+import { RouteName } from '$lib/generated/routes';
+import { apiFetch, getApiUrl } from '$lib/api';
+import { getPageUrl } from '$lib/navigation';
 
-- Flask generates TypeScript type definitions in `frontend/src/lib/generated/routes.ts` - see `backend/docs/URL_REGISTRY.md`
-- SvelteKit uses the `getApiUrl()` and `getPageUrl()` and `apiFetch()` function to generate properly typed API URLs
-- All API endpoints follow a standard structure
+// API call with type checking
+const data = await apiFetch({
+  routeName: RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
+  params: { target_language_code: 'el', wordform: 'γεια' }
+});
 
-See `frontend/docs/FLASK_API_INTEGRATION.md` for details.
-
-### Browser Testing and Web Search with cursor-tools
-
-use Playwright MCP for investigating frontend issues
-
-#### Web Search
-
-use Perplexity_ask MCP to find out about stuff
-
-You can also use Fetch_url MCP to retrieve particular urls.
-
-
-### Testing
-
-[THIS IS A BIT OUT OF DATE - we haven't updated the automated tests in a while]
-
-see `docs/TESTING.md`
-
-### Database
-
-see `backend/docs/DATABASE.md` and `backend/docs/MIGRATIONS.md`
-
-e.g.
-
-```bash
-# Connect to local database with nice formatting
-psql -d hellozenno_development -P pager=off -x auto
-
-# One-off queries
-psql -d hellozenno_development -P pager=off -A -t -c "SELECT * FROM table;"
-
-# Backup local database
-./scripts/local/backup_db.sh
+// Generate URLs
+const apiUrl = getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, 
+  { target_language_code: 'el', wordform: 'γεια' });
+const pageUrl = getPageUrl('wordform', { target_language_code: 'el', wordform: 'γεια' });
 ```
 
+See `backend/docs/URL_REGISTRY.md` and `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md` for details.
 
-## Common Commands
+#### Enhanced Text & Search
+
+- **Enhanced Text**: Interactive word highlighting with hover tooltips
+- **Search**: Unified search with exact, case-insensitive, normalized, and translation matching
+
+See `frontend/docs/ENHANCED_TEXT.md` and `frontend/docs/SEARCH.md` for implementation details.
+
+#### Sourcefile Processing
+
+Source files (text, image, audio) form the core content:
+- Text tab: Enhanced interactive text
+- Words tab: Extracted vocabulary
+- Phrases tab: Multi-word expressions
+- Translation tab: English translation
+- Image/Audio tabs: Original media
+
+See `frontend/docs/SOURCEFILE_PAGES.md` for details.
+
+### 4.6 Testing & Debugging
+
+- Frontend: Use Playwright MCP for browser testing
+- Use Perplexity_ask/Fetch_url MCPs for web research
+- Test API endpoints with curl or Postman
+
+```bash
+# Run Python tests - currently OUT OF DATE
+cd backend && python -m pytest
+
+# Check frontend type safety
+cd frontend && npm run check
+```
+
+See `backend/docs/TESTING.md` for testing patterns.
+
+### 4.7 Development Modes
+
+Special Claude modes for specific tasks:
+- `rules/ARCHITECT-MODE.md`: For high-level design discussions
+- `rules/SURGEON-MODE.md`: For precise code surgery
+- `rules/SOUNDING-BOARD-MODE.md`: For brainstorming and feedback
+- `rules/detective-scientist-mode.md`: For investigating issues
+
+## 5. Common Commands
 
 ### Development
 ```bash
@@ -117,15 +196,18 @@ source .env.local && ./scripts/local/run_backend.sh
 # Run SvelteKit development server - the user will always have this running in another terminal
 source .env.local && ./scripts/local/run_frontend.sh
 
+# Check for type errors
+cd frontend && npm run check
+
+# Generate routes typescript file - this runs automatically when we restart Flask dev server
+cd backend && FLASK_APP=api.index flask generate-routes-ts
+```
 
 ### Deployment
-
-see `scripts/`
-
 ```bash
-# Deploy to production - the user should always be the one to do this
+# Deploy to production (user should run this)
 ./scripts/prod/deploy.sh
 
-# Backup production database - the user should always be the one to do this
+# Backup production database (user should run this)
 ./scripts/prod/backup_db.sh
 ```
