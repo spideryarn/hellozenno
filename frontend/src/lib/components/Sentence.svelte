@@ -70,7 +70,7 @@
         <div>
           <button 
             type="button" 
-            class="btn btn-outline-danger btn-sm" 
+            class="btn btn-outline-warning btn-sm"
             on:click={deleteSentence}
             disabled={isDeleting}
             aria-label="Delete sentence"
@@ -119,19 +119,19 @@
           
           <div class="d-flex gap-2">
             <button 
-              class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-secondary' : 'btn-outline-secondary'}" 
+              class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-primary' : 'btn-outline-secondary'}" 
               on:click={() => setPlaybackRate(0.85)}
             >
               0.85x
             </button>
             <button 
-              class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-secondary' : 'btn-outline-secondary'}" 
+              class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-primary' : 'btn-outline-secondary'}" 
               on:click={() => setPlaybackRate(1.0)}
             >
               1.0x
             </button>
             <button 
-              class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-secondary' : 'btn-outline-secondary'}" 
+              class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-primary' : 'btn-outline-secondary'}" 
               on:click={() => setPlaybackRate(1.2)}
             >
               1.2x

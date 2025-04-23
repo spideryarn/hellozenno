@@ -15,7 +15,7 @@
 </script>
 
 <a href={sentenceUrl} class="text-decoration-none">
-    <div class="hz-sentence-item">
+    <div class="hz-sentence-item card-hover-effect">
         <h3 class="mb-2">
             <span class="hz-foreign-text">{text}</span>
         </h3>
@@ -38,5 +38,11 @@
     
     p {
         margin-bottom: 0;
+    }
+
+    .card-hover-effect:hover {
+      background-color: rgba(var(--hz-color-primary-green-rgb, 102, 154, 115), 0.05);
+      /* Optional: Add a subtle transition */
+      transition: background-color 0.2s ease-in-out;
     }
 </style> 

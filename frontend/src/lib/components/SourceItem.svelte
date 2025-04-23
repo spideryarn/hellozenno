@@ -22,7 +22,10 @@
   <div class="d-flex flex-column">
     <div class="mb-2">
       <h3 class="mb-0">
-        <a href={sourceUrl} class="text-decoration-none">
+        <a
+          href="/language/{languageCode}/sources"
+          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center hz-source-item-hover"
+        >
           {displayName || name}
         </a>
       </h3>
@@ -40,4 +43,10 @@
       </div>
     {/if}
   </div>
-</div> 
+</div>
+
+<style>
+  .hz-source-item-hover:hover {
+    background-color: rgba(var(--hz-color-primary-green-rgb, 102, 154, 115), 0.05);
+  }
+</style> 

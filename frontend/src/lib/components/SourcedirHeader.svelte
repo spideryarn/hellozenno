@@ -218,7 +218,7 @@
   
   .bottom-divider {
     position: relative;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid var(--hz-color-border-subtle, rgba(255, 255, 255, 0.1)); /* Use subtle border */
     margin-bottom: 1rem;
     margin-top: -0.5rem;
   }

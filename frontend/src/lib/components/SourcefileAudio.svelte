@@ -18,6 +18,27 @@
       <Download size={16} weight="bold" /> Download audio
     </a>
   </div>
+  
+  <div class="d-flex gap-2">
+    <button
+      class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-primary' : 'btn-outline-secondary'}" // Primary active, Secondary outline inactive
+      on:click={() => setPlaybackRate(0.85)}
+    >
+      0.85x
+    </button>
+    <button
+      class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-primary' : 'btn-outline-secondary'}" // Primary active, Secondary outline inactive
+      on:click={() => setPlaybackRate(1.0)}
+    >
+      1.0x
+    </button>
+    <button
+      class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-primary' : 'btn-outline-secondary'}" // Primary active, Secondary outline inactive
+      on:click={() => setPlaybackRate(1.2)}
+    >
+      1.2x
+    </button>
+  </div>
 </div>
 
 <style>
