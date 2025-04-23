@@ -166,6 +166,14 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
                 </a>
               </li>
             {/if}
+            {#if languageCode}
+              <li>
+                <a href="/language/{languageCode}/sources" class="btn btn-primary">
+                  <i class="ph ph-arrow-left me-2"></i>Back to {languageName || languageCode.toUpperCase()} language page
+                </a>
+              </li>
+              <br>
+            {/if}
             <li class="mb-2">
               <a href="/" class="btn btn-primary">
                 <i class="ph ph-house-line me-2"></i>Go to the homepage
@@ -176,13 +184,6 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
                 <i class="ph ph-translate me-2"></i>View available languages
               </a>
             </li>
-            {#if languageCode}
-              <li>
-                <a href="/language/{languageCode}/sources" class="btn btn-primary">
-                  <i class="ph ph-arrow-left me-2"></i>Back to {languageName || languageCode.toUpperCase()} language page
-                </a>
-              </li>
-            {/if}
           </ul>
         </div>
         
