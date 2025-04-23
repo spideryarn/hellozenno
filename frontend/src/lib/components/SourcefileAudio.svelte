@@ -3,12 +3,24 @@
   
   export let audioUrl: string;
   export let downloadUrl: string;
+  
+  // Set default playback rate to 1.0
+  let currentPlaybackRate: number = 1.0;
+  let audioElement: HTMLAudioElement;
+  
+  // Function to set the playback rate
+  function setPlaybackRate(rate: number) {
+    if (audioElement) {
+      audioElement.playbackRate = rate;
+      currentPlaybackRate = rate;
+    }
+  }
 </script>
 
 <div class="audio-view">
   <div class="audio-container">
     <h3>Audio Player</h3>
-    <audio controls src={audioUrl} class="audio-player">
+    <audio bind:this={audioElement} controls src={audioUrl} class="audio-player">
       Your browser does not support the audio element.
     </audio>
   </div>
