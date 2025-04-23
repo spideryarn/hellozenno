@@ -13,7 +13,7 @@
   const backgroundImageUrl = '/img/marketing/homepage_hero_background_nebula1.png';
 
   // Overall nebula visibility (0 = invisible, 1 = fully visible)
-  const opacity = 0.8; // 80 % visible, easier to confirm background is rendering
+  const opacity = 0.6; // 60% visible, slightly fainter than before
 
   // Always fade to solid background colour at the very top (no configurables)
   const topGradient = `rgba(11, 11, 14, 1) 0%, rgba(11, 11, 14, 0.7) 5%`;
