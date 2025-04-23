@@ -8,20 +8,18 @@
     DescriptionSection, 
     FileOperationsSection 
   } from '$lib';
-  import { Info } from 'phosphor-svelte';
+  import Info from 'phosphor-svelte/lib/Info';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
   import { onMount } from 'svelte';
-  import { 
-    Trash, 
-    Image, 
-    Download,
-    FileText,
-    SpeakerHigh,
-    MusicNotes,
-    PencilSimple,
-    FolderOpen
-  } from 'phosphor-svelte';
+  import Trash from 'phosphor-svelte/lib/Trash';
+  import Image from 'phosphor-svelte/lib/Image';
+  import Download from 'phosphor-svelte/lib/Download';
+  import FileText from 'phosphor-svelte/lib/FileText';
+  import SpeakerHigh from 'phosphor-svelte/lib/SpeakerHigh';
+  import MusicNotes from 'phosphor-svelte/lib/MusicNotes';
+  import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
+  import FolderOpen from 'phosphor-svelte/lib/FolderOpen';
   import NavButtons from './NavButtons.svelte';
   import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
   import { page } from '$app/stores';

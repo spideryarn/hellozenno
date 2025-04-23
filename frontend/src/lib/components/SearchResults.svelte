@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { SearchMatch, SearchResult } from '$lib/types';
   import { goto } from '$app/navigation';
-  import { ArrowLeft } from 'phosphor-svelte';
+  import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
   
   export let results: SearchResult | null = null;
   

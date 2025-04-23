@@ -1,12 +1,10 @@
 <script lang="ts">
   import { getPageUrl } from '$lib/navigation';
-  import { 
-    CaretDoubleLeft, 
-    CaretDoubleRight, 
-    CaretLeft, 
-    CaretRight, 
-    ArrowUp
-  } from 'phosphor-svelte';
+  import CaretDoubleLeft from 'phosphor-svelte/lib/CaretDoubleLeft';
+  import CaretDoubleRight from 'phosphor-svelte/lib/CaretDoubleRight';
+  import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
+  import CaretRight from 'phosphor-svelte/lib/CaretRight';
+  import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
   import type { Navigation } from '$lib/types/sourcefile';
   import type { PageType } from '$lib/navigation';
   

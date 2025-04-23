@@ -3,7 +3,7 @@
   import type { Sourcedir, Metadata } from '$lib/types/sourcefile'; // Corrected path
   import type { Language } from '$lib/types'; // Corrected type name to Language and path to $lib/types
   import { CollapsibleHeader, DescriptionSection, DirectoryOperationsSection, MetadataSection } from '$lib';
-  import { FolderOpen } from 'phosphor-svelte';
+  import FolderOpen from 'phosphor-svelte/lib/FolderOpen';
   import { getApiUrl } from '$lib/api'; // Added for API calls
   import { RouteName } from '$lib/generated/routes'; // Added for API calls
   import { goto } from '$app/navigation'; // Added for navigation

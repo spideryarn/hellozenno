@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Card from '$lib/components/Card.svelte';
-  import { KeyReturn, XCircle } from 'phosphor-svelte';
+  import KeyReturn from 'phosphor-svelte/lib/KeyReturn';
+  import XCircle from 'phosphor-svelte/lib/XCircle';
   import { getPageUrl } from '$lib/navigation';
 import { getApiUrl, apiFetch } from '$lib/api';
   import { page } from '$app/stores'; // Import page store for current URL

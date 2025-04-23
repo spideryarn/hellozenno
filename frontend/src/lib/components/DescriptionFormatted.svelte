@@ -4,7 +4,7 @@
   // Multiple line breaks (\n\n+) become separate paragraphs
   // Also includes edit functionality with keyboard shortcuts
   
-  import { PencilSimple } from 'phosphor-svelte';
+  import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
   
   export let description: string = '';
   export let placeholder: string = 'No description available';

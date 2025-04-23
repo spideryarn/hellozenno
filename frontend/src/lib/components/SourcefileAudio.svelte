@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Download } from 'phosphor-svelte';
+  import Download from 'phosphor-svelte/lib/Download';
   
   export let audioUrl: string;
   export let downloadUrl: string;

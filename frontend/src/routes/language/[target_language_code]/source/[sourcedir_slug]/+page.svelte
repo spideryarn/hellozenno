@@ -2,7 +2,9 @@
   import type { PageData } from './$types';
   import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import { Trash, ArrowUp, Plus } from 'phosphor-svelte';
+  import Trash from 'phosphor-svelte/lib/Trash';
+  import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
+  import Plus from 'phosphor-svelte/lib/Plus';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { onMount } from 'svelte';
   import { DescriptionFormatted, SourcedirHeader } from '$lib';
