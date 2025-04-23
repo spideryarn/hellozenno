@@ -16,12 +16,12 @@ const validDestinations: PageType[] = [
 
 export const load: PageServerLoad = async ({ url }) => {
     try {
-        // Get and validate the 'next' query parameter
-        const nextParam = url.searchParams.get('next');
+        // Get and validate the 'section' query parameter
+        const sectionParam = url.searchParams.get('section');
         let nextDestination: PageType = 'sources'; // Default destination
         
-        if (nextParam && validDestinations.includes(nextParam as PageType)) {
-            nextDestination = nextParam as PageType;
+        if (sectionParam && validDestinations.includes(sectionParam as PageType)) {
+            nextDestination = sectionParam as PageType;
         }
         
         // Use the generated static language data instead of API call

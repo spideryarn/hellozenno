@@ -84,15 +84,15 @@ This change ensures compatibility with future SvelteKit versions, as `$app/store
 
 ### Languages Page Redirection
 
-The `/languages` page supports a `next` query parameter for directing users to feature-specific pages after language selection:
+The `/languages` page supports a `section` query parameter for directing users to feature-specific pages after language selection:
 
 ```
-/languages?next=flashcards
+/languages?section=flashcards
 ```
 
 After selecting a language, users will be redirected to that language's flashcards page rather than the default sources page. This is particularly useful for marketing materials and blog posts targeting specific features.
 
-Valid `next` parameter values include:
+Valid `section` parameter values include:
 - `flashcards` - Language flashcards
 - `lemmas` - Dictionary lemmas list
 - `phrases` - Multi-word expressions

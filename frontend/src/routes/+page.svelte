@@ -78,10 +78,15 @@
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">2</div>
-              <LightboxImage 
-                src="/img/marketing/word_highlighting.png" 
-                alt="Word highlighting" 
-                className="feature-img mb-3" />
+              <a href="/languages?section=search" class="feature-link">
+                <LightboxImage 
+                  src="/img/marketing/word_highlighting.png" 
+                  alt="Word highlighting" 
+                  className="feature-img mb-3" />
+                <div class="feature-overlay">
+                  <div class="feature-overlay-text">Try Word Search →</div>
+                </div>
+              </a>
               <h3 class="feature-title">Zenno helps with tricky words</h3>
               <p class="feature-description">An AI model predicts which words might trip you up and builds rich dictionary entries.</p>
             </div>
@@ -90,11 +95,15 @@
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">3</div>
-              <LightboxImage 
-                src="/img/marketing/audio_training1.png" 
-                alt="Audio training" 
-                className="feature-img mb-3" 
-                href="/languages" />
+              <a href="/languages?section=flashcards" class="feature-link">
+                <img 
+                  src="/img/marketing/audio_training1.png" 
+                  alt="Audio training" 
+                  class="feature-img mb-3" />
+                <div class="feature-overlay">
+                  <div class="feature-overlay-text">Practice with Flashcards →</div>
+                </div>
+              </a>
               <h3 class="feature-title">Train your ears</h3>
               <p class="feature-description">Auto‑generated sentences and natural‑sounding audio help you recognise new words at speed.</p>
             </div>
@@ -215,7 +224,7 @@
           
           <div class="col-lg-6">
             <div>
-              <a href="/languages?next=flashcards" class="flashcard-link">
+              <a href="/languages?section=flashcards" class="flashcard-link">
                 <LightboxImage 
                   src="/img/marketing/flashcard_screenshot.png" 
                   alt="Flashcard interface for practicing listening - it plays the sentence without any text, and then you can progressively reveal more help" 
@@ -500,7 +509,8 @@
     box-shadow: 0 12px 32px rgba(198, 169, 240, 0.4);
   }
   
-  /* Flashcard link styling */
+  /* Feature and Flashcard link styling */
+  .feature-link,
   .flashcard-link {
     display: block;
     position: relative;
@@ -510,6 +520,7 @@
     overflow: hidden;
   }
   
+  .feature-overlay,
   .flashcard-overlay {
     position: absolute;
     bottom: 0;
@@ -524,6 +535,7 @@
     justify-content: center;
   }
   
+  .feature-overlay-text,
   .flashcard-overlay-text {
     font-weight: 600;
     font-size: 1.25rem;
@@ -531,6 +543,7 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
   
+  .feature-link:hover .feature-overlay,
   .flashcard-link:hover .flashcard-overlay {
     transform: translateY(0);
   }

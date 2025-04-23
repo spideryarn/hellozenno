@@ -33,7 +33,7 @@
   let searchQuery = '';
   let searchInput: HTMLInputElement | null = null;
   
-  // Get the next destination from the data prop (passed from server)
+  // Get the destination section from the data prop (passed from server)
   let nextDestination: PageType = data.nextDestination || 'sources';
   
   onMount(() => {

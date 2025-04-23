@@ -123,6 +123,11 @@
                 Stories of word origins forge powerful memory hooks. By understanding how words evolved,
                 you create lasting connections between languages and concepts.
               </p>
+              <div class="text-center mt-3">
+                <a href="/languages?section=lemmas" class="btn btn-sm btn-outline-success rounded-pill">
+                  Explore Dictionary →
+                </a>
+              </div>
             </div>
           </div>
           

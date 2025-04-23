@@ -55,12 +55,12 @@
         {
           id: "what-makes-the-dictionary-special",
           question: "What makes the dictionary special?",
-          answer: "Instead of static definitions, Hello Zenno uses AI to generate rich dictionary entries dynamically as you encounter words. These include etymology (word origins, often a great memory aid!), example sentences showing context, comparisons with similar words, and difficulty indicators."
+          answer: "Instead of static definitions, Hello Zenno uses AI to generate rich dictionary entries dynamically as you encounter words. These include etymology (word origins, often a great memory aid!), example sentences showing context, comparisons with similar words, and difficulty indicators. <br><br><a href='/languages?section=lemmas' class='btn btn-sm btn-outline-success rounded-pill'>Explore Dictionary →</a>"
         },
         {
           id: "how-does-hello-zenno-work-with-source-materials",
           question: "How does Hello Zenno work with source materials?",
-          answer: "You can upload various types of content including text, photos of text, URLs, or audio files, and Hello Zenno will highlight words it thinks you'll struggle with because they're difficult. You can hover over these words to learn them in context, with rich dictionary entries that include etymology, mnemonics, example sentences, and comparisons with similar words."
+          answer: "You can upload various types of content including text, photos of text, URLs, or audio files, and Hello Zenno will highlight words it thinks you'll struggle with because they're difficult. You can hover over these words to learn them in context, with rich dictionary entries that include etymology, mnemonics, example sentences, and comparisons with similar words. <br><br><a href='/languages?section=sources' class='btn btn-sm btn-outline-success rounded-pill'>Browse Source Materials →</a>"
         },
         {
           id: "how-does-hello-zenno-determine-difficult-words",
@@ -70,12 +70,12 @@
         {
           id: "how-does-search-work",
           question: "How does the search functionality work?",
-          answer: "Hello Zenno features a flexible AI-generated search that's robust to spelling mistakes. You can search in English or in the target language, and it will present multiple results if there are multiple matches. This makes it slower but more flexible than traditional dictionaries."
+          answer: "Hello Zenno features a flexible AI-generated search that's robust to spelling mistakes. You can search in English or in the target language, and it will present multiple results if there are multiple matches. This makes it slower but more flexible than traditional dictionaries. <br><br><a href='/languages?section=search' class='btn btn-sm btn-success rounded-pill'>Try Word Search →</a>"
         },
         {
           id: "how-does-the-listening-practice-work",
           question: "How does the audio flashcard / listening practice work?",
-          answer: "We call it dynamic contextual dictation or \"audio flashcards.\" You can scope the practice to a language, folder, or individual source file. The system finds challenging words in that content and generates example sentences for each, along with audio. It plays the audio for a sentence, and you can listen repeatedly, reveal the transcription, and then the translation. Your task is to understand what's being said, though there are no scores or feedback mechanisms yet. This focused listening practice helps bridge the gap between reading comprehension and auditory understanding."
+          answer: "We call it dynamic contextual dictation or \"audio flashcards.\" You can scope the practice to a language, folder, or individual source file. The system finds challenging words in that content and generates example sentences for each, along with audio. It plays the audio for a sentence, and you can listen repeatedly, reveal the transcription, and then the translation. Your task is to understand what's being said, though there are no scores or feedback mechanisms yet. This focused listening practice helps bridge the gap between reading comprehension and auditory understanding. <br><br><a href='/languages?section=flashcards' class='btn btn-sm btn-success rounded-pill'>Try Flashcards →</a>"
         }
       ]
     },
@@ -86,7 +86,7 @@
         {
           id: "which-languages-are-supported",
           question: "Which languages are supported?",
-          answer: "Any language an LLM can handle confidently (30+ today). If your language isn't listed, open an issue or join the \"centaur-sourcing\" experiment to help cover generation costs."
+          answer: "Any language an LLM can handle confidently (30+ today). If your language isn't listed, open an issue or join the \"centaur-sourcing\" experiment to help cover generation costs. <br><br><a href='/languages' class='btn btn-sm btn-primary rounded-pill'>See Supported Languages →</a>"
         },
         {
           id: "is-hello-zenno-really-free",
@@ -122,12 +122,12 @@
         {
           id: "getting-started",
           question: "How should I get started with Hello Zenno?",
-          answer: "The best way to start is to select the language you're learning and check if there are already source materials at your desired difficulty level. Alternatively, you can add your own content by pasting a URL, uploading images, audio files, or typing in text directly. After processing, you can start reading with hover-enabled dictionary support or try the audio flashcards feature."
+          answer: "The best way to start is to select the language you're learning and check if there are already source materials at your desired difficulty level. Alternatively, you can add your own content by pasting a URL, uploading images, audio files, or typing in text directly. After processing, you can start reading with hover-enabled dictionary support or try the audio flashcards feature. <br><br><a href='/languages' class='btn btn-sm btn-primary rounded-pill'>Get Started Now →</a>"
         },
         {
           id: "user-journey",
           question: "What's the typical user journey?",
-          answer: "First, select the language you're learning. Then, either browse existing source materials or add your own by creating a source folder and adding files to it. Hello Zenno will extract text (if necessary), translate it, and highlight potentially difficult words. You can hover over these words to see their meanings, and click for full dictionary entries. You can also practice with audio flashcards generated from the difficult words in your materials."
+          answer: "First, select the language you're learning. Then, either browse existing source materials or add your own by creating a source folder and adding files to it. Hello Zenno will extract text (if necessary), translate it, and highlight potentially difficult words. You can hover over these words to see their meanings, and click for full dictionary entries. You can also practice with audio flashcards generated from the difficult words in your materials. <br><br><div class='d-flex gap-2 flex-wrap'><a href='/languages' class='btn btn-sm btn-primary rounded-pill'>Choose a Language →</a> <a href='/languages?section=sources' class='btn btn-sm btn-outline-success rounded-pill'>Browse Sources →</a> <a href='/languages?section=flashcards' class='btn btn-sm btn-outline-success rounded-pill'>Try Flashcards →</a></div>"
         },
         {
           id: "reporting-bugs",

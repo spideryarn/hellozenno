@@ -1,7 +1,7 @@
-# Languages Page Next URL Feature
+# Languages Page Section URL Feature
 
 ## Goal
-Add a `next` query parameter to the languages selection page, allowing redirects to language-specific pages (like flashcards) after a user selects a language.
+Add a `section` query parameter to the languages selection page, allowing redirects to language-specific pages (like flashcards) after a user selects a language.
 
 ## Context
 Currently, when users select a language from `/languages`, they're always redirected to `/language/{code}/sources`. For marketing and user experience purposes, we need a way to link users directly to specific language-dependent features (e.g., from a blog post about flashcards to the flashcards interface for their chosen language).
@@ -20,8 +20,8 @@ Currently, when users select a language from `/languages`, they're always redire
 
 ## Implementation Plan
 
-- [x] Update the languages page component to read the `next` query parameter
-  - [x] Extract and validate the `next` parameter in the server-side load function
+- [x] Update the languages page component to read the `section` query parameter
+  - [x] Extract and validate the `section` parameter in the server-side load function
   - [x] Validate against allowed `PageType` from navigation.ts
   - [x] Default to "sources" if invalid or not provided
 
@@ -41,23 +41,23 @@ Currently, when users select a language from `/languages`, they're always redire
 
 We've implemented this feature with a few enhancements over the original plan:
 
-1. **Server-side validation**: We validate the `next` parameter on the server side in the `+page.server.ts` file, providing better security and type-safety.
+1. **Server-side validation**: We validate the `section` parameter on the server side in the `+page.server.ts` file, providing better security and type-safety.
 
 2. **Type-safe redirects**: We use the existing `getPageUrl` function from `$lib/navigation.ts` to ensure that we're generating valid URLs.
 
 3. **Strong typing**: We added proper TypeScript interfaces to ensure type safety throughout the component.
 
-4. **Homepage integration**: Added a "Try Flashcards" link on the homepage that uses this new functionality by linking to `/languages?next=flashcards`. The link is shown as an interactive overlay on the flashcard screenshot in the "Get started in three minutes" section.
+4. **Homepage integration**: Added a "Try Flashcards" link on the homepage that uses this new functionality by linking to `/languages?section=flashcards`. The link is shown as an interactive overlay on the flashcard screenshot in the "Get started in three minutes" section.
 
 ## Example Usage
 After implementation, marketers can use links like:
-- `/languages?next=flashcards` - Takes user to flashcards after language selection
-- `/languages?next=search` - Takes user to search page after language selection
-- `/languages?next=lemmas` - Takes user to lemmas list after language selection
-- `/languages?next=wordforms` - Takes user to wordforms list after language selection
-- `/languages?next=sentences` - Takes user to sentences list after language selection
-- `/languages?next=phrases` - Takes user to phrases list after language selection
-- `/languages?next=sources` - Takes user to source directories after language selection
+- `/languages?section=flashcards` - Takes user to flashcards after language selection
+- `/languages?section=search` - Takes user to search page after language selection
+- `/languages?section=lemmas` - Takes user to lemmas list after language selection
+- `/languages?section=wordforms` - Takes user to wordforms list after language selection
+- `/languages?section=sentences` - Takes user to sentences list after language selection
+- `/languages?section=phrases` - Takes user to phrases list after language selection
+- `/languages?section=sources` - Takes user to source directories after language selection
 
 This will be especially useful for blog posts and marketing materials targeting specific features.
 
@@ -65,6 +65,6 @@ This will be especially useful for blog posts and marketing materials targeting 
 
 The feature is now being used in the following places:
 
-1. **Homepage Flashcard Preview** - The flashcard screenshot in the "Get started in three minutes" section now includes an interactive overlay with a "Try Flashcards →" link that directs users to `/languages?next=flashcards`.
+1. **Homepage Flashcard Preview** - The flashcard screenshot in the "Get started in three minutes" section now includes an interactive overlay with a "Try Flashcards →" link that directs users to `/languages?section=flashcards`.
 
 This implementation allows users to go directly from seeing the flashcard preview on the homepage to selecting a language and being taken straight to the flashcards feature for that language, creating a seamless user journey focused on this specific feature.
