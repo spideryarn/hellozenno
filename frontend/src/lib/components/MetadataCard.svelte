@@ -56,7 +56,7 @@
   
   .metadata-item {
     font-size: 0.8rem;
-    color: var(--bs-secondary-color, #6c757d);
+    color: var(--hz-color-text-secondary);
     margin-bottom: 0.2rem;
   }
   

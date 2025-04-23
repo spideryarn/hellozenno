@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { PencilSimple, Trash } from 'phosphor-svelte';
+  import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
+  import Trash from 'phosphor-svelte/lib/Trash';
 
   const dispatch = createEventDispatcher();
 
@@ -16,10 +17,10 @@
 <div class="directory-operations">
   <h3>Directory Operations</h3>
   <div class="button-group">
-    <button on:click={rename} class="button small-button">
+    <button on:click={rename} class="btn btn-sm btn-primary">
       <PencilSimple size={16} weight="bold" /> Rename
     </button>
-    <button on:click={deleteItem} class="button delete-button small-button">
+    <button on:click={deleteItem} class="btn btn-sm btn-danger">
       <Trash size={16} weight="bold" /> Delete
     </button>
   </div>
@@ -29,12 +30,13 @@
   .directory-operations {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--hz-color-border-subtle);
   }
 
   h3 {
     font-size: 1rem;
     margin-bottom: 0.5rem;
+    color: var(--hz-color-text-secondary);
   }
 
   .button-group {
@@ -44,26 +46,8 @@
     align-items: center;
   }
 
-  /* Copied styles from FileOperationsSection */
-  .button {
-    background-color: #4CAD53;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-
-  .small-button {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .delete-button {
-    background-color: #d9534f;
+  .btn > svg {
+    vertical-align: text-bottom;
+    margin-right: 0.25rem;
   }
 </style> 

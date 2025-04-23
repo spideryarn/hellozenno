@@ -62,14 +62,14 @@
   .card-title {
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
-    color: var(--text-color, #e9e9e9);
+    color: var(--hz-color-text-main);
     font-weight: 500;
   }
   
   .hz-language-code {
     font-size: 0.9rem;
-    color: rgba(233, 233, 233, 0.8);
-    background: rgba(255, 255, 255, 0.15);
+    color: var(--hz-color-text-secondary);
+    background: var(--hz-color-surface-transparent-15);
     display: inline-block;
     padding: 0.2rem 0.6rem;
     border-radius: 4px;

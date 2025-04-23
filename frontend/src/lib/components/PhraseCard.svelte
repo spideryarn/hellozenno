@@ -38,17 +38,17 @@
     .hz-phrase-item {
         padding: 1.25rem;
         border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background-color: rgba(18, 18, 18, 0.4);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--hz-color-border-subtle);
+        background-color: var(--hz-color-surface);
+        box-shadow: none;
         transition: all 0.3s ease;
         height: 100%;
     }
     
     .hz-phrase-item:hover {
         border-color: var(--bs-primary);
-        background-color: rgba(18, 18, 18, 0.6);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        background-color: var(--hz-color-surface-transparent-15);
+        box-shadow: var(--hz-shadow-primary-green);
     }
     
     h3 {
@@ -68,7 +68,7 @@
     
     .notes {
         font-size: 0.875rem;
-        color: #999;
+        color: var(--hz-color-text-secondary);
         line-height: 1.4;
     }
     

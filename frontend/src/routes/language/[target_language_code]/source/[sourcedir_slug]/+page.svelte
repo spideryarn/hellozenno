@@ -416,12 +416,13 @@
     </ol>
   </nav>
 
-  <!-- Use the new SourcedirHeader component -->
+  <!-- Use the new SourcedirHeader component with metadata -->
   <SourcedirHeader 
     {sourcedir} 
     {target_language_code} 
     sourcedir_slug={sourcedir.slug}
     {supported_languages} 
+    metadata={data.metadata} 
     on:languageChange={handleHeaderLanguageChange} 
   />
 

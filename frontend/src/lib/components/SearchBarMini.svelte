@@ -95,7 +95,7 @@
   .input-action-button {
     background: none;
     border: none;
-    color: var(--bs-gray-500);
+    color: var(--hz-color-text-secondary);
     padding: 0.25rem;
     display: flex;
     align-items: center;
@@ -104,7 +104,7 @@
   }
 
   .input-action-button:hover {
-    color: var(--bs-gray-700);
+    color: var(--hz-color-text-main);
   }
 </style>
 

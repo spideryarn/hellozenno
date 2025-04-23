@@ -10,7 +10,7 @@
 <Card>
   <div class="lemma-card">
     <h3 class="fs-5 mb-1">
-      <a href="/language/{target_language_code}/lemma/{lemma.lemma}" class="foreign-text text-decoration-none">
+      <a href="/language/{target_language_code}/lemma/{lemma.lemma}" class="hz-foreign-text text-decoration-none">
         {lemma.lemma}
       </a>
     </h3>
@@ -50,11 +50,6 @@
 </Card>
 
 <style>
-  .foreign-text {
-    font-style: italic;
-    font-family: "Times New Roman", Times, serif;
-  }
-
   .lemma-card {
     padding: 0.25rem;
   }

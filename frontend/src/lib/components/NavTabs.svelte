@@ -34,23 +34,23 @@
   
   /* Override Bootstrap styles to match the site's color scheme */
   :global(.nav-tabs .nav-link) {
-    color: #aaa;
+    color: var(--hz-color-text-secondary);
     border: none;
     border-bottom: 2px solid transparent;
     padding: 0.5rem 1rem;
   }
   
   :global(.nav-tabs .nav-link:hover) {
-    color: #fff;
-    border-color: rgba(76, 173, 83, 0.3);
+    color: var(--hz-color-text-main);
+    border-color: rgba(var(--hz-color-primary-green-rgb), 0.3);
     background-color: transparent;
   }
   
   :global(.nav-tabs .nav-link.active) {
-    color: #4CAD53;
+    color: var(--hz-color-primary-green);
     font-weight: bold;
     background-color: transparent;
-    border-bottom: 2px solid #4CAD53;
+    border-bottom: 2px solid var(--hz-color-primary-green);
   }
   
   .count {
@@ -59,6 +59,6 @@
   
   /* For dark background compatibility */
   :global(.nav-tabs) {
-    border-bottom: 1px solid rgba(222, 226, 230, 0.3);
+    border-bottom: 1px solid var(--hz-color-border);
   }
 </style> 

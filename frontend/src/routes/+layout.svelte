@@ -145,6 +145,28 @@
       height: 36px;
     }
   }
+  
+  /* Footer Styles */
+  .footer-links {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  
+  .footer-link {
+    color: #6c757d;
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 0 0.5rem;
+  }
+  
+  .footer-link:hover {
+    color: var(--hz-color-primary-green);
+    text-decoration: underline;
+  }
+  
+  .footer-divider {
+    color: #6c757d;
+  }
 </style>
 
 <div class="d-flex flex-column min-vh-100">
@@ -159,6 +181,7 @@
         </a>
         <div class="d-flex align-items-center">
           <a href="/languages" class="text-decoration-none text-white ms-3">Languages</a>
+          <a href="/about" class="text-decoration-none text-white ms-3">About</a>
           
           <!-- Auth Status: Use reactive `session` from data -->
           {#if session}
@@ -200,9 +223,26 @@
     <slot />
   </main>
   
-  <footer class="bg-dark py-3 text-center text-white-50">
+  <footer class="bg-dark py-4 text-center">
     <div class="container">
-      <p class="mb-0">Hello Zenno - Learn foreign words with a magical AI dictionary</p>
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="footer-links mb-3">
+            <a href="https://github.com/spideryarn/hellozenno" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+            <span class="footer-divider">·</span>
+            <a href="/blog" class="footer-link">Blog</a>
+            <span class="footer-divider">·</span>
+            <a href="/about" class="footer-link">About</a>
+            <span class="footer-divider">·</span>
+            <a href="/privacy" class="footer-link">Privacy</a>
+            <span class="footer-divider">·</span>
+            <a href="/faq" class="footer-link">FAQ</a>
+            <span class="footer-divider">·</span>
+            <a href="mailto:hellozenno@gregdetre.com" class="footer-link">Contact</a>
+          </div>
+          <p class="mb-0 text-white-50">Hello Zenno - Learn foreign words with a magical AI dictionary</p>
+        </div>
+      </div>
     </div>
   </footer>
 </div>

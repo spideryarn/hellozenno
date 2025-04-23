@@ -32,6 +32,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             { code: target_language_code, name: data.language_name }
         ];
 
+        // Generate metadata object for the sourcedir similar to how it's done for sourcefiles
+        const metadata = {
+            created_at: data.sourcedir.created_at || 'Unknown',
+            updated_at: data.sourcedir.updated_at || 'Unknown'
+        };
+
         return {
             sourcedir: data.sourcedir,
             sourcefiles: data.sourcefiles,
@@ -39,6 +45,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             language_name: data.language_name,
             has_vocabulary: data.has_vocabulary,
             supported_languages,
+            metadata, // Add metadata to the page data
         };
     } catch (err: unknown) {
         console.error("Error loading sourcedir:", err);

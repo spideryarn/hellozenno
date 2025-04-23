@@ -193,8 +193,8 @@
 
 <style>
   .loading-state {
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid var(--hz-color-border-subtle);
     border-radius: 0.375rem;
-    background-color: rgba(var(--bs-primary-rgb), 0.03);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.03);
   }
 </style>

@@ -19,7 +19,7 @@
   .description-section {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--hz-color-border-subtle);
   }
   
   h3 {

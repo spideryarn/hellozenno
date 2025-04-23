@@ -3,12 +3,12 @@
 
 /* General theme overrides */
 body {
-    background-color: var(--bs-body-bg);
-    color: var(--bs-body-color);
+    background-color: var(--hz-color-background);
+    color: var(--hz-color-text-main);
 }
 
 .bg-dark {
-    background-color: var(--bs-body-bg) !important;
+    background-color: var(--hz-color-background) !important;
 }
 
 .text-white-50 {
@@ -17,8 +17,8 @@ body {
 
 /* Card theme overrides */
 .card {
-    background-color: var(--bs-card-bg);
-    border-color: var(--bs-card-border-color);
+    background-color: var(--hz-color-surface);
+    border-color: var(--hz-color-border);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -29,13 +29,18 @@ body {
 
 /* List group theme overrides */
 .list-group-item {
-    background-color: var(--bs-card-bg);
-    border-color: var(--bs-card-border-color);
+    background-color: var(--hz-color-surface);
+    border-color: var(--hz-color-border);
 }
 
 /* Section headings */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--bs-primary);
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--hz-color-primary-green);
 }
 
 /* Form controls */
@@ -43,39 +48,39 @@ h1, h2, h3, h4, h5, h6 {
 .form-select {
     background-color: #2a2a2a;
     border-color: #444;
-    color: var(--bs-body-color);
+    color: var(--hz-color-text-main);
 }
 
 .form-control:focus,
 .form-select:focus {
     background-color: #333;
-    color: var(--bs-body-color);
-    border-color: var(--bs-primary);
-    box-shadow: var(--bs-shadow-mint);
+    color: var(--hz-color-text-main);
+    border-color: var(--hz-color-primary-green);
+    box-shadow: var(--hz-shadow-primary-green);
 }
 
 /* Button styling */
 .btn-primary {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
+    background-color: var(--hz-color-primary-green);
+    border-color: var(--hz-color-primary-green);
     transition: all 0.2s;
 }
 
 .btn-primary:hover {
-    background-color: var(--bs-primary-hover);
-    border-color: var(--bs-primary-hover);
+    background-color: var(--hz-color-primary-green-light);
+    border-color: var(--hz-color-primary-green-light);
     transform: translateY(-1px);
-    box-shadow: var(--bs-shadow-mint-lg);
+    box-shadow: var(--hz-shadow-primary-green-lg);
 }
 
 .btn-secondary {
-    background-color: var(--bs-secondary);
-    border-color: var(--bs-secondary);
+    background-color: var(--hz-color-accent-peach);
+    border-color: var(--hz-color-accent-peach);
 }
 
 /* Text highlighting */
-.text-mint {
-    color: var(--bs-primary) !important;
+.text-primary-green {
+    color: var(--hz-color-primary-green) !important;
 }
 
 /* Animation utilities */
@@ -87,9 +92,11 @@ h1, h2, h3, h4, h5, h6 {
     0% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-10px);
     }
+
     100% {
         transform: translateY(0px);
     }
@@ -97,14 +104,14 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Foreign text styling */
 .hz-foreign-text {
-    font-family: var(--hz-foreign-font);
+    font-family: var(--hz-font-foreign);
     font-style: italic;
 }
 
 /* Language item card styling */
 .hz-language-item {
-    background-color: var(--bs-card-bg);
-    border: 1px solid var(--bs-card-border-color);
+    background-color: var(--hz-color-surface);
+    border: 1px solid var(--hz-color-border);
     border-radius: 8px;
     transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -115,17 +122,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hz-language-item .card-title {
-    color: var(--bs-primary);
+    color: var(--hz-color-primary-green);
 }
 
 .hz-language-code {
-    color: var(--bs-text-secondary);
+    color: var(--hz-color-text-secondary);
     font-size: 0.9rem;
 }
 
 /* Feature cards styling */
 .feature-card {
-    background-color: var(--bs-card-bg);
+    background-color: var(--hz-color-surface);
     border-radius: 12px;
     padding: 1.5rem;
     height: 100%;
@@ -143,7 +150,7 @@ h1, h2, h3, h4, h5, h6 {
     position: absolute;
     top: -10px;
     left: -10px;
-    background-color: var(--bs-primary);
+    background-color: var(--hz-color-primary-green);
     color: white;
     width: 36px;
     height: 36px;
@@ -153,22 +160,22 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
     font-weight: bold;
     font-size: 1.2rem;
-    box-shadow: var(--bs-shadow-mint);
+    box-shadow: var(--hz-shadow-primary-green);
 }
 
 .feature-title {
     font-weight: 600;
     font-size: 1.25rem;
-    color: var(--bs-body-color);
+    color: var(--hz-color-text-main);
 }
 
 .feature-description {
-    color: var(--bs-text-secondary);
+    color: var(--hz-color-text-secondary);
 }
 
 /* Feature list items */
 .feature-item {
-    background-color: var(--bs-card-bg);
+    background-color: var(--hz-color-surface);
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
@@ -189,7 +196,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Getting started steps */
 .getting-started-card {
-    background-color: var(--bs-card-bg);
+    background-color: var(--hz-color-surface);
     border-radius: 12px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
@@ -199,7 +206,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .step-number {
-    background-color: var(--bs-primary);
+    background-color: var(--hz-color-primary-green);
     color: white;
     width: 50px;
     height: 50px;
@@ -210,7 +217,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
     font-size: 1.5rem;
     margin: 0 auto 1rem;
-    box-shadow: var(--bs-shadow-mint);
+    box-shadow: var(--hz-shadow-primary-green);
 }
 
 .step-text {
@@ -227,13 +234,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .footer-link:hover {
-    color: var(--bs-primary);
+    color: var(--hz-color-primary-green);
     text-decoration: underline;
 }
 
 /* Section title styling */
 .section-title {
-    color: var(--bs-primary);
+    color: var(--hz-color-primary-green);
     font-weight: 700;
     margin-bottom: 1.5rem;
 }
@@ -264,12 +271,12 @@ h1, h2, h3, h4, h5, h6 {
 .hero-title {
     position: relative;
     z-index: 2;
-    color: var(--bs-body-color);
+    color: var(--hz-color-text-main);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .subtitle {
     position: relative;
     z-index: 2;
-    color: var(--bs-text-secondary);
+    color: var(--hz-color-text-secondary);
 }

@@ -520,6 +520,11 @@
   </div>
 </CollapsibleHeader>
 
+<!-- Add a bottom divider when header is expanded -->
+{#if isHeaderExpanded}
+  <div class="bottom-divider"></div>
+{/if}
+
 <div class="actions">
   <!-- Show divider for expanded operations when header is expanded -->
   {#if isHeaderExpanded}
@@ -641,6 +646,13 @@
     margin-bottom: 1rem;
   }
   
+  .bottom-divider {
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 1rem;
+    margin-top: -0.5rem;
+  }
+
   .expanded-operations-divider {
     position: relative;
     text-align: center;

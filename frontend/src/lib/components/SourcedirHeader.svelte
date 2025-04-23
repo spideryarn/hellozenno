@@ -1,8 +1,8 @@
 <script lang="ts">
   // Imports and props will go here
-  import type { Sourcedir } from '$lib/types/sourcefile'; // Corrected path
+  import type { Sourcedir, Metadata } from '$lib/types/sourcefile'; // Corrected path
   import type { Language } from '$lib/types'; // Corrected type name to Language and path to $lib/types
-  import { CollapsibleHeader, DescriptionSection, DirectoryOperationsSection } from '$lib';
+  import { CollapsibleHeader, DescriptionSection, DirectoryOperationsSection, MetadataSection } from '$lib';
   import { FolderOpen } from 'phosphor-svelte';
   import { getApiUrl } from '$lib/api'; // Added for API calls
   import { RouteName } from '$lib/generated/routes'; // Added for API calls
@@ -14,6 +14,7 @@
   export let target_language_code: string;
   export let sourcedir_slug: string;
   export let supported_languages: Language[]; // Use the correct type Language[]
+  export let metadata: Metadata = { created_at: '', updated_at: '' }; // Add metadata prop with default empty values
 
   const dispatch = createEventDispatcher(); // Added for language change event
 
@@ -171,6 +172,8 @@
           </select>
         </div>
       </div>
+      <!-- Add MetadataCard at the top right -->
+      <MetadataSection {metadata} />
     </div>
 
     <!-- Content inside the collapsible section -->
@@ -189,12 +192,17 @@
   </CollapsibleHeader>
 {/if}
 
+{#if isHeaderExpanded}
+  <div class="bottom-divider"></div>
+{/if}
+
 <style>
   .collapsible-sections {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem; /* Match SourcefileHeader style */
+    gap: 0.5rem;
   }
+  
   .language-selector-wrapper {
     /* Wrapper to position the selector within the collapsible area */
     width: 100%; /* Ensure it takes full width for alignment */
@@ -202,9 +210,16 @@
     justify-content: flex-end; /* Align inner container to the right */
     margin-bottom: 0.5rem; /* Add some space below the selector */
   }
+  
   .language-selector-container {
     /* Styling for the dropdown itself */
     display: inline-block; /* Keep it inline but allow margin */
   }
-  /* Styles will go here */
+  
+  .bottom-divider {
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 1rem;
+    margin-top: -0.5rem;
+  }
 </style> 

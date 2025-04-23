@@ -68,8 +68,8 @@
   }
   
   .button {
-    background-color: #4CAD53;
-    color: white;
+    background-color: var(--hz-color-primary-green);
+    color: var(--hz-color-text-main);
     padding: 0.5rem 1rem;
     border-radius: 4px;
     text-decoration: none;
@@ -87,7 +87,7 @@
   
   .collapsible-content {
     margin-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--hz-color-border-subtle);
     padding-top: 1rem;
   }
 </style>

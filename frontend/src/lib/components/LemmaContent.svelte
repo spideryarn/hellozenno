@@ -219,8 +219,6 @@
 {/if}
 
 <style>
-  .hz-foreign-text {
-    font-style: italic;
-    font-family: "Times New Roman", Times, serif;
-  }
+  /* Remove local definition, rely on global hz-foreign-text */
+  /* .hz-foreign-text { ... } */
 </style>

@@ -101,6 +101,7 @@
       return data;
     } catch (error) {
       console.error(`- API request failed:`, error);
+      // Ensure errorMessage is derived safely from the unknown error type
       const errorMessage = (error instanceof Error) ? error.message : String(error);
       // Return a fallback result
       return {
@@ -154,7 +155,7 @@
     // Only add debug info in non-production environments
     if (import.meta.env.DEV) {
       const debugInfo = `
-        <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
+        <div class="debug-info" style="font-size: 9px; color: var(--hz-color-text-secondary); margin-top: 8px; border-top: 1px dotted var(--hz-color-border); padding-top: 4px;">
           <strong>URL:</strong><br>
           <span style="font-weight: bold;">${data._debug?.url || 'N/A'}</span><br>
           <strong>Details:</strong><br>
@@ -198,7 +199,7 @@
       }
       
       errorContent += `
-        <div class="debug-info" style="font-size: 9px; color: #888; margin-top: 8px; border-top: 1px dotted #444; padding-top: 4px;">
+        <div class="debug-info" style="font-size: 9px; color: var(--hz-color-text-secondary); margin-top: 8px; border-top: 1px dotted var(--hz-color-border); padding-top: 4px;">
           <strong>URL:</strong><br>
           <span style="font-weight: bold;">${urlForDebug}</span><br>
           <strong>Details:</strong><br>
@@ -446,7 +447,7 @@
           href={`/language/${target_language_code}/wordform/${encodeURIComponent(segment.word)}`}
           class="word-link"
           data-word={segment.word}
-          data-lemma={String(segment.lemma ?? '')}
+          data-lemma={segment.lemma || ''}
           target="_blank"
         >
           {segment.text}
@@ -483,26 +484,29 @@
   
   .enhanced-text :global(a.word-link),
   .enhanced-text a.word-link {
-    color: #4CAD53;
+    color: var(--hz-color-primary-green); /* Use theme primary color */
     text-decoration: none;
-    border-bottom: 1px dotted #4CAD53;
+    border-bottom: 1px dotted var(--hz-color-primary-green); /* Use theme primary color */
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
   }
   
   .enhanced-text :global(a.word-link:hover),
   .enhanced-text a.word-link:hover {
-    background-color: rgba(76, 173, 83, 0.1);
+    /* Use primary color with low opacity for subtle hover */
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1); /* Updated variable */
   }
   
-  /* Tippy custom styles - dark theme to match site */
+  /* Tippy custom styles - dark theme using theme variables */
   :global(.tippy-box[data-theme~='hz-dark']) {
-    background-color: #1e1e1e;
-    border: 1px solid #333;
-    color: #e9e9e9;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    background-color: var(--hz-color-surface); /* Use theme surface color */
+    border: 1px solid var(--hz-color-border); /* Use theme border color */
+    color: var(--hz-color-text-main); /* Use theme main text color */
+    box-shadow: var(--hz-shadow-primary-green); /* Use theme shadow */
   }
   
   :global(.tippy-box[data-theme~='hz-dark'] .tippy-arrow) {
-    color: #1e1e1e;
+    color: var(--hz-color-surface); /* Match background */
   }
   
   :global(.tippy-content) {
@@ -513,7 +517,7 @@
     margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 600;
-    color: #4CAD53; /* Primary color from theme */
+    color: var(--hz-color-primary-green); /* Use theme primary color */
   }
   
   :global(.tippy-content p) {
@@ -522,18 +526,19 @@
   }
   
   :global(.tippy-content .translation) {
-    color: #e9e9e9; /* Light text color matching site */
+    color: var(--hz-color-text-main); /* Use theme main text color */
   }
   
   :global(.tippy-content .inflection-type) {
-    color: #d97a27; /* Use secondary orange color for inflection type */
+    /* Consider using a different accent or secondary text */
+    color: var(--hz-color-accent-lavender); /* Example: Lavender accent */
     font-style: italic;
     font-size: 13px;
     margin-top: 2px;
   }
   
   :global(.tippy-content .etymology) {
-    color: #aaaaaa; /* Slightly muted color for secondary text */
+    color: var(--hz-color-text-secondary); /* Use theme secondary text color */
     font-style: italic;
     font-size: 13px;
   }
@@ -543,16 +548,16 @@
     align-items: center;
     gap: 8px;
     padding: 4px;
-    color: #aaaaaa;
+    color: var(--hz-color-text-secondary); /* Use theme secondary text color */
   }
   
   :global(.tippy-content .translation.error) {
-    color: #d97a27; /* Secondary color from theme for errors */
+    color: var(--hz-color-accent-gold); /* Use gold accent for errors/warnings */
   }
   
   /* Tooltip link styles */
   :global(.tippy-content .tooltip-lemma-link) {
-    color: #4CAD53;
+    color: var(--hz-color-primary-green); /* Use theme primary color */
     text-decoration: none;
     font-weight: 600;
   }
@@ -568,12 +573,31 @@
   }
   
   :global(.tippy-content .view-details a) {
-    color: #4CAD53;
+    color: var(--hz-color-primary-green); /* Use theme primary color */
     text-decoration: none;
   }
   
   :global(.tippy-content .view-details a:hover) {
     text-decoration: underline;
+  }
+
+  /* Debug info styling */
+  :global(.tippy-content .debug-info) {
+    font-size: 9px;
+    color: var(--hz-color-text-secondary);
+    margin-top: 8px;
+    border-top: 1px dotted var(--hz-color-border); /* Use correct border variable */
+    padding-top: 4px;
+  }
+  
+  :global(.tippy-content .debug-info strong) {
+     font-weight: bold;
+     color: var(--hz-color-text-main); /* Make labels slightly more prominent */
+  }
+  
+  :global(.tippy-content .debug-info span[style*="bold"]) {
+      font-weight: bold;
+      color: var(--hz-color-text-main);
   }
   
   /* Responsive styling for different screen sizes */

@@ -107,12 +107,14 @@
   }
   
   kbd {
-    background-color: #f7f7f7;
-    border: 1px solid #ccc;
+    /* Updated kbd styles for dark theme using variables */
+    background-color: var(--hz-color-surface);
+    border: 1px solid var(--hz-color-border);
     border-radius: 3px;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.2);
-    color: #333;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2); /* Keep subtle shadow? Or remove? */
+    color: var(--hz-color-text-main);
     display: inline-block;
+    font-family: var(--hz-font-monospace); /* Use monospace font */
     font-size: 0.85em;
     font-weight: 700;
     line-height: 1;
