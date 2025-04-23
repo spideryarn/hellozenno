@@ -4,78 +4,66 @@
 
   const dispatch = createEventDispatcher();
 
-  function handleRename() {
+  function rename() {
     dispatch('rename');
   }
 
-  function handleDelete() {
+  function deleteItem() {
     dispatch('delete');
   }
 </script>
 
-<div class="operations-section">
-  <h3 class="section-title">Directory Operations</h3>
+<div class="directory-operations">
+  <h3>Directory Operations</h3>
   <div class="button-group">
-    <button on:click={handleRename} class="button is-small is-light">
-      <PencilSimple size={16} />
-      <span>Rename Directory</span>
+    <button on:click={rename} class="button small-button">
+      <PencilSimple size={16} weight="bold" /> Rename
     </button>
-    <button on:click={handleDelete} class="button is-small is-danger is-light">
-      <Trash size={16} />
-      <span>Delete Directory</span>
+    <button on:click={deleteItem} class="button delete-button small-button">
+      <Trash size={16} weight="bold" /> Delete
     </button>
   </div>
 </div>
 
 <style>
-  .operations-section {
+  .directory-operations {
+    margin-top: 1rem;
+    padding-top: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 0.75rem;
-    margin-top: 0.75rem;
   }
 
-  .section-title {
-    font-size: 0.85rem;
-    color: #adb5bd;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  h3 {
+    font-size: 1rem;
     margin-bottom: 0.5rem;
   }
 
   .button-group {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
+    align-items: center;
   }
 
+  /* Copied styles from FileOperationsSection */
   .button {
+    background-color: #4CAD53;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.4rem 0.8rem; /* Slightly smaller padding for is-small */
-    border-radius: 4px;
-    text-decoration: none;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-size: 0.9rem; /* Adjust font size if needed */
   }
 
-  .button.is-light {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #f8f9fa;
-  }
-  .button.is-light:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+  .small-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
   }
 
-  .button.is-danger.is-light {
-    background-color: rgba(220, 53, 69, 0.1); /* Bootstrap danger color with alpha */
-    border-color: rgba(220, 53, 69, 0.3);
-    color: #dc3545; /* Bootstrap danger color */
-  }
-
-  .button.is-danger.is-light:hover {
-    background-color: rgba(220, 53, 69, 0.2);
-    color: #f8f9fa; /* White text on hover */
+  .delete-button {
+    background-color: #d9534f;
   }
 </style> 

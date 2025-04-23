@@ -1,16 +1,21 @@
 <script lang="ts">
   // Imports and props will go here
   import type { Sourcedir } from '$lib/types/sourcefile'; // Corrected path
+  import type { Language } from '$lib/types'; // Corrected type name to Language and path to $lib/types
   import { CollapsibleHeader, DescriptionSection, DirectoryOperationsSection } from '$lib';
   import { FolderOpen } from 'phosphor-svelte';
   import { getApiUrl } from '$lib/api'; // Added for API calls
   import { RouteName } from '$lib/generated/routes'; // Added for API calls
   import { goto } from '$app/navigation'; // Added for navigation
   import { getPageUrl } from '$lib/navigation'; // Added for navigation
+  import { createEventDispatcher } from 'svelte'; // Added for language change event
 
   export let sourcedir: Sourcedir;
   export let target_language_code: string;
   export let sourcedir_slug: string;
+  export let supported_languages: Language[]; // Use the correct type Language[]
+
+  const dispatch = createEventDispatcher(); // Added for language change event
 
   // Collapsible header state
   let isHeaderExpanded = false;
@@ -133,6 +138,12 @@
     }
   }
 
+  // Dispatch event when language changes
+  function onLanguageChange(event: Event) {
+    const newLanguage = (event.target as HTMLSelectElement).value;
+    dispatch('languageChange', newLanguage); // Dispatch custom event with new language code
+  }
+
 </script>
 
 {#if sourcedir}
@@ -142,6 +153,26 @@
     icon={FolderOpen}
     iconSize={24}
   >
+    <!-- Language Selector Slot -->
+    <div class="collapsible-sections">
+      <!-- Language Selector moved inside the collapsible area, styled to be at the top right -->
+      <div class="language-selector-wrapper">
+        <div class="language-selector-container ms-auto">
+          <label for="language-select-{sourcedir.slug}" class="visually-hidden">Language:</label> <!-- Visually hidden label for accessibility -->
+          <select id="language-select-{sourcedir.slug}" class="form-select form-select-sm d-inline-block w-auto" 
+                  value={target_language_code} 
+                  onchange={onLanguageChange}
+                  title="Change directory language">
+            {#each supported_languages as lang}
+              <option value={lang.code} selected={lang.code === target_language_code}>
+                {lang.name}
+              </option>
+            {/each}
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Content inside the collapsible section -->
     <div class="collapsible-sections">
       <DescriptionSection 
@@ -163,6 +194,17 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem; /* Match SourcefileHeader style */
+  }
+  .language-selector-wrapper {
+    /* Wrapper to position the selector within the collapsible area */
+    width: 100%; /* Ensure it takes full width for alignment */
+    display: flex;
+    justify-content: flex-end; /* Align inner container to the right */
+    margin-bottom: 0.5rem; /* Add some space below the selector */
+  }
+  .language-selector-container {
+    /* Styling for the dropdown itself */
+    display: inline-block; /* Keep it inline but allow margin */
   }
   /* Styles will go here */
 </style> 

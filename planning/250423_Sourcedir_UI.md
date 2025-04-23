@@ -45,18 +45,18 @@ If things don't make sense or seem like a bad idea, ask questions or discuss rat
 
 ## Actions
 
-*   [ ] **Component Scaffolding:** Create the basic file structure for `SourcedirHeader.svelte`.
-*   [ ] **Collapsible Header:** Implement the collapsible header logic in `SourcedirHeader.svelte`, reusing the `CollapsibleHeader` component. Include Directory Name as the main title.
-*   [ ] **Header Content:**
-    *   [ ] Integrate `DescriptionSection` for the directory description and edit functionality within the collapsible area.
-    *   [ ] Add "Rename Directory" and "Delete Directory" buttons/logic within the collapsible area. Consider abstracting into a `DirectoryOperationsSection` component, similar to `FileOperationsSection`. Connect to relevant API endpoints.
-*   [ ] **Main Actions:** Position the "Language" dropdown, "Up" button, and "Practice with Flashcards" button appropriately, likely outside/below the main collapsible header but above the file list. Ensure the "Up" button functions correctly.
-*   [ ] **Add Files Dropdown:** Implement the "+" dropdown button. Find/create a suitable dropdown component (e.g., using `<details>`/`<summary>` or a library component) that reveals the existing "Add File" options (Upload Image, Upload Audio, Upload Text, Create From Text, Upload from URL).
-*   [ ] **Sourcedir Page Integration:**
-    *   [ ] Import and use the new `SourcedirHeader.svelte` component in `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/+page.svelte`.
-    *   [ ] Add the new "+" Add Files dropdown button to the page.
-    *   [ ] Remove the old "Add Files" section header and individual buttons.
-    *   [ ] Ensure the "Source Files" list renders correctly below the new header/controls.
+*   [x] **Component Scaffolding:** Create the basic file structure for `SourcedirHeader.svelte` (Moved to `lib/components`).
+*   [x] **Collapsible Header:** Implement the collapsible header logic in `SourcedirHeader.svelte`, reusing the `CollapsibleHeader` component. Include Directory Name as the main title.
+*   [x] **Header Content:**
+    *   [x] Integrate `DescriptionSection` for the directory description and edit functionality within the collapsible area.
+    *   [x] Add "Rename Directory" and "Delete Directory" buttons/logic within the collapsible area. Abstracted into `DirectoryOperationsSection` component and integrated. Connected to relevant API endpoints.
+*   [x] **Main Actions:** Position the "Language" dropdown, "Up" button, and "Practice with Flashcards" button appropriately, outside/below the main collapsible header but above the file list.
+*   [x] **Add Files Dropdown:** Implement the "+" dropdown button using Bootstrap dropdown, revealing the existing "Add File" options.
+*   [x] **Sourcedir Page Integration:**
+    *   [x] Import and use the new `SourcedirHeader.svelte` component in `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/+page.svelte`.
+    *   [x] Add the new "+" Add Files dropdown button to the page.
+    *   [x] Remove the old "Add Files" section header and individual buttons.
+    *   [x] Ensure the "Source Files" list renders correctly below the new header/controls.
 *   [ ] **Component Abstraction (Review):** Review both `SourcefileHeader.svelte` and `SourcedirHeader.svelte` for any further opportunities to abstract common UI elements or logic into shared components in `frontend/src/lib/`.
 *   [ ] **Testing:** Manually test all functionalities:
     *   Header collapsing/expanding.

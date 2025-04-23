@@ -123,9 +123,10 @@
     }
   }
   
-  async function handleLanguageChange(event: Event) {
-    const newLanguage = (event.target as HTMLSelectElement).value;
-    
+  // Handle language change triggered by the header component
+  async function handleHeaderLanguageChange(event: CustomEvent<string>) {
+    const newLanguage = event.detail;
+
     try {
       // Get headers with auth token
       const headers = await createAuthHeaders('application/json');
@@ -416,27 +417,23 @@
   </nav>
 
   <!-- Use the new SourcedirHeader component -->
-  <SourcedirHeader {sourcedir} {target_language_code} sourcedir_slug={sourcedir.slug} />
+  <SourcedirHeader 
+    {sourcedir} 
+    {target_language_code} 
+    sourcedir_slug={sourcedir.slug}
+    {supported_languages} 
+    on:languageChange={handleHeaderLanguageChange} 
+  />
 
   <!-- Main actions below the header -->
   <div class="d-flex justify-content-between align-items-center my-3">
-    <!-- Language Selector (keep as is) -->
-    <div class="language-selector">
-      <label for="language-select" class="me-2">Language:</label>
-      <select id="language-select" class="form-select form-select-sm d-inline-block w-auto" 
-              value={target_language_code} onchange={handleLanguageChange}>
-        {#each supported_languages as lang}
-          <option value={lang.code} selected={lang.code === target_language_code}>
-            {lang.name}
-          </option>
-        {/each}
-      </select>
-    </div>
+    <!-- Language Selector REMOVED -->
     
-    <!-- Up & Practice Buttons (keep as is) -->
+    <!-- Up & Practice Buttons -->
     <div class="d-flex gap-2">
       <a href="/language/{target_language_code}/sources" 
-          class="btn btn-outline-secondary"
+          class="button"
+          data-sveltekit-reload
           title="Back to Sources">
         <ArrowUp size={16} weight="bold" class="me-1" /> Up
       </a>
@@ -702,3 +699,35 @@
 <!-- Backdrop for Modal -->
 <div class="modal-backdrop fade show"></div>
 {/if} 
+
+<style>
+  /* Add styles for the .button class copied from NavButtons.svelte */
+  .button {
+    background-color: #4CAD53;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+  }
+
+  /* Optional: Style for disabled state if needed later */
+  .button.disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  /* Existing styles... */
+  .file-icon i {
+    font-size: 1.5rem; /* Adjust as needed */
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+  }
+
+  /* ... other existing styles ... */
+</style> 
