@@ -10,15 +10,18 @@
   let languageName = '';
   let languageCode = '';
   
-  // Check if we're in a language path
+  // Check if we're in a language path or use route params
   const isLanguagePath = page.url.pathname.startsWith('/language/');
   
-  // Extract language code from URL if in a language path
+  // Get language code either from URL path or route params
   if (isLanguagePath) {
     const parts = page.url.pathname.split('/');
     if (parts.length >= 3 && parts[1] === 'language') {
       languageCode = parts[2];
     }
+  } else if (page.params.target_language_code) {
+    // This handles the case when the error is thrown from a language-specific route
+    languageCode = page.params.target_language_code;
   }
   
   // Define error-specific data
@@ -115,7 +118,10 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
           <!-- Multilingual apology component -->
           <MultilingualApology className="mb-3" />
           
-          <p class="lead">{currentError.message}</p>
+          <!-- Show appropriate error message based on context -->
+          {#if languageCode && page.error?.message?.includes('Failed to search') || page.url.pathname.includes('/search')}
+            <p class="lead">Sorry, something went wrong while accessing {languageName || languageCode.toUpperCase() || 'language'} content.</p>
+          {/if}
           
           <div class="mt-4 mb-5 text-center report-links">
             <a 
@@ -172,7 +178,7 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
             </li>
             {#if languageCode}
               <li>
-                <a href="/language/{languageCode}/sources" class="btn btn-info">
+                <a href="/language/{languageCode}/sources" class="btn btn-primary">
                   <i class="ph ph-arrow-left me-2"></i>Back to {languageName || languageCode.toUpperCase()} language page
                 </a>
               </li>
