@@ -61,114 +61,134 @@
   <title>Frequently Asked Questions - Hello Zenno</title>
 </svelte:head>
 
-<!-- FAQ Hero Section -->
-<section class="hero-section">
-  <div class="container-fluid px-0">
-    <div class="nebula-bg faq-header">
-      <div class="container py-5">
-        <div class="row justify-content-center">
-          <div class="col-12 text-center">
-            <h1 class="display-4 fw-bold mb-3 hero-title">
-              Frequently Asked <span class="text-primary-green">Questions</span>
-            </h1>
-            <p class="lead mb-4 subtitle">
-              Everything you need to know about Hello Zenno
-            </p>
+<!-- Full Viewport Nebula Background -->
+<div class="nebula-bg-wrapper">
+  <!-- FAQ Hero Section -->
+  <section class="hero-section">
+    <div class="container-fluid px-0">
+      <div class="faq-header">
+        <div class="container py-4">
+          <div class="row justify-content-center">
+            <div class="col-12 text-center">
+              <h1 class="display-4 fw-bold mb-3 hero-title">
+                Frequently Asked <span class="text-primary-green">Questions</span>
+              </h1>
+              <p class="lead mb-3 subtitle">
+                Everything you need to know about Hello Zenno
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- FAQ Content -->
-<section class="py-5">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-10">
-        
-        <!-- Simple FAQ list -->
-        <div class="accordion" id="faqAccordion">
-          {#each faqs as faq}
-            <div class="accordion-item faq-item mb-3">
-              <h2 class="accordion-header">
-                <button 
-                  class="accordion-button faq-button {openQuestions[faq.id] ? '' : 'collapsed'}" 
-                  type="button"
-                  on:click={() => toggleQuestion(faq.id)}
-                  aria-expanded={openQuestions[faq.id] ? 'true' : 'false'}
-                  aria-controls="collapse-{faq.id}"
+  <!-- FAQ Content -->
+  <section class="py-4">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          
+          <!-- Simple FAQ list -->
+          <div class="accordion" id="faqAccordion">
+            {#each faqs as faq}
+              <div class="accordion-item faq-item mb-3">
+                <h2 class="accordion-header">
+                  <button 
+                    class="accordion-button faq-button {openQuestions[faq.id] ? '' : 'collapsed'}" 
+                    type="button"
+                    on:click={() => toggleQuestion(faq.id)}
+                    aria-expanded={openQuestions[faq.id] ? 'true' : 'false'}
+                    aria-controls="collapse-{faq.id}"
+                  >
+                    {faq.question}
+                  </button>
+                </h2>
+                <div 
+                  id="collapse-{faq.id}" 
+                  class="accordion-collapse collapse {openQuestions[faq.id] ? 'show' : ''}"
                 >
-                  {faq.question}
-                </button>
-              </h2>
-              <div 
-                id="collapse-{faq.id}" 
-                class="accordion-collapse collapse {openQuestions[faq.id] ? 'show' : ''}"
-              >
-                <div class="accordion-body faq-answer">
-                  {@html faq.answer}
+                  <div class="accordion-body faq-answer">
+                    {@html faq.answer}
+                  </div>
                 </div>
               </div>
-            </div>
-          {/each}
-        </div>
-        
-        <!-- Contact section -->
-        <div class="card contact-card p-4 text-center mt-5">
-          <h3 class="mb-3">Still have questions?</h3>
-          <p class="mb-4">
-            If you can't find the answer you're looking for, please reach out to us directly.
-          </p>
-          <div class="d-flex justify-content-center gap-3">
-            <a 
-              href="mailto:hellozenno@gregdetre.com" 
-              class="btn btn-primary rounded-pill"
-            >
-              Email Us
-            </a>
-            <a 
-              href="https://github.com/spideryarn/hellozenno/issues" 
-              target="_blank" 
-              rel="noopener" 
-              class="btn btn-outline-primary rounded-pill"
-            >
-              GitHub Issues
-            </a>
+            {/each}
           </div>
+          
+          <!-- Contact section -->
+          <div class="card contact-card p-4 text-center mt-4">
+            <h3 class="mb-3">Still have questions?</h3>
+            <p class="mb-4">
+              If you can't find the answer you're looking for, please reach out to us directly.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+              <a 
+                href="mailto:hellozenno@gregdetre.com" 
+                class="btn btn-primary rounded-pill"
+              >
+                Email Us
+              </a>
+              <a 
+                href="https://github.com/spideryarn/hellozenno/issues" 
+                target="_blank" 
+                rel="noopener" 
+                class="btn btn-outline-primary rounded-pill"
+              >
+                GitHub Issues
+              </a>
+            </div>
+          </div>
+          
         </div>
-        
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 
 <style>
-  /* Hero section styling */
-  .hero-section {
+  /* Full viewport nebula background */
+  .nebula-bg-wrapper {
     position: relative;
-  }
-  
-  .nebula-bg {
-    background-image: url('/img/marketing/homepage_hero_background_nebula2.png');
+    min-height: 100vh;
+    background-image: url('/img/marketing/homepage_hero_background_nebula1.png');
     background-size: cover;
-    background-position: center;
+    background-position: center top;
     background-repeat: no-repeat;
-    position: relative;
+    background-attachment: fixed;
+    z-index: 0;
+    margin-top: 0;
+    padding-top: 0;
   }
   
-  .faq-header {
-    padding: 80px 0;
-  }
-  
-  .nebula-bg::before {
+  /* Gradient overlay - made fainter by increasing overlay opacity */
+  .nebula-bg-wrapper::before {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(11, 11, 14, 0.75);
+    background: linear-gradient(
+      to bottom,
+      rgba(11, 11, 14, 0.7) 0%,    /* 70% opaque at the top (more visible background) */
+      rgba(11, 11, 14, 0.6) 25%,   /* 60% opacity at 25% */
+      rgba(11, 11, 14, 0.5) 50%,   /* 50% opacity at 50% */
+      rgba(11, 11, 14, 0.4) 100%   /* 40% opacity for the rest */
+    );
+    z-index: -1; /* Behind the content */
+  }
+  
+  /* Hero section styling - modified to start at the top */
+  .hero-section {
+    position: relative;
+    padding-top: 0;
+    z-index: 1;
+    margin-top: 0;
+  }
+  
+  .faq-header {
+    padding: 0px 0 20px;
   }
   
   .hero-title {
