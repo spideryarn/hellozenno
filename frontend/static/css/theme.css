@@ -87,14 +87,14 @@ h6 {
 }
 
 .btn-secondary {
-    background-color: var(--hz-color-accent-peach);
-    border-color: var(--hz-color-accent-peach);
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
     transition: all 0.2s;
 }
 
 .btn-secondary:hover {
-    background-color: rgba(245, 184, 168, 0.85);
-    border-color: rgba(245, 184, 168, 0.85);
+    background-color: rgba(208, 192, 232, 0.85);
+    border-color: rgba(208, 192, 232, 0.85);
     transform: translateY(-1px);
 }
 
@@ -352,7 +352,7 @@ h6 {
 }
 
 .hz-card-header-secondary {
-    background-color: var(--hz-color-accent-peach);
+    background-color: var(--bs-secondary);
     color: var(--hz-color-text-main);
 }
 

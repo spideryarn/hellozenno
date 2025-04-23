@@ -64,10 +64,10 @@
     --bs-primary: var(--hz-color-primary-green);
     --bs-primary-rgb: 102, 154, 115;
     /* Updated RGB for #669A73 */
-    --bs-secondary: var(--hz-color-accent-peach);
-    /* Mapping Secondary to Peach */
-    --bs-secondary-rgb: 245, 184, 168;
-    /* Updated RGB for #F5B8A8 */
+    --bs-secondary: var(--hz-color-accent-lavender);
+    /* Mapping Secondary to Lavender instead of Peach */
+    --bs-secondary-rgb: 208, 192, 232;
+    /* Updated RGB for #D0C0E8 */
     --bs-link-color: var(--hz-color-primary-green);
     --bs-link-hover-color: var(--hz-color-primary-green-light);
     --bs-card-bg: var(--hz-color-surface);
