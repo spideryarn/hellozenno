@@ -427,6 +427,8 @@ def get_sourcedirs_for_language_api(target_language_code: str):
                 "display_name": sourcedir["path"],
                 "slug": sourcedir["slug"],
                 "description": sourcedir.get("description", ""),
+                "created_at": sourcedir.get("created_at").isoformat() if sourcedir.get("created_at") else None,
+                "updated_at": sourcedir.get("updated_at").isoformat() if sourcedir.get("updated_at") else None,
                 "statistics": {
                     "file_count": stats.get("file_count", 0),
                     "sentence_count": stats.get("phrase_count", 0),
@@ -464,6 +466,8 @@ def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str
                 "slug": sourcedir_entry.slug,
                 "description": sourcedir_entry.description,
                 "target_language_code": sourcedir_entry.target_language_code,
+                "created_at": sourcedir_entry.created_at.isoformat() if sourcedir_entry.created_at else None,
+                "updated_at": sourcedir_entry.updated_at.isoformat() if sourcedir_entry.updated_at else None,
             },
             "sourcefiles": result["sourcefiles"],
             "language_name": result["target_language_name"],

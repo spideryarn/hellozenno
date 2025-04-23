@@ -241,6 +241,8 @@ def get_sourcedirs_for_language(target_language_code: str, sort_by: str = "date"
                 "path": sourcedir.path,
                 "slug": sourcedir.slug,
                 "description": sourcedir.description,
+                "created_at": sourcedir.created_at,
+                "updated_at": sourcedir.updated_at,
             }
         )
 
