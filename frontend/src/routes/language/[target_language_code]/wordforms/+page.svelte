@@ -1,12 +1,27 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import { WordformCard } from '$lib';
+    import DataGrid from '$lib/components/DataGrid.svelte';
     import { SITE_NAME } from '$lib/config';
     
     export let data: PageData;
     
     // Destructure data for easier access
-    const { target_language_code, language_name, wordforms } = data;
+    const { target_language_code, language_name, wordforms, total } = data;
+
+    import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
+    import { supabase } from '$lib/supabaseClient';
+
+    const columns = [
+      { id: 'wordform', header: 'Wordform' },
+      { id: 'lemma_text', header: 'Lemma' },
+      { id: 'part_of_speech', header: 'POS', width: 80 },
+    ];
+
+    const loadData = supabaseDataProvider({
+      table: 'wordform',
+      selectableColumns: 'id,wordform,part_of_speech,lemma(lemma)',
+      client: supabase
+    });
 </script>
 
 <svelte:head>
@@ -29,27 +44,14 @@
     </div>
     
     {#if wordforms.length > 0}
-        <div class="row">
-            <div class="col">
-                <p class="text-muted mb-3">Showing {wordforms.length} wordforms</p>
-            </div>
-        </div>
-        <div class="row gy-4">
-            {#each wordforms as wordform (wordform.wordform)}
-                <div class="col-12">
-                    <WordformCard 
-                        wordform={wordform.wordform}
-                        translations={wordform.translations || []}
-                        part_of_speech={wordform.part_of_speech}
-                        lemma={wordform.lemma}
-                        target_language_code={target_language_code}
-                    />
-                </div>
-            {/each}
-        </div>
+        <DataGrid {columns}
+                  loadData={loadData}
+                  initialRows={wordforms}
+                  initialTotal={total}
+        />
     {:else}
         <div class="alert alert-info">
-            No wordforms found for {language_name}. Start by adding sources!
+            No wordforms found for {language_name}.
         </div>
     {/if}
 </div> 

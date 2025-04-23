@@ -209,45 +209,58 @@ export const load = async ({ params, url }) => {
    - Theme variables use different prefix than documented
    - Using the theme wrapper is essential for proper styling
 
-## Actions
+## Actions (updated)
 
-* [x] **PoC: Integrate SVAR DataGrid with Sourcedir Page**
-  - [x] Install SVAR DataGrid and its dependencies
-  - [x] Create a basic grid component to display source files in `/language/[lang]/source/[sourcedir_slug]`
-  - [x] Configure columns for source file properties (name, type, word count, etc.)
-  - [x] Implement basic styling to match the application's dark theme
+Below is the staged checklist agreed on **23 Apr 2025** after deciding to power our grids with **supabase‑js** wherever possible.  Each bullet group ends with ✅ tests & working code before moving on.
 
-* [x] **Implement Server-Side Data Operations**
-  - [x] Create a load function that fetches paginated data from API
-  - [x] Add server-side sorting by updating URL parameters
-  - [ ] Add server-side filtering by implementing filter query parameters
+* **Refactor core DataGrid**
+  - [x] `DataGrid.svelte` already supports async `loadData` provider (done)
+  - [ ] Extract provider‑agnostic helpers (debounce, sort helpers …) to `$lib/datagrid/utils.ts`
+  - [ ] Update Storybook story to demonstrate async provider with mock latency
+  - [ ] Add unit tests for helpers
+  - [ ] Create `docs/DATAGRID.md` & document the `DataProvider` TS interface
 
-* [ ] **Add Real-Time Updates**
-  - [ ] Set up Supabase subscription for source files table
-  - [ ] Implement grid refresh on data changes
-  - [ ] Create a store for managing grid state with real-time updates
+* **Create Supabase provider (read‑only)**
+  - [ ] Add `$lib/datagrid/providers/supabase.ts` exporting `supabaseDataProvider({ table, selectableColumns })`
+  - [ ] Implement paging via `.range()`, sorting via `.order()`, single‑column filter via `.ilike()`
+  - [ ] Accept optional `server` flag – when true use server‑side supabase client for SSR/SEO
+  - [ ] Unit‑test provider using mocked supabase client (jest)
+  - [ ] Update Storybook to use provider (client‑side) with mock
 
-* [x] **Enhance UI Integration**
-  - [x] Customize grid appearance to match application theme
-  - [x] Add actions column for file operations
-  - [x] Implement toggle between grid and list view
-  - [x] Add loading indicators for data operations
+* **Database safety**
+  - [ ] Review / add Row‑Level Security for `lemma`, `wordform`, `sentence` tables (anonymous read, no write)
+  - [ ] Backend regression tests: anon select succeeds, insert/update fails
 
-* [x] **Create Reusable Components**
-  - [x] Extract grid configuration into a reusable component
-  - [ ] Create helpers for common Supabase integration patterns
-  - [ ] Document usage patterns for application-wide implementation
+* **Wordforms grid**  `/language/[code]/wordforms`
+  - [ ] `+page.server.ts` pre‑fetch first page with server supabase client (SSR)
+  - [ ] Configure `<DataGrid>` columns: `form`, `lemma_text`, `pos`, `frequency` (right‑align numbers)
+  - [ ] Cypress e2e: load page, sort, filter by prefix, paginate
 
-* [ ] **Testing and Validation**
-  - [ ] Test performance with large datasets
-  - [x] Verify correct behavior of sorting and pagination
-  - [ ] Test filtering functionality
-  - [ ] Ensure accessibility compliance
+* **Lemmas grid**  `/language/[code]/lemmas`
+  - [ ] Same pattern as Wordforms; columns: `lemma`, `pos`, `frequency`, etc.
+  - [ ] Cypress e2e for sort & filter
 
-* [ ] **Documentation**
-  - [x] Document implementation challenges and solutions
-  - [ ] Document Supabase integration patterns
-  - [ ] Add notes on extending to other application areas
+* **Sentences grid**  `/language/[code]/sentences`
+  - [ ] Columns: snippet of `sentence_text`, `source_title`, `updated_at`
+  - [ ] Implement filter on sentence text (`ilike %value%`) – consider server FTS later
+  - [ ] Benchmark query & add index `ON sentence(language_code, id)` if needed
+
+* **(Lower priority) Sourcefiles grid**
+  - [ ] Create view/materialised view with `word_count`, `phrase_count` to avoid heavy joins
+  - [ ] Implement grid using same provider once view ready
+
+* **Responsive polish & accessibility**
+  - [x] Ensure grid scrolls horizontally inside `.table-responsive` on narrow screens (Bootstrap wrapper already).
+  - [x] Add keyboard navigation (`tabindex=0`, Enter activates), `aria-sort` attribute on sortable header cells.
+
+* **Performance benchmarking**
+  - [ ] Seed local Supabase with 100 k wordforms & sentences
+  - [ ] Measure first‑page load < 1 s and subsequent pages < 500 ms; tune indexes if necessary
+
+* **Documentation & cleanup**
+  - [ ] Remove legacy SVAR DataGrid code & CSS once pages migrated
+  - [ ] Expand `docs/DATAGRID.md` with provider examples (SSR vs client) & troubleshooting
+  - [ ] Keep this planning doc updated with lessons learned after each completed stage
 
 ## Styling Example
 
@@ -295,21 +308,21 @@ The following CSS variables are used to customize the grid appearance:
 
 ## Pivot (2025-04-23): Switch to a Custom Svelte DataGrid
 
-We trialled **SVAR Svelte DataGrid** but found the dependency heavy and styling brittle.  We are pivoting to a lightweight in‑house grid that follows the project's *coding‑principles* (simplicity, readability, minimal dependencies).
+We trialled **SVAR Svelte DataGrid** but found the dependency heavy and styling brittle.  We are pivoting to a lightweight in-house grid that follows the project's *coding-principles* (simplicity, readability, minimal dependencies).
 
 ### New Goals
 
-* Keep **must‑have** features: single‑column sort + filter, 100‑row pagination, single‑row link navigation.
-* Provide a **re‑usable** `<DataGrid>` component usable across pages.
+* Keep **must-have** features: single-column sort + filter, 100-row pagination, single-row link navigation.
+* Provide a **re-usable** `<DataGrid>` component usable across pages.
 * Respect existing styling (`static/css/theme-variables.css`, Bootstrap 5 classes).
-* **V1 scope**: read‑only grid fed by Supabase PostgREST (via `@supabase/supabase-js`) with RLS; no realtime, no CRUD.
-* **Future scope**: optional realtime, CRUD helpers, potential TanStack‑Table migration, multi‑column filter/sort.
+* **V1 scope**: read-only grid fed by Supabase PostgREST (via `@supabase/supabase-js`) with RLS; no realtime, no CRUD.
+* **Future scope**: optional realtime, CRUD helpers, potential TanStack-Table migration, multi-column filter/sort.
 
 ### Key Decisions (supersede earlier list)
 
 | Decision | Rationale |
 | -------- | --------- |
-| Build our own `<DataGrid>` | Small feature set → faster to code than battling 3rd‑party APIs. |
+| Build our own `<DataGrid>` | Small feature set → faster to code than battling 3rd-party APIs. |
 | Use **direct Supabase** queries for pages that only need simple SELECTs | Removes Flask glue code, reuses session JWT automatically, zero extra backend work. |
 | Provide a pluggable `dataProvider` prop | Keeps existing Flask endpoints viable; Grid consumer decides whether to call Flask or Supabase. |
 | Bootstrap table markup + custom CSS vars | Native responsive behaviour, minimal CSS to maintain. |
@@ -319,20 +332,20 @@ We trialled **SVAR Svelte DataGrid** but found the dependency heavy and styling 
 
 *For the grid pages that simply list rows straight from a table*, querying Supabase directly is **simpler**:
 
-1. `supabase.from('wordform').select('*').range(...)` is 1‑2 LOC vs writing/maintaining Flask endpoints & tests.
+1. `supabase.from('wordform').select('*').range(...)` is 1-2 LOC vs writing/maintaining Flask endpoints & tests.
 2. RLS policies already protect data; the browser uses the same anon / JWT as the rest of the app.
 3. Supabase Realtime subscriptions become a *toggle* later – no extra infra.
 
 We'll therefore **start with Supabase** for the first grid usage (e.g. Words list).  Pages that already have rich Flask logic can keep their endpoints by passing a different `dataProvider`.
 
-### Speculative / To‑Be‑Discussed
+### Speculative / To-Be-Discussed
 
 * Evaluate **TanStack Table** as a headless engine if advanced features (grouping, pivoting) become necessary.
 * GraphQL layer vs REST – revisit only if Supabase REST proves limiting.
 
 ## Actions (updated)
 
-Below is a staged checklist.  We stop at the end of each sub‑list with ✅ tests & running code.
+Below is a staged checklist.  We stop at the end of each sub-list with ✅ tests & running code.
 
 * **Scaffold minimal DataGrid**
   - [x] Create `frontend/src/lib/components/DataGrid.svelte` (plain `<table>` rendering)
@@ -352,19 +365,15 @@ Below is a staged checklist.  We stop at the end of each sub‑list with ✅ tes
   - [x] Show Bootstrap spinner while loading.
   - [ ] Update Storybook story to use async provider mock.
 
-* **Hook up direct Supabase provider (read‑only)**
+* **Hook up direct Supabase provider (read-only)**
   - [ ] Add helper `supabaseDataProvider({ tableName, selectableColumns })` in `$lib/datagrid/providers.ts`.
   - [ ] Implement `range`, `order`, `ilike` for filter.
   - [ ] Swap Sourcedir page to this provider; confirm identical output.
 
 * **Add UI controls**
-  - [x] Clickable column header toggles sort asc ⇄ desc (cycl e undefined→asc→desc→asc).
-  - [x] Optional filter input row (text box under header) – triggers server fetch on debounce.
+  - [x] Clickable column header toggles sort asc ⇄ desc (cycle undefined→asc→desc→asc).
+  - [x] Optional filter input row (text box under header) – triggers server fetch on 300 ms debounce.
   - [x] Pagination controls below table (`First`, `Prev`, `n / total`, `Next`, `Last`).
-
-* **Responsive polish & a11y**
-  - [ ] Ensure grid scrolls horizontally inside `.table-responsive` on small screens.
-  - [ ] Add `aria-sort` on header cells, `role="button"` where appropriate.
 
 * **Testing**
   - [ ] Unit test utility functions (sort param builder, etc.).
@@ -379,11 +388,11 @@ Below is a staged checklist.  We stop at the end of each sub‑list with ✅ tes
   - [ ] Supabase Realtime subscription helper.
   - [ ] Evaluate TanStack Table for headless logic if feature demands grow.
 
-* **Cosmetic / UI Polish (pre‑dataProvider)**
-  - [ ] Apply Bootstrap dark‑theme table header styling using `--hz-color-primary-green-dark` as background & `--hz-color-text-main` for text.
+* **Cosmetic / UI Polish (pre-dataProvider)**
+  - [ ] Apply Bootstrap dark-theme table header styling using `--hz-color-primary-green-dark` as background & `--hz-color-text-main` for text.
   - [ ] Add subtle row hover effect (use existing `.table-hover` plus custom pastel overlay).
   - [ ] Confirm `.table-responsive` allows horizontal scroll on narrow screens; add `overflow-x: auto` fallback if needed.
-  - [ ] Right‑align numeric columns (e.g. word counts) with `text-end` class.
+  - [ ] Right-align numeric columns (e.g. word counts) with `text-end` class.
   - [ ] Add optional `class` prop support on column defs (already in place) and document usage.
   - [ ] Ensure column widths behave sensibly on desktop vs mobile – test shrinking browser window.
   - [ ] Update Storybook story to showcase hover & responsive behaviour.

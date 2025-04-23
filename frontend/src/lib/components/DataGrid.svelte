@@ -21,6 +21,10 @@
     class?: string;
     /** If true, accessor result is treated as raw HTML */
     isHtml?: boolean;
+    /** Disable sorting for this column (defaults to true) */
+    sortable?: boolean;
+    /** Disable filtering for this column (defaults to true) */
+    filterable?: boolean;
   }
 
   /* ---------- props ---------- */
@@ -52,6 +56,10 @@
 
   export let loadData: LoadDataFn | undefined = undefined;
 
+  /** Optional rows + total to seed serverRows for SSR (page pre‑fetch). */
+  export let initialRows: any[] = [];
+  export let initialTotal: number | null = null;
+
   // --- internal state (server‑driven) ---
   let page = 1;
   let sortField: string | null = null;
@@ -61,7 +69,10 @@
 
   let total = 0;
   let isLoading = false;
-  let serverRows: any[] = [];
+  let serverRows: any[] = initialRows;
+
+  // If initialTotal provided, use it; else fallback to initialRows length until first fetch.
+  total = initialTotal ?? initialRows.length;
 
   /** Debounce timer for filter input */
   let filterTimer: number | undefined;
@@ -134,21 +145,26 @@
         <tr>
           {#each columns as col}
             {#if loadData}
-              <th scope="col"
-                  style="width: {col.width ?? 'auto'}"
-                  class={`${col.class ?? ''} ${col.id === sortField ? 'sorted' : ''}`}
-                  role="button"
-                  on:click={() => cycleSort(col.id)}
-              >
-                {col.header}
-                {#if col.id === sortField}
-                  {#if sortDir === 'asc'}
-                    ↑
-                  {:else if sortDir === 'desc'}
-                    ↓
+              {#if col.sortable !== false}
+                <th scope="col"
+                    style="width: {col.width ?? 'auto'}"
+                    class={`${col.class ?? ''} ${col.id === sortField ? 'sorted' : ''}`}
+                    role="button"
+                    aria-sort={col.id === sortField ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    on:click={() => cycleSort(col.id)}
+                >
+                  {col.header}
+                  {#if col.id === sortField}
+                    {#if sortDir === 'asc'}
+                      ↑
+                    {:else if sortDir === 'desc'}
+                      ↓
+                    {/if}
                   {/if}
-                {/if}
-              </th>
+                </th>
+              {:else}
+                <th scope="col" style="width: {col.width ?? 'auto'}" class={col.class}>{col.header}</th>
+              {/if}
             {:else}
               <th scope="col" style="width: {col.width ?? 'auto'}" class={col.class}>{col.header}</th>
             {/if}
@@ -160,12 +176,16 @@
       <thead>
         <tr>
           {#each columns as col}
-            <th>
-              <input type="text" class="form-control form-control-sm" placeholder="Filter"
-                     on:input={(e) => handleFilterInput(col.id, (e.target as HTMLInputElement).value)}
-                     value={col.id === filterField ? (filterValue ?? '') : ''}
-              />
-            </th>
+            {#if col.filterable !== false}
+              <th>
+                <input type="text" class="form-control form-control-sm" placeholder="Filter"
+                       on:input={(e) => handleFilterInput(col.id, (e.target as HTMLInputElement).value)}
+                       value={col.id === filterField ? (filterValue ?? '') : ''}
+                />
+              </th>
+            {:else}
+              <th></th>
+            {/if}
           {/each}
         </tr>
       </thead>
@@ -184,7 +204,7 @@
           </tr>
         {:else}
           {#each visibleRows as row (row.id ?? row.slug ?? row)}
-            <tr role="button" on:click={() => onRowClick(row)} style="cursor: pointer;">
+            <tr role="button" tabindex="0" on:click={() => onRowClick(row)} on:keydown={(e) => e.key === 'Enter' && onRowClick(row)} style="cursor: pointer;">
               {#each columns as col}
                 <td class={col.class}>
                   {#if col.accessor}
