@@ -455,9 +455,8 @@
             <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('textInput')?.click()} 
                         data-bs-toggle="tooltip" data-bs-placement="left" data-bs-html="true" 
                         title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">Upload Text Files</button></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><button class="dropdown-item" type="button" onclick={openCreateTextModal}>Create From Text</button></li>
             <li><button class="dropdown-item" type="button" onclick={() => isUrlModalOpen = true}>Upload from URL</button></li>
+            <li><button class="dropdown-item" type="button" onclick={openCreateTextModal}>Create From Text</button></li>
             <!-- Uncomment if YouTube upload is desired -->
             <!-- <li><button class="dropdown-item" type="button" onclick={openYoutubeModal}>Upload YouTube Video</button></li> -->
           </ul>

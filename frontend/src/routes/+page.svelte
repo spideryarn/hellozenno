@@ -46,6 +46,9 @@
     <div class="row justify-content-center">
       <div class="col-lg-8 text-center">
         <h2 class="section-title mb-4">Why so many of us stall at the intermediate plateau</h2>
+        <div class="text-center mb-4">
+          <img src="/img/marketing/lost in translation.png" alt="Lost in translation" class="problem-img img-fluid rounded mb-4" style="max-width: 70%;" />
+        </div>
         <p class="section-text mb-5">
           Once the beginner courses end, native texts feel overwhelming and listening races ahead of our ears. 
           Hello Zenno gives you gentle "crutches" so you can glide through articles, novels or podcasts and keep the momentum.
@@ -75,9 +78,7 @@
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">2</div>
-              <div class="feature-icon mb-3">
-                <i class="ph-fill ph-lightbulb text-primary display-4"></i>
-              </div>
+              <img src="/img/marketing/word_highlighting.png" alt="Word highlighting" class="feature-img mb-3" />
               <h3 class="feature-title">Zenno flags tricky words</h3>
               <p class="feature-description">An AI model predicts which words might trip you up and builds rich dictionary entries.</p>
             </div>
@@ -86,9 +87,7 @@
           <div class="col-md-4 mb-4">
             <div class="feature-card">
               <div class="feature-number">3</div>
-              <div class="feature-icon mb-3">
-                <i class="ph-fill ph-speaker-high text-primary display-4"></i>
-              </div>
+              <img src="/img/marketing/audio_training1.png" alt="Audio training" class="feature-img mb-3" />
               <h3 class="feature-title">Train your ears</h3>
               <p class="feature-description">Auto‑generated sentences and natural‑sounding audio help you recognise new words at speed.</p>
             </div>
@@ -103,51 +102,64 @@
 <section class="py-5 bg-dark">
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-lg-8 text-center">
+      <div class="col-lg-10 text-center">
         <h2 class="section-title mb-4">Built for curious polyglots</h2>
         
-        <div class="row text-start">
-          <div class="col-md-6 mb-4">
-            <div class="feature-item">
-              <i class="ph-fill ph-book-open me-2 text-mint"></i>
-              <span class="feature-text">Context‑aware dictionary with etymology and mnemonics</span>
+        <div class="row align-items-center mb-5">
+          <div class="col-md-6">
+            <div class="language-globe-wrapper mb-4 mb-md-0">
+              <img src="/img/marketing/language_selection_hero_globe.png" alt="Language selection globe" class="img-fluid rounded" />
             </div>
           </div>
-          
-          <div class="col-md-6 mb-4">
-            <div class="feature-item">
-              <i class="ph-fill ph-magnifying-glass me-2 text-mint"></i>
-              <span class="feature-text">Fuzzy bilingual search (typos welcome)</span>
+          <div class="col-md-6">
+            <div class="row text-start">
+              <div class="col-12 mb-4">
+                <div class="feature-item">
+                  <i class="ph-fill ph-book-open me-2 text-mint"></i>
+                  <span class="feature-text">Context‑aware dictionary with etymology and mnemonics</span>
+                </div>
+              </div>
+              
+              <div class="col-12 mb-4">
+                <div class="feature-item">
+                  <i class="ph-fill ph-magnifying-glass me-2 text-mint"></i>
+                  <span class="feature-text">Fuzzy bilingual search (typos welcome)</span>
+                </div>
+              </div>
+              
+              <div class="col-12 mb-4">
+                <div class="feature-item">
+                  <i class="ph-fill ph-translate me-2 text-mint"></i>
+                  <span class="feature-text">30+ languages supported</span>
+                </div>
+              </div>
+              
+              <div class="col-12 mb-4">
+                <div class="feature-item">
+                  <i class="ph-fill ph-code me-2 text-mint"></i>
+                  <span class="feature-text">Open‑source & free (login required for AI content)</span>
+                </div>
+              </div>
+              
+              <div class="col-12 mb-4">
+                <div class="feature-item">
+                  <i class="ph-fill ph-globe me-2 text-mint"></i>
+                  <span class="feature-text">Web first – works on laptop or mobile browser</span>
+                </div>
+              </div>
+              
+              <div class="col-12 mb-4">
+                <div class="feature-item">
+                  <i class="ph-fill ph-brain me-2 text-mint"></i>
+                  <span class="feature-text">Powered by Claude Sonnet 3.7 AI</span>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-6 mb-4">
-            <div class="feature-item">
-              <i class="ph-fill ph-translate me-2 text-mint"></i>
-              <span class="feature-text">30+ languages supported</span>
-            </div>
-          </div>
-          
-          <div class="col-md-6 mb-4">
-            <div class="feature-item">
-              <i class="ph-fill ph-code me-2 text-mint"></i>
-              <span class="feature-text">Open‑source & free (login required for AI content)</span>
-            </div>
-          </div>
-          
-          <div class="col-md-6 mb-4">
-            <div class="feature-item">
-              <i class="ph-fill ph-globe me-2 text-mint"></i>
-              <span class="feature-text">Web first – works on laptop or mobile browser</span>
-            </div>
-          </div>
-          
-          <div class="col-md-6 mb-4">
-            <div class="feature-item">
-              <i class="ph-fill ph-brain me-2 text-mint"></i>
-              <span class="feature-text">Powered by Claude Sonnet 3.7 AI</span>
-            </div>
-          </div>
+        </div>
+        
+        <div class="alien-avatars-container text-center mt-5">
+          <img src="/img/marketing/alien_avatars1.png" alt="Alien avatars" class="img-fluid rounded" style="max-width: 350px;" />
         </div>
         
         <p class="small text-white-50 mt-3">
@@ -162,36 +174,46 @@
 <section class="py-5">
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-lg-8 text-center">
+      <div class="col-lg-10 text-center">
         <h2 class="section-title mb-4">Get started in three minutes</h2>
         
-        <div class="card p-4 mb-4 getting-started-card">
-          <div class="row">
-            <div class="col-md-4 mb-3 mb-md-0 d-flex align-items-center justify-content-center">
-              <div class="getting-started-step">
-                <div class="step-number">1</div>
-                <div class="step-text">Sign up<br/>(completely free)</div>
+        <div class="row align-items-center mb-5">
+          <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="card p-4 mb-4 getting-started-card">
+              <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0 d-flex align-items-center justify-content-center">
+                  <div class="getting-started-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Sign up<br/>(completely free)</div>
+                  </div>
+                </div>
+                
+                <div class="col-md-4 mb-3 mb-md-0 d-flex align-items-center justify-content-center">
+                  <div class="getting-started-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Add a text or<br/>audio clip</div>
+                  </div>
+                </div>
+                
+                <div class="col-md-4 d-flex align-items-center justify-content-center">
+                  <div class="getting-started-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">Hover, listen,<br/>keep reading</div>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div class="col-md-4 mb-3 mb-md-0 d-flex align-items-center justify-content-center">
-              <div class="getting-started-step">
-                <div class="step-number">2</div>
-                <div class="step-text">Add a text or<br/>audio clip</div>
-              </div>
-            </div>
-            
-            <div class="col-md-4 d-flex align-items-center justify-content-center">
-              <div class="getting-started-step">
-                <div class="step-number">3</div>
-                <div class="step-text">Hover, listen,<br/>keep reading</div>
-              </div>
+            <div class="mt-4">
+              <a href="/auth" class="btn btn-primary btn-lg px-4 rounded-pill">Sign up now</a>
             </div>
           </div>
-        </div>
-        
-        <div class="mt-4">
-          <a href="/auth" class="btn btn-primary btn-lg px-4 rounded-pill">Sign up now</a>
+          
+          <div class="col-lg-6">
+            <div class="flashcard-screenshot-wrapper">
+              <img src="/img/marketing/flashcard_screenshot.png" alt="Flashcard interface" class="img-fluid rounded shadow-lg" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -243,7 +265,7 @@
   }
   
   .nebula-bg {
-    background-image: url('/img/marketing/homepage_hero_background_nebula1.png');
+    background-image: url('/img/marketing/homepage_hero_background_nebula2.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -442,6 +464,64 @@
     background-color: var(--bs-card-bg);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Problem section */
+  .problem-img {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(69, 193, 135, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .problem-img:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(69, 193, 135, 0.25);
+  }
+  
+  /* Language globe styling */
+  .language-globe-wrapper {
+    position: relative;
+  }
+  
+  .language-globe-wrapper img {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+  }
+  
+  .language-globe-wrapper img:hover {
+    transform: rotate(5deg) scale(1.05);
+  }
+  
+  /* Alien avatars styling */
+  .alien-avatars-container {
+    margin: 2rem auto;
+    position: relative;
+  }
+  
+  .alien-avatars-container img {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .alien-avatars-container img:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px rgba(198, 169, 240, 0.4);
+  }
+  
+  /* Flashcard screenshot styling */
+  .flashcard-screenshot-wrapper {
+    position: relative;
+    padding: 1rem;
+  }
+  
+  .flashcard-screenshot-wrapper img {
+    border: 1px solid rgba(69, 193, 135, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .flashcard-screenshot-wrapper img:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
   }
   
   /* Footer */
