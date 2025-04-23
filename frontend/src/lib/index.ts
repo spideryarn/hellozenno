@@ -16,6 +16,8 @@ export { default as CollapsibleHeader } from "./components/CollapsibleHeader.sve
 export { default as MetadataSection } from "./components/MetadataSection.svelte";
 export { default as DescriptionSection } from "./components/DescriptionSection.svelte";
 export { default as FileOperationsSection } from "./components/FileOperationsSection.svelte";
+export { default as DirectoryOperationsSection } from "./components/DirectoryOperationsSection.svelte";
+export { default as SourcedirHeader } from "./components/SourcedirHeader.svelte";
 export { default as SourcefileImage } from "./components/SourcefileImage.svelte";
 export { default as SourcefileAudio } from "./components/SourcefileAudio.svelte";
 export { default as NavTabs } from "./components/NavTabs.svelte";

@@ -2,10 +2,10 @@
   import type { PageData } from './$types';
   import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import { Trash, ArrowUp } from 'phosphor-svelte';
+  import { Trash, ArrowUp, Plus } from 'phosphor-svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { onMount } from 'svelte';
-  import { DescriptionFormatted } from '$lib';
+  import { DescriptionFormatted, SourcedirHeader } from '$lib';
   import { page } from '$app/stores';
   
   let { data }: { data: PageData } = $props();
@@ -90,75 +90,6 @@
   let isUrlLoading = $state(false);
   let urlErrorMessage = $state('');
   let urlSuccessMessage = $state('');
-  
-  async function renameSourcedir() {
-    if (isRenamingDir) return;
-    
-    try {
-      const newName = prompt('Enter new directory name:', sourcedir.path);
-      if (!newName || newName === sourcedir.path) return;
-      
-      isRenamingDir = true;
-      
-      // Get headers with auth token
-      const headers = await createAuthHeaders('application/json');
-      
-      const response = await fetch(
-        getApiUrl(RouteName.SOURCEDIR_API_RENAME_SOURCEDIR_API, {
-          target_language_code: target_language_code,
-          sourcedir_slug: sourcedir.slug
-        }),
-        {
-          method: 'PUT',
-          headers: headers,
-          body: JSON.stringify({ new_name: newName })
-        }
-      );
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to rename directory');
-      }
-      
-      const data = await response.json();
-      // Redirect to the new URL with the new slug
-      window.location.href = `/language/${target_language_code}/source/${data.slug}`;
-    } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
-      isRenamingDir = false;
-    }
-  }
-  
-  async function deleteSourcedir() {
-    if (!confirm('Are you sure you want to delete this directory? This action cannot be undone.')) {
-      return;
-    }
-    
-    try {
-      // Get headers with auth token
-      const headers = await createAuthHeaders();
-      
-      const response = await fetch(
-        getApiUrl(RouteName.SOURCEDIR_API_DELETE_SOURCEDIR_API, {
-          target_language_code: target_language_code,
-          sourcedir_slug: sourcedir.slug
-        }),
-        {
-          method: 'DELETE',
-          headers: headers
-        }
-      );
-      
-      if (response.ok) {
-        window.location.href = `/language/${target_language_code}/sources`;
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete directory. If the directory contains files, you must delete all files first.');
-      }
-    } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
   
   async function deleteSourcefile(slug: string) {
     if (!confirm('Are you sure you want to delete this sourcefile? This action cannot be undone.')) {
@@ -484,133 +415,57 @@
     </ol>
   </nav>
 
-  <div class="card mb-4">
-    <div class="card-body">
-      <h1 class="card-title">{sourcedir.path}</h1>
+  <!-- Use the new SourcedirHeader component -->
+  <SourcedirHeader {sourcedir} {target_language_code} sourcedir_slug={sourcedir.slug} />
+
+  <!-- Main actions below the header -->
+  <div class="d-flex justify-content-between align-items-center my-3">
+    <!-- Language Selector (keep as is) -->
+    <div class="language-selector">
+      <label for="language-select" class="me-2">Language:</label>
+      <select id="language-select" class="form-select form-select-sm d-inline-block w-auto" 
+              value={target_language_code} onchange={handleLanguageChange}>
+        {#each supported_languages as lang}
+          <option value={lang.code} selected={lang.code === target_language_code}>
+            {lang.name}
+          </option>
+        {/each}
+      </select>
+    </div>
+    
+    <!-- Up & Practice Buttons (keep as is) -->
+    <div class="d-flex gap-2">
+      <a href="/language/{target_language_code}/sources" 
+          class="btn btn-outline-secondary"
+          title="Back to Sources">
+        <ArrowUp size={16} weight="bold" class="me-1" /> Up
+      </a>
+      <a href="/language/{target_language_code}/flashcards?sourcedir={sourcedir.slug}" 
+          class="btn btn-primary {!has_vocabulary ? 'disabled' : ''}"
+          title={!has_vocabulary ? 'No vocabulary found' : ''}>
+        Practice with Flashcards
+      </a>
       
-      <!-- Description section -->
-      <DescriptionFormatted 
-        description={sourcedir.description} 
-        placeholder="No description available for this directory"
-        onSave={async (text) => {
-          try {
-            const response = await fetch(
-              getApiUrl(RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API, {
-                target_language_code: target_language_code,
-                sourcedir_slug: sourcedir.slug
-              }),
-              {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ description: text })
-              }
-            );
-            
-            if (!response.ok) {
-              throw new Error('Failed to update description');
-            }
-            
-            // Update local state
-            sourcedir.description = text;
-          } catch (error) {
-            alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
-            throw error; // Propagate error to component
-          }
-        }}
-      />
-      
-      <!-- Top controls -->
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="language-selector">
-          <label for="language-select" class="me-2">Language:</label>
-          <select id="language-select" class="form-select form-select-sm d-inline-block w-auto" 
-                  value={target_language_code} onchange={handleLanguageChange}>
-            {#each supported_languages as lang}
-              <option value={lang.code} selected={lang.code === target_language_code}>
-                {lang.name}
-              </option>
-            {/each}
-          </select>
+      <!-- Add Files Dropdown -->
+      {#if data.session}
+        <div class="btn-group">
+          <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Add Files">
+            <Plus size={16} weight="bold" />
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('fileInput')?.click()}>Upload Image Files</button></li>
+            <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('audioInput')?.click()}>Upload Audio Files</button></li>
+            <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('textInput')?.click()} 
+                        data-bs-toggle="tooltip" data-bs-placement="left" data-bs-html="true" 
+                        title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">Upload Text Files</button></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item" type="button" onclick={openCreateTextModal}>Create From Text</button></li>
+            <li><button class="dropdown-item" type="button" onclick={() => isUrlModalOpen = true}>Upload from URL</button></li>
+            <!-- Uncomment if YouTube upload is desired -->
+            <!-- <li><button class="dropdown-item" type="button" onclick={openYoutubeModal}>Upload YouTube Video</button></li> -->
+          </ul>
         </div>
-        
-        <div class="d-flex gap-2">
-          <a href="/language/{target_language_code}/sources" 
-             class="btn btn-outline-secondary"
-             title="Back to Sources">
-            <ArrowUp size={16} weight="bold" class="me-1" /> Up
-          </a>
-          <a href="/language/{target_language_code}/flashcards?sourcedir={sourcedir.slug}" 
-             class="btn btn-primary {!has_vocabulary ? 'disabled' : ''}"
-             title={!has_vocabulary ? 'No vocabulary found' : ''}>
-            Practice with Flashcards
-          </a>
-        </div>
-      </div>
-      
-      <!-- Directory actions -->
-      <div class="btn-group mb-4">
-        <button class="btn btn-outline-secondary" onclick={renameSourcedir}>
-          Rename Directory
-        </button>
-        <button class="btn btn-outline-danger" onclick={deleteSourcedir}>
-          <Trash size={16} weight="bold" class="me-1" /> Delete Directory
-        </button>
-      </div>
-      
-      <!-- File upload section -->
-      <div class="card mb-4">
-        <div class="card-header">Add Files</div>
-        <div class="card-body">
-          {#if data.session}
-            <div class="row mb-3">
-              <div class="col">
-                <label for="fileInput" class="btn btn-outline-primary me-2">Upload Image Files</label>
-                <input type="file" id="fileInput" class="d-none" multiple accept="image/*" onchange={handleFileSelect}>
-                
-                <label for="audioInput" class="btn btn-outline-primary me-2">Upload Audio Files</label>
-                <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" onchange={handleFileSelect}>
-                
-                <div class="d-inline-block position-relative me-2">
-                  <label for="textInput" class="btn btn-outline-primary" 
-                         data-bs-toggle="tooltip" 
-                         data-bs-html="true"
-                         title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">
-                    Upload Text Files
-                  </label>
-                  <input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" onchange={handleFileSelect}>
-                </div>
-                
-                <button class="btn btn-outline-primary me-2" onclick={() => showCreateTextModal = true}>Create From Text</button>
-                <button class="btn btn-outline-primary me-2" onclick={() => isUrlModalOpen = true}>Upload from URL</button>
-                <!-- Leave this commented. We've disabled it for now, but might want to try it again in the future. -->
-                <!-- <button class="btn btn-outline-primary" onclick={() => showYoutubeModal = true}>Upload YouTube Video</button> -->
-              </div>
-            </div>
-            
-            <!-- Mobile-specific options would go here -->
-            
-            {#if uploadProgress}
-              <div class="progress mb-3">
-                <div class="progress-bar bg-success" 
-                     role="progressbar" 
-                     style="width: {uploadProgressValue}%" 
-                     aria-valuenow={uploadProgressValue} 
-                     aria-valuemin="0" 
-                     aria-valuemax="100">
-                  {uploadProgressValue}%
-                </div>
-              </div>
-            {/if}
-          {:else}
-            <!-- Use standard Bootstrap alert -->
-            <div class="alert alert-info" role="alert">
-              Please <a href={loginUrl}>login</a> to upload files or create text sources.
-            </div>
-          {/if}
-        </div>
-      </div>
+      {/if}
     </div>
   </div>
 
@@ -671,6 +526,11 @@
     </div>
   {/if}
 </div>
+
+<!-- Hidden File Inputs (needed for upload buttons in dropdown) -->
+<input type="file" id="fileInput" class="d-none" multiple accept="image/*" onchange={handleFileSelect}>
+<input type="file" id="audioInput" class="d-none" multiple accept=".mp3" onchange={handleFileSelect}>
+<input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" onchange={handleFileSelect}>
 
 <!-- Create from Text Modal -->
 {#if showCreateTextModal}

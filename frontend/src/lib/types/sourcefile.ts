@@ -3,6 +3,7 @@ export interface Sourcedir {
     path: string;
     slug: string;
     target_language_code: string; // This is kept as target_language_code for backward compatibility
+    description: string | null;
 }
 
 export interface Sourcefile {
