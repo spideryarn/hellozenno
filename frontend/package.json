@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build --legacy-peer-deps",
+		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -56,10 +56,9 @@
 	"dependencies": {
 		"@supabase/ssr": "^0.6.1",
 		"@supabase/supabase-js": "^2.49.4",
-		"marked": "^15.0.9",
 		"phosphor-svelte": "^3.0.1",
 		"queue-typescript": "^1.0.1",
-		"svelte-lightbox": "^1.1.6",
-		"tippy.js": "^6.3.7"
+		"tippy.js": "^6.3.7",
+		"wx-svelte-grid": "^2.1.3"
 	}
 }

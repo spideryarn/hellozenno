@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { marked } from 'marked';
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
   import TableOfContents from '$lib/components/TableOfContents.svelte';
   import { SITE_NAME } from '$lib/config';
@@ -23,52 +22,12 @@
     });
   }
   
-  // Extract headings from markdown content for table of contents
-  function extractHeadings(content: string) {
-    if (!content || typeof content !== 'string') {
-      return [];
-    }
-    
-    const headings = [];
-    const headingRegex = /^##\s+(.+)$/gm;
-    let match;
-    
-    while ((match = headingRegex.exec(content)) !== null) {
-      const title = match[1].trim();
-      const id = title.toLowerCase().replace(/[^\w\s-]/g, '')
-                       .replace(/\s+/g, '-');
-      headings.push({ id, title });
-    }
-    
-    return headings;
-  }
-  
-  // Configure marked options
-  const renderer = new marked.Renderer();
-  
-  // Override the heading renderer to add IDs for TOC linking
-  renderer.heading = function(text, level) {
-    // Ensure text is a string and handle case where text is an object
-    const textStr = typeof text === 'object' ? (text.title || String(text)) : String(text);
-    const id = textStr.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-    return `<h${level} id="${id}">${textStr}</h${level}>`;
-  };
-  
-  // Override link renderer to add proper styling
-  renderer.link = function(href, title, text) {
-    // Apply appropriate styling for links based on your design system
-    const titleAttr = title ? ` title="${title}"` : '';
-    return `<a href="${href}"${titleAttr} class="text-primary-green">${text}</a>`;
-  };
-  
-  marked.setOptions({
-    renderer: renderer,
-    breaks: true, // Convert '\n' to <br>
-    gfm: true     // Enable GitHub flavored markdown
-  });
-  
-  // Safely extract TOC items
-  const tocItems = data.post?.content ? extractHeadings(data.post.content) : [];
+  // Static TOC items for hardcoded content
+  const tocItems = [
+    { id: 'breaking-through-the-intermediate-plateau', title: 'Breaking through the intermediate plateau' },
+    { id: 'the-hello-zenno-approach', title: 'The Hello Zenno approach' },
+    { id: 'try-it-today', title: 'Try it today' }
+  ];
   
   onMount(() => {
     // Add any initialization on mount if needed
