@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { SearchMatch, SearchResult } from '$lib/types';
   import { goto } from '$app/navigation';
-  import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
+  import { ArrowLeft } from 'phosphor-svelte';
   
   export let results: SearchResult | null = null;
   
@@ -164,6 +164,7 @@
     border-bottom: none;
   }
   
+  /* Use Bootstrap's bg-* classes or define custom ones */
   .hz-card-header-primary {
     background-color: var(--hz-color-primary-green);
     color: var(--hz-color-text-main); /* Ensure contrast */

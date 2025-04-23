@@ -238,6 +238,27 @@ h6 {
     text-decoration: underline;
 }
 
+/* Card header styling for different types */
+.hz-card-header-primary {
+    background-color: var(--hz-color-primary-green);
+    color: var(--hz-color-text-main);
+}
+
+.hz-card-header-secondary {
+    background-color: var(--hz-color-accent-peach);
+    color: var(--hz-color-text-main);
+}
+
+.hz-card-header-warning {
+    background-color: var(--hz-color-accent-gold);
+    color: var(--hz-color-surface);
+}
+
+.hz-card-header-info {
+    background-color: var(--hz-color-accent-sky-blue);
+    color: var(--hz-color-surface);
+}
+
 /* Section title styling */
 .section-title {
     color: var(--hz-color-primary-green);

@@ -167,7 +167,7 @@
       <!-- Exact match found -->
       {:else if result.status === 'found'}
         <div class="card mb-4">
-          <div class="card-header bg-success text-white">
+          <div class="card-header hz-card-header-primary">
             <h5 class="card-title mb-0">Match Found</h5>
           </div>
           <div class="card-body">
@@ -216,7 +216,7 @@
         <!-- Target language matches -->
         {#if result.data.target_language_results?.matches?.length > 0}
           <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header hz-card-header-primary">
               <h5 class="card-title mb-0">{result.target_language_name} Matches</h5>
             </div>
             <div class="card-body">
@@ -256,7 +256,7 @@
         <!-- Possible misspellings for target language -->
         {#if result.data.target_language_results?.possible_misspellings?.length > 0}
           <div class="card mb-4">
-            <div class="card-header bg-warning text-dark">
+            <div class="card-header hz-card-header-warning">
               <h5 class="card-title mb-0">Did you mean one of these?</h5>
             </div>
             <div class="card-body">
@@ -276,7 +276,7 @@
         <!-- English translation matches -->
         {#if result.data.english_results?.matches?.length > 0}
           <div class="card mb-4">
-            <div class="card-header bg-secondary text-white">
+            <div class="card-header hz-card-header-secondary">
               <h5 class="card-title mb-0">{result.target_language_name} words matching English term "{result.query}"</h5>
             </div>
             <div class="card-body">
@@ -316,7 +316,7 @@
       <!-- Invalid word -->
       {:else if result.status === 'invalid'}
         <div class="card mb-4">
-          <div class="card-header bg-danger text-white">
+          <div class="card-header hz-card-header-warning">
             <h5 class="card-title mb-0">No Results Found</h5>
           </div>
           <div class="card-body">
@@ -343,7 +343,7 @@
       {:else if result.status === 'error'}
         {#if result.error && result.error.includes('401 UNAUTHORIZED')}
           <div class="card mb-4">
-            <div class="card-header bg-info text-white">
+            <div class="card-header hz-card-header-info">
               <h5 class="card-title mb-0">Login Required</h5>
             </div>
             <div class="card-body">
@@ -357,7 +357,7 @@
           </div>
         {:else}
           <div class="card mb-4">
-            <div class="card-header bg-danger text-white">
+            <div class="card-header hz-card-header-warning">
               <h5 class="card-title mb-0">Search Error</h5>
             </div>
             <div class="card-body">
