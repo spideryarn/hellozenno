@@ -2,8 +2,9 @@
   import { onMount } from 'svelte';
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
   import TableOfContents from '$lib/components/TableOfContents.svelte';
-  import { SITE_NAME } from '$lib/config';
+  import { SITE_NAME, CONTACT_EMAIL, GITHUB_ISSUES_URL } from '$lib/config';
   import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
+  import { LANGUAGES } from '$lib/generated/languages';
   
   onMount(() => {
     // Handle any initialization on mount if needed
@@ -14,6 +15,26 @@
     // Update URL to remove the fragment
     history.replaceState(null, document.title, window.location.pathname + window.location.search);
   }
+  
+  // Format the list of languages nicely with commas and "and"
+  function formatLanguageList(languages: Array<{name: string, code: string}>) {
+    if (!languages || languages.length === 0) return '';
+    if (languages.length === 1) return languages[0].name;
+    
+    const lastLanguage = languages[languages.length - 1].name;
+    const otherLanguages = languages.slice(0, -1).map((l: {name: string, code: string}) => l.name);
+    return `${otherLanguages.join(', ')} and ${lastLanguage}`;
+  }
+  
+  // Prepare a nicely formatted list of popular languages (first 10)
+  const popularLanguages = formatLanguageList(LANGUAGES.slice(0, 10));
+  
+  // Prepare the languages list with links for the FAQ - add hyphens as delimiters
+  const languageListHtml = LANGUAGES.map((lang, index) => {
+    // Add a hyphen before every language except the first one
+    const delimiter = index === 0 ? '' : ' - ';
+    return `${delimiter}<a href="/language/${lang.code}" class="language-tag">${lang.name}</a>`;
+  }).join('');
   
   // FAQ data grouped by categories
   const faqCategories = [
@@ -30,6 +51,26 @@
           id: "who-is-hello-zenno-for",
           question: "Who is Hello Zenno for?",
           answer: "Intermediate-ish learners who can already parse simple sentences but need vocabulary depth & listening speed. Hello Zenno is designed for learners at roughly A2 level and above who want to expand their vocabulary and improve listening comprehension by working with authentic materials."
+        },
+        {
+          id: "which-languages-are-supported",
+          question: "Which languages are supported?",
+          answer: `
+            Hello Zenno currently supports <strong>${LANGUAGES.length} languages</strong>:
+            <br><br>
+            <div class="language-tags-container">
+              ${languageListHtml}
+            </div>
+            <br>
+            Our language coverage is driven by what Claude can handle confidently, and we're constantly working to improve
+            language support quality across all languages. Each language has the same feature set, providing rich dictionary
+            entries, audio generation, and contextual learning tools.
+            <br><br>
+            If your language isn't listed, please <a href="${GITHUB_ISSUES_URL}" target="_blank" rel="noopener">open an issue on GitHub</a> or <a href="mailto:${CONTACT_EMAIL}">contact us</a> directly. We prioritize adding
+            new languages based on user demand and technical feasibility.
+            <br><br>
+            <a href='/languages' class='btn btn-sm btn-primary rounded-pill'>See All Languages →</a>
+          `
         },
         {
           id: "is-hello-zenno-a-complete-language-course",
@@ -83,11 +124,6 @@
       id: "technical",
       title: "Technical & Access",
       faqs: [
-        {
-          id: "which-languages-are-supported",
-          question: "Which languages are supported?",
-          answer: "Any language an LLM can handle confidently (30+ today). If your language isn't listed, open an issue or join the \"centaur-sourcing\" experiment to help cover generation costs. <br><br><a href='/languages' class='btn btn-sm btn-primary rounded-pill'>See Supported Languages →</a>"
-        },
         {
           id: "is-hello-zenno-really-free",
           question: "Is it really free?",
@@ -200,6 +236,12 @@
     }
   ];
   
+  // Remove the duplicate language FAQ from Technical section
+  const technicalFaqs = faqCategories.find(category => category.id === "technical");
+  if (technicalFaqs) {
+    technicalFaqs.faqs = technicalFaqs.faqs.filter(faq => faq.id !== "which-languages-are-supported");
+  }
+  
   // Flatten categories for the ToC and page rendering
   const allFaqs = faqCategories.flatMap(category => category.faqs);
 </script>
@@ -237,7 +279,7 @@
         <div class="col-lg-10">
           
           <!-- Table of Contents -->
-          <TableOfContents categories={faqCategories} />
+          <TableOfContents categories={faqCategories as any} />
           
           <!-- FAQ list - all visible and categorized -->
           <div class="faq-list">
@@ -277,13 +319,13 @@
             </p>
             <div class="d-flex justify-content-center gap-3">
               <a 
-                href="mailto:hellozenno@gregdetre.com" 
+                href="mailto:{CONTACT_EMAIL}" 
                 class="btn btn-primary rounded-pill"
               >
                 Email Us
               </a>
               <a 
-                href="https://github.com/spideryarn/hellozenno/issues" 
+                href="{GITHUB_ISSUES_URL}" 
                 target="_blank" 
                 rel="noopener" 
                 class="btn btn-outline-primary rounded-pill"
@@ -450,5 +492,33 @@
       margin-right: 0.5rem;
     }
     /* categories-toc styles moved to TableOfContents.svelte */
+  }
+  
+  /* Language tags styling for FAQ */
+  .language-tags-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    line-height: 2;
+  }
+  
+  .language-tag {
+    display: inline;
+    padding: 0.3rem 0.7rem;
+    margin: 0 0.1rem;
+    background-color: rgba(102, 154, 115, 0.1);
+    border: 1px solid rgba(102, 154, 115, 0.2);
+    border-radius: 50px;
+    color: var(--hz-color-text-main);
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  
+  .language-tag:hover {
+    background-color: var(--hz-color-primary-green);
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
   }
 </style>

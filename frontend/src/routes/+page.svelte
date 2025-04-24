@@ -3,6 +3,22 @@
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
   import LightboxImage from '$lib/components/LightboxImage.svelte';
   import { SITE_NAME, TAGLINE } from '$lib/config';
+  import { LANGUAGES } from '$lib/generated/languages';
+  
+  // Function to generate deterministic colors for language bubbles
+  function getLanguageBubbleColor(code: string): string {
+    const colors = [
+      'var(--hz-color-primary-green)',
+      'var(--hz-color-accent-lavender)',
+      'var(--hz-color-accent-sky-blue)',
+      'var(--hz-color-accent-gold)',
+      'var(--hz-color-accent-peach)'
+    ];
+    
+    // Simple hash function to get a consistent color for each language
+    const hashCode = code.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+    return colors[hashCode % colors.length];
+  }
 </script>
 
 <svelte:head>
@@ -108,6 +124,34 @@
               <p class="feature-description">Auto‑generated sentences and natural‑sounding audio help you recognise new words at speed.</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Languages Showcase section -->
+<section class="py-5 bg-dark">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 text-center">
+        <h2 class="section-title mb-4">Available in <span class="language-count">{LANGUAGES.length}</span> languages</h2>
+        <p class="section-text mb-4">
+          From widely spoken to niche languages, Hello Zenno helps you expand your vocabulary in context.
+        </p>
+        
+        <div class="languages-grid">
+          {#each LANGUAGES as language}
+            <a href="/language/{language.code}" class="language-item" style="--item-color: {getLanguageBubbleColor(language.code)};">
+              {language.name}
+            </a>
+          {/each}
+        </div>
+        
+        <div class="mt-4">
+          <a href="/languages" class="btn btn-outline-light btn-sm rounded-pill px-4">
+            Explore all languages
+          </a>
         </div>
       </div>
     </div>
@@ -548,5 +592,55 @@
     transform: translateY(0);
   }
   
+  /* Languages Showcase */
+  .languages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
   
+  .language-count {
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--hz-color-primary-green) 0%, var(--hz-color-accent-lavender) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+  }
+  
+  .language-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--item-color, var(--hz-color-primary-green));
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  .language-item:hover {
+    background-color: var(--item-color, var(--hz-color-primary-green));
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  @media (max-width: 768px) {
+    .languages-grid {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.5rem;
+    }
+    
+    .language-item {
+      font-size: 0.85rem;
+      padding: 0.6rem 0.4rem;
+    }
+  }
 </style>
