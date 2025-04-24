@@ -1,11 +1,111 @@
 <!-- https://supabase.com/dashboard/project/itcwqlhvpbtvtgqkumia/auth/templates -->
 
-<h2>Confirm your signup to <a href="{{ .ConfirmationURL }}">Hello Zenno</a>, the AI-powered dictionary and listening
-    practice</h2>
+<!DOCTYPE html>
+<html>
 
-<p>Follow this link to confirm that this is you:</p>
-<p><a href="{{ .ConfirmationURL }}">Confirm your mail</a></p>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirm your signup to Hello Zenno</title>
+    <style>
+        /* HelloZenno theme colors from STYLING.md */
+        :root {
+            --hz-color-primary-green: #669A73;
+            --hz-color-primary-green-light: #80B890;
+            --hz-color-primary-green-dark: #537E5C;
+            --hz-color-background: #0b0b0e;
+            --hz-color-surface: #1e1e1e;
+            --hz-color-border: #333333;
+            --hz-color-text-main: #f8f9fa;
+            --hz-color-text-secondary: #d7dadd;
+            --hz-color-accent-peach: #F5B8A8;
+        }
 
-<p>If it wasn't you, then just ignore this email</p>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Georgia, serif;
+            background-color: var(--hz-color-background);
+            color: var(--hz-color-text-main);
+        }
 
-<p>Thanks - your friends at Hello Zenno</p>
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--hz-color-surface);
+            border: 1px solid var(--hz-color-border);
+            border-radius: 8px;
+        }
+
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 200px;
+        }
+
+        h1 {
+            color: var(--hz-color-primary-green);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        p {
+            margin-bottom: 16px;
+            line-height: 1.5;
+            color: var(--hz-color-text-secondary);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--hz-color-primary-green);
+            color: white !important;
+            text-decoration: none;
+            border-radius: 24px;
+            font-weight: bold;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .button:hover {
+            background-color: var(--hz-color-primary-green-light);
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--hz-color-text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <img src="{{ .SiteURL }}/img/logo.png" alt="Hello Zenno Logo" class="logo">
+
+        <h1>Welcome to Hello Zenno!</h1>
+
+        <p>Thank you for signing up to Hello Zenno, the AI-powered dictionary and listening practice tool for learning
+            languages.</p>
+
+        <p>Please confirm your email address by clicking the button below:</p>
+
+        <div style="text-align: center;">
+            <a href="{{ .ConfirmationURL }}" class="button">Confirm My Email</a>
+        </div>
+
+        <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; font-size: 14px;">{{ .ConfirmationURL }}</p>
+
+        <p>If you didn't create an account with us, you can safely ignore this email.</p>
+
+        <div class="footer">
+            <p>Thanks for joining us!<br>
+                The Hello Zenno Team</p>
+        </div>
+    </div>
+</body>
+
+</html>
