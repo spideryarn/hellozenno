@@ -19,7 +19,7 @@
           <div class="col-12 text-center">
             <!-- Animated logo -->
             <div class="logo-container mb-4">
-              <img src="/logo.png" alt="Hello Zenno logo" class="logo animate-float" />
+              <img src="/img/logo.png" alt="Hello Zenno logo" class="logo animate-float" />
             </div>
             
             <!-- Main headline -->

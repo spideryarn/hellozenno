@@ -185,6 +185,35 @@ Style properties (defined in `theme.css` using variables):
 
 Secondary buttons use the peach accent color (`--hz-color-accent-peach`) via the standard Bootstrap `.btn-secondary` class (which is mapped in `theme-variables.css`).
 
+## Static Assets
+
+### Images & Icons
+
+The application's static images are organized in the following structure:
+
+```
+static/
+├── favicon.ico, favicon.png, site.webmanifest   # favicons etc
+├── img/
+│   ├── logo.png
+│   ├── email_contact_envelope.png               # Contact icon
+│   ├── extern/                                  # External/third-party images
+│   └── marketing/                               # for homepage, about, hero images, etc
+└── js/, css/                                    # Other static assets
+```
+
+When referencing images in components, always use the full path from the static directory:
+
+```svelte
+<img src="/img/logo.png" alt="Hello Zenno" />
+```
+
+For new images, follow these guidelines:
+- Store application-wide images like the logo in `/static/img/`
+- Place feature-specific images in appropriate subdirectories
+- Use external logos etc in `/static/img/extern/`
+- see also `phosphor-svelte`
+
 ## Animation Guidelines
 
 Use subtle animations to enhance user experience without being distracting:

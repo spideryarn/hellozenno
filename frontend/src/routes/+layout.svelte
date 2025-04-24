@@ -184,7 +184,7 @@
             href="/" 
             class="text-decoration-none" 
             title="Hello Zenno">
-            <img src="/logo.png" alt="Hello Zenno" class="logo-image" />
+            <img src="/img/logo.png" alt="Hello Zenno" class="logo-image" />
           </a>
           <div class="d-flex align-items-center">
             <a href="/languages" class="text-decoration-none text-white ms-3">Languages</a>
