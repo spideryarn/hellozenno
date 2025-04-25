@@ -22,6 +22,11 @@
       selectableColumns: 'id,wordform,part_of_speech,lemma(lemma)',
       client: supabase
     });
+    
+    // Function to generate URLs for each row
+    function getWordformUrl(row: any): string {
+      return `/language/${target_language_code}/wordform/${row.wordform}`;
+    }
 </script>
 
 <svelte:head>
@@ -48,6 +53,7 @@
                   loadData={loadData}
                   initialRows={wordforms}
                   initialTotal={total}
+                  getRowUrl={getWordformUrl}
         />
     {:else}
         <div class="alert alert-info">

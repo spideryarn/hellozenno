@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
    * Very‑lightweight, reusable data grid for Hello Zenno.
-   * Stage‑1 scope: static rows with Bootstrap table markup, single‑row click event.
+   * Stage‑1 scope: static rows with Bootstrap table markup, proper hyperlinks.
    * More functionality (pagination, sort, filter) will be layered in future stages.
    */
   import { createEventDispatcher } from 'svelte';
@@ -37,14 +37,16 @@
   export let showHeader: boolean = true;
   /** Whether to show navigation buttons at the top */
   export let showTopNav: boolean = true;
+  /**
+   * Function to generate the URL for each row
+   * When provided, rows will be rendered as actual hyperlinks (<a> tags)
+   * making the entire row clickable with standard browser link behavior
+   */
+  export let getRowUrl: ((row: any) => string) | null = null;
 
   const dispatch = createEventDispatcher();
 
   // visibleRows will be assigned reactively further below
-
-  function onRowClick(row: any) {
-    dispatch('rowClick', row);
-  }
 
   /** Optional async data provider. If supplied, grid becomes server-driven. */
   interface LoadParams {
@@ -227,21 +229,44 @@
           </tr>
         {:else}
           {#each visibleRows as row (row.id ?? row.slug ?? row)}
-            <tr role="button" tabindex="0" on:click={() => onRowClick(row)} on:keydown={(e) => e.key === 'Enter' && onRowClick(row)} style="cursor: pointer;">
-              {#each columns as col}
-                <td class={col.class}>
-                  {#if col.accessor}
-                    {#if col.isHtml}
-                      {@html col.accessor(row) }
+            {#if getRowUrl}
+              <!-- Render as proper hyperlink -->
+              <tr class="data-grid-row-link">
+                {#each columns as col}
+                  <td class={col.class}>
+                    <!-- Apply the anchor to each cell -->
+                    <a href={getRowUrl(row)} class="grid-row-link">
+                      {#if col.accessor}
+                        {#if col.isHtml}
+                          {@html col.accessor(row) }
+                        {:else}
+                          {col.accessor(row)}
+                        {/if}
+                      {:else}
+                        {row[col.id]}
+                      {/if}
+                    </a>
+                  </td>
+                {/each}
+              </tr>
+            {:else}
+              <!-- No URL provided, render as non-clickable row -->
+              <tr>
+                {#each columns as col}
+                  <td class={col.class}>
+                    {#if col.accessor}
+                      {#if col.isHtml}
+                        {@html col.accessor(row) }
+                      {:else}
+                        {col.accessor(row)}
+                      {/if}
                     {:else}
-                      {col.accessor(row)}
+                      {row[col.id]}
                     {/if}
-                  {:else}
-                    {row[col.id]}
-                  {/if}
-                </td>
-              {/each}
-            </tr>
+                  </td>
+                {/each}
+              </tr>
+            {/if}
           {/each}
         {/if}
       {/if}
@@ -309,5 +334,36 @@
     .bottom-nav-container {
       justify-content: center;
     }
+  }
+
+  /* Data grid row link styling */
+  .data-grid-row-link {
+    transition: background-color 0.15s ease-in-out;
+  }
+
+  .data-grid-row-link:hover {
+    background-color: rgba(102, 154, 115, 0.07); /* subtle green overlay */
+  }
+
+  /* Make the link fill the entire cell */
+  .grid-row-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    padding: 0;
+    margin: -0.6rem -0.75rem; /* Negative margin to counter td padding */
+    padding: 0.6rem 0.75rem;  /* Match td padding */
+    position: relative;       /* Create stacking context for nested interactive elements */
+  }
+
+  /* Ensure text color doesn't change */
+  .grid-row-link:hover, 
+  .grid-row-link:focus, 
+  .grid-row-link:active, 
+  .grid-row-link:visited {
+    color: inherit;
+    text-decoration: none;
   }
 </style> 

@@ -101,9 +101,9 @@
     { id: 'wordform_count', header: 'Words', accessor: (row: any) => row.metadata?.wordform_count ?? 0, width: 80, class: 'text-end' },
   ];
   
-  function handleRowClick(event: CustomEvent<any>) {
-    const row = event.detail;
-    window.location.href = `/language/${target_language_code}/source/${sourcedir.slug}/${row.slug}`;
+  // URL generator function for DataGrid rows
+  function getSourcefileUrl(row: any): string {
+    return `/language/${target_language_code}/source/${sourcedir.slug}/${row.slug}`;
   }
   
   async function deleteSourcefile(slug: string) {
@@ -491,7 +491,7 @@
       {columns}
       rows={sourcefiles}
       pageSize={100}
-      on:rowClick={handleRowClick}
+      getRowUrl={getSourcefileUrl}
     />
   {/if}
 </div>
