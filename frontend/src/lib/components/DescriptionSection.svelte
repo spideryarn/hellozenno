@@ -9,7 +9,7 @@
   <h3>Description</h3>
   <DescriptionFormatted 
     {description} 
-    placeholder="No description available for this file"
+    placeholder="No description for this file - click to edit"
     cssClass=""
     {onSave}
   />

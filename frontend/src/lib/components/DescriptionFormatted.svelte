@@ -72,8 +72,10 @@
       </div>
     </div>
   {:else}
-    <div class="d-flex justify-content-between align-items-start mb-3 p-3 border rounded {cssClass}">
-      <div class="description-content flex-grow-1">
+    <div class="d-flex align-items-start mb-3 p-3 border rounded {cssClass}">
+      <div class="description-content w-100" 
+           on:click={editable ? startEditing : undefined} 
+           class:editable={editable}>
         {#if description}
           <div>
             {#each description.split(/\n\n+/).map(para => para.trim()) as paragraph, i}
@@ -91,11 +93,6 @@
           <p class="text-muted fst-italic mb-0">{placeholder}</p>
         {/if}
       </div>
-      {#if editable}
-        <button class="btn btn-sm btn-outline-secondary" on:click={startEditing}>
-          <PencilSimple size={16} weight="bold" /> Edit Description
-        </button>
-      {/if}
     </div>
   {/if}
 </div>
@@ -120,5 +117,28 @@
     line-height: 1;
     padding: 2px 4px;
     white-space: nowrap;
+  }
+  
+  .editable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  
+  .editable:hover {
+    background-color: var(--hz-color-surface-hover, rgba(255, 255, 255, 0.05));
+  }
+  
+  .editable:hover::after {
+    content: 'Click to edit';
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: 0.75rem;
+    color: var(--hz-color-text-muted, #888);
+    background-color: var(--hz-color-surface, #222);
+    padding: 2px 6px;
+    border-radius: 4px;
+    opacity: 0.8;
   }
 </style>
