@@ -163,13 +163,13 @@
       <Card>
         <!-- Header with title and back button in same row -->
         <div class="d-flex align-items-center mb-4">
-          <button 
+          <a 
+            href={`/language/${data.metadata.target_language_code}/flashcards${$page.url.search}`}
             class="btn btn-outline-secondary back-button" 
-            on:click={navigateToFlashcards}
             aria-label="Back to flashcards"
             title="Back to flashcards">
             <ArrowLeft size={20} weight="bold" />
-          </button>
+          </a>
           
           <h2 class="flex-grow-1 text-center mb-0">{data.metadata.language_name} Flashcard</h2>
           
@@ -242,17 +242,20 @@
             
             <!-- Sentence (visible in stage 2+) -->
             {#if currentStage >= 2}
-              <!-- Replaced alert with a styled div -->
-              <div class="flashcard-content-box border rounded p-4 mt-3 mb-3 bg-body-tertiary">
-                <h3 class="text-center font-weight-bold fs-2 mb-0">{data.text}</h3>
+              <div class="flashcard-content-box border rounded p-4 mt-3 mb-3">
+                <div class="hz-foreign-text">
+                  <p class="text-center font-weight-bold fs-2 mb-0">{data.text}</p>
+                </div>
               </div>
             {/if}
             
             <!-- Translation (visible in stage 3) -->
             {#if currentStage >= 3}
-              <!-- Replaced alert with a styled div -->
-              <div class="flashcard-content-box border rounded p-3 mb-3 bg-body-tertiary">
-                <p class="text-center mb-0 fs-4">{data.translation}</p>
+              <div class="flashcard-content-box border rounded p-4 mb-3">
+                <div class="text-secondary fst-italic text-center fs-4 mb-3">
+                  {data.translation}
+                </div>
+                
                 <div class="text-center mt-3">
                   <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="btn btn-sm btn-outline-secondary">
                     View full sentence page
@@ -267,16 +270,16 @@
                     <div class="alert alert-success mt-3">{ignoreSuccess}</div>
                   {/if}
                   
-                  <!-- Show lemma words with ignore buttons (Revised Style) -->
+                  <!-- Show lemma words with ignore buttons -->
                   {#if data.lemma_words && data.lemma_words.length > 0}
                     <div class="mt-4 pt-3 border-top">
                       <p class="mb-2 text-muted small">Words in this sentence:</p>
-                      <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
+                      <div class="lemma-words-container">
                         {#each data.lemma_words as lemma, i}
-                          <div class="d-inline-flex align-items-center">
-                            <span class="fs-6 me-1">{lemma}</span>
+                          <div class="lemma-word-item">
+                            <span class="lemma-text">{lemma}</span>
                             <button
-                              class="btn btn-link p-0 border-0 text-secondary lh-1 ignore-btn"
+                              class="ignore-btn"
                               title={`Ignore "${lemma}" in future flashcards`}
                               on:click={() => ignoreLemma(lemma)}
                               disabled={isIgnoring}
@@ -288,10 +291,6 @@
                               {/if}
                             </button>
                           </div>
-                          <!-- Optional: Add separator if needed, e.g., if not wrapping well -->
-                          <!-- {#if i < data.lemma_words.length - 1}
-                            <span class="text-muted mx-1">•</span>
-                          {/if} -->
                         {/each}
                       </div>
                     </div>
@@ -346,18 +345,67 @@
 </div>
 
 <style>
+  /* Improved ignore button styling */
   .ignore-btn {
     opacity: 0.6;
     transition: opacity 0.2s ease-in-out;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    color: var(--hz-color-text-secondary);
   }
+  
   .ignore-btn:hover,
   .ignore-btn:focus {
     opacity: 1;
     color: var(--bs-danger) !important; /* Use theme danger color on hover */
   }
-  /* Optional: Style for the content boxes if needed beyond Bootstrap */
+  
+  /* Flashcard content styling */
   .flashcard-content-box {
-    /* Add custom styles if bg-body-tertiary and border aren't enough */
+    background-color: var(--hz-color-surface-transparent-15);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .flashcard-content-box:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Style for the hz-foreign-text class */
+  .hz-foreign-text {
+    font-family: var(--hz-font-target-language, system-ui);
+    line-height: 1.5;
+  }
+  
+  /* Word container styling */
+  .lemma-words-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  
+  .lemma-word-item {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--hz-color-surface-transparent-10);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.2s;
+  }
+  
+  .lemma-word-item:hover {
+    background-color: var(--hz-color-surface-transparent-15);
+  }
+  
+  .lemma-text {
+    font-size: 1rem;
   }
   
   /* Clear filter button styling */
