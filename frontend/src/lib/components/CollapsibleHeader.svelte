@@ -21,7 +21,7 @@
           <svelte:component this={icon} size={iconSize} />
         </span>
       {/if}
-      {title}
+      <span class="title-text" title={title}>{title}</span>
       <button on:click={toggleExpanded} class="button small-button expand-button" aria-expanded={isExpanded}>
         {#if isExpanded}
           ▲ Collapse
@@ -52,19 +52,53 @@
   
   h1 {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
     margin-bottom: 0;
     flex: 1;
+    overflow: hidden;
+    min-width: 0;
+    padding-right: 0.5rem;
+  }
+  
+  /* Reduce the padding and gap on small screens */
+  @media (max-width: 576px) {
+    h1 {
+      padding-right: 0.25rem;
+      gap: 0.3rem;
+    }
   }
   
   .file-icon {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+  
+  .title-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+    max-height: 2.6em;
+    min-width: 0;
+    /* Add small margin to ensure button doesn't overlap with second line */
+    margin-right: 1rem;
+  }
+  
+  /* Reduce right margin on small screens */
+  @media (max-width: 576px) {
+    .title-text {
+      margin-right: 0.25rem;
+    }
   }
   
   .expand-button {
     margin-left: auto;
+    flex-shrink: 0;
   }
   
   .button {
@@ -83,6 +117,14 @@
   .small-button {
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
+  }
+  
+  /* Make the button smaller on mobile screens */
+  @media (max-width: 576px) {
+    .small-button {
+      padding: 0.15rem 0.4rem;
+      font-size: 0.7rem;
+    }
   }
   
   .collapsible-content {
