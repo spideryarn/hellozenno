@@ -187,13 +187,13 @@
             <img src="/img/logo.png" alt="Hello Zenno" class="logo-image" />
           </a>
           <div class="d-flex align-items-center">
-            <a href="/languages" class="text-decoration-none text-white ms-3">Languages</a>
-            <a href="/about" class="text-decoration-none text-white ms-3">About</a>
+            <a href="/languages" class="text-decoration-none text-white ms-4">Languages</a>
+            <a href="/about" class="text-decoration-none text-white ms-4">About</a>
             
             <!-- Auth Status: Use reactive `session` from data -->
             {#if session}
               <!-- Custom Svelte Dropdown for logged-in user -->
-              <div class="profile-dropdown ms-3"> 
+              <div class="profile-dropdown ms-4"> 
                 <button
                   class="btn btn-sm btn-secondary"
                   type="button"
@@ -219,7 +219,7 @@
               </div>
             {:else}
               <!-- Login Button for logged-out user -->
-              <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}`} class="btn btn-sm btn-primary ms-3">Login / Sign Up</a>
+              <a href={`/auth?next=${encodeURIComponent($page.url.pathname)}`} class="btn btn-sm btn-primary ms-4">Login / Sign Up</a>
             {/if}
           </div>
         </div>
