@@ -4,6 +4,8 @@
   import TableOfContents from '$lib/components/TableOfContents.svelte';
   import { SITE_NAME, CONTACT_EMAIL, GITHUB_ISSUES_URL } from '$lib/config';
   import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
+  import ContactButton from '$lib/components/ContactButton.svelte';
+  import GithubIssueButton from '$lib/components/GithubIssueButton.svelte';
   import { LANGUAGES } from '$lib/generated/languages';
   
   onMount(() => {
@@ -317,21 +319,16 @@
             <p class="mb-4">
               If you can't find the answer you're looking for, please reach out to us directly.
             </p>
-            <div class="d-flex justify-content-center gap-3">
-              <a 
-                href="mailto:{CONTACT_EMAIL}" 
-                class="btn btn-primary rounded-pill"
-              >
-                Email Us
-              </a>
-              <a 
-                href="{GITHUB_ISSUES_URL}" 
-                target="_blank" 
-                rel="noopener" 
-                class="btn btn-outline-primary rounded-pill"
-              >
-                GitHub Issues
-              </a>
+            <div class="d-flex justify-content-center gap-5">
+              <ContactButton 
+                asButton={false}
+                subject="Question about Hello Zenno" 
+                caption="Email Us"
+              ></ContactButton>
+              <GithubIssueButton 
+                asButton={false}
+                caption="GitHub Issues"
+              ></GithubIssueButton>
             </div>
           </div>
           

@@ -2,7 +2,7 @@
   // Home page component
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
   import LightboxImage from '$lib/components/LightboxImage.svelte';
-  import { SITE_NAME, TAGLINE } from '$lib/config';
+  import { SITE_NAME, TAGLINE, CONTACT_EMAIL } from '$lib/config';
   import { LANGUAGES } from '$lib/generated/languages';
   
   // Function to generate deterministic colors for language bubbles
@@ -220,7 +220,7 @@
         </div>
         
         <p class="small text-white-50 mt-3">
-          Missing your language? Drop us a line at <a href="mailto:hellozenno@gregdetre.com">hellozenno@gregdetre.com</a>
+          Missing your language? Drop us a line at <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a>
         </p>
       </div>
     </div>

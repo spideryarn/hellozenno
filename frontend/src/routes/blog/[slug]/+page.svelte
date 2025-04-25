@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
   import TableOfContents from '$lib/components/TableOfContents.svelte';
+  import ContactButton from '$lib/components/ContactButton.svelte';
+  import GithubIssueButton from '$lib/components/GithubIssueButton.svelte';
   import { SITE_NAME } from '$lib/config';
   import type { PageData } from './$types';
   
@@ -113,9 +115,24 @@
               <p class="mb-4">
                 Start your language learning journey today with our AI-powered tools.
               </p>
-              <div class="cta-buttons">
-                <a href="/languages" class="btn btn-primary rounded-pill px-4 py-2">Get Started</a>
-                <a href="/faq" class="btn btn-outline-secondary rounded-pill px-4 py-2">Learn More</a>
+              <div class="cta-buttons d-flex flex-wrap align-items-center justify-content-center">
+                <div class="me-4 mb-3">
+                  <a href="/languages" class="btn btn-primary rounded-pill px-4 py-2">Get Started</a>
+                </div>
+                <div class="me-4 mb-3">
+                  <a href="/faq" class="btn btn-outline-secondary rounded-pill px-4 py-2">Learn More</a>
+                </div>
+                <div class="d-flex gap-5 mb-3">
+                  <ContactButton 
+                    asButton={false}
+                    subject="Hello Zenno Blog Feedback" 
+                    caption="Contact Us"
+                  ></ContactButton>
+                  <GithubIssueButton 
+                    asButton={false}
+                    caption="GitHub Issues"
+                  ></GithubIssueButton>
+                </div>
               </div>
             </div>
           </footer>
@@ -311,6 +328,16 @@
     display: flex;
     gap: 1rem;
     justify-content: center;
+  }
+  
+  /* Override some of the contact button styling to better fit this layout */
+  :global(.call-to-action .report-image) {
+    width: 100px !important; 
+    height: auto;
+  }
+  
+  :global(.call-to-action .github-image) {
+    width: 60px !important;
   }
   
   @media (max-width: 576px) {

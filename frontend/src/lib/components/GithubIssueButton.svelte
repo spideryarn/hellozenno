@@ -1,21 +1,15 @@
 <script lang="ts">
   /**
-   * Email address to contact
+   * GitHub Issues URL
    */
-  import { CONTACT_EMAIL } from '$lib/config';
-  export let email: string = CONTACT_EMAIL;
+  import { GITHUB_ISSUES_URL } from '$lib/config';
+  export let url: string = GITHUB_ISSUES_URL;
   
   /**
-   * Subject line for the email
-   * @default 'Hello Zenno Feedback'
+   * Button text
+   * @default 'Open GitHub Issue'
    */
-  export let subject: string = 'Hello Zenno Feedback';
-  
-  /**
-   * Body content for the email
-   * @default ''
-   */
-  export let body: string = '';
+  export let text: string = 'Open GitHub Issue';
   
   /**
    * CSS class name(s) to apply to the button
@@ -25,15 +19,9 @@
   
   /**
    * Icon class to use (Phosphor icon)
-   * @default 'ph-envelope'
+   * @default 'ph-github-logo'
    */
-  export let icon: string = 'ph-envelope';
-  
-  /**
-   * Button text
-   * @default 'Contact Us'
-   */
-  export let text: string = 'Contact Us';
+  export let icon: string = 'ph-github-logo';
   
   /**
    * Show as a button (true) or a card with image (false)
@@ -43,43 +31,40 @@
   
   /**
    * Image source for card mode
-   * @default '/img/email_contact_envelope.png'
+   * @default '/img/extern/github-mark.svg'
    */
-  export let imageSrc: string = '/img/email_contact_envelope.png';
+  export let imageSrc: string = '/img/extern/github-mark.svg';
   
   /**
    * Image alt text for card mode
-   * @default 'Report this issue via email'
+   * @default 'Create a GitHub issue'
    */
-  export let imageAlt: string = 'Report this issue via email';
+  export let imageAlt: string = 'Create a GitHub issue';
   
   /**
    * Caption text for card mode
-   * @default 'Report via Email'
+   * @default 'Open GitHub Issue'
    */
-  export let caption: string = 'Report via Email';
-  
-  /**
-   * Generate the mailto URL with encoded subject and body
-   */
-  $: mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  export let caption: string = 'Open GitHub Issue';
 </script>
 
 {#if asButton}
-  <a href={mailtoUrl} class="btn {className}" target="_blank" rel="noopener noreferrer">
+  <a href={url} class="btn {className}" target="_blank" rel="noopener noreferrer">
     <i class="{icon} me-2"></i>{text}
   </a>
 {:else}
   <a 
-    href={mailtoUrl}
+    href={url} 
+    target="_blank" 
+    rel="noopener noreferrer" 
     class="report-link"
-    title="Email us"
+    title="Create an issue on GitHub"
   >
     <img 
       src={imageSrc} 
       alt={imageAlt} 
-      class="report-image email-image" 
-      width="150"
+      class="report-image github-image" 
+      width="97"
       height="auto"
     />
     <span class="report-caption">{caption}</span>
@@ -112,8 +97,11 @@
     margin-bottom: 0.75rem;
   }
   
-  .email-image {
-    width: 150px;
+  .github-image {
+    width: 80px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 50%;
   }
   
   .report-caption {

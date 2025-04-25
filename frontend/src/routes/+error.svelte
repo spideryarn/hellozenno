@@ -3,9 +3,10 @@
   import { onMount } from 'svelte';
   import { get_language_name } from '$lib/utils';
   import { dev } from '$app/environment';
-  import { SITE_NAME } from '$lib/config';
+  import { SITE_NAME, CONTACT_EMAIL } from '$lib/config';
   import MultilingualApology from '$lib/components/MultilingualApology.svelte';
   import ContactButton from '$lib/components/ContactButton.svelte';
+  import GithubIssueButton from '$lib/components/GithubIssueButton.svelte';
   
   let languageName = '';
   let languageCode = '';
@@ -124,37 +125,13 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
           {/if}
           
           <div class="mt-4 mb-5 text-center report-links">
-            <a 
-              href="https://github.com/spideryarn/hellozenno/issues/new" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              class="report-link"
-              title="Create an issue on GitHub"
-            >
-              <img 
-                src="/img/extern/GitHub-logo.png" 
-                alt="Create a GitHub issue" 
-                class="report-image " 
-                width="97"
-                height="auto"
-              />
-              <span class="report-caption">Open GitHub Issue</span>
-            </a>
-
-            <a 
-              href={`mailto:hellozenno@gregdetre.com?subject=${encodeURIComponent(`${SITE_NAME} Error Report: ${page.status} on ${page.url.pathname}`)}&body=${encodeURIComponent(errorDetails)}`}
-              class="report-link"
-              title="Email us about this error"
-            >
-              <img 
-                src="/img/email_contact_envelope.png" 
-                alt="Report this issue via email" 
-                class="report-image email-image" 
-                width="150"
-                height="auto"
-              />
-              <span class="report-caption">Report via Email</span>
-            </a>
+            <GithubIssueButton url="https://github.com/spideryarn/hellozenno/issues/new" asButton={false}></GithubIssueButton>
+            
+            <ContactButton 
+              asButton={false}
+              subject={`${SITE_NAME} Error Report: ${page.status} on ${page.url.pathname}`}
+              body={errorDetails}
+            ></ContactButton>
         </div>
           
           <p>You might also want to:</p>

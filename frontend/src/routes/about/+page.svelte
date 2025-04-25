@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { SITE_NAME } from '$lib/config';
+  import ContactButton from '$lib/components/ContactButton.svelte';
+  import GithubIssueButton from '$lib/components/GithubIssueButton.svelte';
   
   // For now, let's go back to the inline SVG approach since it works 
   // and fixes the SSR issue with phosphor-svelte
@@ -27,12 +29,6 @@
   const CodeIcon = () => `
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256">
       <path d="M69.1,94.1,28.5,128l40.6,33.9a8,8,0,1,1-10.2,12.2l-48-40a8,8,0,0,1,0-12.2l48-40a8,8,0,0,1,10.2,12.2Zm176,27.8-48-40a8,8,0,0,0-10.2,12.2L227.5,128l-40.6,33.9a8,8,0,1,0,10.2,12.2l48-40a8,8,0,0,0,0-12.2ZM162.2,32.2a8,8,0,0,0-10.4,4.4l-64,176a8,8,0,0,0,4.4,10.4A8.2,8.2,0,0,0,96,224a8,8,0,0,0,7.6-5.5l64-176A8,8,0,0,0,162.2,32.2Z"/>
-    </svg>
-  `;
-  
-  const GithubLogoIcon = () => `
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256">
-      <path d="M136,184a8,8,0,0,1-16,0c0-24,16-36,16-36a8,8,0,0,1,0,12S136,169.1,136,184Zm88-56a76,76,0,1,1-76-76A76.1,76.1,0,0,1,224,128Zm-16,0a60,60,0,0,0-9.8-32.8c-2.9,2.2-8.9,7.5-11.7,10.4a41.7,41.7,0,0,0-5.8,8,24,24,0,0,1-8.9,8.9c-6.1,3.6-13.8,5.3-22.9,5.4,1.8,2.8,5.7,9.4,5.7,17.8,0,11.9-5.3,27.9-5.3,27.9a60,60,0,0,0,58.7-45.6ZM128,68a59.4,59.4,0,0,0-20,3.5,60,60,0,0,0-37.6,45.1q-.9,4.5-1,9.4a59.6,59.6,0,0,0,0,8,60.3,60.3,0,0,0,.6,8c0,.5.1,1,.2,1.4a60,60,0,0,0,117.6,0c.1-.5.1-1,.2-1.4a60.3,60.3,0,0,0,.6-8,59.6,59.6,0,0,0,0-8c-.1-1.2-.2-2.3-.3-3.5s-.3-2.3-.5-3.5c0-.6-.1-1.1-.2-1.7A60,60,0,0,0,128,68Zm-8,36c-8,0-14-4-14-12s6-16,14-16,14,8,14,16S128,104,120,104Z"/>
     </svg>
   `;
 </script>
@@ -217,24 +213,24 @@
     <div class="row justify-content-center">
       <div class="col-lg-8 text-center">
         <div class="card p-4 contribute-card border-0 shadow">
-          <div class="text-center mb-3">
-            <div class="text-primary-green">
-              {@html GithubLogoIcon()}
-            </div>
-          </div>
           <h3 class="section-title mb-3">Want to co‑build?</h3>
           <p class="mb-4">
             Hello Zenno is an open-source project and welcomes contributions from developers, language
             enthusiasts, and anyone passionate about improving language learning.
           </p>
-          <a 
-            href="https://github.com/spideryarn/hellozenno" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            class="btn btn-primary btn-lg px-4 rounded-pill"
-          >
-            Contribute on GitHub
-          </a>
+          <div class="d-flex justify-content-center gap-5 flex-wrap">
+            <GithubIssueButton 
+              asButton={false}
+              url="https://github.com/spideryarn/hellozenno"
+              caption="Contribute on GitHub"
+            ></GithubIssueButton>
+            
+            <ContactButton 
+              asButton={false}
+              subject="Hello Zenno - Getting Involved"
+              caption="Contact the Team"
+            ></ContactButton>
+          </div>
         </div>
       </div>
     </div>

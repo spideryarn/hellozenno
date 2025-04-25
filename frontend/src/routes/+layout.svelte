@@ -4,7 +4,7 @@
   import { invalidateAll } from '$app/navigation'; // Use invalidateAll for simplicity
   import { page } from '$app/stores'; 
   import type { LayoutData } from './$types'; // Import the type for LayoutData
-  import { SITE_NAME, TAGLINE } from '$lib/config'; // Added Import
+  import { SITE_NAME, TAGLINE, CONTACT_EMAIL } from '$lib/config'; // Added Import
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
 
   // Get data passed from +layout.ts
@@ -245,7 +245,7 @@
               <span class="footer-divider">·</span>
               <a href="/faq" class="footer-link">FAQ</a>
               <span class="footer-divider">·</span>
-              <a href="mailto:hellozenno@gregdetre.com" class="footer-link">Contact</a>
+              <a href="mailto:{CONTACT_EMAIL}" class="footer-link">Contact</a>
             </div>
             <p class="mb-0 text-white-50">{TAGLINE}</p>
           </div>
