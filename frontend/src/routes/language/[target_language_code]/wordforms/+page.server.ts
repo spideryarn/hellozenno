@@ -17,7 +17,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
         const { rows: wordforms, total } = await provider({
             page: 1,
-            pageSize: 100
+            pageSize: 100,
+            filterField: 'target_language_code',
+            filterValue: target_language_code
         });
 
         return {
