@@ -200,7 +200,7 @@
   }
   
   .hz-keyboard-hints {
-    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
+    background-color: var(--hz-color-border-subtle);
     border-radius: 8px;
     padding: 1rem 1.5rem;
     margin-top: 1.5rem;

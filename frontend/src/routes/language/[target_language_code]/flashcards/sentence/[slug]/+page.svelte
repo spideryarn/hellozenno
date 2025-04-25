@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import Card from '$lib/components/Card.svelte';
   import KeyReturn from 'phosphor-svelte/lib/KeyReturn';
-  import XCircle from 'phosphor-svelte/lib/XCircle';
+  import Prohibit from 'phosphor-svelte/lib/Prohibit';
   import X from 'phosphor-svelte/lib/X';
   import FunnelSimple from 'phosphor-svelte/lib/FunnelSimple';
   import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
@@ -242,24 +242,20 @@
             
             <!-- Sentence (visible in stage 2+) -->
             {#if currentStage >= 2}
-              <div class="flashcard-content-box border rounded p-4 mt-3 mb-3">
-                <div class="hz-foreign-text">
-                  <p class="text-center font-weight-bold fs-2 mb-0">{data.text}</p>
-                </div>
+              <!-- Replaced alert with a styled div -->
+              <div class="flashcard-content-box border rounded p-4 mt-3 mb-3 bg-body-tertiary">
+                <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="text-decoration-none">
+                  <h3 class="text-center font-weight-bold fs-2 mb-0 hz-foreign-text">{data.text}</h3>
+                </a>
               </div>
             {/if}
             
             <!-- Translation (visible in stage 3) -->
             {#if currentStage >= 3}
-              <div class="flashcard-content-box border rounded p-4 mb-3">
-                <div class="text-secondary fst-italic text-center fs-4 mb-3">
-                  {data.translation}
-                </div>
-                
+              <!-- Replaced alert with a styled div -->
+              <div class="flashcard-content-box border rounded p-3 mb-3 bg-body-tertiary">
+                <p class="text-center mb-0 fs-4 text-secondary translation-text">{data.translation}</p>
                 <div class="text-center mt-3">
-                  <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="btn btn-sm btn-outline-secondary">
-                    View full sentence page
-                  </a>
                   
                   <!-- Status messages for ignoring lemmas -->
                   {#if ignoreError}
@@ -270,16 +266,16 @@
                     <div class="alert alert-success mt-3">{ignoreSuccess}</div>
                   {/if}
                   
-                  <!-- Show lemma words with ignore buttons -->
+                  <!-- Show lemma words with ignore buttons (Revised Style) -->
                   {#if data.lemma_words && data.lemma_words.length > 0}
                     <div class="mt-4 pt-3 border-top">
                       <p class="mb-2 text-muted small">Words in this sentence:</p>
-                      <div class="lemma-words-container">
+                      <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
                         {#each data.lemma_words as lemma, i}
-                          <div class="lemma-word-item">
-                            <span class="lemma-text">{lemma}</span>
+                          <div class="d-inline-flex align-items-center">
+                            <span class="fs-6 me-1 hz-foreign-text">{lemma}</span>
                             <button
-                              class="ignore-btn"
+                              class="btn btn-link p-0 border-0 text-secondary lh-1 ignore-btn"
                               title={`Ignore "${lemma}" in future flashcards`}
                               on:click={() => ignoreLemma(lemma)}
                               disabled={isIgnoring}
@@ -287,10 +283,14 @@
                               {#if isIgnoring}
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                               {:else}
-                                <XCircle size={16} weight="regular" />
+                                <Prohibit size={16} weight="regular" />
                               {/if}
                             </button>
                           </div>
+                          <!-- Optional: Add separator if needed, e.g., if not wrapping well -->
+                          <!-- {#if i < data.lemma_words.length - 1}
+                            <span class="text-muted mx-1">•</span>
+                          {/if} -->
                         {/each}
                       </div>
                     </div>
@@ -345,67 +345,30 @@
 </div>
 
 <style>
-  /* Improved ignore button styling */
   .ignore-btn {
     opacity: 0.6;
     transition: opacity 0.2s ease-in-out;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 0.25rem;
-    display: inline-flex;
-    align-items: center;
-    color: var(--hz-color-text-secondary);
   }
-  
   .ignore-btn:hover,
   .ignore-btn:focus {
     opacity: 1;
     color: var(--bs-danger) !important; /* Use theme danger color on hover */
   }
   
-  /* Flashcard content styling */
-  .flashcard-content-box {
-    background-color: var(--hz-color-surface-transparent-15);
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .flashcard-content-box:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-  
-  /* Style for the hz-foreign-text class */
+  /* Typography styles using theme variables */
   .hz-foreign-text {
-    font-family: var(--hz-font-target-language, system-ui);
-    line-height: 1.5;
+    font-family: var(--hz-font-foreign) !important;
+    font-style: italic;
   }
   
-  /* Word container styling */
-  .lemma-words-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+  .translation-text {
+    font-family: var(--hz-font-main) !important;
+    font-style: normal;
   }
   
-  .lemma-word-item {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--hz-color-surface-transparent-10);
-    border-radius: 4px;
-    padding: 0.25rem 0.5rem;
-    transition: all 0.2s;
-  }
-  
-  .lemma-word-item:hover {
-    background-color: var(--hz-color-surface-transparent-15);
-  }
-  
-  .lemma-text {
-    font-size: 1rem;
+  /* Optional: Style for the content boxes if needed beyond Bootstrap */
+  .flashcard-content-box {
+    /* Add custom styles if bg-body-tertiary and border aren't enough */
   }
   
   /* Clear filter button styling */
