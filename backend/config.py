@@ -49,6 +49,7 @@ SUPPORTED_LANGUAGES = set(
         "nl",  # Dutch
         "pl",  # Polish
         "hu",  # Hungarian
+        "hr",  # Croatian
     ]
 )
 
