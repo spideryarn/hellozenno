@@ -34,9 +34,9 @@
   <div class="d-flex gap-2">
     <button
       class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-primary' : 'btn-outline-secondary'}"
-      on:click={() => setPlaybackRate(0.85)}
+      on:click={() => setPlaybackRate(0.9)}
     >
-      0.85x
+      0.9x
     </button>
     <button
       class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-primary' : 'btn-outline-secondary'}"
