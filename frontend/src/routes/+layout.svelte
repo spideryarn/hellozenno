@@ -235,19 +235,21 @@
         <div class="row justify-content-center">
           <div class="col-lg-8">
             <div class="footer-links mb-3">
-              <a href="https://github.com/spideryarn/hellozenno" target="_blank" rel="noopener" class="footer-link">GitHub</a>
-              <span class="footer-divider">·</span>
-              <a href="/blog" class="footer-link">Blog</a>
+              <a href="/" class="footer-link">Home</a>
               <span class="footer-divider">·</span>
               <a href="/about" class="footer-link">About</a>
               <span class="footer-divider">·</span>
-              <a href="/privacy" class="footer-link">Privacy</a>
-              <span class="footer-divider">·</span>
               <a href="/faq" class="footer-link">FAQ</a>
               <span class="footer-divider">·</span>
-              <a href="mailto:{CONTACT_EMAIL}" class="footer-link">Contact</a>
+              <a href="/privacy" class="footer-link">Privacy</a>
+              <span class="footer-divider">·</span>
+              <a href="/terms" class="footer-link">Terms</a>
+              <span class="footer-divider">·</span>
+              <a href="mailto:{CONTACT_EMAIL}" class="footer-link">Email</a>
+              <span class="footer-divider">·</span>
+              <a href="https://github.com/spideryarn/hellozenno" target="_blank" rel="noopener" class="footer-link">GitHub</a>
             </div>
-            <p class="mb-0 text-white-50">{TAGLINE}</p>
+            <p class="mb-0 text-white-50"><em>{TAGLINE}</em></p>
           </div>
         </div>
       </div>
