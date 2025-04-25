@@ -23,6 +23,8 @@
   let ignoreError = ''; // Store any error messages during ignore operation
   let ignoreSuccess = ''; // Store success message after ignoring
   let audioPlayer;
+  let audioReplayCount = 0; // Track how many times audio is replayed
+  let userSelectedSpeed = false; // Track if user manually changed playback speed
   
   function nextStage() {
     if (currentStage < 3) {
@@ -32,8 +34,29 @@
   
   function playAudio() {
     if (audioPlayer && !data.audio_requires_login) {
+      // Only count replays and auto-adjust in stage 1 (audio only) if user hasn't manually selected a speed
+      if (currentStage === 1 && !userSelectedSpeed) {
+        audioReplayCount++;
+        
+        // Gradually slow down playback on repeated plays in stage 1
+        if (audioReplayCount === 2) {
+          audioPlayer.setPlaybackRate(0.95);
+        } else if (audioReplayCount === 3) {
+          audioPlayer.setPlaybackRate(0.9);
+        } else if (audioReplayCount === 4) {
+          audioPlayer.setPlaybackRate(0.85);
+        } else if (audioReplayCount >= 5) {
+          audioPlayer.setPlaybackRate(0.8);
+        }
+      }
+      
       audioPlayer.play();
     }
+  }
+  
+  // Handle when user changes the playback speed
+  function handleSpeedChanged(event) {
+    userSelectedSpeed = true;
   }
 
   function prevStage() {
@@ -44,6 +67,13 @@
   }
   
   function nextSentence() {
+    // Reset audio replay count, playback speed, and user selection flag
+    if (audioPlayer) {
+      audioPlayer.setPlaybackRate(1.0);
+    }
+    audioReplayCount = 0;
+    userSelectedSpeed = false;
+    
     // Get parameters for the URL
     const params = new URLSearchParams(window.location.search);
     const baseUrl = `/language/${data.metadata.target_language_code}/flashcards/random`;
@@ -147,6 +177,13 @@
     // Add keyboard event listener
     window.addEventListener('keydown', handleKeyDown);
     
+    // Reset the audio replay count, playback speed, and user selection flag for new sentences
+    audioReplayCount = 0;
+    userSelectedSpeed = false;
+    if (audioPlayer) {
+      audioPlayer.setPlaybackRate(1.0);
+    }
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -236,6 +273,7 @@
                 showControls={true}
                 showSpeedControls={true}
                 showDownload={false}
+                on:speedChanged={handleSpeedChanged}
               />
             {/if}
             

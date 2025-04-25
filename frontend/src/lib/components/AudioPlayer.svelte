@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import Download from 'phosphor-svelte/lib/Download';
   import LoadingSpinner from './LoadingSpinner.svelte';
+  
+  const dispatch = createEventDispatcher();
   
   // Props
   export let src: string;
@@ -33,10 +35,15 @@
     }
   }
   
-  export function setPlaybackRate(rate: number) {
+  export function setPlaybackRate(rate: number, userInitiated: boolean = false) {
     if (audioElement) {
       audioElement.playbackRate = rate;
       currentPlaybackRate = rate;
+      
+      // Dispatch an event when the user manually changes the speed
+      if (userInitiated) {
+        dispatch('speedChanged', { rate, userInitiated });
+      }
     }
   }
   
@@ -122,22 +129,43 @@
       <div class="speed-controls-container mt-2">
         <div class="d-flex gap-2 justify-content-center">
           <button
+            class="btn btn-sm {currentPlaybackRate === 0.8 ? 'btn-primary' : 'btn-outline-secondary'}"
+            on:click={() => setPlaybackRate(0.8, true)}
+            aria-label="Set playback speed to 0.8x"
+          >
+            0.8x
+          </button>
+          <button
+            class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-primary' : 'btn-outline-secondary'}"
+            on:click={() => setPlaybackRate(0.85, true)}
+            aria-label="Set playback speed to 0.85x"
+          >
+            0.85x
+          </button>
+          <button
             class="btn btn-sm {currentPlaybackRate === 0.9 ? 'btn-primary' : 'btn-outline-secondary'}"
-            on:click={() => setPlaybackRate(0.9)}
+            on:click={() => setPlaybackRate(0.9, true)}
             aria-label="Set playback speed to 0.9x"
           >
             0.9x
           </button>
           <button
+            class="btn btn-sm {currentPlaybackRate === 0.95 ? 'btn-primary' : 'btn-outline-secondary'}"
+            on:click={() => setPlaybackRate(0.95, true)}
+            aria-label="Set playback speed to 0.95x"
+          >
+            0.95x
+          </button>
+          <button
             class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-primary' : 'btn-outline-secondary'}"
-            on:click={() => setPlaybackRate(1.0)}
+            on:click={() => setPlaybackRate(1.0, true)}
             aria-label="Set playback speed to 1.0x"
           >
             1.0x
           </button>
           <button
             class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-primary' : 'btn-outline-secondary'}"
-            on:click={() => setPlaybackRate(1.2)}
+            on:click={() => setPlaybackRate(1.2, true)}
             aria-label="Set playback speed to 1.2x"
           >
             1.2x
