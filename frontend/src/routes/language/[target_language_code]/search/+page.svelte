@@ -118,6 +118,7 @@
       targetLanguageCode={data.target_language_code} 
       languageName={data.langName || result?.target_language_name || 'Language'} 
       autofocus={true}
+      initialQuery={query}
     />
     
     {#if !data.session}

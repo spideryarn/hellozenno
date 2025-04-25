@@ -9,8 +9,9 @@
   export let languageName: string;
   export let targetLanguageCode: string;
   export let autofocus: boolean = false;
+  export let initialQuery: string = '';
   
-  let searchQuery = '';
+  let searchQuery = initialQuery;
   let searchInput: HTMLInputElement;
   let isSearching = false;
   
