@@ -1,11 +1,15 @@
 <script lang="ts">
-	// Optional: Add props for size, color, speed etc. later if needed.
-	// export let size = '36px';
-	// export let color = 'var(--bs-primary, #0d6efd)';
-	// export let speed = '1s';
-
-	// Accept style prop
-	let { style = '' }: { style?: string } = $props();
+	// Support for size variants and custom styling using the new runes syntax
+	let { size = undefined, style = '' }: { 
+		size?: 'sm' | 'md' | 'lg', 
+		style?: string 
+	} = $props();
+	
+	// Determine size based on the size prop using the new runes syntax
+	const sizeClass = $derived(
+		size === 'sm' ? 'spinner-sm' : 
+		size === 'lg' ? 'spinner-lg' : ''
+	);
 </script>
 
 <style>
@@ -19,6 +23,17 @@
 
 		/* Ensure the color defaults to the text color or a specific var */
 		color: var(--spinner-color, currentColor);
+	}
+	
+	/* Size variants */
+	.spinner-sm {
+		width: 16px;
+		height: 16px;
+	}
+	
+	.spinner-lg {
+		width: 48px;
+		height: 48px;
 	}
 
 	/* Keep the keyframes */
@@ -39,7 +54,7 @@
 	height="1em"
 	fill="currentColor"
 	viewBox="0 0 256 256"
-	class="spinner-svg"
+	class="spinner-svg {sizeClass}"
 	role="status"
 	aria-live="polite"
 	aria-label="Loading..."

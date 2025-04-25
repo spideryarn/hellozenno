@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Navigation } from '$lib/types/sourcefile';
-  import NavButtons from './NavButtons.svelte';
+  import SourcefileNavButtons from './SourcefileNavButtons.svelte';
   import { onMount } from 'svelte';
   
   export let navigation: Navigation;
@@ -39,7 +39,7 @@
 
 {#if showFooterNav}
   <div class="sourcefile-footer">
-    <NavButtons 
+    <SourcefileNavButtons 
       {navigation}
       {target_language_code}
       {sourcedir_slug}

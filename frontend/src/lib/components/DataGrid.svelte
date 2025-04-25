@@ -5,6 +5,8 @@
    * More functionality (pagination, sort, filter) will be layered in future stages.
    */
   import { createEventDispatcher } from 'svelte';
+  import DataGridNavButtons from './DataGridNavButtons.svelte';
+  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
   /** Column definition for DataGrid */
   // Column definition type (generic row type T)
@@ -33,6 +35,8 @@
   export let pageSize = 100;
   /** Whether to render the header row */
   export let showHeader: boolean = true;
+  /** Whether to show navigation buttons at the top */
+  export let showTopNav: boolean = true;
 
   const dispatch = createEventDispatcher();
 
@@ -114,7 +118,7 @@
 
   $: visibleRows = loadData ? serverRows : rows.slice(0, pageSize);
 
-  const totalPages = () => Math.max(1, Math.ceil((loadData ? total : rows.length) / pageSize));
+  $: totalPagesValue = Math.max(1, Math.ceil((loadData ? total : rows.length) / pageSize));
 
   function cycleSort(colId: string) {
     if (sortField !== colId) {
@@ -136,17 +140,25 @@
   }
 
   /* Pagination helpers */
-  function goToPage(p: number) {
-    const max = totalPages();
-    page = Math.min(Math.max(1, p), max);
+  function handlePageChange(newPage: number) {
+    page = newPage; // This will trigger a reactive update
   }
-
-  import CaretDoubleLeft from 'phosphor-svelte/lib/CaretDoubleLeft';
-  import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
-  import CaretRight from 'phosphor-svelte/lib/CaretRight';
-  import CaretDoubleRight from 'phosphor-svelte/lib/CaretDoubleRight';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  
+  // Show navigation only if we have server-driven pagination and more than one page
+  $: showNavigation = loadData && totalPagesValue > 1;
 </script>
+
+<!-- Top navigation (optional - shows when showTopNav prop is true and we have pagination) -->
+{#if showNavigation && showTopNav}
+  <div class="top-nav-container mb-3">
+    <DataGridNavButtons 
+      page={page} 
+      totalPages={totalPagesValue} 
+      isLoading={isLoading} 
+      onPageChange={handlePageChange} 
+    />
+  </div>
+{/if}
 
 <!-- Responsive wrapper so the table can scroll on small screens -->
 <div class="table-responsive">
@@ -237,22 +249,15 @@
   </table>
 </div>
 
-<!-- Pagination -->
-{#if loadData && totalPages() > 1}
-  <div class="pagination-buttons mt-2 d-flex align-items-center gap-2">
-    <button class="button" on:click={() => goToPage(1)} disabled={page === 1} title="First Page">
-      <CaretDoubleLeft size={16} weight="bold" />
-    </button>
-    <button class="button" on:click={() => goToPage(page - 1)} disabled={page === 1} title="Previous Page">
-      <CaretLeft size={16} weight="bold" />
-    </button>
-    <span class="file-position">({page}/{totalPages()})</span>
-    <button class="button" on:click={() => goToPage(page + 1)} disabled={page === totalPages()} title="Next Page">
-      <CaretRight size={16} weight="bold" />
-    </button>
-    <button class="button" on:click={() => goToPage(totalPages())} disabled={page === totalPages()} title="Last Page">
-      <CaretDoubleRight size={16} weight="bold" />
-    </button>
+<!-- Bottom navigation -->
+{#if showNavigation}
+  <div class="bottom-nav-container mt-3">
+    <DataGridNavButtons 
+      page={page} 
+      totalPages={totalPagesValue} 
+      isLoading={isLoading} 
+      onPageChange={handlePageChange} 
+    />
   </div>
 {/if}
 
@@ -285,29 +290,24 @@
     border-left: none;
     border-right: none;
   }
-
-  /* --- Pagination button styles (borrowed from NavButtons) --- */
-  .button {
-    background-color: var(--hz-color-primary-green);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    white-space: nowrap;
+  
+  /* Top navigation container */
+  .top-nav-container {
+    display: flex;
+    justify-content: flex-end;
   }
-
-  .button:disabled,
-  .button.disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+  
+  /* Bottom navigation container */
+  .bottom-nav-container {
+    display: flex;
+    justify-content: flex-end;
   }
-
-  .file-position {
-    white-space: nowrap;
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .top-nav-container,
+    .bottom-nav-container {
+      justify-content: center;
+    }
   }
 </style> 

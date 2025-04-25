@@ -20,7 +20,7 @@
   import MusicNotes from 'phosphor-svelte/lib/MusicNotes';
   import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
   import FolderOpen from 'phosphor-svelte/lib/FolderOpen';
-  import NavButtons from './NavButtons.svelte';
+  import SourcefileNavButtons from './SourcefileNavButtons.svelte';
   import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
   import { page } from '$app/stores';
   import type { SupabaseClient } from '@supabase/supabase-js';
@@ -578,7 +578,7 @@
     
     <div class="section navigation-section">
       <div class="section-divider"></div>
-      <NavButtons 
+      <SourcefileNavButtons 
         {navigation}
         {target_language_code}
         {sourcedir_slug}
