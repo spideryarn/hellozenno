@@ -31,9 +31,9 @@
   
   /**
    * Image source for card mode
-   * @default '/img/extern/github-mark.svg'
+   * @default '/img/extern/GitHub-logo.png'
    */
-  export let imageSrc: string = '/img/extern/github-mark.svg';
+  export let imageSrc: string = '/img/extern/GitHub-logo.png';
   
   /**
    * Image alt text for card mode
@@ -99,9 +99,9 @@
   
   .github-image {
     width: 80px;
-    background-color: white;
-    padding: 10px;
-    border-radius: 50%;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
   }
   
   .report-caption {
