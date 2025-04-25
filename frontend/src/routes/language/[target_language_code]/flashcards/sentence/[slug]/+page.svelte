@@ -3,6 +3,9 @@
   import Card from '$lib/components/Card.svelte';
   import KeyReturn from 'phosphor-svelte/lib/KeyReturn';
   import XCircle from 'phosphor-svelte/lib/XCircle';
+  import X from 'phosphor-svelte/lib/X';
+  import FunnelSimple from 'phosphor-svelte/lib/FunnelSimple';
+  import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
   import { getPageUrl } from '$lib/navigation';
   import { getApiUrl, apiFetch } from '$lib/api';
   import { page } from '$app/stores'; // Import page store for current URL
@@ -50,6 +53,25 @@
     } else {
       window.location.href = baseUrl;
     }
+  }
+  
+  // Navigate back to flashcards landing page while preserving query parameters
+  function navigateToFlashcards() {
+    const params = new URLSearchParams(window.location.search);
+    const baseUrl = `/language/${data.metadata.target_language_code}/flashcards`;
+    
+    if (params.toString()) {
+      window.location.href = `${baseUrl}?${params.toString()}`;
+    } else {
+      window.location.href = baseUrl;
+    }
+  }
+  
+  // Function to clear filter and navigate back to all flashcards
+  function clearFilter(event) {
+    event.preventDefault();
+    const baseUrl = `/language/${data.metadata.target_language_code}/flashcards/random`;
+    window.location.href = baseUrl;
   }
   
   // Function to ignore a lemma
@@ -139,28 +161,54 @@
   <div class="row justify-content-center">
     <div class="col-12 col-lg-10">
       <Card>
-        <div class="text-center mb-4">
-          <h2>{data.metadata.language_name} Flashcard</h2>
+        <!-- Header with title and back button in same row -->
+        <div class="d-flex align-items-center mb-4">
+          <button 
+            class="btn btn-outline-secondary back-button" 
+            on:click={navigateToFlashcards}
+            aria-label="Back to flashcards"
+            title="Back to flashcards">
+            <ArrowLeft size={20} weight="bold" />
+          </button>
           
-          {#if data.sourcefile}
-            <p class="text-muted">
-              From sourcefile: <a href={getPageUrl('sourcefile', {
-                target_language_code: data.metadata.target_language_code,
-                sourcedir_slug: data.sourcefile.sourcedir_slug,
-                sourcefile_slug: data.sourcefile.slug
-              })}>{data.sourcefile.name}</a>
-            </p>
-          {:else if data.sourcedir}
-            <p class="text-muted">
-              From sourcedir: <a href={getPageUrl('sourcedir', {
-                target_language_code: data.metadata.target_language_code,
-                sourcedir_slug: data.sourcedir.slug
-              })}>{data.sourcedir.name}</a>
-            </p>
-          {/if}
+          <h2 class="flex-grow-1 text-center mb-0">{data.metadata.language_name} Flashcard</h2>
+          
+          <!-- Empty div to balance the layout -->
+          <div style="width: 46px;"></div>
         </div>
         
-        <div class="row align-items-center mb-4">
+        <!-- Navigation buttons moved above audio player -->
+        <div class="row g-3 mb-4">
+          <!-- First row with left/right navigation -->
+          <div class="col-6">
+            <button 
+              class="btn btn-secondary w-100 py-3" 
+              on:click={currentStage === 1 ? playAudio : prevStage}
+              disabled={data.audio_requires_login}>
+              {currentStage === 1 ? 'Play audio (←)' : currentStage === 2 ? 'Play audio (←)' : 'Show sentence (←)'}
+            </button>
+          </div>
+          
+          <div class="col-6">
+            <button 
+              class="btn btn-secondary w-100 py-3" 
+              on:click={nextStage}
+              disabled={currentStage === 3}>
+              {currentStage === 1 ? 'Show sentence (→)' : currentStage === 2 ? 'Show translation (→)' : 'Next step (→)'}
+            </button>
+          </div>
+          
+          <!-- New sentence button on second row -->
+          <div class="col-12 mt-2">
+            <button 
+              class="btn btn-primary w-100 py-3" 
+              on:click={nextSentence}>
+              New sentence <KeyReturn size={18} weight="bold" class="ms-1" />
+            </button>
+          </div>
+        </div>
+        
+        <div class="row align-items-center mb-3">
           <div class="col-12">
             <!-- Audio player (always visible, but may be disabled) -->
             {#if data.audio_requires_login}
@@ -187,10 +235,11 @@
               />
             {/if}
             
+            
             <!-- Sentence (visible in stage 2+) -->
             {#if currentStage >= 2}
               <!-- Replaced alert with a styled div -->
-              <div class="flashcard-content-box border rounded p-4 mb-3 bg-body-tertiary">
+              <div class="flashcard-content-box border rounded p-4 mt-3 mb-3 bg-body-tertiary">
                 <h3 class="text-center font-weight-bold fs-2 mb-0">{data.text}</h3>
               </div>
             {/if}
@@ -249,39 +298,43 @@
           </div>
         </div>
         
-        <div class="row g-3 mt-3">
-          <!-- Navigation buttons -->
-          <div class="col-4">
-            <button 
-              class="btn btn-secondary w-100 py-3" 
-              on:click={currentStage === 1 ? playAudio : prevStage}
-              disabled={data.audio_requires_login}>
-              {currentStage === 1 ? 'Play audio (←)' : currentStage === 2 ? 'Play audio (←)' : 'Show sentence (←)'}
-            </button>
-          </div>
-          
-          <div class="col-4">
-            <button 
-              class="btn btn-primary w-100 py-3" 
-              on:click={nextSentence}>
-              New sentence <KeyReturn size={18} weight="bold" class="ms-1" />
-            </button>
-          </div>
-          
-          <div class="col-4">
-            <button 
-              class="btn btn-secondary w-100 py-3" 
-              on:click={nextStage}
-              disabled={currentStage === 3}>
-              {currentStage === 1 ? 'Show sentence (→)' : currentStage === 2 ? 'Show translation (→)' : 'Next step (→)'}
-            </button>
-          </div>
-        </div>
         
-        <div class="text-center mt-4">
-          <p class="text-muted small">
-            Press ← → arrow keys to navigate, ENTER for next sentence
+        <div class="text-center mt-3 mb-4">
+          <p class="text-muted small mb-4">
+            Press ← / → arrow keys to navigate, ENTER for next sentence
           </p>
+          
+          {#if data.sourcefile || data.sourcedir}
+            <div class="hz-filter-banner mx-auto" style="max-width: 600px;">
+              <span class="d-flex align-items-center me-2" title="This content is filtered to show sentences from a specific source">
+                <FunnelSimple size={24} weight="fill" />
+              </span>
+              <div>
+                <p class="mb-0">
+                  Filtered by {data.sourcedir ? 'directory' : 'file'}: 
+                  {#if data.sourcedir}
+                    <strong>
+                      <a href={getPageUrl('sourcedir', {
+                        target_language_code: data.metadata.target_language_code,
+                        sourcedir_slug: data.sourcedir.slug
+                      })} class="text-decoration-none">{data.sourcedir.name}</a>
+                    </strong>
+                  {:else if data.sourcefile}
+                    <strong>
+                      <a href={getPageUrl('sourcefile', {
+                        target_language_code: data.metadata.target_language_code,
+                        sourcedir_slug: data.sourcefile.sourcedir_slug,
+                        sourcefile_slug: data.sourcefile.slug
+                      })} class="text-decoration-none">{data.sourcefile.name}</a>
+                    </strong>
+                  {/if}
+                </p>
+              </div>
+              <button type="button" on:click={clearFilter} class="ms-auto btn btn-outline-secondary clear-filter d-flex align-items-center justify-content-center" aria-label="Clear filter" title="Remove filter">
+                <X size={18} weight="bold" />
+              </button>
+            </div>
+          {/if}
         </div>
       </Card>
     </div>
@@ -301,5 +354,33 @@
   /* Optional: Style for the content boxes if needed beyond Bootstrap */
   .flashcard-content-box {
     /* Add custom styles if bg-body-tertiary and border aren't enough */
+  }
+  
+  /* Clear filter button styling */
+  .clear-filter {
+    background-color: transparent;
+    border-color: var(--hz-color-border);
+    color: var(--hz-color-text-main);
+    width: 36px;
+    height: 36px;
+    padding: 0;
+  }
+  
+  .clear-filter:hover {
+    background-color: var(--hz-color-primary-green-dark);
+    border-color: var(--hz-color-primary-green);
+    color: var(--hz-color-text-main);
+  }
+  
+  /* Back button styling */
+  .back-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 8px;
   }
 </style> 
