@@ -4,9 +4,10 @@
   import KeyReturn from 'phosphor-svelte/lib/KeyReturn';
   import XCircle from 'phosphor-svelte/lib/XCircle';
   import { getPageUrl } from '$lib/navigation';
-import { getApiUrl, apiFetch } from '$lib/api';
+  import { getApiUrl, apiFetch } from '$lib/api';
   import { page } from '$app/stores'; // Import page store for current URL
   import Alert from '$lib/components/Alert.svelte'; // Import Alert
+  import { AudioPlayer } from '$lib';
   import { RouteName } from '$lib/generated/routes';
   
   export let data;
@@ -18,6 +19,7 @@ import { getApiUrl, apiFetch } from '$lib/api';
   let isIgnoring = false; // Track if we're currently ignoring a lemma
   let ignoreError = ''; // Store any error messages during ignore operation
   let ignoreSuccess = ''; // Store success message after ignoring
+  let audioPlayer;
   
   function nextStage() {
     if (currentStage < 3) {
@@ -26,15 +28,8 @@ import { getApiUrl, apiFetch } from '$lib/api';
   }
   
   function playAudio() {
-    const audioElement = document.getElementById('audio-player') as HTMLAudioElement;
-    if (audioElement) {
-      // Only restart if audio is not currently playing
-      if (audioElement.paused || audioElement.ended) {
-        audioElement.currentTime = 0; // Restart from beginning
-        audioElement.play().catch(err => {
-          console.error('Failed to play audio:', err);
-        });
-      }
+    if (audioPlayer && !data.audio_requires_login) {
+      audioPlayer.play();
     }
   }
 
@@ -127,16 +122,6 @@ import { getApiUrl, apiFetch } from '$lib/api';
   }
   
   onMount(() => {
-    // Autoplay audio on load ONLY if login is not required
-    if (!data.audio_requires_login) {
-      const audioElement = document.getElementById('audio-player') as HTMLAudioElement;
-      if (audioElement) {
-        audioElement.play().catch(err => {
-          console.error('Failed to autoplay audio:', err);
-        });
-      }
-    }
-    
     // Add keyboard event listener
     window.addEventListener('keydown', handleKeyDown);
     
@@ -183,10 +168,23 @@ import { getApiUrl, apiFetch } from '$lib/api';
                 Audio generation requires login.
                 <a href={loginUrl} class="btn btn-sm btn-primary ms-2">Login</a>
               </Alert>
-              <!-- Render a disabled-looking player without controls -->
-              <audio id="audio-player" src={data.audio_url} class="w-100 mb-3" style="opacity: 0.5; pointer-events: none;"></audio>
+              <div class="w-100 mb-3" style="opacity: 0.5; pointer-events: none;">
+                <AudioPlayer 
+                  src={data.audio_url}
+                  showControls={false}
+                  showSpeedControls={false}
+                  showDownload={false}
+                />
+              </div>
             {:else}
-              <audio id="audio-player" src={data.audio_url} controls class="w-100 mb-3"></audio>
+              <AudioPlayer
+                bind:this={audioPlayer}
+                src={data.audio_url}
+                autoplay={true}
+                showControls={true}
+                showSpeedControls={true}
+                showDownload={false}
+              />
             {/if}
             
             <!-- Sentence (visible in stage 2+) -->

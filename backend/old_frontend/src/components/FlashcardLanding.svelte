@@ -52,9 +52,10 @@
       Each flashcard has three stages:
     </p>
     <ol>
-      <li>Listen to the audio</li>
-      <li>View the {targetLanguageName} sentence</li>
-      <li>See the translation</li>
+      <li>Listen to the audio (multiple times if you want)</li>
+      <li>Show the {targetLanguageName} sentence to see if you heard it right</li>
+      <li>You can reveal the translation</li>
+      <li>... Then move on to the next sentence</li>
     </ol>
     
     <p class="keyboard-hints">

@@ -3,6 +3,8 @@
   import Card from '$lib/components/Card.svelte';
   import { getPageUrl } from '$lib/navigation';
   import { SITE_NAME } from '$lib/config';
+  import X from 'phosphor-svelte/lib/X';
+  import FunnelSimple from 'phosphor-svelte/lib/FunnelSimple';
   
   export let data;
   
@@ -32,6 +34,12 @@
   }
   
   let startUrl = getStartUrl();
+  
+  // Function to clear filter and navigate
+  function clearFilter(event) {
+    event.preventDefault();
+    window.location.href = `/language/${target_language_code}/flashcards`;
+  }
   
   // Handle keyboard events
   function handleKeyDown(event: KeyboardEvent) {
@@ -80,7 +88,9 @@
         <!-- Source filter banner -->
         {#if sourcefile || sourcedir}
           <div class="hz-filter-banner mb-4">
-            <i class="bi bi-filter me-2"></i>
+            <span class="d-flex align-items-center me-2" title="This content is filtered to show words from a specific source">
+              <FunnelSimple size={24} weight="fill" />
+            </span>
             <div>
               <p class="mb-1">
                 Filtered by {sourcedir ? 'directory' : 'file'}: 
@@ -89,7 +99,7 @@
                     <a href={getPageUrl('sourcedir', {
                       target_language_code: target_language_code,
                       sourcedir_slug: sourcedir.slug
-                    })} class="text-light">{sourcedir.name}</a>
+                    })} class="text-decoration-none">{sourcedir.name}</a>
                   </strong>
                 {:else if sourcefile}
                   <strong>
@@ -97,7 +107,7 @@
                       target_language_code: target_language_code,
                       sourcedir_slug: sourcefile.sourcedir_slug,
                       sourcefile_slug: sourcefile.slug
-                    })} class="text-light">{sourcefile.name}</a>
+                    })} class="text-decoration-none">{sourcefile.name}</a>
                   </strong>
                 {/if}
               </p>
@@ -105,12 +115,21 @@
                 <p class="mb-0 small text-muted">({lemma_count} unique words)</p>
               {/if}
             </div>
-            <a href={`/language/${target_language_code}/flashcards`} class="ms-auto btn btn-sm btn-outline-secondary clear-filter">
-              <i class="bi bi-x"></i>
-            </a>
+            <button type="button" on:click={clearFilter} class="ms-auto btn btn-outline-secondary clear-filter d-flex align-items-center justify-content-center" aria-label="Clear filter" title="Remove filter">
+              <X size={18} weight="bold" />
+            </button>
           </div>
         {/if}
         
+        <!-- Start button - moved up for better visibility on mobile -->
+        <div class="start-button-container d-grid gap-2 col-md-8 mx-auto mb-4">
+          <div class="start-button-wrapper p-3 text-center">
+            <a href={startUrl} class="btn hz-start-button" tabindex="0">
+              Start Flashcards <span class="ms-1 shortcut-hint">(Enter)</span>
+            </a>
+          </div>
+        </div>
+
         <div class="flashcard-description mb-4">
           <p>
             Practice your <span class="hz-language-name">{language_name}</span> vocabulary with interactive flashcards.
@@ -124,18 +143,18 @@
         </div>
         
         <div class="hz-keyboard-hints mb-4">
-          <p>
-            <strong>Keyboard shortcuts:</strong><br>
-            <span class="hz-key">←</span> Previous stage 
-            <span class="hz-key">→</span> Next stage
-            <span class="hz-key">Enter</span> New sentence
-          </p>
-        </div>
-        
-        <div class="start-button-container d-grid gap-2 col-md-8 mx-auto mt-4">
-          <a href={startUrl} class="btn hz-start-button" tabindex="0">
-            Start Flashcards <span class="ms-1 shortcut-hint">(Enter)</span>
-          </a>
+          <h5>Keyboard shortcuts:</h5>
+          <div class="d-flex justify-content-center gap-4 flex-wrap">
+            <div class="shortcut-item">
+              <span class="hz-key">←</span> Previous stage
+            </div>
+            <div class="shortcut-item">
+              <span class="hz-key">→</span> Next stage
+            </div>
+            <div class="shortcut-item">
+              <span class="hz-key hz-key-enter">Enter</span> New sentence
+            </div>
+          </div>
         </div>
       </Card>
     </div>
@@ -181,23 +200,41 @@
   }
   
   .hz-keyboard-hints {
-    background-color: rgba(76, 173, 83, 0.1);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
     border-radius: 8px;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     margin-top: 1.5rem;
+  }
+  
+  .hz-keyboard-hints h5 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 600;
   }
   
   .hz-key {
     display: inline-block;
     padding: 0.15rem 0.4rem;
-    margin: 0 0.25rem;
-    border: 1px solid #4CAD53;
+    margin-right: 0.5rem;
+    border: 1px solid var(--hz-color-primary-green);
     border-radius: 0.25rem;
-    background-color: rgba(76, 173, 83, 0.2);
-    color: #e9e9e9;
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.15);
+    color: var(--hz-color-text-main);
     font-size: 0.9rem;
     font-family: monospace;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    min-width: 2rem;
+    text-align: center;
+  }
+  
+  .shortcut-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+  }
+  
+  .hz-key-enter {
+    min-width: 3.5rem;
   }
   
   .shortcut-hint {
@@ -205,49 +242,51 @@
     opacity: 0.7;
   }
   
-  .hz-filter-banner {
-    background-color: rgba(217, 122, 39, 0.1);
-    border: 1px solid rgba(217, 122, 39, 0.3);
-    color: #e9e9e9;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-  }
+  /* Using global .hz-filter-banner class from theme.css */
   
   .clear-filter {
-    background-color: rgba(217, 122, 39, 0.2);
-    border-color: rgba(217, 122, 39, 0.4);
-    color: #e9e9e9;
+    background-color: transparent;
+    border-color: var(--hz-color-border);
+    color: var(--hz-color-text-main);
+    width: 36px;
+    height: 36px;
+    padding: 0;
   }
   
   .clear-filter:hover {
-    background-color: rgba(217, 122, 39, 0.3);
-    border-color: rgba(217, 122, 39, 0.5);
-    color: #fff;
+    background-color: var(--hz-color-primary-green-dark);
+    border-color: var(--hz-color-primary-green);
+    color: var(--hz-color-text-main);
   }
 
   .hz-start-button {
-    background-color: #4CAD53;
-    color: #121212;
+    background-color: var(--hz-color-primary-green);
+    color: white;
     font-weight: 600;
-    font-size: 1.1rem;
-    padding: 0.75rem 1.5rem;
+    font-size: 1.2rem;
+    padding: 1rem 1.5rem;
     border-radius: 8px;
     border: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--hz-shadow-primary-green);
     transition: all 0.2s ease;
+    margin-top: 0.5rem;
   }
   
   .hz-start-button:hover {
-    background-color: #5abe61;
+    background-color: var(--hz-color-primary-green-light);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    color: #121212;
+    box-shadow: var(--hz-shadow-primary-green-lg);
+    color: white;
   }
   
   .hz-start-button:active {
     transform: translateY(0);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  .start-button-wrapper {
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.08);
+    border-radius: 12px;
+    /* Removed dashed border */
   }
 </style> 

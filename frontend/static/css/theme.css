@@ -90,12 +90,14 @@ h6 {
     background-color: var(--bs-secondary);
     border-color: var(--bs-secondary);
     transition: all 0.2s;
+    color: #333333;
 }
 
 .btn-secondary:hover {
     background-color: rgba(208, 192, 232, 0.85);
     border-color: rgba(208, 192, 232, 0.85);
     transform: translateY(-1px);
+    color: #222222;
 }
 
 .btn-success {
@@ -343,6 +345,37 @@ h6 {
 .hz-badge-duration {
     background-color: var(--hz-color-badge-duration);
     color: white;
+}
+
+/* Filter banner styling */
+.hz-filter-banner {
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.05);
+    border-left: 3px solid var(--hz-color-primary-green-dark);
+    border-top: 1px solid var(--hz-color-border);
+    border-right: 1px solid var(--hz-color-border);
+    border-bottom: 1px solid var(--hz-color-border);
+    color: var(--hz-color-text-main);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hz-filter-banner:hover {
+    border-left-color: var(--hz-color-primary-green);
+    border-top-color: var(--hz-color-primary-green);
+    border-right-color: var(--hz-color-primary-green);
+    border-bottom-color: var(--hz-color-primary-green);
+    box-shadow: var(--hz-shadow-primary-green);
+}
+
+.hz-filter-banner a {
+    color: var(--hz-color-primary-green);
+}
+
+.hz-filter-banner a:hover {
+    color: var(--hz-color-primary-green-light);
 }
 
 /* Card header styling for different types */
