@@ -190,12 +190,16 @@
           </div>
           
           <div class="col-6">
-            <button 
-              class="btn btn-secondary w-100 py-3" 
-              on:click={nextStage}
-              disabled={currentStage === 3}>
-              {currentStage === 1 ? 'Show sentence (→)' : currentStage === 2 ? 'Show translation (→)' : 'Next step (→)'}
-            </button>
+            {#if currentStage < 3}
+              <button 
+                class="btn btn-secondary w-100 py-3" 
+                on:click={nextStage}>
+                {currentStage === 1 ? 'Show sentence (→)' : 'Show translation (→)'}
+              </button>
+            {:else}
+              <!-- No button shown on final stage -->
+              <div class="invisible w-100 py-3"></div>
+            {/if}
           </div>
           
           <!-- New sentence button on second row -->
