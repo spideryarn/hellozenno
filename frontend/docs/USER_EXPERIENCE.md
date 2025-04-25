@@ -22,19 +22,11 @@ Implementation:
 </div>
 ```
 
+For ARIA attributes and accessibility guidelines for modals, see [STYLING.md](./STYLING.md#accessibility-guidelines).
+
 ### Loading States
 
-- Show loading spinners during API operations using Phosphor icons:
-  ```svelte
-  import { Spinner } from 'phosphor-svelte';
-  
-  {#if isLoading}
-    <span class="me-2"><Spinner size={16} weight="bold" /></span>
-    Loading...
-  {:else}
-    Submit
-  {/if}
-  ```
+- Show loading spinners during API operations - see `LoadingSpinner.svelte`
 
 ### Form Validation
 
@@ -48,6 +40,8 @@ Implementation:
   ```
 
 ### Input Focus
+
+If there's an obvious focus either when the page loads or because some new action has been taken then make use of auto focus. 
 
 - Use a Svelte action for auto-focusing elements when they're mounted:
   ```svelte
@@ -66,6 +60,8 @@ Implementation:
   <!-- Usage in a component -->
   <input type="text" use:focusOnMount>
   ```
+
+For accessibility considerations when using autofocus, see [STYLING.md](./STYLING.md#accessibility-guidelines).
 
 ### Preventing Double Submission
 
@@ -90,20 +86,53 @@ Implementation:
 
 ## Icons and Buttons
 
-- Use Phosphor icons for consistency:
-  ```svelte
-  import { Trash } from 'phosphor-svelte';
-  
-  <button class="btn btn-outline-danger">
-    <Trash size={16} weight="bold" class="me-1" /> Delete
-  </button>
-  ```
-
 - Add tooltips to icon-only buttons for clarity:
   ```svelte
   <button title="Delete this item">
     <Trash size={16} />
   </button>
+  ```
+
+- For icon library information, common icons, and Svelte 5 import syntax, see [STYLING.md](./STYLING.md#icons).
+
+- Use icons with buttons for better clarity:
+  ```svelte
+  <button class="btn btn-outline-danger">
+    <Trash size={16} weight="bold" class="me-1" /> Delete
+  </button>
+  ```
+
+## Links and Navigation
+
+- Use proper `<a>` elements with `href` attributes instead of buttons with click handlers for navigation:
+  ```svelte
+  <!-- Good - supports Cmd/Ctrl+click to open in new tab -->
+  <a href={`/path/to/page${$page.url.search}`} class="btn btn-primary">
+    Go to Page
+  </a>
+  
+  <!-- Avoid - doesn't support Cmd/Ctrl+click behavior -->
+  <button on:click={() => navigateToPage()} class="btn btn-primary">
+    Go to Page
+  </button>
+  ```
+
+- When preserving query parameters is needed, use `$page.url.search`:
+  ```svelte
+  <a href={`/path/to/page${$page.url.search}`}>Link with query params</a>
+  ```
+
+- For programmatic navigation with query parameters and proper Cmd/Ctrl+click handling:
+  ```svelte
+  function handleClick(event) {
+    // Don't override Cmd/Ctrl+click default behavior
+    if (event.metaKey || event.ctrlKey) return;
+    
+    event.preventDefault();
+    // Handle navigation here
+  }
+  
+  <a href="/path" on:click={handleClick}>Link</a>
   ```
 
 See [STYLING.md](./STYLING.md) for more information on component styling and theme usage.

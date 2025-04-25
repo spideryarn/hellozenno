@@ -162,6 +162,8 @@ Common icons used throughout the application:
 - `size`: Controls the icon size (typically 16px for small icons, 24px for navigation icons)
 - `weight`: Icon style variants: "regular" (default), "bold", "fill", "duotone", "thin", "light"
 
+For icon usage in buttons with tooltips and accessibility best practices, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md#icons-and-buttons).
+
 ## Button Styling
 
 ### Primary Buttons
@@ -242,29 +244,13 @@ Use subtle animations to enhance user experience without being distracting:
        <h5 id="modal-title">Modal Title</h5>
      </div>
      ```
-   - **Keyboard Shortcuts:** Implement common shortcuts like `Escape` to close and `Enter` (or `Ctrl+Enter` for multi-line inputs) to submit the primary action, attached to the modal content element. Ensure event propagation is stopped (`|stopPropagation`) if necessary.
+   - For modal keyboard shortcuts and user interaction patterns, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md#modal-dialogs).
 
 4. Form elements and focus management:
-   - When using autofocus (which is sometimes necessary for a good UX), add a svelte-ignore comment to avoid accessibility warnings
-   - Example:
-     ```svelte
-     <script>
-       import { onMount } from 'svelte';
-       let input;
-       export let autofocus = false;
-       
-       onMount(() => {
-         if (autofocus && input) {
-           input.focus();
-         }
-       });
-     </script>
-     
-     <!-- svelte-ignore a11y_autofocus -->
-     <input bind:this={input} />
-     ```
+   - When using autofocus, add a svelte-ignore comment to avoid accessibility warnings
    - Prefer making autofocus configurable via props rather than hardcoded
    - Ensure autofocus is only used on the main content area of a page, not in modals or popups
+   - For implementation patterns and best practices for autofocus, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md#input-focus)
 
 ## How to Use
 
