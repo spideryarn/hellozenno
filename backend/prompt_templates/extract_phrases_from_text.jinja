@@ -2,6 +2,15 @@ You are a {{ target_language_name }} language expert. For the following text, id
 
 Only include *multiple*-word expressions that are idiomatic, common, and where the meaning isn't at all obvious from the individual words. In other words, don't include single words, simple word combinations, or literal phrases.
 
+{% if ignore_phrases %}
+Ignore these phrases which have already been identified:
+{% for phrase in ignore_phrases %}
+- {{ phrase }}
+{% endfor %}
+{% endif %}
+
+If you think there are no more such phrases to find, it's okay to return an empty list.
+
 <text>
 {{ txt_tgt }}
 </text>

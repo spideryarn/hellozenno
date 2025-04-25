@@ -413,6 +413,7 @@ def ensure_tricky_phrases(
     sourcefile_entry: Sourcefile,
     language_level: LanguageLevel,
     max_new_phrases: Optional[int],
+    verbose: int = 0,
 ):
     """Extract tricky phrases from text."""
     extra = locals()
@@ -429,6 +430,7 @@ def ensure_tricky_phrases(
         language_level=language_level,
         max_new_phrases=max_new_phrases,
         sourcefile_entry=sourcefile_entry,
+        verbose=verbose,
     )
     extra.update({"phrases_extra": phrases_extra})
     return sourcefile_entry, extra
@@ -608,6 +610,7 @@ def process_sourcefile(
     language_level: LanguageLevel,
     max_new_words: Optional[int],
     max_new_phrases: Optional[int],
+    verbose: int = 0,
 ):
     """
     If MAX_NEW_WORDS or MAX_NEW_PHRASES is 0, skip. If None, then there is no max.
@@ -632,6 +635,7 @@ def process_sourcefile(
         sourcefile_entry,
         language_level=language_level,
         max_new_phrases=max_new_phrases,
+        verbose=verbose,
     )
 
 

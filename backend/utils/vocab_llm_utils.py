@@ -403,9 +403,22 @@ def extract_phrases_from_text(
     target_language_name: str,
     language_level: Optional[str] = None,
     max_new_phrases: Optional[int] = None,
-    verbose: int = 1,
+    ignore_phrases: list[str] | None = None,
+    verbose: int = 0,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Extract idiomatic phrases and expressions from text."""
+    """Extract idiomatic phrases and expressions from text.
+    
+    Args:
+        txt: Text to analyze in target language
+        target_language_name: Full name of target language (e.g. "Greek")
+        language_level: Optional language level (e.g. "intermediate")
+        max_new_phrases: Optional maximum number of phrases to extract
+        ignore_phrases: Optional list of phrase canonical forms to ignore
+        verbose: Verbosity level
+        
+    Returns:
+        Tuple of (phrases_dict, extra_info)
+    """
     if not txt.strip() or txt.strip() == "-":
         return {}, {}
 
@@ -417,6 +430,7 @@ def extract_phrases_from_text(
             "target_language_name": target_language_name,
             "language_level": language_level,
             "max_new_phrases": max_new_phrases,
+            "ignore_phrases": ignore_phrases or [],
         },
         response_json=True,
         verbose=verbose,
@@ -927,6 +941,7 @@ def process_phrases_from_text(
     language_level: Optional[str],
     max_new_phrases: Optional[int],
     sourcefile_entry=None,
+    verbose: int = 0,
 ) -> list[dict]:
     """Extract and store phrases from text.
 
@@ -936,14 +951,29 @@ def process_phrases_from_text(
         target_language_code: Language code (e.g. "el")
         sourcefile_entry: Optional sourcefile entry to link phrases to
         language_level: Optional language level
+        max_new_phrases: Optional maximum number of phrases to extract
         verbose: Verbosity level
 
     Returns:
         List of phrase dictionaries
     """
-    # Extract phrases
+    # Get existing phrases if we have a sourcefile
+    existing_phrases = []
+    if sourcefile_entry is not None:
+        for phrase_entry in SourcefilePhrase.select().where(
+            SourcefilePhrase.sourcefile == sourcefile_entry
+        ):
+            if phrase_entry.phrase and phrase_entry.phrase.canonical_form:
+                existing_phrases.append(phrase_entry.phrase.canonical_form)
+    
+    # Extract phrases, ignoring existing ones
     phrases_d_orig, _ = extract_phrases_from_text(
-        txt, target_language_name, language_level, max_new_phrases
+        txt, 
+        target_language_name, 
+        language_level, 
+        max_new_phrases,
+        ignore_phrases=existing_phrases,
+        verbose=verbose
     )
     phrases_d = phrases_d_orig.get("phrases", [])
 
