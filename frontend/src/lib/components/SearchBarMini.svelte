@@ -60,6 +60,10 @@
       if (searchInput) {
         searchInput.focus();
       }
+      // Auto-trigger search if there's text pasted
+      if (text.trim()) {
+        handleSearch(new Event('click') as unknown as MouseEvent);
+      }
     } catch (error) {
       console.error('Failed to read clipboard:', error);
     }
