@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Sentence, SentenceMetadata } from '$lib/types';
-  import { MetadataCard } from '$lib';
+  import { MetadataCard, AudioPlayer } from '$lib';
   import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { goto } from '$app/navigation';
@@ -12,17 +12,8 @@
   export let enhanced_sentence_text: string = '';
   
   // State for audio player
-  let audioPlayer: HTMLAudioElement;
-  let currentPlaybackRate: number = 1.0;
+  let audioPlayer;
   let isDeleting = false;
-  
-  // Function to set playback rate
-  function setPlaybackRate(rate: number) {
-    if (audioPlayer) {
-      audioPlayer.playbackRate = rate;
-      currentPlaybackRate = rate;
-    }
-  }
   
   // Generate the audio URL using type-safe route resolution
   const audioUrl = getApiUrl(RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API, {
@@ -108,35 +99,13 @@
       <!-- Audio Section -->
       {#if sentence.has_audio}
         <div class="mt-4">
-          <audio
+          <AudioPlayer 
             bind:this={audioPlayer}
-            controls
             src={audioUrl}
-            class="w-100 mb-2"
-          >
-            Your browser does not support the audio element.
-          </audio>
-          
-          <div class="d-flex gap-2">
-            <button 
-              class="btn btn-sm {currentPlaybackRate === 0.85 ? 'btn-primary' : 'btn-outline-secondary'}" 
-              on:click={() => setPlaybackRate(0.9)}
-            >
-              0.9x
-            </button>
-            <button 
-              class="btn btn-sm {currentPlaybackRate === 1.0 ? 'btn-primary' : 'btn-outline-secondary'}" 
-              on:click={() => setPlaybackRate(1.0)}
-            >
-              1.0x
-            </button>
-            <button 
-              class="btn btn-sm {currentPlaybackRate === 1.2 ? 'btn-primary' : 'btn-outline-secondary'}" 
-              on:click={() => setPlaybackRate(1.2)}
-            >
-              1.2x
-            </button>
-          </div>
+            showControls={true}
+            showSpeedControls={true}
+            showDownload={false}
+          />
         </div>
       {/if}
     </div>

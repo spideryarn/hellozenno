@@ -1,6 +1,7 @@
 // place files you want to import through the `$lib` alias in this folder.
 
 // Re-export components for easy imports
+export { default as AudioPlayer } from "./components/AudioPlayer.svelte";
 export { default as Card } from "./components/Card.svelte";
 export { default as Sentence } from "./components/Sentence.svelte";
 export { default as SourceItem } from "./components/SourceItem.svelte";
