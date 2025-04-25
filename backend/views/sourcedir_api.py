@@ -300,6 +300,11 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                 print(f"DEBUG: Creating sourcefile with filename {filename}")
 
                 # Determine file type and set appropriate fields
+                # Initialize description variable for all file types
+                description = None
+                if "description" in metadata and metadata["description"] is not None:
+                    description = metadata["description"]
+                    
                 if filename.endswith(".mp3"):
                     sourcefile_type = "audio"
                     image_data = None
@@ -311,21 +316,11 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                     audio_data = None
                     # For text files, we use the file content directly as text_target
                     text_target = file_content.decode("utf-8").strip()
-
-                    # If there's a description in metadata, set it on the sourcefile
-                    if (
-                        "description" in metadata
-                        and metadata["description"] is not None
-                    ):
-                        description = metadata["description"]
-                    else:
-                        description = None
                 else:
                     sourcefile_type = "image"
                     image_data = file_content
                     audio_data = None
                     text_target = ""  # Will be populated during processing
-                    description = None
 
                 sourcefile = Sourcefile.create(
                     sourcedir=sourcedir_entry,
