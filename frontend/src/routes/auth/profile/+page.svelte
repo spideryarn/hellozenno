@@ -93,6 +93,7 @@
             <select 
                 id="targetLanguage" 
                 class="form-select" 
+                style="max-width: 400px;" 
                 bind:value={selectedLanguage} 
                 disabled={isLoading}
             >
