@@ -92,7 +92,7 @@
       // Navigate to the renamed directory page
       const newSourcedirUrl = getPageUrl('sourcedir', {
         target_language_code,
-        sourcedir_slug: result.new_slug // Assuming API returns new slug
+        sourcedir_slug: result.slug // API returns slug, not new_slug
       });
       window.location.href = newSourcedirUrl; // Force reload
 
