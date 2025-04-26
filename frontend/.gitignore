@@ -24,3 +24,8 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 *storybook.log
+
+# Sitemaps
+/static/sitemaps/sitemap-generated-*.xml
+/static/sitemap.xml
+

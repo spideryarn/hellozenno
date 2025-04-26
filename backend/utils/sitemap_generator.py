@@ -1,23 +1,24 @@
 #!/usr/bin/env python
 """Generate XML sitemaps for HelloZenno, including a sitemap index and content-specific sitemaps."""
 
-import argparse
-import os
-import sys
 from datetime import datetime
 from pathlib import Path
 
 from loguru import logger
 from gjdutils.strings import jinja_render
 
-# Import Peewee models and database connection
+# Import Peewee models
 from db_models import Phrase, Sourcefile, Sourcedir
-from utils.db_connection import db
+from utils.db_connection import init_db, database
 from utils.env_config import VITE_FRONTEND_URL as SITE_URL
 
 # Constants
 FRONTEND_STATIC_DIR = Path(__file__).parent.parent.parent / "frontend" / "static"
+SITEMAPS_DIR = FRONTEND_STATIC_DIR / "sitemaps"
 MAX_URLS_PER_SITEMAP = 50000
+
+# Ensure the sitemaps directory exists
+SITEMAPS_DIR.mkdir(exist_ok=True)
 
 # Jinja templates for sitemap generation
 SITEMAP_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
@@ -25,9 +26,7 @@ SITEMAP_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 {% for item in items %}
   <url>
     <loc>{{ site_url }}/language/{{ lang_code }}/{{ content_type }}/{{ item.url_param }}</loc>
-    {% if item.lastmod %}
-    <lastmod>{{ item.lastmod }}</lastmod>
-    {% endif %}
+    {% if item.lastmod %}<lastmod>{{ item.lastmod }}</lastmod>{% endif %}
     <changefreq>{{ changefreq }}</changefreq>
     <priority>{{ priority }}</priority>
   </url>
@@ -37,7 +36,7 @@ SITEMAP_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 SITEMAP_INDEX_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>{{ site_url }}/sitemap-static.xml</loc>
+    <loc>{{ site_url }}/sitemaps/sitemap-static.xml</loc>
     <lastmod>{{ today }}</lastmod>
   </sitemap>
 {% for sitemap in sitemaps %}
@@ -53,6 +52,7 @@ def fetch_available_languages() -> list[dict]:
     """Fetch list of available languages from the configuration."""
     try:
         from utils.lang_utils import get_all_languages
+
         return get_all_languages()
     except Exception as e:
         logger.error(f"Error fetching languages: {e}")
@@ -63,11 +63,11 @@ def fetch_phrases_for_language(lang_code: str) -> list[dict]:
     """Fetch phrases for a specific language."""
     try:
         phrases = []
+        
+        # Use the target_language_code field on Phrase directly instead of joining
         query = (
             Phrase.select(Phrase.slug, Phrase.updated_at)
-            .join(Sourcefile)
-            .join(Sourcedir)
-            .where(Sourcedir.target_language_code == lang_code)
+            .where(Phrase.target_language_code == lang_code)
             .order_by(Phrase.updated_at.desc())
         )
 
@@ -122,13 +122,14 @@ def fetch_sentences_for_language(lang_code: str) -> list[dict]:
 def generate_phrase_sitemap(language: dict) -> str:
     """Generate a phrases sitemap for a specific language."""
     lang_code = language["code"]
-    filename = f"sitemap-{lang_code}-phrases.xml"
-    filepath = FRONTEND_STATIC_DIR / filename
+    filename = f"sitemap-generated-{lang_code}-phrases.xml"
+    filepath = SITEMAPS_DIR / filename
+    relative_path = f"sitemaps/{filename}"
 
     phrases = fetch_phrases_for_language(lang_code)
 
     if not phrases:
-        logger.warning(f"No phrases found for language: {lang_code}")
+        # Silently skip if no phrases found
         return ""
 
     logger.info(
@@ -139,11 +140,17 @@ def generate_phrase_sitemap(language: dict) -> str:
         # Prepare data for template rendering
         items = []
         for phrase in phrases:
-            items.append({
-                "url_param": phrase["slug"],
-                "lastmod": phrase["updated_at"].strftime("%Y-%m-%d") if phrase["updated_at"] else ""
-            })
-        
+            items.append(
+                {
+                    "url_param": phrase["slug"],
+                    "lastmod": (
+                        phrase["updated_at"].strftime("%Y-%m-%d")
+                        if phrase["updated_at"]
+                        else ""
+                    ),
+                }
+            )
+
         # Render the template
         sitemap_content = jinja_render(
             SITEMAP_TEMPLATE,
@@ -153,15 +160,15 @@ def generate_phrase_sitemap(language: dict) -> str:
                 "lang_code": lang_code,
                 "content_type": "phrase",
                 "changefreq": "monthly",
-                "priority": "0.6"
-            }
+                "priority": "0.6",
+            },
         )
-        
+
         # Write to file
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(sitemap_content)
 
-        return filename
+        return relative_path
     except Exception as e:
         logger.error(f"Error writing phrases sitemap for {lang_code}: {e}")
         return ""
@@ -173,7 +180,7 @@ def generate_lemma_sitemap(language: dict) -> list[str]:
     lemmas = fetch_lemmas_for_language(lang_code)
 
     if not lemmas:
-        logger.warning(f"No lemmas found for language: {lang_code}")
+        # Silently skip if no lemmas found
         return []
 
     # Determine if we need to paginate
@@ -188,8 +195,9 @@ def generate_lemma_sitemap(language: dict) -> list[str]:
 
     for page in range(page_count):
         page_suffix = f"-{page+1}" if page_count > 1 else ""
-        filename = f"sitemap-{lang_code}-lemmas{page_suffix}.xml"
-        filepath = FRONTEND_STATIC_DIR / filename
+        filename = f"sitemap-generated-{lang_code}-lemmas{page_suffix}.xml"
+        filepath = SITEMAPS_DIR / filename
+        relative_path = f"sitemaps/{filename}"
 
         start_idx = page * MAX_URLS_PER_SITEMAP
         end_idx = min(start_idx + MAX_URLS_PER_SITEMAP, total_lemmas)
@@ -199,11 +207,17 @@ def generate_lemma_sitemap(language: dict) -> list[str]:
             # Prepare data for template rendering
             items = []
             for lemma in page_lemmas:
-                items.append({
-                    "url_param": lemma["lemma"],
-                    "lastmod": lemma["updated_at"].strftime("%Y-%m-%d") if lemma["updated_at"] else ""
-                })
-            
+                items.append(
+                    {
+                        "url_param": lemma["lemma"],
+                        "lastmod": (
+                            lemma["updated_at"].strftime("%Y-%m-%d")
+                            if lemma["updated_at"]
+                            else ""
+                        ),
+                    }
+                )
+
             # Render the template
             sitemap_content = jinja_render(
                 SITEMAP_TEMPLATE,
@@ -213,15 +227,15 @@ def generate_lemma_sitemap(language: dict) -> list[str]:
                     "lang_code": lang_code,
                     "content_type": "lemma",
                     "changefreq": "monthly",
-                    "priority": "0.7"
-                }
+                    "priority": "0.7",
+                },
             )
-            
+
             # Write to file
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(sitemap_content)
 
-            generated_filenames.append(filename)
+            generated_filenames.append(relative_path)
             logger.info(
                 f"Generated lemma sitemap page {page+1}/{page_count} with {len(page_lemmas)} lemmas"
             )
@@ -237,13 +251,14 @@ def generate_lemma_sitemap(language: dict) -> list[str]:
 def generate_sentence_sitemap(language: dict) -> str:
     """Generate a sentences sitemap for a specific language."""
     lang_code = language["code"]
-    filename = f"sitemap-{lang_code}-sentences.xml"
-    filepath = FRONTEND_STATIC_DIR / filename
+    filename = f"sitemap-generated-{lang_code}-sentences.xml"
+    filepath = SITEMAPS_DIR / filename
+    relative_path = f"sitemaps/{filename}"
 
     sentences = fetch_sentences_for_language(lang_code)
 
     if not sentences:
-        logger.warning(f"No sentences found for language: {lang_code}")
+        # Silently skip if no sentences found
         return ""
 
     logger.info(
@@ -254,11 +269,17 @@ def generate_sentence_sitemap(language: dict) -> str:
         # Prepare data for template rendering
         items = []
         for sentence in sentences:
-            items.append({
-                "url_param": sentence["slug"],
-                "lastmod": sentence["updated_at"].strftime("%Y-%m-%d") if sentence["updated_at"] else ""
-            })
-        
+            items.append(
+                {
+                    "url_param": sentence["slug"],
+                    "lastmod": (
+                        sentence["updated_at"].strftime("%Y-%m-%d")
+                        if sentence["updated_at"]
+                        else ""
+                    ),
+                }
+            )
+
         # Render the template
         sitemap_content = jinja_render(
             SITEMAP_TEMPLATE,
@@ -268,15 +289,15 @@ def generate_sentence_sitemap(language: dict) -> str:
                 "lang_code": lang_code,
                 "content_type": "sentence",
                 "changefreq": "monthly",
-                "priority": "0.5"
-            }
+                "priority": "0.5",
+            },
         )
-        
+
         # Write to file
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(sitemap_content)
 
-        return filename
+        return relative_path
     except Exception as e:
         logger.error(f"Error writing sentences sitemap for {lang_code}: {e}")
         return ""
@@ -290,21 +311,17 @@ def update_sitemap_index(sitemap_files: list[str]) -> None:
     try:
         # Filter out empty filenames
         valid_sitemaps = [sitemap for sitemap in sitemap_files if sitemap]
-        
+
         # Render the index template
         sitemap_index_content = jinja_render(
             SITEMAP_INDEX_TEMPLATE,
-            {
-                "sitemaps": valid_sitemaps,
-                "site_url": SITE_URL,
-                "today": today
-            }
+            {"sitemaps": valid_sitemaps, "site_url": SITE_URL, "today": today},
         )
-        
+
         # Write to file
         with open(index_path, "w", encoding="utf-8") as f:
             f.write(sitemap_index_content)
-            
+
         logger.info(f"Updated sitemap index with {len(valid_sitemaps)} sitemaps")
     except Exception as e:
         logger.error(f"Error updating sitemap index: {e}")
@@ -314,8 +331,12 @@ def generate_sitemaps():
     """Main function to generate all sitemaps."""
     logger.info("Starting sitemap generation")
 
-    # Initialize database connection
-    db.connect(reuse_if_open=True)
+    # Initialize database
+    init_db()
+
+    # Ensure database connection is established
+    if database and database.is_closed():
+        database.connect()
 
     try:
         languages = fetch_available_languages()
@@ -347,8 +368,9 @@ def generate_sitemaps():
     except Exception as e:
         logger.error(f"Error generating sitemaps: {e}")
     finally:
-        if not db.is_closed():
-            db.close()
+        # Close the database connection
+        if database and not database.is_closed():
+            database.close()
 
 
 if __name__ == "__main__":

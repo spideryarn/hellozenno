@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generate sitemaps as part of the deployment process
+# Generate sitemaps for local development
 
 set -e
 
@@ -10,7 +10,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../utils/common.sh"
 
-print_header "Generating sitemaps"
+print_header "Generating sitemaps locally"
 
 # Define paths
 FRONTEND_STATIC_DIR="${PROJECT_ROOT}/frontend/static"

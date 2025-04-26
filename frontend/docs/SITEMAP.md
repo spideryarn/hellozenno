@@ -19,15 +19,18 @@ Our sitemap system consists of:
 
 ```
 sitemap.xml (index file)
-├── sitemap-static.xml (homepage, about, faq, etc.)
-├── sitemap-{language_code}.xml (if not further divided)
-├── sitemap-{language_code}-lemmas.xml
-├── sitemap-{language_code}-wordforms.xml
-├── sitemap-{language_code}-sentences.xml
-├── sitemap-{language_code}-phrases.xml
-├── sitemap-{language_code}-sourcedirs.xml
-└── sitemap-{language_code}-sourcefiles.xml
+├── sitemaps/
+    ├── sitemap-static.xml (homepage, about, faq, etc.)
+    ├── sitemap-generated-{language_code}.xml (if not further divided)
+    ├── sitemap-generated-{language_code}-lemmas.xml
+    ├── sitemap-generated-{language_code}-wordforms.xml
+    ├── sitemap-generated-{language_code}-sentences.xml
+    ├── sitemap-generated-{language_code}-phrases.xml
+    ├── sitemap-generated-{language_code}-sourcedirs.xml
+    └── sitemap-generated-{language_code}-sourcefiles.xml
 ```
+
+Note: All dynamically generated sitemaps use the `sitemap-generated-` prefix to distinguish them from static sitemaps that are maintained in version control.
 
 ### 2. Build-time Generation
 
@@ -46,28 +49,31 @@ Benefits:
 
 ### 3. Implementation Plan
 
-#### 3.1 Script Location and Structure
+#### 3.1 Generation Scripts
 
-Create a script at `frontend/scripts/generate_sitemaps.py` that:
+We use two scripts for sitemap generation:
 
-1. Connects to the database using existing utilities
-2. Queries for public content across all supported languages
-3. Generates XML sitemap files in `frontend/static/` directory
-4. Updates the sitemap index with current timestamp
+1. `scripts/local/generate_sitemaps.sh` - For local development testing 
+2. `scripts/prod/generate_sitemaps.sh` - Used during production deployment
+
+Both scripts:
+1. Clean up any existing generated sitemap files
+2. Create the sitemaps directory structure if needed  
+3. Run the backend's `utils.sitemap_generator.generate_sitemaps()` function
+4. Store all generated files in the `frontend/static/sitemaps/` directory
+5. Create the main sitemap index at `frontend/static/sitemap.xml`
 
 #### 3.2 Deployment Integration
 
-Modify `scripts/prod/deploy_frontend.sh` to:
+The production sitemap generator is integrated in `scripts/prod/deploy_frontend.sh`:
 
-1. Run the sitemap generation script before building the frontend
-2. Example:
-   ```bash
-   # Generate sitemaps
-   python frontend/scripts/generate_sitemaps.py
-   
-   # Continue with normal build process
-   cd frontend && npm run build
-   ```
+```bash
+# Generate sitemaps
+./scripts/prod/generate_sitemaps.sh
+
+# Continue with normal build process
+cd frontend && npm run build
+```
 
 #### 3.3 XML Structure Examples
 
@@ -76,18 +82,18 @@ Modify `scripts/prod/deploy_frontend.sh` to:
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://hellozenno.com/sitemap-static.xml</loc>
+    <loc>https://hellozenno.com/sitemaps/sitemap-static.xml</loc>
     <lastmod>2025-04-26</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://hellozenno.com/sitemap-el-lemmas.xml</loc>
+    <loc>https://hellozenno.com/sitemaps/sitemap-generated-el-lemmas.xml</loc>
     <lastmod>2025-04-26</lastmod>
   </sitemap>
   <!-- Additional sitemaps -->
 </sitemapindex>
 ```
 
-**Content Sitemap Example (sitemap-el-lemmas.xml):**
+**Content Sitemap Example (sitemap-generated-el-lemmas.xml):**
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -117,8 +123,9 @@ The generation script will:
 
 If any content type exceeds 50,000 URLs (the sitemap standard limit):
 - Split into multiple files with numerical suffixes
-- Example: `sitemap-el-lemmas-1.xml`, `sitemap-el-lemmas-2.xml`
-- Update sitemap index to reference all parts
+- Example: `sitemap-generated-el-lemmas-1.xml`, `sitemap-generated-el-lemmas-2.xml`
+- These files are stored in the sitemaps directory
+- Update sitemap index to reference all parts with proper paths
 
 ### 6. Priority Settings
 
@@ -139,9 +146,3 @@ Generate new sitemaps on each deployment to keep content fresh. If deployment fr
 
 1. Creating a scheduled job to regenerate sitemaps
 2. Moving to a more dynamic approach if deployment-based generation becomes insufficient
-
-## Future Considerations
-
-- Automated tests to verify sitemap validity
-- Analytics to track crawler behavior before/after implementation
-- Potential optimization based on observed search engine behavior
