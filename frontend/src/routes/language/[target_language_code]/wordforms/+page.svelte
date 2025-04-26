@@ -21,13 +21,78 @@
       },
       { id: 'translations', header: 'Translations', accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '' },
       { id: 'part_of_speech', header: 'POS', width: 80 },
+      { 
+        id: 'updated_at', 
+        header: 'Modified', 
+        accessor: row => {
+          if (!row.updated_at) return '';
+          try {
+            const date = new Date(row.updated_at);
+            const formatted = date.toLocaleString('en-US', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+            return `<span class="metadata-timestamp">${formatted}</span>`;
+          } catch (e) {
+            return row.updated_at;
+          }
+        },
+        isHtml: true
+      },
     ];
 
-    const loadData = supabaseDataProvider({
+    // For this page, extend the data provider with client-side filtering for translations
+    const baseLoadData = supabaseDataProvider({
       table: 'wordform',
-      selectableColumns: 'id,wordform,part_of_speech,translations',
-      client: supabase
+      selectableColumns: 'id,wordform,part_of_speech,translations,updated_at',
+      client: supabase,
+      jsonArrayColumns: ['translations'] // This isn't working directly with Supabase
     });
+    
+    // Wrap the data provider to add client-side translation filtering
+    const loadData = async (params) => {
+      // Special handling for translations filter
+      if (params.filterField === 'translations' && params.filterValue) {
+        // Fetch all data for the language without server-side filter
+        const filterValue = params.filterValue;
+        
+        // Remove the filter for server request
+        const serverParams = {
+          ...params,
+          filterField: null,
+          filterValue: null
+        };
+        
+        // Get all data for this language
+        const result = await baseLoadData(serverParams);
+        
+        // Apply client-side filter for translations
+        const filteredRows = result.rows.filter(row => {
+          // If no translations, skip
+          if (!row.translations || !Array.isArray(row.translations)) return false;
+          
+          // Check if any translation contains the filter text (case insensitive)
+          return row.translations.some(translation => 
+            translation.toLowerCase().includes(filterValue.toLowerCase())
+          );
+        });
+        
+        console.log(`Client-side filtering for '${filterValue}' in translations: Found ${filteredRows.length} of ${result.rows.length} rows`);
+        
+        // Return filtered data
+        return {
+          rows: filteredRows,
+          total: filteredRows.length
+        };
+      }
+      
+      // For all other cases, use the base provider
+      return baseLoadData(params);
+    };
     
     // Function to generate URLs for each row
     function getWordformUrl(row: any): string {
@@ -67,4 +132,10 @@
             No wordforms found for {language_name}.
         </div>
     {/if}
-</div> 
+</div>
+
+<style>
+    .metadata-timestamp {
+        font-family: var(--bs-font-monospace, monospace);
+    }
+</style>
