@@ -12,7 +12,7 @@
     import { supabase } from '$lib/supabaseClient';
 
     const columns = [
-      { id: 'wordform', header: 'Wordform' },
+      { id: 'wordform', header: 'Wordform', class: 'hz-foreign-text' },
       { id: 'translations', header: 'Translations', accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '' },
       { id: 'part_of_speech', header: 'POS', width: 80 },
     ];
