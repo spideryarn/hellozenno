@@ -13,13 +13,13 @@
 
     const columns = [
       { id: 'wordform', header: 'Wordform' },
-      { id: 'lemma_text', header: 'Lemma' },
+      { id: 'translations', header: 'Translations', accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '' },
       { id: 'part_of_speech', header: 'POS', width: 80 },
     ];
 
     const loadData = supabaseDataProvider({
       table: 'wordform',
-      selectableColumns: 'id,wordform,part_of_speech,lemma(lemma)',
+      selectableColumns: 'id,wordform,part_of_speech,translations',
       client: supabase
     });
     
