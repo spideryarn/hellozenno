@@ -1,12 +1,68 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import SentenceCard from '$lib/components/SentenceCard.svelte';
+    import DataGrid from '$lib/components/DataGrid.svelte';
     import { SITE_NAME } from '$lib/config';
+    import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
+    import { supabase } from '$lib/supabaseClient';
     
     export let data: PageData;
     
     // Destructure data for easier access
-    const { target_language_code, language_name, sentences } = data;
+    const { target_language_code, language_name, sentences, total } = data;
+
+    const columns = [
+      { 
+        id: 'sentence', 
+        header: 'Sentence',
+        accessor: row => `<span class="hz-column-primary-green">${row.sentence}</span>`,
+        isHtml: true
+      },
+      { 
+        id: 'translation', 
+        header: 'Translation'
+      },
+      { 
+        id: 'language_level', 
+        header: 'Level',
+        width: 90
+      },
+      { 
+        id: 'updated_at', 
+        header: 'Modified', 
+        accessor: row => {
+          if (!row.updated_at) return '';
+          try {
+            const date = new Date(row.updated_at);
+            const formatted = date.toLocaleString('en-US', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+            return `<span class="metadata-timestamp">${formatted}</span>`;
+          } catch (e) {
+            return row.updated_at;
+          }
+        },
+        isHtml: true,
+        width: 170
+      }
+    ];
+
+    // Use the supabase data provider
+    const loadData = supabaseDataProvider({
+      table: 'sentence',
+      selectableColumns: 'id,sentence,translation,language_level,updated_at,slug,lemma_words',
+      client: supabase,
+      jsonArrayColumns: ['lemma_words']
+    });
+    
+    // Function to generate URLs for each row
+    function getSentenceUrl(row: any): string {
+      return `/language/${target_language_code}/sentence/${row.slug}`;
+    }
 </script>
 
 <svelte:head>
@@ -26,22 +82,24 @@
     </div>
     
     {#if sentences.length > 0}
-        <div class="row">
-            {#each sentences as sentence (sentence.id)}
-                <div class="col-12 mb-3">
-                    <SentenceCard 
-                        text={sentence.text}
-                        translation={sentence.translation}
-                        slug={sentence.slug}
-                        lemma_words={sentence.lemma_words || []}
-                        target_language_code={target_language_code}
-                    />
-                </div>
-            {/each}
-        </div>
+        <DataGrid {columns}
+                loadData={loadData}
+                initialRows={sentences}
+                initialTotal={total}
+                getRowUrl={getSentenceUrl}
+                defaultSortField="updated_at"
+                defaultSortDir="desc"
+                queryModifier={(query) => query.eq('target_language_code', target_language_code)}
+        />
     {:else}
         <div class="alert alert-info">
             No sentences found for {language_name}. Start by adding sources!
         </div>
     {/if}
-</div> 
+</div>
+
+<style>
+    .metadata-timestamp {
+        font-family: var(--bs-font-monospace, monospace);
+    }
+</style> 

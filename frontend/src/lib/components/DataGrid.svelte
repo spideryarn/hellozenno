@@ -76,14 +76,18 @@
    */
   export let queryModifier: ((query: any) => any) | undefined = undefined;
 
+  /** Optional default sort field and direction for initial display */
+  export let defaultSortField: string | null = null;
+  export let defaultSortDir: 'asc' | 'desc' | null = null;
+
   /** Optional rows + total to seed serverRows for SSR (page pre‑fetch). */
   export let initialRows: any[] = [];
   export let initialTotal: number | null = null;
 
   // --- internal state (server‑driven) ---
   let page = 1;
-  let sortField: string | null = null;
-  let sortDir: 'asc' | 'desc' | null = null;
+  let sortField: string | null = defaultSortField;
+  let sortDir: 'asc' | 'desc' | null = defaultSortDir;
   let filterField: string | null = null;
   let filterValue: string | null = null;
 

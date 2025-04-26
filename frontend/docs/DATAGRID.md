@@ -104,6 +104,22 @@ You can add persistent filters to ensure certain conditions are always applied, 
 />
 ```
 
+### Setting Default Sort Order
+
+You can specify which column should be sorted initially and in what direction:
+
+```svelte
+<DataGrid 
+  {columns}
+  {rows}
+  defaultSortField="created_at"
+  defaultSortDir="desc"
+  getRowUrl={getItemUrl}
+/>
+```
+
+This will make the grid initially display with rows sorted by the "created_at" column in descending order (newest first).
+
 The `queryModifier` function gives you direct access to the Supabase query builder, allowing complex filtering:
 
 ```typescript
@@ -135,6 +151,8 @@ queryModifier={(query) =>
 | getRowUrl | (row: any) => string \| null | null | Function to generate URLs for each row |
 | getRowTooltip | (row: any) => string \| null | null | Function to generate tooltip content for each row |
 | loadData | Function \| undefined | undefined | Function to load data from server |
+| defaultSortField | string \| null | null | Column ID to sort by when grid first loads |
+| defaultSortDir | 'asc' \| 'desc' \| null | null | Sort direction ('asc' or 'desc') when grid first loads |
 | initialRows | any[] | [] | Initial rows for SSR with server-side loading |
 | initialTotal | number \| null | null | Initial total count for SSR with server-side loading |
 | queryModifier | (query: any) => any \| undefined | undefined | Function to modify the query before execution, used for persistent filters |
