@@ -54,6 +54,7 @@
                   initialRows={wordforms}
                   initialTotal={total}
                   getRowUrl={getWordformUrl}
+                  queryModifier={(query) => query.eq('target_language_code', target_language_code)}
         />
     {:else}
         <div class="alert alert-info">

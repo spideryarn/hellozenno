@@ -77,6 +77,43 @@ DataGrid supports server-side data loading via a data provider function:
 />
 ```
 
+### Adding Persistent Filters
+
+You can add persistent filters to ensure certain conditions are always applied, regardless of user sorting or filtering:
+
+```svelte
+<script>
+  // ...previous code
+  const { target_language_code } = data;
+</script>
+
+<DataGrid 
+  {columns}
+  loadData={loadData}
+  getRowUrl={getWordformUrl}
+  queryModifier={(query) => query.eq('target_language_code', target_language_code)}
+/>
+```
+
+The `queryModifier` function gives you direct access to the Supabase query builder, allowing complex filtering:
+
+```typescript
+// Simple equality filter
+queryModifier={(query) => query.eq('target_language_code', 'el')}
+
+// Multiple conditions
+queryModifier={(query) => 
+  query
+    .eq('target_language_code', 'el')
+    .gte('created_at', '2023-01-01')
+}
+
+// OR conditions
+queryModifier={(query) => 
+  query.or('status.eq.active,status.eq.pending')
+}
+```
+
 ## Props
 
 | Prop | Type | Default | Description |
@@ -90,6 +127,7 @@ DataGrid supports server-side data loading via a data provider function:
 | loadData | Function \| undefined | undefined | Function to load data from server |
 | initialRows | any[] | [] | Initial rows for SSR with server-side loading |
 | initialTotal | number \| null | null | Initial total count for SSR with server-side loading |
+| queryModifier | (query: any) => any \| undefined | undefined | Function to modify the query before execution, used for persistent filters |
 
 
 ## Column Definition
@@ -128,6 +166,8 @@ interface ColumnDef<T = any> {
 4. **Use server-side data loading** for large datasets to improve performance.
 
 5. **Use the `class` property** to apply custom styling to specific columns.
+
+6. **Apply persistent filters**: When displaying data that should be limited to a specific condition (like language), always use the `queryModifier` prop to ensure those conditions are maintained during sorting and pagination.
 
 ## Implementation Details
 

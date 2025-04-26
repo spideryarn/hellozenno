@@ -56,11 +56,18 @@
     sortDir?: 'asc' | 'desc' | null;
     filterField?: string | null;
     filterValue?: string | null;
+    queryModifier?: (query: any) => any;
   }
 
   type LoadDataFn = (params: LoadParams) => Promise<{ rows: any[]; total: number }>;
 
   export let loadData: LoadDataFn | undefined = undefined;
+  
+  /** 
+   * Optional query modifier function that can apply custom filters 
+   * or transformations to the query before execution
+   */
+  export let queryModifier: ((query: any) => any) | undefined = undefined;
 
   /** Optional rows + total to seed serverRows for SSR (page pre‑fetch). */
   export let initialRows: any[] = [];
@@ -91,14 +98,21 @@
     }
     isLoading = true;
     try {
-      const { rows: fetchedRows, total: fetchedTotal } = await loadData({
+      const params = {
         page,
         pageSize,
         sortField,
         sortDir,
         filterField,
         filterValue
-      });
+      };
+      
+      // Pass the queryModifier function if provided
+      if (queryModifier) {
+        params.queryModifier = queryModifier;
+      }
+      
+      const { rows: fetchedRows, total: fetchedTotal } = await loadData(params);
       serverRows = fetchedRows;
       total = fetchedTotal;
     } finally {

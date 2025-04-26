@@ -17,6 +17,7 @@ export interface LoadParams {
   sortDir?: 'asc' | 'desc' | null;
   filterField?: string | null;
   filterValue?: string | null;
+  queryModifier?: (query: any) => any;
 }
 
 export function supabaseDataProvider({ table, selectableColumns, client }: SupabaseProviderOptions) {
@@ -30,11 +31,17 @@ export function supabaseDataProvider({ table, selectableColumns, client }: Supab
     sortField,
     sortDir,
     filterField,
-    filterValue
+    filterValue,
+    queryModifier
   }: LoadParams): Promise<{ rows: any[]; total: number }> {
     const fromQuery = client.from(table);
 
     let query = fromQuery.select(selectClause, { count: 'exact' });
+    
+    // Apply custom query modifiers if provided
+    if (queryModifier) {
+      query = queryModifier(query);
+    }
 
     // filtering (only simple ilike currently)
     if (filterField && filterValue) {
