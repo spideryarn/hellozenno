@@ -64,6 +64,34 @@
         }
     }
 
+    // Find language name from code
+    function getLanguageName(code: string): string | null {
+        const language = data.availableLanguages?.find(lang => lang.code === code);
+        return language ? language.name : null;
+    }
+
+    // Determine if we should show the back button and with what text
+    function getBackButtonInfo() {
+        const savedLanguageCode = data.profile?.target_language_code;
+        
+        // If no language saved or selected is empty, show "Back to languages"
+        if (!savedLanguageCode || !selectedLanguage) {
+            return { show: true, text: 'Back to languages', link: '/languages' };
+        }
+        
+        // If saved language matches selected language, show "Back to TARGET_LANGUAGE_NAME"
+        if (savedLanguageCode === selectedLanguage) {
+            const languageName = getLanguageName(savedLanguageCode);
+            return { 
+                show: true, 
+                text: `Back to ${languageName}`, 
+                link: `/language/${savedLanguageCode}/sources`
+            };
+        }
+        
+        // Otherwise, don't show a button
+        return { show: false };
+    }
 </script>
 
 <svelte:head>
@@ -107,6 +135,18 @@
             {#if isLoading}Saving...{:else}Save Profile{/if}
         </button>
     </form>
+
+    <!-- Back button section -->
+    {#if getBackButtonInfo().show}
+        <div class="mt-4">
+            <a 
+                href={getBackButtonInfo().link} 
+                class="btn btn-secondary text-on-light"
+            >
+                {getBackButtonInfo().text}
+            </a>
+        </div>
+    {/if}
 {:else if !errorMessage}
     <p>Loading profile...</p>
 {/if} 
