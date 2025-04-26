@@ -19,7 +19,12 @@
         accessor: row => `<span class="hz-column-primary-green">${row.wordform}</span>`,
         isHtml: true
       },
-      { id: 'translations', header: 'Translations', accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '' },
+      { 
+        id: 'translations', 
+        header: 'Translations', 
+        accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '',
+        filterType: 'json_array' // Explicitly mark this column as a JSON array for filtering
+      },
       { id: 'part_of_speech', header: 'POS', width: 80 },
       { 
         id: 'updated_at', 
@@ -45,54 +50,13 @@
       },
     ];
 
-    // For this page, extend the data provider with client-side filtering for translations
-    const baseLoadData = supabaseDataProvider({
+    // Use the supabase data provider with the new column-based filterType approach
+    const loadData = supabaseDataProvider({
       table: 'wordform',
       selectableColumns: 'id,wordform,part_of_speech,translations,updated_at',
       client: supabase,
-      jsonArrayColumns: ['translations'] // This isn't working directly with Supabase
+      // We don't need to list jsonArrayColumns anymore since we use filterType in column definitions
     });
-    
-    // Wrap the data provider to add client-side translation filtering
-    const loadData = async (params) => {
-      // Special handling for translations filter
-      if (params.filterField === 'translations' && params.filterValue) {
-        // Fetch all data for the language without server-side filter
-        const filterValue = params.filterValue;
-        
-        // Remove the filter for server request
-        const serverParams = {
-          ...params,
-          filterField: null,
-          filterValue: null
-        };
-        
-        // Get all data for this language
-        const result = await baseLoadData(serverParams);
-        
-        // Apply client-side filter for translations
-        const filteredRows = result.rows.filter(row => {
-          // If no translations, skip
-          if (!row.translations || !Array.isArray(row.translations)) return false;
-          
-          // Check if any translation contains the filter text (case insensitive)
-          return row.translations.some(translation => 
-            translation.toLowerCase().includes(filterValue.toLowerCase())
-          );
-        });
-        
-        console.log(`Client-side filtering for '${filterValue}' in translations: Found ${filteredRows.length} of ${result.rows.length} rows`);
-        
-        // Return filtered data
-        return {
-          rows: filteredRows,
-          total: filteredRows.length
-        };
-      }
-      
-      // For all other cases, use the base provider
-      return baseLoadData(params);
-    };
     
     // Function to generate URLs for each row
     function getWordformUrl(row: any): string {

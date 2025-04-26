@@ -12,7 +12,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         const provider = supabaseDataProvider({
             table: 'wordform',
             selectableColumns: 'id,wordform,part_of_speech,translations',
-            client: locals.supabase
+            client: locals.supabase,
+            jsonArrayColumns: ['translations'] // Explicitly specify JSON array columns
         });
 
         const { rows: wordforms, total } = await provider({

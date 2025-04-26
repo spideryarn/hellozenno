@@ -94,13 +94,9 @@
 
   async function fetchRows() {
     if (!loadData) return;
-    // If we already have serverRows for this state, skip
-    if (!isLoading && serverRows.length && page === 1 && !sortField && !filterField) {
-      return;
-    }
     isLoading = true;
     try {
-      const params = {
+      const params: any = {
         page,
         pageSize,
         sortField,
@@ -110,7 +106,7 @@
         columns // Pass column definitions to allow providers to check filterType
       };
       
-      // Pass the queryModifier function if provided
+      // @ts-ignore – dynamic property added for provider
       if (queryModifier) {
         params.queryModifier = queryModifier;
       }
@@ -186,6 +182,13 @@
   
   // Show navigation only if we have server-driven pagination and more than one page
   $: showNavigation = loadData && totalPagesValue > 1;
+
+  /**
+   * NOTE: Filter inputs are temporarily hidden until filtering functionality can be properly fixed.
+   * The filtering code is kept intact for future re-enablement when resources are available.
+   * This is a temporary workaround to avoid confusing users with non-working filters.
+   */
+  const showFilters = false; // Temporarily disable filter inputs
 </script>
 
 <!-- Top navigation (optional - shows when showTopNav prop is true) -->
@@ -237,7 +240,7 @@
         </tr>
       </thead>
     {/if}
-    {#if loadData}
+    {#if loadData && showFilters}
       <thead>
         <tr>
           {#each columns as col}

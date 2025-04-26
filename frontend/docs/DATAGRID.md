@@ -2,6 +2,8 @@
 
 The DataGrid component is a lightweight, reusable data grid for HelloZenno that provides a consistent way to display tabular data across the application.
 
+Ideally, we would write things in a way that it could be reused for other apps, as long as that doesn't create extra complexity.
+
 ## Features
 
 - Display tabular data with customizable columns
@@ -57,12 +59,19 @@ DataGrid supports server-side data loading via a data provider function:
     { id: 'wordform', header: 'Wordform' },
     { id: 'lemma_text', header: 'Lemma' },
     { id: 'part_of_speech', header: 'POS', width: 80 },
+    { 
+      id: 'translations', 
+      header: 'Translations', 
+      accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '',
+      filterType: 'json_array' // Specify special filter handling for JSON array columns
+    }
   ];
   
   const loadData = supabaseDataProvider({
     table: 'wordform',
-    selectableColumns: 'id,wordform,part_of_speech,lemma(lemma)',
+    selectableColumns: 'id,wordform,part_of_speech,translations,lemma(lemma)',
     client: supabase
+    // No need to specify jsonArrayColumns anymore since we use filterType in column definitions
   });
   
   function getWordformUrl(row) {
@@ -152,6 +161,8 @@ interface ColumnDef<T = any> {
   sortable?: boolean;
   /** Disable filtering for this column (defaults to true) */
   filterable?: boolean;
+  /** Specify special filter handling for this column (e.g. 'json_array') */
+  filterType?: 'json_array' | string;
 }
 ```
 
@@ -169,6 +180,18 @@ interface ColumnDef<T = any> {
 
 6. **Apply persistent filters**: When displaying data that should be limited to a specific condition (like language), always use the `queryModifier` prop to ensure those conditions are maintained during sorting and pagination.
 
+7. **Use `filterType` for special column types**: When a column contains non-standard data (like JSON arrays), specify the `filterType` property to ensure proper filtering:
+
+```typescript
+// JSON array column example
+{
+  id: 'translations',
+  header: 'Translations',
+  accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '',
+  filterType: 'json_array'
+}
+```
+
 ## Implementation Details
 
 - When using `getRowUrl`, every cell in the row becomes a proper hyperlink (`<a>` tag).
@@ -179,3 +202,4 @@ interface ColumnDef<T = any> {
   - Right-click context menu options (Open in New Tab, Copy Link Address, etc.)
   - Keyboard navigation accessibility
 - Styling is applied to ensure the links maintain the same visual appearance as the non-linked version.
+
