@@ -55,6 +55,7 @@ HelloZenno uses a SvelteKit/TypeScript frontend with a Flask API backend and Sup
 - Comment sparingly - only explain surprising or confusing sections
 - Start simple, get v1 working, then add complexity
 - Question things that don't make sense rather than proceeding blindly
+- Use lowercase types for type hints (we use a recent Python version, so `list[str]` instead of `List[str]` from typing)
 
 ## 4. Development Guidelines
 
@@ -107,9 +108,12 @@ Import and use logger in Python code:
 ```python
 from loguru import logger
 logger.info("Message")
+logger.debug("Debug info")
+logger.warning("Warning message")
+logger.error("Error message")
 ```
 
-See `backend/docs/DEBUGGING.md` for troubleshooting tips.
+See `backend/docs/DEBUGGING.md` for troubleshooting tips and `backend/docs/CODING_PYTHON.md` for Python style guidelines.
 
 ### 4.5 Frontend Development
 
