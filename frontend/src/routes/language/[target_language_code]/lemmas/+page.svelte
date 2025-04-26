@@ -66,7 +66,7 @@
   // Use the supabase data provider
   const loadData = supabaseDataProvider({
     table: 'lemma',
-    selectableColumns: 'id,lemma,part_of_speech,translations,updated_at,language_level,is_complete,commonality',
+    selectableColumns: 'id,lemma,part_of_speech,translations,updated_at,language_level,is_complete,commonality,etymology',
     client: supabase,
     jsonArrayColumns: ['translations']
   });
@@ -74,6 +74,11 @@
   // Function to generate URLs for each row
   function getLemmaUrl(row: any): string {
     return `/language/${target_language_code}/lemma/${row.lemma}`;
+  }
+  
+  // Function to generate tooltip content from etymology field
+  function getLemmaTooltip(row: any): string {
+    return row.etymology ? `Etymology: ${row.etymology}` : '';
   }
 
   // Note: The letter navigation feature is commented out but preserved for potential future use
@@ -111,6 +116,7 @@
               initialRows={lemmas}
               initialTotal={total}
               getRowUrl={getLemmaUrl}
+              getRowTooltip={getLemmaTooltip}
               queryModifier={(query) => query.eq('target_language_code', target_language_code)}
     />
   {:else}
@@ -130,11 +136,6 @@
     </div>
   -->
 
-  <div class="mt-4 mb-4">
-    <a href="/language/{target_language_code}/sources" class="btn btn-outline-secondary">
-      Back to Sources
-    </a>
-  </div>
 </div>
 
 <style>

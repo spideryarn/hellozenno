@@ -45,6 +45,11 @@
    * making the entire row clickable with standard browser link behavior
    */
   export let getRowUrl: ((row: any) => string) | null = null;
+  /**
+   * Function to generate the tooltip content for each row
+   * When provided, rows will have a title attribute with the tooltip content
+   */
+  export let getRowTooltip: ((row: any) => string) | null = null;
 
   const dispatch = createEventDispatcher();
 
@@ -285,7 +290,7 @@
           {#each visibleRows as row (row.id ?? row.slug ?? row)}
             {#if getRowUrl}
               <!-- Render as proper hyperlink -->
-              <tr class="data-grid-row-link">
+              <tr class="data-grid-row-link" title={getRowTooltip ? getRowTooltip(row) : undefined}>
                 {#each columns as col}
                   <td class={col.class}>
                     <!-- Apply the anchor to each cell -->
@@ -305,7 +310,7 @@
               </tr>
             {:else}
               <!-- No URL provided, render as non-clickable row -->
-              <tr>
+              <tr title={getRowTooltip ? getRowTooltip(row) : undefined}>
                 {#each columns as col}
                   <td class={col.class}>
                     {#if col.accessor}

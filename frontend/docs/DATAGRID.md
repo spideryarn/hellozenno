@@ -133,6 +133,7 @@ queryModifier={(query) =>
 | showHeader | boolean | true | Whether to show the column headers |
 | showTopNav | boolean | true | Whether to show navigation at the top |
 | getRowUrl | (row: any) => string \| null | null | Function to generate URLs for each row |
+| getRowTooltip | (row: any) => string \| null | null | Function to generate tooltip content for each row |
 | loadData | Function \| undefined | undefined | Function to load data from server |
 | initialRows | any[] | [] | Initial rows for SSR with server-side loading |
 | initialTotal | number \| null | null | Initial total count for SSR with server-side loading |

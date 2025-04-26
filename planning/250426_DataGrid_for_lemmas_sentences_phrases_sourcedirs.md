@@ -4,6 +4,20 @@ This document outlines the implementation of the DataGrid component for various 
 
 ## Lemmas Page Implementation
 
+### Prompt I used for updating the Lemma page
+
+```
+Let's update the Lemmas list page, e.g. http://localhost:5173/language/el/lemmas
+
+To use the DataGrid, using this as an example http://localhost:5173/language/el/wordforms
+
+see frontend/docs/DATAGRID.md frontend/src/lib/components/DataGrid.svelte frontend/docs/STYLING.md
+
+Remember rules/CODING-PRINCIPLES.md
+
+Ask questions about the design requirements before we start making changes
+```
+
 ### Completed Work
 
 - Replaced the existing lemmas list page with a DataGrid implementation
@@ -21,18 +35,8 @@ This document outlines the implementation of the DataGrid component for various 
 
 ### Remaining Tasks for Lemmas
 
-1. **Tooltip Support**: Add support for tooltips in the DataGrid component, potentially showing etymology information when hovering over lemma rows. This requires:
-   - Modifying the DataGrid component to accept a `getRowTooltip` prop (similar to `getRowUrl`)
-   - Implementing the tooltip rendering in the row generation
-   - Fetching etymology data for lemmas
+- No remaining tasks for the lemma implementation. The tooltip support has been added, allowing etymology information to be displayed when hovering over lemma rows.
 
-2. **Letter Navigation Integration**: Consider how to reintegrate the letter navigation with the DataGrid pagination (if desired)
-
-3. **Column Customization**: Allow users to customize visible columns or their order
-
-4. **Enhanced Sorting Indicators**: Improve the visual indicators for sorting state
-
-5. **Testing**: Verify the implementation works correctly in all supported browsers
 
 ## Checklist for Converting Other List Pages
 
@@ -86,10 +90,15 @@ When converting other list pages (phrases, sentences, sourcedirs, etc.) to use t
       jsonArrayColumns: ['array_column1', 'array_column2']
   });
   ```
-- [ ] Create a function to generate URLs for each row:
+- [ ] Create functions to generate URLs and optional tooltips for each row:
   ```typescript
   function getItemUrl(row: any): string {
       return `/language/${target_language_code}/item_type/${row.identifier}`;
+  }
+  
+  // Optional tooltip function
+  function getItemTooltip(row: any): string {
+      return row.description ? `Description: ${row.description}` : '';
   }
   ```
 - [ ] Implement the DataGrid component:
@@ -99,6 +108,7 @@ When converting other list pages (phrases, sentences, sourcedirs, etc.) to use t
             initialRows={items}
             initialTotal={total}
             getRowUrl={getItemUrl}
+            getRowTooltip={getItemTooltip} // Optional tooltip support
             queryModifier={(query) => query.eq('target_language_code', target_language_code)}
   />
   ```
@@ -178,24 +188,6 @@ Ensure consistent column configuration across different list pages:
     }
     ```
 
-### 4. DataGrid Enhancement Ideas
-
-Future improvements to consider for all DataGrid implementations:
-
-1. **Row Tooltips**: Add support for tooltips on rows (etymology for lemmas, extra info for other types)
-
-2. **Customizable Columns**: Allow users to show/hide columns and remember preferences
-
-3. **Filtering UI**: Improve the filtering UI with better controls (when filtering is enabled)
-
-4. **Export Options**: Add export to CSV/JSON options
-
-5. **Saved Filters/Views**: Allow users to save preferred views or filters
-
-6. **Responsive Layouts**: Enhance mobile friendliness with responsive column configurations
-
-7. **Row Actions**: Add action buttons or context menus for common operations
-
 ## Priority Implementation Order
 
 Suggested order for implementing DataGrid on remaining list pages:
@@ -203,9 +195,4 @@ Suggested order for implementing DataGrid on remaining list pages:
 1. Sentences page
 2. Phrases page
 3. Sourcedirs page
-4. User profile related lists
 
-## Conclusion
-
-The DataGrid implementation provides a consistent, efficient way to display and interact with data lists across HelloZenno. By following this standardized approach, we ensure a consistent user experience while making maintenance and improvements more streamlined.
-EOF < /dev/null

@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
         const provider = supabaseDataProvider({
             table: 'lemma',
-            selectableColumns: 'id,lemma,part_of_speech,translations,updated_at,language_level,is_complete,commonality',
+            selectableColumns: 'id,lemma,part_of_speech,translations,updated_at,language_level,is_complete,commonality,etymology',
             client: locals.supabase,
             jsonArrayColumns: ['translations'] // Explicitly specify JSON array columns
         });
