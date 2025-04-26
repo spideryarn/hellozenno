@@ -195,7 +195,7 @@
               <!-- Custom Svelte Dropdown for logged-in user -->
               <div class="profile-dropdown ms-4"> 
                 <button
-                  class="btn btn-sm btn-secondary"
+                  class="btn btn-sm btn-secondary text-on-light"
                   type="button"
                   aria-haspopup="true"
                   aria-expanded={isMenuOpen}

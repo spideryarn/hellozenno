@@ -71,7 +71,7 @@
       <h1 class="display-4 mb-2 hz-foreign-text">{phrase.canonical_form}</h1>
       <div class="phrase-meta mb-3">
         {#if phrase.part_of_speech}
-          <span class="badge bg-secondary me-2">{phrase.part_of_speech}</span>
+          <span class="badge bg-secondary text-on-light me-2">{phrase.part_of_speech}</span>
         {/if}
         {#if phrase.difficulty_level}
           <span class="badge bg-info me-2">{phrase.difficulty_level}</span>

@@ -75,7 +75,7 @@
   <!-- Row count display - always visible -->
   {#if totalRows > 0}
     <div class="row-count me-auto">
-      <span class="badge bg-secondary">
+      <span class="badge bg-secondary text-on-light">
         {#if filteredRows !== null && filteredRows !== totalRows}
           {filteredRows} of {totalRows} rows
         {:else}

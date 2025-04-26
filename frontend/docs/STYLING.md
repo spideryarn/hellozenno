@@ -45,6 +45,8 @@ The app uses a dark theme with a "friendly elegant pastel" color palette defined
 | `--hz-color-accent-sky-blue`    | `#A8D8F0` | Muted Sky Blue Accent (Info)    |
 | `--hz-color-accent-gold`        | `#F8DDA8` | Soft Gold Accent (Alert/Warning)|
 
+**Note:** When using lavender (`--hz-color-accent-lavender`) as a background color (e.g., in buttons or badges), use the `.text-on-light` class for consistent dark text styling. This ensures proper contrast and consistent appearance across UI elements.
+
 ### UI Effects
 
 - Shadow (Primary): `var(--hz-shadow-primary-green)` - `0 4px 12px rgba(102, 154, 115, 0.25)`
@@ -185,7 +187,19 @@ Style properties (defined in `theme.css` using variables):
 
 ### Secondary Buttons
 
-Secondary buttons use the peach accent color (`--hz-color-accent-peach`) via the standard Bootstrap `.btn-secondary` class (which is mapped in `theme-variables.css`).
+Secondary buttons use the lavender accent color (`--hz-color-accent-lavender`) via the standard Bootstrap `.btn-secondary` class (which is mapped in `theme-variables.css`).
+
+```html
+<!-- Always use the text-on-light class with btn-secondary -->
+<button class="btn btn-secondary text-on-light">
+  Secondary Button
+</button>
+```
+
+Style properties:
+- Background: `var(--hz-color-accent-lavender)` 
+- Text color: Dark (`#212529`) using `.text-on-light` class
+- Hover: Slightly darker lavender with dark text
 
 ## Static Assets
 
