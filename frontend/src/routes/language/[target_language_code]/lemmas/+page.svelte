@@ -117,6 +117,8 @@
               initialTotal={total}
               getRowUrl={getLemmaUrl}
               getRowTooltip={getLemmaTooltip}
+              defaultSortField="lemma"
+              defaultSortDir="asc"
               queryModifier={(query) => query.eq('target_language_code', target_language_code)}
     />
   {:else}

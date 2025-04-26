@@ -92,6 +92,8 @@
                   initialTotal={total}
                   getRowUrl={getPhraseUrl}
                   getRowTooltip={getPhraseTooltip}
+                  defaultSortField="updated_at"
+                  defaultSortDir="desc"
                   queryModifier={(query) => query.eq('target_language_code', target_language_code)}
         />
     {:else}
