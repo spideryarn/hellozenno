@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_PAGE_SIZE, buildOrderParam } from '../utils';
+import type { Database } from '$lib/database.types';
 
 export interface SupabaseProviderOptions {
   /** Table or view to query */
@@ -7,7 +8,7 @@ export interface SupabaseProviderOptions {
   /** Columns to select (comma‑separated or array) */
   selectableColumns?: string | string[];
   /** Optional server‑side client (pass from +page.server.ts).  If undefined we fall back to browser instance. */
-  client: SupabaseClient;
+  client: SupabaseClient<Database>;
 }
 
 export interface LoadParams {

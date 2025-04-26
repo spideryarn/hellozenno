@@ -26,9 +26,19 @@ cleanup() {
 # Register the cleanup function on script exit
 trap cleanup EXIT INT TERM
 
+# Change to frontend directory
+cd "$PROJECT_ROOT/frontend"
+
+# Generate Supabase types
+echo "Generating Supabase database types..."
+# Use local database for type generation including auth schema
+npx supabase gen types typescript --local --schema public --schema auth > src/lib/database.types.ts
+# If you prefer using your project ID instead of local, use:
+# npx supabase gen types typescript --project-id "$PROJECT_ID" --schema public --schema auth > src/lib/database.types.ts
+echo "Supabase types generated successfully!"
+
 # Start SvelteKit in the background with error handling and log capturing to both file and stdout
 echo "Starting SvelteKit development server (logs in $LOG_FILE and stdout)..."
-cd "$PROJECT_ROOT/frontend"
 # Set strict mode with SVELTE_WARNINGS_STRICT to catch unused CSS selectors during development
 SVELTE_WARNINGS_STRICT=true npm run dev 2>&1 | tee -a "$LOG_FILE" &
 # SVELTE_WARNINGS_STRICT=true node --trace-deprecation node_modules/.bin/vite dev 2>&1 | tee -a "$LOG_FILE" &
