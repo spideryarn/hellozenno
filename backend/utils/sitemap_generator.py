@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from loguru import logger
+from gjdutils.strings import jinja_render
 
 # Import Peewee models and database connection
 from db_models import Phrase, Sourcefile, Sourcedir
@@ -17,6 +18,35 @@ from utils.env_config import VITE_FRONTEND_URL as SITE_URL
 # Constants
 FRONTEND_STATIC_DIR = Path(__file__).parent.parent.parent / "frontend" / "static"
 MAX_URLS_PER_SITEMAP = 50000
+
+# Jinja templates for sitemap generation
+SITEMAP_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{% for item in items %}
+  <url>
+    <loc>{{ site_url }}/language/{{ lang_code }}/{{ content_type }}/{{ item.url_param }}</loc>
+    {% if item.lastmod %}
+    <lastmod>{{ item.lastmod }}</lastmod>
+    {% endif %}
+    <changefreq>{{ changefreq }}</changefreq>
+    <priority>{{ priority }}</priority>
+  </url>
+{% endfor %}
+</urlset>"""
+
+SITEMAP_INDEX_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>{{ site_url }}/sitemap-static.xml</loc>
+    <lastmod>{{ today }}</lastmod>
+  </sitemap>
+{% for sitemap in sitemaps %}
+  <sitemap>
+    <loc>{{ site_url }}/{{ sitemap }}</loc>
+    <lastmod>{{ today }}</lastmod>
+  </sitemap>
+{% endfor %}
+</sitemapindex>"""
 
 
 def fetch_available_languages() -> list[dict]:
@@ -106,27 +136,30 @@ def generate_phrase_sitemap(language: dict) -> str:
     )
 
     try:
+        # Prepare data for template rendering
+        items = []
+        for phrase in phrases:
+            items.append({
+                "url_param": phrase["slug"],
+                "lastmod": phrase["updated_at"].strftime("%Y-%m-%d") if phrase["updated_at"] else ""
+            })
+        
+        # Render the template
+        sitemap_content = jinja_render(
+            SITEMAP_TEMPLATE,
+            {
+                "items": items,
+                "site_url": SITE_URL,
+                "lang_code": lang_code,
+                "content_type": "phrase",
+                "changefreq": "monthly",
+                "priority": "0.6"
+            }
+        )
+        
+        # Write to file
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            f.write('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
-
-            for phrase in phrases:
-                url = f"{SITE_URL}/language/{lang_code}/phrase/{phrase['slug']}"
-                lastmod = (
-                    phrase["updated_at"].strftime("%Y-%m-%d")
-                    if phrase["updated_at"]
-                    else ""
-                )
-
-                f.write("  <url>\n")
-                f.write(f"    <loc>{url}</loc>\n")
-                if lastmod:
-                    f.write(f"    <lastmod>{lastmod}</lastmod>\n")
-                f.write("    <changefreq>monthly</changefreq>\n")
-                f.write("    <priority>0.6</priority>\n")
-                f.write("  </url>\n")
-
-            f.write("</urlset>")
+            f.write(sitemap_content)
 
         return filename
     except Exception as e:
@@ -163,29 +196,30 @@ def generate_lemma_sitemap(language: dict) -> list[str]:
         page_lemmas = lemmas[start_idx:end_idx]
 
         try:
+            # Prepare data for template rendering
+            items = []
+            for lemma in page_lemmas:
+                items.append({
+                    "url_param": lemma["lemma"],
+                    "lastmod": lemma["updated_at"].strftime("%Y-%m-%d") if lemma["updated_at"] else ""
+                })
+            
+            # Render the template
+            sitemap_content = jinja_render(
+                SITEMAP_TEMPLATE,
+                {
+                    "items": items,
+                    "site_url": SITE_URL,
+                    "lang_code": lang_code,
+                    "content_type": "lemma",
+                    "changefreq": "monthly",
+                    "priority": "0.7"
+                }
+            )
+            
+            # Write to file
             with open(filepath, "w", encoding="utf-8") as f:
-                f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-                f.write(
-                    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                )
-
-                for lemma in page_lemmas:
-                    url = f"{SITE_URL}/language/{lang_code}/lemma/{lemma['lemma']}"
-                    lastmod = (
-                        lemma["updated_at"].strftime("%Y-%m-%d")
-                        if lemma["updated_at"]
-                        else ""
-                    )
-
-                    f.write("  <url>\n")
-                    f.write(f"    <loc>{url}</loc>\n")
-                    if lastmod:
-                        f.write(f"    <lastmod>{lastmod}</lastmod>\n")
-                    f.write("    <changefreq>monthly</changefreq>\n")
-                    f.write("    <priority>0.7</priority>\n")
-                    f.write("  </url>\n")
-
-                f.write("</urlset>")
+                f.write(sitemap_content)
 
             generated_filenames.append(filename)
             logger.info(
@@ -217,27 +251,30 @@ def generate_sentence_sitemap(language: dict) -> str:
     )
 
     try:
+        # Prepare data for template rendering
+        items = []
+        for sentence in sentences:
+            items.append({
+                "url_param": sentence["slug"],
+                "lastmod": sentence["updated_at"].strftime("%Y-%m-%d") if sentence["updated_at"] else ""
+            })
+        
+        # Render the template
+        sitemap_content = jinja_render(
+            SITEMAP_TEMPLATE,
+            {
+                "items": items,
+                "site_url": SITE_URL,
+                "lang_code": lang_code,
+                "content_type": "sentence",
+                "changefreq": "monthly",
+                "priority": "0.5"
+            }
+        )
+        
+        # Write to file
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            f.write('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
-
-            for sentence in sentences:
-                url = f"{SITE_URL}/language/{lang_code}/sentence/{sentence['slug']}"
-                lastmod = (
-                    sentence["updated_at"].strftime("%Y-%m-%d")
-                    if sentence["updated_at"]
-                    else ""
-                )
-
-                f.write("  <url>\n")
-                f.write(f"    <loc>{url}</loc>\n")
-                if lastmod:
-                    f.write(f"    <lastmod>{lastmod}</lastmod>\n")
-                f.write("    <changefreq>monthly</changefreq>\n")
-                f.write("    <priority>0.5</priority>\n")
-                f.write("  </url>\n")
-
-            f.write("</urlset>")
+            f.write(sitemap_content)
 
         return filename
     except Exception as e:
@@ -251,30 +288,24 @@ def update_sitemap_index(sitemap_files: list[str]) -> None:
     index_path = FRONTEND_STATIC_DIR / "sitemap.xml"
 
     try:
-        with open(index_path, "w", encoding="utf-8") as f:
-            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            f.write(
-                '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            )
-
-            # Add static sitemap
-            f.write("  <sitemap>\n")
-            f.write(f"    <loc>{SITE_URL}/sitemap-static.xml</loc>\n")
-            f.write(f"    <lastmod>{today}</lastmod>\n")
-            f.write("  </sitemap>\n")
-
-            # Add generated sitemaps
-            for sitemap in sitemap_files:
-                if sitemap:
-                    f.write("  <sitemap>\n")
-                    f.write(f"    <loc>{SITE_URL}/{sitemap}</loc>\n")
-                    f.write(f"    <lastmod>{today}</lastmod>\n")
-                    f.write("  </sitemap>\n")
-
-            f.write("</sitemapindex>")
-        logger.info(
-            f"Updated sitemap index with {len([f for f in sitemap_files if f])} sitemaps"
+        # Filter out empty filenames
+        valid_sitemaps = [sitemap for sitemap in sitemap_files if sitemap]
+        
+        # Render the index template
+        sitemap_index_content = jinja_render(
+            SITEMAP_INDEX_TEMPLATE,
+            {
+                "sitemaps": valid_sitemaps,
+                "site_url": SITE_URL,
+                "today": today
+            }
         )
+        
+        # Write to file
+        with open(index_path, "w", encoding="utf-8") as f:
+            f.write(sitemap_index_content)
+            
+        logger.info(f"Updated sitemap index with {len(valid_sitemaps)} sitemaps")
     except Exception as e:
         logger.error(f"Error updating sitemap index: {e}")
 
