@@ -886,6 +886,7 @@ class Profile(BaseModel):
 
     user_id = CharField(unique=True)  # References auth.users.id in Supabase
     target_language_code = CharField(null=True)  # User's preferred language
+    # Removed email field as it should come directly from AuthUser (auth.users)
 
     class Meta:
         indexes = ((("user_id",), True),)  # Unique index
@@ -901,12 +902,11 @@ class Profile(BaseModel):
         }
 
     @classmethod
-    def get_or_create_for_user(cls, user_id: str, email: str = None):
+    def get_or_create_for_user(cls, user_id: str):
         """Get or create a profile for a Supabase auth user.
 
         Args:
             user_id: Supabase auth user ID
-            email: User's email (optional)
 
         Returns:
             Tuple of (profile, created)
@@ -918,62 +918,84 @@ class Profile(BaseModel):
             # Create new profile with default values
             profile = cls.create(user_id=user_id)
             return profile, True
+            
+    @classmethod
+    def get_email_by_user_id(cls, user_id: str) -> Optional[str]:
+        """Get a user's email by their user ID.
+        
+        DEPRECATED: Use AuthUser model to get email directly from auth.users
+        
+        Args:
+            user_id: Supabase auth user ID
+            
+        Returns:
+            The user's email if found, or None
+        """
+        try:
+            # Try to get email from auth.users via AuthUser model
+            auth_user = AuthUser.get_by_id(user_id)
+            if hasattr(auth_user, 'email'):
+                return auth_user.email
+            return None
+        except DoesNotExist:
+            return None
 
 
-class ProfileLemma(BaseModel):
-    """Junction table between Profile and Lemma for tracking user-specific lemma preferences."""
+class UserLemma(BaseModel):
+    """Junction table between auth.users and Lemma for tracking user-specific lemma preferences."""
 
-    profile = ForeignKeyField(Profile, backref="profile_lemmas", on_delete="CASCADE")
-    lemma = ForeignKeyField(Lemma, backref="profile_lemmas", on_delete="CASCADE")
+    user_id = UUIDField()  # Reference to auth.users.id
+    lemma = ForeignKeyField(Lemma, backref="user_lemmas", on_delete="CASCADE")
     ignored_dt = DateTimeField(
         null=True
     )  # When the lemma was ignored (NULL = not ignored)
 
     class Meta:
-        indexes = ((("profile", "lemma"), True),)  # Unique index
+        indexes = ((("user_id", "lemma"), True),)  # Unique index
+        table_name = "userlemma"
 
     @classmethod
-    def ignore_lemma(cls, profile: Profile, lemma: Lemma) -> "ProfileLemma":
-        """Ignore a lemma for a profile.
+    def ignore_lemma(cls, user_id: str, lemma: Lemma) -> "UserLemma":
+        """Ignore a lemma for a user.
 
         Args:
-            profile: Profile model
+            user_id: UUID of auth.users
             lemma: Lemma model
 
         Returns:
-            The ProfileLemma junction object
+            The UserLemma junction object
         """
-        profile_lemma, created = cls.get_or_create(
-            profile=profile,
+        user_lemma, created = cls.get_or_create(
+            user_id=user_id,
             lemma=lemma,
         )
 
         # Set ignored_dt to current time if not already set
-        if not profile_lemma.ignored_dt:
-            profile_lemma.ignored_dt = datetime.now()
-            profile_lemma.save()
+        if not user_lemma.ignored_dt:
+            user_lemma.ignored_dt = datetime.now()
+            user_lemma.save()
 
-        return profile_lemma
+        return user_lemma
 
     @classmethod
-    def unignore_lemma(cls, profile: Profile, lemma: Lemma) -> bool:
-        """Unignore a lemma for a profile.
+    def unignore_lemma(cls, user_id: str, lemma: Lemma) -> bool:
+        """Unignore a lemma for a user.
 
         Args:
-            profile: Profile model
+            user_id: UUID of auth.users
             lemma: Lemma model
 
         Returns:
             True if the lemma was unignored, False if it wasn't ignored
         """
         try:
-            profile_lemma = cls.get(
-                profile=profile,
+            user_lemma = cls.get(
+                user_id=user_id,
                 lemma=lemma,
                 ignored_dt__is_null=False,
             )
-            profile_lemma.ignored_dt = None
-            profile_lemma.save()
+            user_lemma.ignored_dt = None
+            user_lemma.save()
             return True
         except DoesNotExist:
             return False
@@ -995,5 +1017,5 @@ def get_models():
         SourcefileWordform,
         SourcefilePhrase,
         Profile,
-        ProfileLemma,
+        UserLemma,
     ]  # Order matters for foreign key dependencies

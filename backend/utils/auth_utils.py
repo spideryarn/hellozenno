@@ -5,7 +5,7 @@ import json
 import time
 import requests
 from functools import wraps
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Dict, Any, Callable, Tuple
 import jwt
 from loguru import logger
 from flask import request, redirect, url_for, g, jsonify, make_response
@@ -118,7 +118,7 @@ def get_current_user() -> Optional[Dict[str, Any]]:
 
 
 def _attempt_authentication_and_set_g() -> bool:
-    """Attempts to authenticate user from JWT and set g.user and g.profile.
+    """Attempts to authenticate user from JWT and set g.user, g.user_id, and g.profile.
 
     Returns:
         bool: True if authentication succeeded (user found), False otherwise.
@@ -126,14 +126,16 @@ def _attempt_authentication_and_set_g() -> bool:
     """
     user = get_current_user()  # Attempt to get user from verified JWT
     g.user = None  # Initialize
+    g.user_id = None  # Initialize
     g.profile = None  # Initialize
 
     if user and user.get("id") and user.get("email"):
         # User is authenticated
         g.user = user
+        g.user_id = user["id"]  # Set user_id directly for UserLemma operations
         try:
             profile_obj, created = Profile.get_or_create_for_user(
-                user_id=user["id"], email=user["email"]
+                user_id=user["id"]
             )
             if created:
                 logger.info(f"Created new profile for user_id: {user['id']}")
@@ -205,3 +207,50 @@ def api_auth_required(f: Callable) -> Callable:
 
 
 # Remove the old complex implementation of api_auth_required that handled required=False
+
+
+def get_user_by_id(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Profile]]:
+    """Get a user's information by their user ID.
+    
+    Args:
+        user_id: Supabase auth user ID
+        
+    Returns:
+        Tuple of (user_data, profile_obj) where:
+            - user_data: Contains email and other user information if found, or None
+            - profile_obj: The user's Profile object if found, or None
+    """
+    try:
+        # First, try to get the user's profile
+        profile_obj = Profile.get_or_none(Profile.user_id == user_id)
+        
+        # Next, get the user's auth info from AuthUser (maps to auth.users)
+        # Import here to avoid circular imports
+        from db_models import AuthUser
+        
+        user_data = None
+        try:
+            auth_user = AuthUser.get_by_id(user_id)
+            # Create a user data dict with available fields
+            user_data = {
+                "id": user_id,
+                # Add other fields from auth_user that are accessible
+            }
+            
+            # Add email if it's available in AuthUser
+            if hasattr(auth_user, 'email'):
+                user_data["email"] = auth_user.email
+                
+        except DoesNotExist:
+            logger.warning(f"AuthUser not found for user_id: {user_id}")
+            # Still create minimal user data if we at least have the ID
+            user_data = {"id": user_id} if user_id else None
+        
+        if not profile_obj:
+            logger.warning(f"Profile not found for user_id: {user_id}")
+            # We might want to auto-create a profile here if needed
+            
+        return user_data, profile_obj
+    except Exception as e:
+        logger.error(f"Error retrieving user by ID {user_id}: {e}")
+        return None, None
