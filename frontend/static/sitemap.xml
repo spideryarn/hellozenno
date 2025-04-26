@@ -1,14 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://hellozenno.com/sitemap-static.xml</loc>
+    <loc>http://localhost:5173/sitemaps/sitemap-static.xml</loc>
     <lastmod>2025-04-26</lastmod>
   </sitemap>
-  <!-- Dynamic sitemaps will be added here -->
-  <!-- Example:
+
   <sitemap>
-    <loc>https://hellozenno.com/sitemap-el-lemmas.xml</loc>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-ar-lemmas.xml</loc>
     <lastmod>2025-04-26</lastmod>
   </sitemap>
-  -->
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-ar-sentences.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-zh-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-fi-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-fr-phrases.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-fr-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-de-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-el-phrases.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-el-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-el-sentences.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-it-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-it-sentences.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-ko-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-es-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>http://localhost:5173/sitemaps/sitemap-generated-th-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+
 </sitemapindex>
