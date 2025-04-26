@@ -15,7 +15,7 @@ See also: DATABASE.md
 1. **Safety First**
    - Never drop tables unless explicitly requested
    - Never run migrations on production unless explicitly requested
-   - Always wrap migrations in `database.atomic()` transactions
+   - Always wrap the entire migration in a `database.atomic()` transaction (so it either passes or fails in its entirety)
    - Try to write rollback functions, or if that's going to be very complicated then ask the user
    - Check with the user that they've backed up the database first - see scripts/prod/backup_db.sh
    
@@ -162,7 +162,76 @@ Note: No need to bind models to database - they're just used for schema definiti
    - Always test migrations on a copy of production data before deploying
    - Avoid redundant index creation: If you define a field with `unique=True` in a model definition, Peewee automatically creates a unique index for that field during `create_model(Model)`. Don't call `add_index(Model, 'field_name', unique=True)` after that or you'll get a "relation already exists" error.
 
-See `migrations/004_fix_sourcedir_language.py` and `migrations/029_add_profile_table.py` for examples.
+See `migrations/004_fix_sourcedir_language.py`, `migrations/029_add_profile_table.py`, and `migrations/032_add_various_fields.py` for examples.
+
+## Adding Fields
+
+When adding fields to existing table
+
+1. Define model classes within the migration for each table you're modifying:
+   ```python
+   class Lemma(pw.Model):
+       language_level = pw.CharField(null=True)
+       created_by = pw.CharField(null=True)
+       
+       class Meta:
+           table_name = 'lemma'
+   ```
+
+2. Pass the model class to `add_fields` instead of just the table name:
+   ```python
+   with database.atomic():
+       migrator.add_fields(Lemma, 
+           language_level=pw.CharField(null=True),
+           created_by=pw.CharField(null=True),
+       )
+   ```
+
+3. Define similar model classes in the rollback function (without field definitions):
+   ```python
+   class Lemma(pw.Model):
+       class Meta:
+           table_name = 'lemma'
+   ```
+
+## Cross-Schema Foreign Keys (e.g., to auth.users)
+
+When creating foreign keys to tables in another schema (such as Supabase's `auth.users`):
+
+1. Define an unmanaged model for the foreign table with the correct schema:
+   ```python
+   class AuthUser(pw.Model):
+       id = pw.UUIDField(primary_key=True)
+       
+       class Meta:
+           database = database
+           table_name = 'users'
+           schema = 'auth'    # Specify the schema
+           managed = False    # Don't modify this table
+   ```
+
+2. Use this model as the target for your ForeignKeyField:
+   ```python
+   class YourModel(pw.Model):
+       class Meta:
+           table_name = 'your_table'
+   
+   migrator.add_fields(
+       YourModel,
+       created_by=pw.ForeignKeyField(
+           AuthUser,              # Reference the auth schema model
+           field='id',            # Field in auth.users to reference
+           backref='your_models', # Back reference name
+           null=True,             # Allow NULL values 
+           on_delete='CASCADE'    # CASCADE on delete
+       )
+   )
+   ```
+
+3. Peewee will handle the cross-schema reference correctly without manual SQL statements
+
+See `migrations/033_add_user_reference_fields.py` for a complete example.
+
 
 ## Questions or Improvements?
 

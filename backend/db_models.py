@@ -11,6 +11,7 @@ from peewee import (
     fn,
     DoesNotExist,
     ForeignKeyField,
+    UUIDField,
 )
 from playhouse.postgres_ext import JSONField
 from datetime import datetime
@@ -23,6 +24,17 @@ from config import (
     SOURCEFILE_SLUG_MAX_LENGTH,
     VALID_SOURCEFILE_TYPES,
 )
+
+
+class AuthUser(Model):
+    """Model to reference Supabase auth.users table."""
+
+    id = UUIDField(primary_key=True)
+
+    class Meta:
+        database = database
+        table_name = "users"
+        schema = "auth"
 
 
 class BaseModel(Model):
@@ -96,6 +108,10 @@ class Lemma(BaseModel):
     )  # list[dict] with detailed confusion info
     example_usage = JSONField(null=True)  # list[dict] with phrase and translation
     is_complete = BooleanField(default=False)  # whether all metadata has been populated
+    language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
+    created_by = ForeignKeyField(
+        AuthUser, backref="lemmas", null=True, on_delete="CASCADE"
+    )
 
     class Meta:
         indexes = ((("lemma", "target_language_code"), True),)  # Unique index
@@ -283,6 +299,12 @@ class Wordform(BaseModel):
     inflection_type = CharField(null=True)  # e.g. "first-person singular present"
     possible_misspellings = JSONField(null=True)  # List of suggested corrections
     is_lemma = BooleanField(default=False)  # whether this is a dictionary form
+    created_by = ForeignKeyField(
+        AuthUser,
+        backref="wordforms",
+        null=True,
+        on_delete="CASCADE",
+    )
 
     class Meta:
         indexes = ((("wordform", "target_language_code"), True),)  # Unique index
@@ -492,6 +514,10 @@ class Sentence(BaseModel):
     translation = TextField()  # English translation
     audio_data = BlobField(null=True)  # MP3 audio data for the sentence
     slug = CharField(max_length=255)  # URL-friendly version of the sentence
+    language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
+    created_by = ForeignKeyField(
+        AuthUser, backref="sentences", null=True, on_delete="CASCADE"
+    )
 
     def save(self, *args, **kwargs):
         # Generate slug from sentence if not set
@@ -610,6 +636,9 @@ class Phrase(BaseModel):
     slug = CharField(
         max_length=255, null=True
     )  # URL-friendly version of the canonical form
+    created_by = ForeignKeyField(
+        AuthUser, backref="phrases", null=True, on_delete="CASCADE"
+    )
 
     def save(self, *args, **kwargs):
         # Generate slug from canonical_form if not set
@@ -760,6 +789,9 @@ class Sourcedir(BaseModel):
     target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     slug = CharField(max_length=SOURCEDIR_SLUG_MAX_LENGTH)
     description = TextField(null=True)  # description of the directory content
+    created_by = ForeignKeyField(
+        AuthUser, backref="sourcedirs", null=True, on_delete="CASCADE"
+    )
 
     def save(self, *args, **kwargs):
         # Generate slug from path if not set
@@ -792,6 +824,14 @@ class Sourcefile(BaseModel):
     sourcefile_type = (
         CharField()
     )  # Type of source: "text" for direct text input, "image" for uploaded images, "audio" for audio files, "youtube_audio" for YouTube audio downloads
+    created_by = ForeignKeyField(
+        AuthUser, backref="sourcefiles", null=True, on_delete="CASCADE"
+    )
+    publication_date = DateTimeField(null=True)  # original publication date if known
+    num_words = IntegerField(null=True)  # number of words in the text
+    language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
+    url = CharField(null=True)  # original source URL if applicable
+    title_target = CharField(null=True)  # title in target language
 
     def save(self, *args, **kwargs):
         # Always generate slug from current filename
@@ -885,7 +925,9 @@ class ProfileLemma(BaseModel):
 
     profile = ForeignKeyField(Profile, backref="profile_lemmas", on_delete="CASCADE")
     lemma = ForeignKeyField(Lemma, backref="profile_lemmas", on_delete="CASCADE")
-    ignored_dt = DateTimeField(null=True)  # When the lemma was ignored (NULL = not ignored)
+    ignored_dt = DateTimeField(
+        null=True
+    )  # When the lemma was ignored (NULL = not ignored)
 
     class Meta:
         indexes = ((("profile", "lemma"), True),)  # Unique index
@@ -893,11 +935,11 @@ class ProfileLemma(BaseModel):
     @classmethod
     def ignore_lemma(cls, profile: Profile, lemma: Lemma) -> "ProfileLemma":
         """Ignore a lemma for a profile.
-        
+
         Args:
             profile: Profile model
             lemma: Lemma model
-            
+
         Returns:
             The ProfileLemma junction object
         """
@@ -905,22 +947,22 @@ class ProfileLemma(BaseModel):
             profile=profile,
             lemma=lemma,
         )
-        
+
         # Set ignored_dt to current time if not already set
         if not profile_lemma.ignored_dt:
             profile_lemma.ignored_dt = datetime.now()
             profile_lemma.save()
-            
+
         return profile_lemma
-        
+
     @classmethod
     def unignore_lemma(cls, profile: Profile, lemma: Lemma) -> bool:
         """Unignore a lemma for a profile.
-        
+
         Args:
             profile: Profile model
             lemma: Lemma model
-            
+
         Returns:
             True if the lemma was unignored, False if it wasn't ignored
         """
