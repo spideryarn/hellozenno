@@ -535,7 +535,7 @@
     <div class="section process-section">
       {#if data.session}
         <div class="process-controls">
-          <button on:click={processSourcefile} class="button" disabled={$processingState.isProcessing}>
+          <button on:click={processSourcefile} class="button {$processingState.isProcessing ? 'is-processing' : ''}">
             {#if $processingState.isProcessing}
               {$processingState.description || 'Processing...'}
               {#if $processingState.totalIterations > 1}
@@ -582,7 +582,7 @@
         {navigation}
         {target_language_code}
         {sourcedir_slug}
-        {sourcefile_slug}
+        view="text"
       />
     </div>
   </div>
@@ -889,5 +889,33 @@
   .process-controls.login-prompt a.button.is-light:hover {
     background-color: #e8e8e8;
     border-color: #b5b5b5;
+  }
+  
+  .button.is-processing {
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.7);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .button.is-processing::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    100% {
+      left: 100%;
+    }
   }
 </style>

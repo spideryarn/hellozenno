@@ -113,8 +113,11 @@ export class SourcefileProcessingQueue {
 
     console.log('Determining steps based on status:', status);
 
-    // 1. Text Extraction (if needed)
-    if ((this.sourcefileType === 'image' || this.sourcefileType === 'audio') && !status.has_text) {
+    // Determine if text extraction is needed
+    const needsTextExtraction = (this.sourcefileType === 'image' || this.sourcefileType === 'audio') && !status.has_text;
+
+    // 1. Add text extraction step if needed
+    if (needsTextExtraction) {
       console.log('Adding text extraction step.');
       steps.push({
         type: 'text_extraction',
@@ -125,13 +128,13 @@ export class SourcefileProcessingQueue {
         params: {},
         description: 'Extracting text'
       });
-      // If text extraction is needed, subsequent steps depend on its success,
-      // so we determine them in the next iteration after status refresh.
-      return steps;
     }
 
-    // 2. Translation (if needed and text exists)
-    if (status.has_text && !status.has_translation) {
+    // Determine if text will be available (either already exists or will be extracted)
+    const willHaveText = status.has_text || needsTextExtraction;
+
+    // 2. Translation (if needed and text exists or will exist)
+    if (willHaveText && !status.has_translation) {
       console.log('Adding translation step.');
       steps.push({
         type: 'translation',
@@ -144,9 +147,8 @@ export class SourcefileProcessingQueue {
       });
     }
 
-    // 3. Wordforms & Phrases (if text exists)
-    // These can be added regardless of translation status
-    if (status.has_text) {
+    // 3. Wordforms & Phrases (if text exists or will exist)
+    if (willHaveText) {
       console.log('Adding wordforms extraction step.');
       steps.push({
         type: 'wordforms',
@@ -170,8 +172,8 @@ export class SourcefileProcessingQueue {
       });
     }
 
-    // 4. Lemma Metadata Completion (if text exists and there are incomplete lemmas)
-    if (status.has_text && status.incomplete_lemmas_count > 0) {
+    // 4. Lemma Metadata Completion (if text exists or will exist and there are incomplete lemmas)
+    if (willHaveText && status.incomplete_lemmas_count > 0) {
       console.log(`Adding ${status.incomplete_lemmas_count} lemma metadata completion steps.`);
       for (const lemmaInfo of status.incomplete_lemmas) {
         steps.push({
@@ -301,60 +303,113 @@ export class SourcefileProcessingQueue {
 
     let overallSuccess = true;
 
-    for (let i = 0; i < iterations; i++) {
-      const currentIteration = i + 1;
-      console.log(`--- Starting Iteration ${currentIteration}/${iterations} ---`);
-
-      processingState.update(state => ({ ...state, currentIteration }));
-
-      // 1. Fetch current status for this iteration
-      const currentStatus = await this.fetchSourcefileStatus();
-      if (!currentStatus) {
-        console.error(`Iteration ${currentIteration}: Failed to fetch status, aborting.`);
-        processingState.update(state => ({
-          ...state,
-          error: "Failed to fetch sourcefile status",
-          isProcessing: false
-        }));
-        overallSuccess = false;
-        break; // Stop all iterations if status fails
-      }
-
-      // 2. Determine steps for *this* iteration based on *current* status
-      const stepsForThisIteration = await this.determineSteps(currentStatus);
-      if (stepsForThisIteration.length === 0) {
-        console.log(`Iteration ${currentIteration}: No steps needed.`);
-        continue; // Move to the next iteration if no steps are required
-      }
-
-      // Update total steps for the UI progress bar (relative to this iteration)
+    // 1. Fetch current status to determine required steps
+    const currentStatus = await this.fetchSourcefileStatus();
+    if (!currentStatus) {
+      console.error(`Failed to fetch status, aborting.`);
       processingState.update(state => ({
         ...state,
-        totalSteps: stepsForThisIteration.length,
-        progress: 0 // Reset progress for the new iteration
+        error: "Failed to fetch sourcefile status",
+        isProcessing: false
       }));
+      return false;
+    }
 
-      // 3. Process steps for this iteration
-      this.queue = new Queue<QueuedStep>(...stepsForThisIteration); // Load queue for this iteration
+    // 2. Determine all steps needed based on current status
+    const allSteps = await this.determineSteps(currentStatus);
+    if (allSteps.length === 0) {
+      console.log(`No processing steps needed.`);
+      processingState.update(state => ({
+        ...state,
+        isProcessing: false,
+        description: 'No processing needed'
+      }));
+      return true;
+    }
 
-      while (this.queue.length > 0) {
-        const step = this.queue.dequeue();
-        const success = await this.processSingleStep(step);
+    // 3. Separate normal steps from lemma metadata steps to prioritize wordforms extraction
+    const normalSteps: QueuedStep[] = [];
+    const lemmaMetadataSteps: QueuedStep[] = [];
 
-        if (!success) {
-          console.error(`Iteration ${currentIteration}: Step ${step.type} failed. Aborting further processing.`);
-          overallSuccess = false;
-          // State updated within processSingleStep
-          break; // Stop processing this iteration
+    // Separate lemma metadata from other steps
+    allSteps.forEach(step => {
+      if (step.type === 'lemma_metadata') {
+        lemmaMetadataSteps.push(step);
+      } else {
+        normalSteps.push(step);
+      }
+    });
+
+    // Calculate total steps for progress bar
+    const totalStepsCount = (normalSteps.length * iterations) + lemmaMetadataSteps.length;
+    console.log(`Processing ${normalSteps.length} normal steps × ${iterations} iterations + ${lemmaMetadataSteps.length} lemma metadata steps`);
+
+    processingState.update(state => ({
+      ...state,
+      totalSteps: totalStepsCount,
+      progress: 0 // Reset progress counter
+    }));
+
+    // Build full queue with prioritized order:
+    // - Process all normal steps for each iteration
+    // - Then process all lemma metadata steps once at the end
+    this.queue = new Queue<QueuedStep>();
+
+    // 4. Process normal steps for each iteration
+    for (let i = 0; i < iterations; i++) {
+      const currentIteration = i + 1;
+      console.log(`--- Queueing normal steps for iteration ${currentIteration}/${iterations} ---`);
+      
+      // Add all normal steps to the queue
+      for (const step of normalSteps) {
+        this.queue.enqueue({...step}); // Clone step object to avoid reference issues
+      }
+    }
+
+    // 5. Add all lemma metadata steps to the end of the queue (only once)
+    console.log(`--- Queueing ${lemmaMetadataSteps.length} lemma metadata steps ---`);
+    for (const step of lemmaMetadataSteps) {
+      this.queue.enqueue({...step});
+    }
+
+    // 6. Process all steps in the queue
+    let currentStepIndex = 1;
+    let currentIterationTracking = 1;
+    let stepsInCurrentIteration = normalSteps.length;
+
+    while (this.queue.length > 0) {
+      const step = this.queue.dequeue();
+      
+      // Update iteration counter for the UI
+      if (step.type !== 'lemma_metadata') {
+        if (currentStepIndex > stepsInCurrentIteration) {
+          currentIterationTracking++;
+          currentStepIndex = 1;
+        } else {
+          currentStepIndex++;
         }
+        
+        processingState.update(state => ({ 
+          ...state, 
+          currentIteration: currentIterationTracking 
+        }));
+      } else {
+        // For lemma metadata, we're in a special "finishing" phase
+        processingState.update(state => ({ 
+          ...state, 
+          currentIteration: iterations,
+          description: step.description 
+        }));
       }
+      
+      const success = await this.processSingleStep(step);
 
-      if (!overallSuccess) {
-        break; // Stop all iterations if one fails
+      if (!success) {
+        console.error(`Step ${step.type} failed. Aborting further processing.`);
+        overallSuccess = false;
+        break; // Stop processing on failure
       }
-
-      console.log(`--- Finished Iteration ${currentIteration}/${iterations} ---`);
-    } // End of iterations loop
+    }
 
     // Final state update
     console.log("Processing finished. Fetching final data...");
