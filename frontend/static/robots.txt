@@ -1,3 +1,4 @@
 User-agent: *
 Disallow: /auth
-Crawl-delay: 10 
+Crawl-delay: 10
+Sitemap: https://hellozenno.com/sitemap.xml

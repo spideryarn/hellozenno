@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://hellozenno.com/sitemap-static.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+  <!-- Dynamic sitemaps will be added here -->
+  <!-- Example:
+  <sitemap>
+    <loc>https://hellozenno.com/sitemap-el-lemmas.xml</loc>
+    <lastmod>2025-04-26</lastmod>
+  </sitemap>
+  -->
+</sitemapindex>

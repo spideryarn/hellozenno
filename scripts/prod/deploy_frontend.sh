@@ -62,6 +62,14 @@ fi
 # exit 1
 
 
+# Generate sitemaps before deployment for production only
+if [[ "$PREVIEW" == "false" ]]; then
+    echo "Generating sitemaps for production deployment..."
+    cd .. # Return to project root
+    ./scripts/prod/generate_sitemaps.sh
+    cd frontend # Go back to frontend directory
+fi
+
 # Deploy to Vercel with environment variables
 if [[ "$PREVIEW" == "true" ]]; then
     echo "Deploying Frontend to Vercel preview environment..."
