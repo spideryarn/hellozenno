@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
             language_name,
             target_language_code,
             current_sort: sort,
+            total: phrases.length, // Add total count for DataGrid pagination
         };
     } catch (err) {
         console.error("Error loading phrases data:", err);

@@ -1,87 +1,108 @@
 <script lang="ts">
-    import { PhraseCard } from '$lib';
-    import type { Phrase } from '$lib/types';
-    import { page } from '$app/state';
+    import type { PageData } from './$types';
+    import DataGrid from '$lib/components/DataGrid.svelte';
     import { SITE_NAME } from '$lib/config';
+    import { page } from '$app/stores';
     
-    export let data: {
-        phrases: Phrase[],
-        language_name: string,
-        target_language_code: string
-    };
+    export let data: PageData;
+    
+    // Destructure data for easier access
+    const { target_language_code, language_name, phrases, total } = data;
+
+    import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
+    import { supabase } from '$lib/supabaseClient';
+
+    const columns = [
+      { 
+        id: 'canonical_form', 
+        header: 'Phrase',
+        accessor: row => `<span class="hz-column-primary-green">${row.canonical_form}</span>`,
+        isHtml: true
+      },
+      { 
+        id: 'translations', 
+        header: 'Translations', 
+        accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '',
+        filterType: 'json_array'
+      },
+      { id: 'part_of_speech', header: 'Part of Speech', width: 120 },
+      { 
+        id: 'difficulty_level', 
+        header: 'Level', 
+        width: 80,
+        accessor: row => row.difficulty_level || '—'
+      },
+      { 
+        id: 'updated_at', 
+        header: 'Modified', 
+        accessor: row => {
+          if (!row.updated_at) return '';
+          try {
+            const date = new Date(row.updated_at);
+            const formatted = date.toLocaleString('en-US', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+            return `<span class="metadata-timestamp">${formatted}</span>`;
+          } catch (e) {
+            return row.updated_at;
+          }
+        },
+        isHtml: true
+      },
+    ];
+
+    // Use the supabase data provider
+    const loadData = supabaseDataProvider({
+      table: 'phrase',
+      selectableColumns: 'id,canonical_form,part_of_speech,translations,updated_at,usage_notes,slug,difficulty_level',
+      client: supabase,
+    });
+    
+    // Function to generate URLs for each row
+    function getPhraseUrl(row: any): string {
+      return `/language/${target_language_code}/phrase/${row.slug}`;
+    }
+
+    // Function to generate tooltips for each row
+    function getPhraseTooltip(row: any): string {
+      return row.usage_notes || '';
+    }
 </script>
 
 <svelte:head>
-    <title>Phrases | {data.language_name} | {SITE_NAME}</title>
+    <title>Phrases | {language_name} | {SITE_NAME}</title>
 </svelte:head>
 
-<div class="container my-5">
-    <h1 class="mb-4">{data.language_name} phrases and idioms <span class="text-muted">({data.phrases?.length || 0})</span></h1>
-
-    <div class="sort-options mb-4">
-        <a href="{`/language/${data.target_language_code}/phrases?sort=alpha`}" class="sort-link me-3 {page.url.searchParams.get('sort') === 'alpha' || !page.url.searchParams.get('sort') ? 'active' : ''}">
-            Sort alphabetically
-        </a>
-        <a href="{`/language/${data.target_language_code}/phrases?sort=date`}" class="sort-link {page.url.searchParams.get('sort') === 'date' ? 'active' : ''}">
-            Sort by date
-        </a>
-    </div>
-
-    {#if data.phrases?.length > 0}
-        <div class="phrases-list">
-            {#each data.phrases as phrase}
-                <div class="phrase-item mb-4">
-                    <PhraseCard 
-                        phrase={phrase.canonical_form} 
-                        translations={phrase.translations} 
-                        slug={phrase.slug}
-                        part_of_speech={phrase.part_of_speech}
-                        notes={phrase.usage_notes}
-                        target_language_code={data.target_language_code}
-                    />
-                </div>
-            {/each}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-3">Phrases and idioms in {language_name}</h1>
         </div>
+    </div>
+    
+    {#if phrases.length > 0}
+        <DataGrid {columns}
+                  loadData={loadData}
+                  initialRows={phrases}
+                  initialTotal={total}
+                  getRowUrl={getPhraseUrl}
+                  getRowTooltip={getPhraseTooltip}
+                  queryModifier={(query) => query.eq('target_language_code', target_language_code)}
+        />
     {:else}
-        <div class="alert alert-info">No phrases available</div>
+        <div class="alert alert-info">
+            No phrases found for {language_name}.
+        </div>
     {/if}
 </div>
 
 <style>
-    .sort-link {
-        text-decoration: none;
-        padding: 0.5em 0.8em;
-        border-radius: 4px;
-        color: var(--bs-secondary);
-        transition: all 0.2s ease;
-    }
-    
-    .sort-link:hover {
-        background-color: rgba(76, 173, 83, 0.1);
-    }
-    
-    .sort-link.active {
-        font-weight: bold;
-        color: var(--bs-primary);
-        background-color: rgba(76, 173, 83, 0.15);
-    }
-    
-    .phrases-list {
-        display: grid;
-        gap: 1.5rem;
-    }
-    
-    .phrase-item {
-        transition: transform 0.2s ease;
-    }
-    
-    .phrase-item:hover {
-        transform: translateY(-2px);
-    }
-    
-    @media (min-width: 768px) {
-        .phrases-list {
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-        }
+    .metadata-timestamp {
+        font-family: var(--bs-font-monospace, monospace);
     }
 </style> 
