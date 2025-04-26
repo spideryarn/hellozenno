@@ -12,7 +12,13 @@
     import { supabase } from '$lib/supabaseClient';
 
     const columns = [
-      { id: 'wordform', header: 'Wordform', class: 'hz-foreign-text' },
+      { 
+        id: 'wordform', 
+        header: 'Wordform',
+        // width: '25%', // Set the wordform column to 25% of table width
+        accessor: row => `<span class="hz-column-primary-green">${row.wordform}</span>`,
+        isHtml: true
+      },
       { id: 'translations', header: 'Translations', accessor: row => Array.isArray(row.translations) ? row.translations.join(', ') : '' },
       { id: 'part_of_speech', header: 'POS', width: 80 },
     ];

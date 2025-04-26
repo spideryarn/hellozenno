@@ -57,6 +57,11 @@
     --hz-font-foreign: 'Times New Roman', serif;
     /* Keep italic styling separate */
     --hz-font-monospace: Menlo, Monaco, 'Courier New', monospace;
+    
+    /* Border radius values for consistent UI elements */
+    --hz-border-radius-sm: 4px;
+    --hz-border-radius-md: 6px;
+    --hz-border-radius-lg: 8px;
 
     /* --- Bootstrap Overrides (Using HZ Variables) --- */
     --bs-body-bg: var(--hz-color-background);

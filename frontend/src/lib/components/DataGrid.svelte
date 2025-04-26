@@ -152,6 +152,8 @@
       filterField = value ? colId : null;
       filterValue = value || null;
       page = 1;
+      // For debugging
+      console.log(`Filtering on ${filterField}: ${filterValue}`);
     }, 300) as unknown as number;
   }
 
@@ -217,10 +219,20 @@
           {#each columns as col}
             {#if col.filterable !== false}
               <th>
-                <input type="text" class="form-control form-control-sm" placeholder="Filter"
-                       on:input={(e) => handleFilterInput(col.id, (e.target as HTMLInputElement).value)}
-                       value={col.id === filterField ? (filterValue ?? '') : ''}
-                />
+                <div class="input-group input-group-sm">
+                  <input type="text" class="form-control form-control-sm" placeholder="Filter"
+                         on:input={(e) => handleFilterInput(col.id, (e.target as HTMLInputElement).value)}
+                         value={col.id === filterField ? (filterValue ?? '') : ''}
+                  />
+                  {#if col.id === filterField && filterValue}
+                    <button class="btn btn-outline-secondary btn-sm" 
+                            type="button" 
+                            title="Clear filter"
+                            on:click={() => handleFilterInput(col.id, '')}>
+                      ×
+                    </button>
+                  {/if}
+                </div>
               </th>
             {:else}
               <th></th>
@@ -303,12 +315,25 @@
 <style>
   .hz-datagrid {
     border-collapse: collapse;
+    border-radius: var(--hz-border-radius-md);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--hz-color-border);
   }
 
   .hz-datagrid thead th {
     background-color: var(--hz-color-primary-green-dark);
     color: var(--hz-color-text-main);
     border-bottom: none; /* remove bottom border */
+  }
+  
+  .input-group .btn-outline-secondary {
+    color: var(--hz-color-text-main);
+    border-color: var(--hz-color-border-main);
+  }
+  
+  .input-group .btn-outline-secondary:hover {
+    background-color: var(--hz-color-primary-green);
+    border-color: var(--hz-color-primary-green);
   }
 
   .hz-datagrid tbody tr {
@@ -317,11 +342,11 @@
   }
 
   .hz-datagrid tbody tr:hover {
-    background-color: rgba(102, 154, 115, 0.07); /* subtle green overlay */
+    background-color: rgba(102, 154, 115, 0.1); /* slightly enhanced green overlay */
   }
 
   .hz-datagrid td, .hz-datagrid th {
-    padding: 0.6rem 0.75rem;
+    padding: 0.8rem 0.75rem; /* increased vertical padding */
   }
 
   /* remove left/right borders */
@@ -356,7 +381,7 @@
   }
 
   .data-grid-row-link:hover {
-    background-color: rgba(102, 154, 115, 0.07); /* subtle green overlay */
+    background-color: rgba(102, 154, 115, 0.1); /* subtle green overlay */
   }
 
   /* Make the link fill the entire cell */
@@ -367,17 +392,22 @@
     text-decoration: none;
     color: inherit;
     padding: 0;
-    margin: -0.6rem -0.75rem; /* Negative margin to counter td padding */
-    padding: 0.6rem 0.75rem;  /* Match td padding */
+    margin: -0.8rem -0.75rem; /* Negative margin to counter td padding */
+    padding: 0.8rem 0.75rem;  /* Match td padding */
     position: relative;       /* Create stacking context for nested interactive elements */
   }
 
-  /* Ensure text color doesn't change */
+  /* Ensure text color doesn't change (unless explicitly overridden with .hz-column-primary-green) */
   .grid-row-link:hover, 
   .grid-row-link:focus, 
   .grid-row-link:active, 
   .grid-row-link:visited {
     color: inherit;
     text-decoration: none;
+  }
+  
+  /* Don't override the primary green color for links that contain spans with this class */
+  .grid-row-link .hz-column-primary-green {
+    color: var(--hz-color-primary-green) !important;
   }
 </style> 
