@@ -15,6 +15,10 @@
   export let totalPages: number = 1;
   export let isLoading: boolean = false;
   
+  // Row count information props
+  export let totalRows: number = 0;
+  export let filteredRows: number | null = null;
+  
   // Function to call when page changes
   export let onPageChange: (newPage: number) => void;
 
@@ -67,44 +71,87 @@
   }
 </script>
 
-{#if totalPages > 1}
-  <div class="pagination-buttons d-flex align-items-center gap-2">
-    <button class="button" on:click={() => goToPage(1)} disabled={page === 1 || isLoading} title="First Page">
-      <CaretDoubleLeft size={16} weight="bold" />
-    </button>
-    <button class="button" on:click={() => goToPage(page - 1)} disabled={page === 1 || isLoading} title="Previous Page">
-      <CaretLeft size={16} weight="bold" />
-    </button>
-    <span class="file-position">
-      {#if isLoading}
-        <LoadingSpinner size="sm" />
-      {:else}
-        <div class="page-input-container">
-          <input
-            bind:this={inputElement}
-            type="text"
-            class="page-input {inputError ? 'input-error' : ''}"
-            bind:value={inputValue}
-            on:blur={handleSubmit}
-            on:keydown={(e) => e.key === 'Enter' && handleSubmit()}
-            disabled={isLoading}
-            title="Enter page number"
-            aria-label="Go to page"
-          />
-          <span class="page-total">/{totalPages}</span>
-        </div>
-      {/if}
-    </span>
-    <button class="button" on:click={() => goToPage(page + 1)} disabled={page === totalPages || isLoading} title="Next Page">
-      <CaretRight size={16} weight="bold" />
-    </button>
-    <button class="button" on:click={() => goToPage(totalPages)} disabled={page === totalPages || isLoading} title="Last Page">
-      <CaretDoubleRight size={16} weight="bold" />
-    </button>
-  </div>
-{/if}
+<div class="pagination-container d-flex align-items-center justify-content-between">
+  <!-- Row count display - always visible -->
+  {#if totalRows > 0}
+    <div class="row-count me-auto">
+      <span class="badge bg-secondary">
+        {#if filteredRows !== null && filteredRows !== totalRows}
+          {filteredRows} of {totalRows} rows
+        {:else}
+          {totalRows} rows
+        {/if}
+      </span>
+    </div>
+  {/if}
+
+  <!-- Pagination buttons - only visible if more than one page -->
+  {#if totalPages > 1}
+    <div class="pagination-buttons d-flex align-items-center gap-2">
+      <button class="button" on:click={() => goToPage(1)} disabled={page === 1 || isLoading} title="First Page">
+        <CaretDoubleLeft size={16} weight="bold" />
+      </button>
+      <button class="button" on:click={() => goToPage(page - 1)} disabled={page === 1 || isLoading} title="Previous Page">
+        <CaretLeft size={16} weight="bold" />
+      </button>
+      <span class="file-position">
+        {#if isLoading}
+          <LoadingSpinner size="sm" />
+        {:else}
+          <div class="page-input-container">
+            <input
+              bind:this={inputElement}
+              type="text"
+              class="page-input {inputError ? 'input-error' : ''}"
+              bind:value={inputValue}
+              on:blur={handleSubmit}
+              on:keydown={(e) => e.key === 'Enter' && handleSubmit()}
+              disabled={isLoading}
+              title="Enter page number"
+              aria-label="Go to page"
+            />
+            <span class="page-total">/{totalPages}</span>
+          </div>
+        {/if}
+      </span>
+      <button class="button" on:click={() => goToPage(page + 1)} disabled={page === totalPages || isLoading} title="Next Page">
+        <CaretRight size={16} weight="bold" />
+      </button>
+      <button class="button" on:click={() => goToPage(totalPages)} disabled={page === totalPages || isLoading} title="Last Page">
+        <CaretDoubleRight size={16} weight="bold" />
+      </button>
+    </div>
+  {:else if totalRows > 0}
+    <!-- If we have rows but only one page, still show the count but right-aligned -->
+    <div></div>
+  {/if}
+</div>
 
 <style>
+  /* --- Pagination container styles --- */
+  .pagination-container {
+    width: 100%;
+  }
+
+  /* --- Row count styles --- */
+  .row-count {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--hz-color-text-main);
+    white-space: nowrap;
+    padding: 0.5rem 0;
+    margin-right: 1rem;
+    display: flex;
+    flex: 1;
+  }
+  
+  .row-count .badge {
+    background-color: var(--hz-color-primary-green-dark);
+    color: white;
+    font-weight: normal;
+    padding: 0.4rem 0.8rem;
+  }
+
   /* --- Pagination button styles --- */
   .button {
     background-color: var(--hz-color-primary-green);

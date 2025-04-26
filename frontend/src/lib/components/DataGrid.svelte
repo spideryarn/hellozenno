@@ -27,6 +27,8 @@
     sortable?: boolean;
     /** Disable filtering for this column (defaults to true) */
     filterable?: boolean;
+    /** Specify special filter handling for this column (e.g. 'json_array') */
+    filterType?: 'json_array' | string;
   }
 
   /* ---------- props ---------- */
@@ -104,7 +106,8 @@
         sortField,
         sortDir,
         filterField,
-        filterValue
+        filterValue,
+        columns // Pass column definitions to allow providers to check filterType
       };
       
       // Pass the queryModifier function if provided
@@ -149,11 +152,30 @@
   function handleFilterInput(colId: string, value: string) {
     clearTimeout(filterTimer);
     filterTimer = setTimeout(() => {
-      filterField = value ? colId : null;
-      filterValue = value || null;
+      // If the value is empty and this column was previously filtered,
+      // we need to make sure we clear the filter
+      if (!value && filterField === colId) {
+        filterField = null;
+        filterValue = null;
+      } else if (value) {
+        // Find the column definition to check if it has a special filterType
+        const column = columns.find(col => col.id === colId);
+        
+        // Set the filter field and value
+        filterField = colId;
+        filterValue = value;
+        
+        // Log additional debug info for special filter types
+        if (column?.filterType) {
+          console.log(`Applying ${column.filterType} filter on ${filterField}: ${filterValue}`);
+        }
+      } else {
+        // No value and not previously this column, no change needed
+        return;
+      }
       page = 1;
       // For debugging
-      console.log(`Filtering on ${filterField}: ${filterValue}`);
+      console.log(`Filtering on ${filterField ?? 'none'}: ${filterValue ?? 'none'}`);
     }, 300) as unknown as number;
   }
 
@@ -166,14 +188,16 @@
   $: showNavigation = loadData && totalPagesValue > 1;
 </script>
 
-<!-- Top navigation (optional - shows when showTopNav prop is true and we have pagination) -->
-{#if showNavigation && showTopNav}
+<!-- Top navigation (optional - shows when showTopNav prop is true) -->
+{#if showTopNav}
   <div class="top-nav-container mb-3">
     <DataGridNavButtons 
       page={page} 
       totalPages={totalPagesValue} 
       isLoading={isLoading} 
       onPageChange={handlePageChange} 
+      totalRows={total}
+      filteredRows={filterField ? visibleRows.length : null}
     />
   </div>
 {/if}
@@ -222,6 +246,7 @@
                 <div class="input-group input-group-sm">
                   <input type="text" class="form-control form-control-sm" placeholder="Filter"
                          on:input={(e) => handleFilterInput(col.id, (e.target as HTMLInputElement).value)}
+                         on:change={(e) => handleFilterInput(col.id, (e.target as HTMLInputElement).value)}
                          value={col.id === filterField ? (filterValue ?? '') : ''}
                   />
                   {#if col.id === filterField && filterValue}
@@ -301,16 +326,16 @@
 </div>
 
 <!-- Bottom navigation -->
-{#if showNavigation}
-  <div class="bottom-nav-container mt-3">
-    <DataGridNavButtons 
-      page={page} 
-      totalPages={totalPagesValue} 
-      isLoading={isLoading} 
-      onPageChange={handlePageChange} 
-    />
-  </div>
-{/if}
+<div class="bottom-nav-container mt-3">
+  <DataGridNavButtons 
+    page={page} 
+    totalPages={totalPagesValue} 
+    isLoading={isLoading} 
+    onPageChange={handlePageChange} 
+    totalRows={total}
+    filteredRows={filterField ? visibleRows.length : null}
+  />
+</div>
 
 <style>
   .hz-datagrid {
@@ -359,12 +384,14 @@
   .top-nav-container {
     display: flex;
     justify-content: flex-end;
+    width: 100%;
   }
   
   /* Bottom navigation container */
   .bottom-nav-container {
     display: flex;
     justify-content: flex-end;
+    width: 100%;
   }
   
   /* Responsive adjustments */
