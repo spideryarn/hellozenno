@@ -349,9 +349,14 @@
   }
 
   .hz-datagrid thead th {
-    background-color: var(--hz-color-primary-green-dark);
+    /* Make the header less obtrusive */
+    background-color: rgba(83, 126, 92, 0.6); /* Semi-transparent version of var(--hz-color-primary-green-dark) */
     color: var(--hz-color-text-main);
     border-bottom: none; /* remove bottom border */
+    font-weight: 500; /* Slightly reduce font weight */
+    font-size: 0.95rem; /* Slightly reduce font size */
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3); /* Subtle text shadow for better readability */
+    letter-spacing: 0.02em; /* Slightly increased letter spacing */
   }
   
   .input-group .btn-outline-secondary {
@@ -373,8 +378,12 @@
     background-color: rgba(102, 154, 115, 0.1); /* slightly enhanced green overlay */
   }
 
-  .hz-datagrid td, .hz-datagrid th {
-    padding: 0.8rem 0.75rem; /* increased vertical padding */
+  .hz-datagrid td {
+    padding: 0.8rem 0.75rem; /* increased vertical padding for data cells */
+  }
+  
+  .hz-datagrid th {
+    padding: 0.6rem 0.75rem; /* slightly reduced padding for header cells */
   }
 
   /* remove left/right borders */
