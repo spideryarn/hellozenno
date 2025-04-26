@@ -74,6 +74,7 @@ We provide reusable Svelte components to maintain consistent styling:
 - `CollapsibleHeader.svelte`: Expandable header component with toggle functionality
 - `LoadingSpinner.svelte`: For displaying a loading indicator
 - `LightboxImage.svelte`: For displaying images that can be clicked to view in a fullscreen lightbox overlay
+- `DropdownButton.svelte`: Reusable dropdown menu component with tooltip support and click-outside behavior
 
 ## Custom CSS Classes
 
@@ -319,3 +320,48 @@ Use subtle animations to enhance user experience without being distracting:
 ```
 
 **Important Note**: The LightboxImage component should only be used for screenshots and detailed images where it's important for users to see the full-size version. It works best for non-clickable images - if you need the image to be a link, use a regular `<a>` tag with an `<img>` instead.
+
+7. For dropdown menus:
+
+```svelte
+<script>
+  import DropdownButton from '$lib/components/DropdownButton.svelte';
+  // Import Phosphor icon if needed
+  import User from 'phosphor-svelte/lib/User';
+  
+  // Create your items array
+  const dropdownItems = [
+    { type: 'header', text: 'Menu Title' },
+    { type: 'link', text: 'Profile', href: '/profile' },
+    { type: 'divider' },
+    { type: 'button', text: 'Logout', onClick: handleLogout }
+  ];
+  
+  let isOpen = false;
+</script>
+
+<!-- Basic usage -->
+<DropdownButton 
+  buttonText="Menu" 
+  buttonClass="btn btn-sm btn-secondary"
+  tooltipText="Optional button tooltip"
+  bind:isOpen={isOpen}
+  items={dropdownItems}
+/>
+
+<!-- With Phosphor icon -->
+<DropdownButton 
+  buttonText="Profile" 
+  buttonSvelteContent={User}
+  buttonClass="btn btn-sm btn-secondary"
+  tooltipText="User profile menu"
+  bind:isOpen={isOpen}
+  items={dropdownItems}
+/>
+```
+
+**Item Types Supported**:
+- `header`: Display a non-interactive header text
+- `link`: Standard link with href
+- `button`: Clickable button with onClick handler
+- `divider`: Horizontal divider line

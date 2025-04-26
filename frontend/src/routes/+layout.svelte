@@ -6,6 +6,9 @@
   import type { LayoutData } from './$types'; // Import the type for LayoutData
   import { SITE_NAME, TAGLINE, CONTACT_EMAIL } from '$lib/config'; // Added Import
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
+  import DropdownButton from '$lib/components/DropdownButton.svelte';
+  import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
+  import User from 'phosphor-svelte/lib/User';
 
   // Get data passed from +layout.ts
   export let data: LayoutData;
@@ -48,10 +51,6 @@
   }
 
   let isMenuOpen = false;
-
-  function toggleMenu() {
-    isMenuOpen = !isMenuOpen;
-  }
 </script>
 
 <!-- Add the svelte:head block for the title -->
@@ -60,63 +59,7 @@
 </svelte:head>
 
 <style>
-  /* Add basic styles for custom dropdown */
-  .profile-dropdown {
-    position: relative; /* Needed for absolute positioning of menu */
-  }
-
-  .profile-menu {
-    position: absolute;
-    top: 100%; /* Position below the button */
-    right: 0; /* Align to the right */
-    z-index: 1000; /* Ensure it's above other content */
-    display: block; /* Override Bootstrap's default display: none */
-    min-width: 10rem;
-    padding: 0.5rem 0;
-    margin: 0.125rem 0 0; /* Slight separation */
-    font-size: 1rem;
-    color: #212529;
-    text-align: left;
-    list-style: none;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0,0,0,.15);
-    border-radius: 0.25rem;
-  }
-
-  /* Reuse Bootstrap styles for items if available or add custom ones */
-  .profile-menu .dropdown-header { /* Assuming Bootstrap CSS is still linked */
-      display: block;
-      padding: 0.5rem 1rem;
-      margin-bottom: 0;
-      font-size: 0.875rem;
-      color: #6c757d;
-      white-space: nowrap;
-  }
-  .profile-menu .dropdown-item {
-      display: block;
-      width: 100%;
-      padding: 0.25rem 1rem;
-      clear: both;
-      font-weight: 400;
-      color: #212529;
-      text-align: inherit;
-      white-space: nowrap;
-      background-color: transparent;
-      border: 0;
-      text-decoration: none; /* Added for links */
-  }
-  .profile-menu .dropdown-item:hover,
-  .profile-menu .dropdown-item:focus {
-      color: #1e2125;
-      background-color: #e9ecef;
-  }
-  .profile-menu .dropdown-divider {
-    height: 0;
-    margin: 0.5rem 0;
-    overflow: hidden;
-    border-top: 1px solid rgba(0,0,0,.15);
-  }
+  /* Dropdown styles are now handled by the DropdownButton component */
 
   .logo-image {
     height: 40px;
@@ -192,30 +135,21 @@
             
             <!-- Auth Status: Use reactive `session` from data -->
             {#if session}
-              <!-- Custom Svelte Dropdown for logged-in user -->
-              <div class="profile-dropdown ms-4"> 
-                <button
-                  class="btn btn-sm btn-secondary text-on-light"
-                  type="button"
-                  aria-haspopup="true"
-                  aria-expanded={isMenuOpen}
-                  on:click={toggleMenu}
-                >
-                  <i class="fas fa-user"></i> Profile
-                </button>
-                {#if isMenuOpen} 
-                <ul class="profile-menu" aria-labelledby="profileDropdownMenuButton"> 
-                  <!-- Use session.user.email -->
-                  <li><h6 class="dropdown-header">{session.user.email}</h6></li>
-                  <li><a class="dropdown-item" href="/auth/profile">Edit Profile</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li>
-                    <button class="dropdown-item" type="button" on:click={() => { handleLogout(); isMenuOpen = false; }}>
-                      Logout
-                    </button>
-                  </li>
-                </ul>
-                {/if}
+              <!-- Reusable Dropdown Component for logged-in user -->
+              <div class="ms-4">
+                <DropdownButton 
+                  buttonText="Profile" 
+                  buttonSvelteContent={User}
+                  buttonClass="btn btn-sm btn-secondary text-on-light"
+                  tooltipText="Logged in as {session.user.email}"
+                  bind:isOpen={isMenuOpen}
+                  items={[
+                    { type: 'header', text: session.user.email },
+                    { type: 'link', text: 'Edit Profile', href: '/auth/profile' },
+                    { type: 'divider' },
+                    { type: 'button', text: 'Logout', onClick: handleLogout }
+                  ]}
+                />
               </div>
             {:else}
               <!-- Login Button for logged-out user -->
