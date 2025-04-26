@@ -5,6 +5,13 @@
     import { apiFetch } from '$lib/api';
     import { RouteName } from '$lib/generated/routes';
     import { SITE_NAME } from '$lib/config';
+    import Card from '$lib/components/Card.svelte';
+    import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+    import Alert from '$lib/components/Alert.svelte';
+    import Globe from 'phosphor-svelte/lib/Globe';
+    import User from 'phosphor-svelte/lib/User';
+    import FloppyDisk from 'phosphor-svelte/lib/FloppyDisk';
+    import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 
     export let data: PageData;
     let supabase: SupabaseClient | null = data.supabase;
@@ -98,55 +105,85 @@
     <title>Profile | {SITE_NAME}</title>
 </svelte:head>
 
-<h1>User Profile</h1>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <Card>
+                <div slot="title" class="d-flex align-items-center">
+                    <User size={24} weight="fill" class="me-2 text-primary-green" />
+                    <h1 class="h3 mb-0">User Profile</h1>
+                </div>
+                
+                {#if errorMessage}
+                    <Alert type="danger" class="mt-3">{errorMessage}</Alert>
+                {/if}
 
-{#if errorMessage}
-    <div class="alert alert-danger" role="alert">
-        {errorMessage}
-    </div>
-{/if}
+                {#if successMessage}
+                    <Alert type="success" class="mt-3">{successMessage}</Alert>
+                {/if}
 
-{#if successMessage}
-    <div class="alert alert-success" role="alert">
-        {successMessage}
-    </div>
-{/if}
+                {#if data.profile}
+                    <div class="mb-4 mt-3">
+                        <div class="d-flex align-items-center">
+                            <div class="p-3 rounded-circle me-3" style="background-color: var(--hz-color-surface);">
+                                <User size={20} weight="fill" class="text-primary-green" />
+                            </div>
+                            <div>
+                                <div class="text-secondary small">Email</div>
+                                <div>{data.profile.email || session?.user?.email}</div>
+                            </div>
+                        </div>
+                    </div>
 
-{#if data.profile}
-    <p>Email: {data.profile.email || session?.user?.email}</p> 
-
-    <form on:submit|preventDefault={handleSaveProfile}>
-        <div class="mb-3">
-            <label for="targetLanguage" class="form-label">Target Language</label>
-            <select 
-                id="targetLanguage" 
-                class="form-select" 
-                style="max-width: 400px;" 
-                bind:value={selectedLanguage} 
-                disabled={isLoading}
-            >
-                <option value="" disabled selected>-- Select Language --</option>
-                {#each data.availableLanguages || [] as lang}
-                    <option value={lang.code}>{lang.name}</option>
-                {/each}
-            </select>
+                    <form on:submit|preventDefault={handleSaveProfile} class="mb-4">
+                        <div class="mb-4">
+                            <label for="targetLanguage" class="form-label d-flex align-items-center">
+                                <Globe size={20} weight="fill" class="me-2 text-primary-green" />
+                                <span>Target Language</span>
+                            </label>
+                            <select 
+                                id="targetLanguage" 
+                                class="form-select" 
+                                bind:value={selectedLanguage} 
+                                disabled={isLoading}
+                            >
+                                <option value="" disabled selected>-- Select Language --</option>
+                                {#each data.availableLanguages || [] as lang}
+                                    <option value={lang.code}>{lang.name}</option>
+                                {/each}
+                            </select>
+                            <div class="form-text">This will be your default language for study</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="submit" class="btn btn-primary" disabled={isLoading}>
+                                {#if isLoading}
+                                    <LoadingSpinner size="sm" class="me-2" />
+                                    <span>Saving...</span>
+                                {:else}
+                                    <FloppyDisk size={18} weight="fill" class="me-2" />
+                                    <span>Save Profile</span>
+                                {/if}
+                            </button>
+                            
+                            {#if getBackButtonInfo().show}
+                                <a 
+                                    href={getBackButtonInfo().link} 
+                                    class="btn btn-secondary text-on-light"
+                                >
+                                    <CaretLeft size={18} weight="fill" class="me-1" />
+                                    {getBackButtonInfo().text}
+                                </a>
+                            {/if}
+                        </div>
+                    </form>
+                {:else if !errorMessage}
+                    <div class="text-center py-4">
+                        <LoadingSpinner size="lg" />
+                        <p class="mt-3">Loading profile...</p>
+                    </div>
+                {/if}
+            </Card>
         </div>
-        <button type="submit" class="btn btn-primary" disabled={isLoading}>
-            {#if isLoading}Saving...{:else}Save Profile{/if}
-        </button>
-    </form>
-
-    <!-- Back button section -->
-    {#if getBackButtonInfo().show}
-        <div class="mt-4">
-            <a 
-                href={getBackButtonInfo().link} 
-                class="btn btn-secondary text-on-light"
-            >
-                {getBackButtonInfo().text}
-            </a>
-        </div>
-    {/if}
-{:else if !errorMessage}
-    <p>Loading profile...</p>
-{/if} 
+    </div>
+</div>
