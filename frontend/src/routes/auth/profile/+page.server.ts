@@ -12,10 +12,10 @@ async function getProfile(supabaseClient: any) {
     console.warn("Using placeholder getProfile in profile/+page.server.ts");
     // Example: Fetch from /api/profile using apiFetch
     try {
-        // Need to ensure PROFILE_API_GET_PROFILE_API exists in RouteName / generated routes
+        // Using the correct PROFILE_API_GET_CURRENT_PROFILE_API
         const profileData = await apiFetch({
             supabaseClient: supabaseClient, // Pass the server client
-            routeName: RouteName.PROFILE_API_GET_PROFILE_API, // NEEDS TO BE CREATED IN BACKEND/GENERATED
+            routeName: RouteName.PROFILE_API_GET_CURRENT_PROFILE_API, 
             params: {},
             options: { method: 'GET' }
         });
