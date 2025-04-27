@@ -39,6 +39,11 @@
   export let showHeader: boolean = true;
   /** Whether to show navigation buttons at the top */
   export let showTopNav: boolean = true;
+  /** 
+   * Whether to show loading spinner on initial load
+   * Default is true for better user experience - prevents "No data" flash
+   */
+  export let showLoadingOnInitial: boolean = true;
   /**
    * Function to generate the URL for each row
    * When provided, rows will be rendered as actual hyperlinks (<a> tags)
@@ -290,44 +295,25 @@
       </thead>
     {/if}
     <tbody>
-      {#if visibleRows.length === 0}
+      {#if isLoading || (visibleRows.length === 0 && loadData && showLoadingOnInitial)}
+        <tr>
+          <td colspan={columns.length} class="text-center py-4">
+            <LoadingSpinner />
+          </td>
+        </tr>
+      {:else if visibleRows.length === 0}
         <tr>
           <td colspan={columns.length} class="text-center text-muted py-4">No data</td>
         </tr>
       {:else}
-        {#if isLoading}
-          <tr>
-            <td colspan={columns.length} class="text-center py-4">
-              <LoadingSpinner />
-            </td>
-          </tr>
-        {:else}
-          {#each visibleRows as row (row.id ?? row.slug ?? row)}
-            {#if getRowUrl}
-              <!-- Render as proper hyperlink -->
-              <tr class="data-grid-row-link" title={getRowTooltip ? getRowTooltip(row) : undefined}>
-                {#each columns as col}
-                  <td class={col.class}>
-                    <!-- Apply the anchor to each cell -->
-                    <a href={getRowUrl(row)} class="grid-row-link">
-                      {#if col.accessor}
-                        {#if col.isHtml}
-                          {@html col.accessor(row) }
-                        {:else}
-                          {col.accessor(row)}
-                        {/if}
-                      {:else}
-                        {row[col.id]}
-                      {/if}
-                    </a>
-                  </td>
-                {/each}
-              </tr>
-            {:else}
-              <!-- No URL provided, render as non-clickable row -->
-              <tr title={getRowTooltip ? getRowTooltip(row) : undefined}>
-                {#each columns as col}
-                  <td class={col.class}>
+        {#each visibleRows as row (row.id ?? row.slug ?? row)}
+          {#if getRowUrl}
+            <!-- Render as proper hyperlink -->
+            <tr class="data-grid-row-link" title={getRowTooltip ? getRowTooltip(row) : undefined}>
+              {#each columns as col}
+                <td class={col.class}>
+                  <!-- Apply the anchor to each cell -->
+                  <a href={getRowUrl(row)} class="grid-row-link">
                     {#if col.accessor}
                       {#if col.isHtml}
                         {@html col.accessor(row) }
@@ -337,12 +323,29 @@
                     {:else}
                       {row[col.id]}
                     {/if}
-                  </td>
-                {/each}
-              </tr>
-            {/if}
-          {/each}
-        {/if}
+                  </a>
+                </td>
+              {/each}
+            </tr>
+          {:else}
+            <!-- No URL provided, render as non-clickable row -->
+            <tr title={getRowTooltip ? getRowTooltip(row) : undefined}>
+              {#each columns as col}
+                <td class={col.class}>
+                  {#if col.accessor}
+                    {#if col.isHtml}
+                      {@html col.accessor(row) }
+                    {:else}
+                      {col.accessor(row)}
+                    {/if}
+                  {:else}
+                    {row[col.id]}
+                  {/if}
+                </td>
+              {/each}
+            </tr>
+          {/if}
+        {/each}
       {/if}
     </tbody>
   </table>

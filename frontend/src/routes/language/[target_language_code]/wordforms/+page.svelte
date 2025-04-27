@@ -72,18 +72,10 @@
     <div class="row mb-4">
         <div class="col">
             <h1 class="mb-3">Wordforms in {language_name}</h1>
-            <p class="d-flex gap-2">
-                <a href="/language/{target_language_code}/sources" class="btn btn-outline-primary">
-                    Browse {language_name} Sources
-                </a>
-                <a href="/language/{target_language_code}/sentences" class="btn btn-outline-secondary">
-                    View {language_name} Sentences
-                </a>
-            </p>
         </div>
     </div>
     
-    {#if wordforms.length > 0}
+    {#if wordforms !== undefined}
         <DataGrid {columns}
                   loadData={loadData}
                   initialRows={wordforms}

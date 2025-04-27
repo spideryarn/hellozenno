@@ -3,23 +3,16 @@
   import { RouteName } from '$lib/generated/routes';
   import { SITE_NAME } from '$lib/config';
   import DataGrid from '$lib/components/DataGrid.svelte';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
   import { supabase } from '$lib/supabaseClient';
   import { getApiUrl } from '$lib/api';
-  import { onMount } from 'svelte';
   
   export let data: PageData;
   
   // Extract data with reactive declarations
   $: ({ target_language_code: languageCode, languageName, sources, total } = data);
   
-  // Flag to show loading spinner when component first mounts
-  let loading = true;
-  onMount(() => {
-    // Set loading to false after a brief delay to avoid "No data" flash
-    setTimeout(() => loading = false, 300);
-  });
+  // No longer need custom loading state as DataGrid handles this
   
   // Transform API data to match database fields for consistent rendering
   // Handle the case where sources might be undefined (during initial load or error)
@@ -185,12 +178,8 @@
     </div>
   </div>
   
-  <!-- Loading spinner or DataGrid for sources -->
-  {#if loading}
-    <div class="text-center py-5">
-      <LoadingSpinner size="lg" />
-    </div>
-  {:else if sources && sources.length > 0}
+  <!-- DataGrid with built-in loading indicator -->
+  {#if sources !== undefined}
     <DataGrid 
       {columns}
       loadData={loadData}
