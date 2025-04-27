@@ -12,21 +12,6 @@
   // Extract data with reactive declarations
   $: ({ target_language_code: languageCode, languageName, sources, total } = data);
   
-  // No longer need custom loading state as DataGrid handles this
-  
-  // Transform API data to match database fields for consistent rendering
-  // Handle the case where sources might be undefined (during initial load or error)
-  const transformedSources = sources ? sources.map(source => ({
-    id: source.id,
-    path: source.name || source.path, // Handle different API formats
-    slug: source.slug,
-    description: source.description,
-    created_by_id: source.created_by_id || null,
-    updated_at: source.updated_at,
-    // Keep the statistics object for our accessor
-    statistics: source.statistics
-  })) : [];
-
   // Define columns for the DataGrid
   const columns = [
     { 
@@ -38,26 +23,13 @@
     { 
       id: 'file_count', 
       header: '# Sources',
-      accessor: row => {
-        // Use direct file_count column from our custom query if available
-        if (typeof row.file_count === 'number') {
-          return row.file_count;
-        }
-        // Fallback to statistics if available (for API format data)
-        else if (row.statistics && typeof row.statistics.file_count === 'number') {
-          return row.statistics.file_count;
-        }
-        return 0;
-      },
+      accessor: row => row.file_count ?? 0,
       width: 100
     },
     { 
       id: 'created_by_id', 
       header: 'Created By',
-      accessor: row => {
-        if (!row.created_by_id) return '';
-        return row.created_by_id;
-      },
+      accessor: row => row.created_by_id || '',
       width: 200
     },
     { 
@@ -84,25 +56,11 @@
     }
   ];
 
-  // Set up the data provider with just the database columns
-  // Additional query to count number of sourcefiles per sourcedir
+  // Set up the data provider using Supabase's foreign table count feature
   const loadData = supabaseDataProvider({
     table: 'sourcedir',
-    selectableColumns: 'id,path,slug,description,created_by_id,updated_at', 
-    client: supabase,
-    customQuery: `
-      SELECT 
-        sourcedir.id,
-        sourcedir.path,
-        sourcedir.slug,
-        sourcedir.description,
-        sourcedir.created_by_id,
-        sourcedir.updated_at,
-        COUNT(sourcefile.id) as file_count
-      FROM sourcedir
-      LEFT JOIN sourcefile ON sourcedir.id = sourcefile.sourcedir_id
-      GROUP BY sourcedir.id
-    `
+    selectableColumns: 'id,path,slug,description,created_by_id,updated_at,file_count:sourcefile(count)', 
+    client: supabase
   });
 
   // Function to generate URLs for each row
@@ -183,7 +141,7 @@
     <DataGrid 
       {columns}
       loadData={loadData}
-      initialRows={transformedSources}
+      initialRows={sources}
       initialTotal={total}
       getRowUrl={getSourcedirUrl}
       getRowTooltip={getSourcedirTooltip}

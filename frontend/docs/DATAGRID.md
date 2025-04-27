@@ -74,6 +74,13 @@ DataGrid supports server-side data loading via a data provider function:
     // No need to specify jsonArrayColumns anymore since we use filterType in column definitions
   });
   
+  // You can also count related records using foreign table syntax:
+  const loadSourcedirsWithCount = supabaseDataProvider({
+    table: 'sourcedir',
+    selectableColumns: 'id,path,slug,description,sourcefiles:sourcefile(count)',
+    client: supabase
+  });
+  
   function getWordformUrl(row) {
     return `/language/el/wordform/${row.wordform}`;
   }
@@ -148,6 +155,7 @@ queryModifier={(query) =>
 | pageSize | number | 100 | Number of rows per page |
 | showHeader | boolean | true | Whether to show the column headers |
 | showTopNav | boolean | true | Whether to show navigation at the top |
+| showLoadingOnInitial | boolean | true | Whether to show loading spinner on initial load |
 | getRowUrl | (row: any) => string \| null | null | Function to generate URLs for each row |
 | getRowTooltip | (row: any) => string \| null | null | Function to generate tooltip content for each row |
 | loadData | Function \| undefined | undefined | Function to load data from server |
@@ -211,6 +219,28 @@ interface ColumnDef<T = any> {
 }
 ```
 
+8. **Counting related records**: To count related records using foreign table syntax:
+
+```typescript
+// To count sourcefiles per sourcedir:
+const loadData = supabaseDataProvider({
+  table: 'sourcedir',
+  selectableColumns: 'id,path,slug,description,file_count:sourcefile(count)',
+  client: supabase
+});
+
+// In your columns definition, access the count via a custom accessor:
+{
+  id: 'file_count',
+  header: '# Files',
+  accessor: row => row.file_count ?? 0
+}
+```
+
+The data provider handles PostgREST's nested response format and extracts the count value. You can directly name the count aggregate with a proper field alias (`file_count:sourcefile(count)`) to make it clear in your column definitions.
+
+**Important Note**: PostgREST sometimes returns aggregates like `count` in different formats depending on the query context - it can be a scalar, an object with a `count` property, or even an array of objects. Our data provider automatically normalizes these different formats to provide a consistent value.
+
 ## Implementation Details
 
 - When using `getRowUrl`, every cell in the row becomes a proper hyperlink (`<a>` tag).
@@ -222,3 +252,86 @@ interface ColumnDef<T = any> {
   - Keyboard navigation accessibility
 - Styling is applied to ensure the links maintain the same visual appearance as the non-linked version.
 
+## Appendix: Server-Side Rendering Considerations
+
+The DataGrid component is designed with support for server-side rendering (SSR) through its `initialRows` and `initialTotal` props. This section explores the benefits, tradeoffs, and potential implementation strategies for fully leveraging SSR.
+
+### Current Implementation
+
+The DataGrid currently supports a hybrid rendering approach:
+
+1. Server components (+page.server.ts) fetch initial data
+2. This data is passed to the client component and to DataGrid via `initialRows` and `initialTotal` props
+3. On the client, DataGrid shows this initial data while also setting up client-side data loading for subsequent interactions
+
+### Benefits of Full Server-Side Rendering
+
+- **Immediate Content Display**: Users see actual data immediately instead of loading spinners
+- **Improved SEO**: Search engines can index the full content
+- **Better Core Web Vitals**: Faster Largest Contentful Paint (LCP) and First Input Delay (FID)
+- **Reduced Client-Side Processing**: Less initial JavaScript execution on client devices
+- **Enhanced User Experience**: No flashing of loading states during initial page load
+- **Progressive Enhancement**: Content is accessible even if JavaScript fails to load
+
+### Tradeoffs and Complexities
+
+1. **Increased Server Load**: Each page request requires database queries on the server
+2. **Potentially Stale Data**: Data shown initially might become outdated quickly
+3. **Hydration Complexity**: Need to ensure consistent state between server and client renders
+4. **Navigation Considerations**: Full page navigation vs. client-side routing affects data freshness
+5. **State Management**: Pagination, sorting, and filtering state needs to be synchronized with URL parameters
+
+### Implementation Strategy
+
+To fully leverage SSR for DataGrid:
+
+1. **URL-Based State**: Move pagination, sorting, and filtering parameters to URL query parameters
+   ```
+   /language/el/wordforms?page=2&sort=updated_at&dir=desc&filter=ψάρι
+   ```
+
+2. **Server Load Function**: Parse these parameters in +page.server.ts to fetch appropriate data
+   ```typescript
+   export const load: PageServerLoad = async ({ params, url }) => {
+     const page = parseInt(url.searchParams.get('page') || '1');
+     const sortField = url.searchParams.get('sort') || 'updated_at';
+     const sortDir = url.searchParams.get('dir') || 'desc';
+     const filterValue = url.searchParams.get('filter');
+     
+     // Fetch data based on these parameters
+     // ...
+   };
+   ```
+
+3. **Parameterized Data Provider**: Update the supabaseDataProvider to work efficiently in both server and client contexts
+   ```typescript
+   // Server context
+   const initialData = await supabaseDataProvider({
+     // ...
+   }).load({
+     page: page,
+     sortField: sortField,
+     sortDir: sortDir,
+     // ...
+   });
+   ```
+
+4. **URL-Aware Navigation Controls**: Update DataGridNavButtons to generate URLs instead of just events
+   ```svelte
+   <a href="?page={nextPage}&sort={sortField}&dir={sortDir}" class="btn">Next</a>
+   ```
+
+5. **Transition Hints**: Use SvelteKit's transition directives to enhance navigation
+   ```svelte
+   <a data-sveltekit-preload-data="hover" href="?page=2">Next</a>
+   ```
+
+6. **Two-Phase Rendering**: Add special handling for transition between server render and client hydration
+   - Server: Render with data from URL parameters
+   - Client: Hydrate with same initial state, then enhance with interactive features
+
+7. **Progressive Enhancement**: Ensure the grid works even without JavaScript
+   - All navigation can happen through regular links
+   - Basic functionality preserved with pure HTML
+
+This approach would fully leverage SvelteKit's SSR capabilities while maintaining the interactive features of the DataGrid component.

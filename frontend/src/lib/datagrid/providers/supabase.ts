@@ -44,54 +44,54 @@ export function supabaseDataProvider({
     queryModifier,
     columns
   }: LoadParams): Promise<{ rows: any[]; total: number }> {
-    // Start building the query
-    const columnsToSelect = selectClause === '*' ? selectClause : `${selectClause},updated_at`;
-    let query = (client.from as any)(table).select(columnsToSelect, { count: 'exact' });
-    
-    // Apply custom query modifiers if provided (language filters, etc.)
-    if (queryModifier) {
-      query = queryModifier(query);
-    }
-
-    // Apply filtering if specified
-    if (filterField && filterValue) {
-      console.log(`Filtering on ${filterField} with value: ${filterValue}`);
-      
-      // Check if this is a JSON array column either by explicit list or by column definition
-      const isJsonArrayColumn = jsonArrayColumns.includes(filterField);
-      const hasJsonArrayFilterType = columns?.find(col => col.id === filterField)?.filterType === 'json_array';
-      
-      if (isJsonArrayColumn || hasJsonArrayFilterType) {
-        // For JSON array columns, we perform a membership test: does the array
-        // contain *any* element that matches the user-supplied string
-        // case-insensitively?  PostgREST (and therefore supabase-js) doesn't
-        // support casts inside the column identifier, so the fast ILIKE cast
-        // approach won't work.  Instead we use the Postgres `?` / `cs` array
-        // containment operators that PostgREST exposes via `.contains()`.
-
-        // We still want case-insensitivity, so we lower-case both sides.
-        const valueLower = filterValue.toLowerCase();
-        query = (query as any).contains(filterField as any, [valueLower]);
-      } else {
-        // For regular text columns, use the standard ilike filter
-        query = (query as any).ilike(filterField as any, `%${filterValue}%`);
-      }
-    }
-
-    // Apply sorting
-    const { column, ascending } = buildOrderParam(sortField ?? null, sortDir ?? null);
-    if (column) {
-      query = query.order(column as string, { ascending });
-    }
-
-    // Apply pagination
-    const fromIdx = (page - 1) * pageSize;
-    const toIdx = fromIdx + pageSize - 1; // inclusive
-    query = query.range(fromIdx, toIdx);
-
-    // Execute the query
     try {
+      // Standard query using the query builder
+      // Start building the query
+      const columnsToSelect = selectClause === '*' ? selectClause : `${selectClause},updated_at`;
+      let query = (client.from as any)(table).select(columnsToSelect, { count: 'exact' });
       
+      // Apply custom query modifiers if provided (language filters, etc.)
+      if (queryModifier) {
+        query = queryModifier(query);
+      }
+
+      // Apply filtering if specified
+      if (filterField && filterValue) {
+        console.log(`Filtering on ${filterField} with value: ${filterValue}`);
+        
+        // Check if this is a JSON array column either by explicit list or by column definition
+        const isJsonArrayColumn = jsonArrayColumns.includes(filterField);
+        const hasJsonArrayFilterType = columns?.find(col => col.id === filterField)?.filterType === 'json_array';
+        
+        if (isJsonArrayColumn || hasJsonArrayFilterType) {
+          // For JSON array columns, we perform a membership test: does the array
+          // contain *any* element that matches the user-supplied string
+          // case-insensitively?  PostgREST (and therefore supabase-js) doesn't
+          // support casts inside the column identifier, so the fast ILIKE cast
+          // approach won't work.  Instead we use the Postgres `?` / `cs` array
+          // containment operators that PostgREST exposes via `.contains()`.
+
+          // We still want case-insensitivity, so we lower-case both sides.
+          const valueLower = filterValue.toLowerCase();
+          query = (query as any).contains(filterField as any, [valueLower]);
+        } else {
+          // For regular text columns, use the standard ilike filter
+          query = (query as any).ilike(filterField as any, `%${filterValue}%`);
+        }
+      }
+
+      // Apply sorting
+      const { column, ascending } = buildOrderParam(sortField ?? null, sortDir ?? null);
+      if (column) {
+        query = query.order(column as string, { ascending });
+      }
+
+      // Apply pagination
+      const fromIdx = (page - 1) * pageSize;
+      const toIdx = fromIdx + pageSize - 1; // inclusive
+      query = query.range(fromIdx, toIdx);
+
+      // Execute the query
       const { data, count, error } = await query;
       
       if (error) {
@@ -100,15 +100,40 @@ export function supabaseDataProvider({
       }
       
       // Process results - Map nested lemma_entry.lemma to lemma_text for grid columns if present
+      // Also map foreign table counts like sourcefiles(count) to file_count
       const mapped = (data ?? []).map((row: any) => {
-        // Prefer explicit mapping; handle two possible FKey names
+        const result: any = { ...row };
+        
+        // Handle nested lemma text
         if (row.lemma_entry && typeof row.lemma_entry === 'object' && 'lemma' in row.lemma_entry) {
-          return { ...row, lemma_text: row.lemma_entry.lemma };
+          result.lemma_text = row.lemma_entry.lemma;
         }
         if (row.lemma && typeof row.lemma === 'object' && 'lemma' in row.lemma) {
-          return { ...row, lemma_text: row.lemma.lemma };
+          result.lemma_text = row.lemma.lemma;
         }
-        return row;
+        
+        // Handle foreign table counts
+        if (row.sourcefiles !== undefined) {
+          console.log('DataProvider - Sourcefiles structure:', row.sourcefiles);
+          result.file_count = typeof row.sourcefiles === 'object' && row.sourcefiles !== null
+            ? (Array.isArray(row.sourcefiles)
+                ? (row.sourcefiles[0]?.count ?? 0)
+                : (row.sourcefiles.count ?? 0))
+            : (row.sourcefiles ?? 0);
+        }
+        
+        // Handle new file_count alias which may still be an array/object from PostgREST
+        if (row.file_count !== undefined) {
+          if (Array.isArray(row.file_count)) {
+            result.file_count = row.file_count[0]?.count ?? 0;
+          } else if (typeof row.file_count === 'object' && row.file_count !== null) {
+            result.file_count = row.file_count.count ?? 0;
+          } else {
+            result.file_count = row.file_count;
+          }
+        }
+        
+        return result;
       });
 
       return { rows: mapped, total: count ?? 0 };

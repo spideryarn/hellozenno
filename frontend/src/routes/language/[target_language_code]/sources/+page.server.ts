@@ -23,27 +23,33 @@ export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
         const languageData = await languageResponse.json();
         const languageName = languageData.language_name;
 
-        // Get list of sources for initial rendering
-        const apiUrl = getApiUrl(
-            RouteName.SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API,
-            { target_language_code },
-        );
+        // Get list of sources directly from Supabase with sourcefile count
+        const { data: sourcedirs, error: sourcedirsError, count } = await supabase
+            .from('sourcedir')
+            .select(`
+                id,
+                path,
+                slug,
+                description,
+                created_by_id,
+                updated_at,
+                file_count:sourcefile(count)
+            `, { count: 'exact' })
+            .eq('target_language_code', target_language_code)
+            .order('updated_at', { ascending: false });
         
-        const sourcesResponse = await fetch(apiUrl);
-
-        if (!sourcesResponse.ok) {
-            throw new Error(
-                `Failed to fetch sources: ${sourcesResponse.statusText}`,
-            );
+        if (sourcedirsError) {
+            throw new Error(`Failed to fetch sources: ${sourcedirsError.message}`);
         }
-
-        const sourcesData = await sourcesResponse.json();
+        
+        // No additional mapping needed: file_count is already a scalar
+        const sources = sourcedirs || [];
 
         return {
             target_language_code,
             languageName,
-            sources: sourcesData.sources || [],
-            total: sourcesData.sources?.length || 0
+            sources,
+            total: count || 0
         };
     } catch (err) {
         console.error("Failed to load sources:", err);
