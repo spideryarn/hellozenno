@@ -2,7 +2,7 @@
   // Accept either categories-based structure (for FAQ) or flat items (for blog posts)
   export let categories = null;
   export let items = null;
-  export let title = "Table of Contents";
+  export let title = "";
 </script>
 
 <div class="card toc-card mb-4 p-4">
