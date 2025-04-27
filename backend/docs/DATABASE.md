@@ -75,8 +75,36 @@ Main database models (`db_models.py`):
 - `Phrase`: Multi-word expressions
 - `Sourcedir`/`Sourcefile`: Source content management
 - Various relationship models (e.g., `LemmaExampleSentence`, `SourcefileWordform`)
+- `UserLemma`: Junction table linking `auth.users` directly to lemmas
 
 See [MODELS.md](./MODELS.md) for a comprehensive overview of all models, their fields, and relationships.
+
+### Cross-Schema References
+
+We're still evolving the best approach for this, but this is the current thinking.
+
+Our models often reference Supabase's `auth.users` table. When working with such cross-schema references:
+
+1. For model definitions (`db_models.py`), we define an `AuthUser` model with the appropriate schema:
+   ```python
+   class AuthUser(Model):
+       """Model to reference Supabase auth.users table."""
+       id = UUIDField(primary_key=True)
+       
+       class Meta:
+           database = database
+           table_name = "users"
+           schema = "auth"
+   ```
+
+2. For referencing user IDs, we use a `UUIDField()` rather than `ForeignKeyField`:
+   ```python
+   class SomeModel(BaseModel):
+       # Direct reference to auth.users.id
+       user_id = UUIDField()  
+   ```
+
+3. For migrations, see the detailed section on cross-schema foreign keys in [MIGRATIONS.md](./MIGRATIONS.md).
 
 ## Connection Management
 

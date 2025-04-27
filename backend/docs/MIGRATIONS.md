@@ -196,7 +196,58 @@ When adding fields to existing table
 
 ## Cross-Schema Foreign Keys (e.g., to auth.users)
 
-When creating foreign keys to tables in another schema (such as Supabase's `auth.users`):
+When creating foreign keys to tables in another schema (such as Supabase's `auth.users`), we use one of two approaches:
+
+### Approach 1: Define fields as UUIDs and add FK constraints with SQL (Preferred)
+
+This is our preferred approach for references to `auth.users`:
+
+1. Define an unmanaged model for the foreign table in the migration (only for reference):
+   ```python
+   class AuthUser(pw.Model):
+       id = pw.UUIDField(primary_key=True)
+       
+       class Meta:
+           table_name = 'users'
+           schema = 'auth'
+   ```
+
+2. Add the field as a simple UUIDField:
+   ```python
+   class YourModel(pw.Model):
+       created_by_id = pw.UUIDField(null=True)  # Use _id suffix by convention
+       
+       class Meta:
+           table_name = 'your_table'
+   
+   migrator.add_fields(
+       YourModel,
+       created_by_id=pw.UUIDField(null=True), 
+   )
+   ```
+
+3. Add the foreign key constraint explicitly using SQL:
+   ```python
+   migrator.sql(
+       """
+       ALTER TABLE "your_table" 
+       ADD CONSTRAINT fk_your_table_created_by_id
+       FOREIGN KEY ("created_by_id")
+       REFERENCES "auth"."users" ("id") 
+       ON DELETE CASCADE;
+       """
+   )
+   ```
+
+4. In your model definition in `db_models.py`, use UUIDField as well:
+   ```python
+   class YourModel(BaseModel):
+       created_by_id = UUIDField(null=True)  # Not a ForeignKeyField
+   ```
+
+See `migrations/033_add_user_reference_fields.py` and `migrations/034_add_userlemma_table.py` for complete examples.
+
+### Approach 2: Use ForeignKeyField with cross-schema reference
 
 1. Define an unmanaged model for the foreign table with the correct schema:
    ```python
@@ -228,9 +279,7 @@ When creating foreign keys to tables in another schema (such as Supabase's `auth
    )
    ```
 
-3. Peewee will handle the cross-schema reference correctly without manual SQL statements
-
-See `migrations/033_add_user_reference_fields.py` for a complete example.
+3. Peewee will handle the cross-schema reference, but you may need to add explicit constraints
 
 
 ## Questions or Improvements?
