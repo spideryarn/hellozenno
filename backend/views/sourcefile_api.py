@@ -19,6 +19,7 @@ from flask import (
     current_app,
     jsonify,
     request,
+    g,
 )
 from peewee import DoesNotExist
 
@@ -676,6 +677,7 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
                 description=description,
                 metadata=metadata,
                 sourcefile_type="text",
+                created_by_id=g.user["id"] if g.user else None,
             )
         except ValueError as e:  # Catch collision error from helper
             # Log the collision specifically
@@ -970,6 +972,8 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
                 description=description,  # Pass updated description
                 metadata=metadata,  # Pass updated metadata
                 sourcefile_type="text",
+                created_by_id=g.user["id"] if g.user else None,
+                url=url,  # Pass the source URL
             )
         except (
             ValueError
