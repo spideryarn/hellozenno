@@ -179,6 +179,9 @@
               <span class="footer-divider">·</span>
               <a href="/terms" class="footer-link">Terms</a>
               <span class="footer-divider">·</span>
+              <!-- This isn't quite ready yet, so we'll uncomment it when it is.  -->
+              <!-- <a href="/changelog" class="footer-link">Changelog</a>
+              <span class="footer-divider">·</span> -->
               <a href="mailto:{CONTACT_EMAIL}" class="footer-link">Email</a>
               <span class="footer-divider">·</span>
               <a href="https://github.com/spideryarn/hellozenno" target="_blank" rel="noopener" class="footer-link">GitHub</a>
