@@ -21,6 +21,7 @@
   let isLoading: boolean = true;
   let hasError: boolean = false;
   let errorMessage: string = '';
+  let autoplayBlocked: boolean = false;
   
   // Exposed properties and methods
   export function play() {
@@ -56,10 +57,19 @@
     console.error('Audio playback error:', error);
     isLoading = false;
     
-    // Special handling for autoplay error - common when visiting directly
-    if (error?.message?.includes("play() failed because the user didn't interact")) {
+    // Special handling for autoplay errors - common on mobile devices
+    // This catches various browser-specific autoplay restriction messages
+    if (
+      error?.message?.includes("play() failed because the user didn't interact") ||
+      error?.message?.includes("request is not allowed by the user agent") ||
+      error?.message?.includes("user denied permission") ||
+      error?.message?.includes("user gesture is required") ||
+      error?.name === 'NotAllowedError'
+    ) {
       // Don't show error for autoplay - just stop the loading spinner
       hasError = false;
+      autoplayBlocked = true;
+      dispatch('autoplayBlocked', { error });
       return;
     }
     
@@ -95,7 +105,7 @@
   });
 </script>
 
-<div class="audio-view {className}" style={containerStyle}>
+<div class="audio-view {className} {autoplayBlocked ? 'audio-player-needs-interaction' : ''}" style={containerStyle}>
   <div class="audio-container">
     {#if isLoading}
       <div class="loading-container">

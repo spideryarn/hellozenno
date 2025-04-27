@@ -25,6 +25,7 @@
   let audioPlayer;
   let audioReplayCount = 0; // Track how many times audio is replayed
   let userSelectedSpeed = false; // Track if user manually changed playback speed
+  let autoplayWasBlocked = false; // Track if autoplay was blocked by browser
   
   function nextStage() {
     if (currentStage < 3) {
@@ -57,6 +58,12 @@
   // Handle when user changes the playback speed
   function handleSpeedChanged(event) {
     userSelectedSpeed = true;
+  }
+  
+  // Handle autoplay blocked event from AudioPlayer
+  function handleAutoplayBlocked(event) {
+    autoplayWasBlocked = true;
+    console.log('Autoplay was blocked by browser policy, user needs to interact');
   }
 
   function prevStage() {
@@ -219,7 +226,7 @@
           <!-- First row with left/right navigation -->
           <div class="col-6">
             <button 
-              class="btn btn-secondary w-100 py-3" 
+              class="btn btn-secondary w-100 py-3 play-audio-btn" 
               on:click={currentStage === 1 ? playAudio : prevStage}
               disabled={data.audio_requires_login}>
               {currentStage === 1 ? 'Play audio (←)' : currentStage === 2 ? 'Play audio (←)' : 'Show sentence (←)'}
@@ -274,6 +281,7 @@
                 showSpeedControls={true}
                 showDownload={false}
                 on:speedChanged={handleSpeedChanged}
+                on:autoplayBlocked={handleAutoplayBlocked}
               />
             {/if}
             
@@ -435,5 +443,20 @@
     height: 46px;
     padding: 0;
     border-radius: 8px;
+  }
+  
+  /* Add pulsing animation to play button when autoplay fails */
+  @keyframes gentle-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(var(--hz-color-primary-green-rgb), 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(var(--hz-color-primary-green-rgb), 0); }
+    100% { box-shadow: 0 0 0 0 rgba(var(--hz-color-primary-green-rgb), 0); }
+  }
+  
+  /* Apply animation when audio element reports it needs interaction */
+  audio:not([autoplay]):not([controls]) ~ .row .play-audio-btn,
+  .audio-player-needs-interaction ~ .row .play-audio-btn {
+    animation: gentle-pulse 2s infinite;
+    background-color: var(--hz-color-primary-green);
+    border-color: var(--hz-color-primary-green-dark);
   }
 </style> 
