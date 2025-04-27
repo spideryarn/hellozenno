@@ -102,6 +102,7 @@ def get_sentence_audio_by_language_api(target_language_code: str, sentence_id: i
 
 
 @sentence_api_bp.route("/<target_language_code>/<slug>", methods=["DELETE"])
+@api_auth_required
 def delete_sentence_api(target_language_code: str, slug: str):
     """Delete a sentence."""
     try:
@@ -116,6 +117,7 @@ def delete_sentence_api(target_language_code: str, slug: str):
 
 
 @sentence_api_bp.route("/<target_language_code>/<slug>/rename", methods=["PUT"])
+@api_auth_required
 def rename_sentence_api(target_language_code: str, slug: str):
     """Rename/edit a sentence."""
     try:
@@ -135,6 +137,7 @@ def rename_sentence_api(target_language_code: str, slug: str):
         # Update the sentence text - this will trigger slug regeneration in save()
         sentence.sentence = new_text
         sentence.slug = slugify(new_text)  # Manually update slug
+            
         sentence.save()
 
         return jsonify({"new_text": new_text, "new_slug": sentence.slug}), 200

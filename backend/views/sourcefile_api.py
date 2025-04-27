@@ -256,6 +256,7 @@ def inspect_sourcefile_audio_api(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process",
     methods=["POST"],
 )
+@api_auth_required
 def process_sourcefile_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -351,6 +352,7 @@ def _process_individual_lemma(lemma: str, target_language_code: str):
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/process_individual",
     methods=["POST"],
 )
+@api_auth_required
 def process_individual_words_api(target_language_code, sourcedir_slug, sourcefile_slug):
     """Process individual words in a sourcefile, generating full metadata and audio."""
     try:
@@ -404,6 +406,7 @@ def process_individual_words_api(target_language_code, sourcedir_slug, sourcefil
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/update_description",
     methods=["PUT"],
 )
+@api_auth_required
 def update_sourcefile_description_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -438,6 +441,7 @@ def update_sourcefile_description_api(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/move",
     methods=["PUT"],
 )
+@api_auth_required
 def move_sourcefile_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -514,6 +518,7 @@ def move_sourcefile_api(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>",
     methods=["DELETE"],
 )
+@api_auth_required
 def delete_sourcefile_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -585,6 +590,7 @@ def delete_sourcefile_api(
     "/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/rename",
     methods=["PUT"],
 )
+@api_auth_required
 def rename_sourcefile_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):

@@ -43,6 +43,7 @@ sourcedir_api_bp = Blueprint(
 
 
 @sourcedir_api_bp.route("/<target_language_code>", methods=["POST"])
+@api_auth_required
 def create_sourcedir_api(target_language_code: str):
     """Create a new source directory."""
     data = request.get_json()
@@ -95,6 +96,7 @@ def create_sourcedir_api(target_language_code: str):
 
 
 @sourcedir_api_bp.route("/<target_language_code>/<sourcedir_slug>", methods=["DELETE"])
+@api_auth_required
 def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """Delete a source directory if it's empty."""
     try:
@@ -123,6 +125,7 @@ def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
 @sourcedir_api_bp.route(
     "/<target_language_code>/<sourcedir_slug>/language", methods=["PUT"]
 )
+@api_auth_required
 def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str):
     """Update the language of a source directory."""
     try:
@@ -175,6 +178,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
 @sourcedir_api_bp.route(
     "/<target_language_code>/<sourcedir_slug>/rename", methods=["PUT"]
 )
+@api_auth_required
 def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     """Rename a source directory."""
     try:
@@ -366,6 +370,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
     "/<target_language_code>/<sourcedir_slug>/update_description",
     methods=["PUT"],
 )
+@api_auth_required
 def update_sourcedir_description_api(target_language_code: str, sourcedir_slug: str):
     """Update the description of a sourcedir."""
     try:
