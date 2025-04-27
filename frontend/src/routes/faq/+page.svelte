@@ -170,7 +170,7 @@
         {
           id: "reporting-bugs",
           question: "How can I report bugs or give feedback?",
-          answer: "The best way to report bugs or provide feedback is by opening an issue on GitHub at <a href=\"https://github.com/spideryarn/hellozenno/issues\" target=\"_blank\" rel=\"noopener\">github.com/spideryarn/hellozenno/issues</a>."
+          answer: "The best way to report bugs or provide feedback is by opening an issue on GitHub at <a href=\"https://github.com/spideryarn/hellozenno/issues\" target=\"_blank\" rel=\"noopener\">github.com/spideryarn/hellozenno/issues</a>. You can also check the <a href=\"/changelog\">changelog</a> to see recent updates."
         },
         {
           id: "tracking-progress",

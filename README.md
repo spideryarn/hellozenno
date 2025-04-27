@@ -49,5 +49,6 @@ See the following documentation for setup and development:
 - `docs/DEVOPS.md` for development setup and infrastructure details
 - `docs/DATABASE.md` for database configuration
 - `.env.example` for required environment variables
+- [Changelog](/changelog) for recent updates and changes
 
 Copy `.env.example` to `.env.local` and fill in your credentials to get started. 

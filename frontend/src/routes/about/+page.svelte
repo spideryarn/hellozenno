@@ -200,6 +200,10 @@
                 </div>
               </div>
             </div>
+            
+            <div class="text-center mt-4">
+              <a href="/changelog" class="btn btn-sm btn-outline-secondary">View Complete Changelog</a>
+            </div>
           </div>
         {/if}
       </div>
@@ -216,7 +220,8 @@
           <h3 class="section-title mb-3">Want to co‑build?</h3>
           <p class="mb-4">
             Hello Zenno is an open-source project and welcomes contributions from developers, language
-            enthusiasts, and anyone passionate about improving language learning.
+            enthusiasts, and anyone passionate about improving language learning. Check out our 
+            <a href="/changelog">changelog</a> to see recent updates.
           </p>
           <div class="d-flex justify-content-center gap-5 flex-wrap">
             <GithubIssueButton 
