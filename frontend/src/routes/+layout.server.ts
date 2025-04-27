@@ -10,7 +10,7 @@ export const load: LayoutServerLoad = async ({ locals: { session, user, supabase
       // Fetch the user profile if logged in
       profile = await apiFetch({
         supabaseClient: supabase,
-        routeName: RouteName.PROFILE_API_GET_PROFILE_API,
+        routeName: RouteName.PROFILE_API_GET_CURRENT_PROFILE_API,
         params: {},
         options: { method: 'GET' }
       });

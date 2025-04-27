@@ -96,8 +96,9 @@ export enum RouteName {
   SEARCH_API_SEARCH_LANDING_API = "SEARCH_API_SEARCH_LANDING_API",
   SEARCH_API_SEARCH_WORD_API = "SEARCH_API_SEARCH_WORD_API",
   SEARCH_API_UNIFIED_SEARCH_API = "SEARCH_API_UNIFIED_SEARCH_API",
-  PROFILE_API_GET_PROFILE_API = "PROFILE_API_GET_PROFILE_API",
+  PROFILE_API_GET_CURRENT_PROFILE_API = "PROFILE_API_GET_CURRENT_PROFILE_API",
   PROFILE_API_UPDATE_PROFILE_API = "PROFILE_API_UPDATE_PROFILE_API",
+  PROFILE_API_GET_USER_EMAIL_API = "PROFILE_API_GET_USER_EMAIL_API",
 }
 
 
@@ -198,8 +199,9 @@ export const ROUTES = {
   SEARCH_API_SEARCH_LANDING_API: "/api/lang/{target_language_code}/search",
   SEARCH_API_SEARCH_WORD_API: "/api/lang/{target_language_code}/search/{wordform}",
   SEARCH_API_UNIFIED_SEARCH_API: "/api/lang/{target_language_code}/unified_search",
-  PROFILE_API_GET_PROFILE_API: "/api/profile/",
-  PROFILE_API_UPDATE_PROFILE_API: "/api/profile/",
+  PROFILE_API_GET_CURRENT_PROFILE_API: "/api/profile/current",
+  PROFILE_API_UPDATE_PROFILE_API: "/api/profile/update",
+  PROFILE_API_GET_USER_EMAIL_API: "/api/profile/user/{user_id}",
 } as const;
 
 
@@ -300,8 +302,9 @@ export type RouteParams = {
   [RouteName.SEARCH_API_SEARCH_LANDING_API]: { target_language_code: string };
   [RouteName.SEARCH_API_SEARCH_WORD_API]: { target_language_code: string; wordform: string };
   [RouteName.SEARCH_API_UNIFIED_SEARCH_API]: { target_language_code: string };
-  [RouteName.PROFILE_API_GET_PROFILE_API]: {};
+  [RouteName.PROFILE_API_GET_CURRENT_PROFILE_API]: {};
   [RouteName.PROFILE_API_UPDATE_PROFILE_API]: {};
+  [RouteName.PROFILE_API_GET_USER_EMAIL_API]: { user_id: string };
 };
 
 
