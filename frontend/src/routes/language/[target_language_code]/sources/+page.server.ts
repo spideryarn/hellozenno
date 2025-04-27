@@ -2,6 +2,7 @@ import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { getApiUrl } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
+import { supabase } from '$lib/supabaseClient';
 
 export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
     // Register dependency on the query parameters (specifically the sort parameter)
@@ -10,27 +11,25 @@ export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
     const { target_language_code } = params;
 
     try {
-        // Get sort parameter (default to 'date')
-        const sort = url.searchParams.get("sort") || "date";
-        console.log('Server load - URL sort parameter:', sort);
+        // Get language name
+        const languageResponse = await fetch(
+            getApiUrl(RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API, { target_language_code })
+        );
+        
+        if (!languageResponse.ok) {
+            throw new Error(`Failed to fetch language name: ${languageResponse.statusText}`);
+        }
+        
+        const languageData = await languageResponse.json();
+        const languageName = languageData.language_name;
 
-        // Use the typed API utility for type-safe URL generation
+        // Get list of sources for initial rendering
         const apiUrl = getApiUrl(
             RouteName.SOURCEDIR_API_GET_SOURCEDIRS_FOR_LANGUAGE_API,
             { target_language_code },
         );
         
-        // Add the sort parameter to the API URL
-        const apiUrlWithParams = `${apiUrl}?sort=${sort}`;
-        console.log('Server load - API URL with params:', apiUrlWithParams);
-
-        // Fetch sources data from our API endpoint
-        const sourcesResponse = await fetch(apiUrlWithParams, {
-            // Ensure no caching
-            headers: {
-                'Cache-Control': 'no-cache'
-        }
-        });
+        const sourcesResponse = await fetch(apiUrl);
 
         if (!sourcesResponse.ok) {
             throw new Error(
@@ -41,10 +40,10 @@ export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
         const sourcesData = await sourcesResponse.json();
 
         return {
-            languageCode: sourcesData.target_language_code,
-            languageName: sourcesData.language_name,
-            sources: sourcesData.sources,
-            currentSort: sort,
+            target_language_code,
+            languageName,
+            sources: sourcesData.sources || [],
+            total: sourcesData.sources?.length || 0
         };
     } catch (err) {
         console.error("Failed to load sources:", err);

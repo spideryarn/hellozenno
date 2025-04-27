@@ -1,25 +1,101 @@
 <script lang="ts">
   import type { PageData } from './$types';
-  import { getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
-  import SourceItem from '$lib/components/SourceItem.svelte';
-  import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
   import { SITE_NAME } from '$lib/config';
+  import DataGrid from '$lib/components/DataGrid.svelte';
+  import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
+  import { supabase } from '$lib/supabaseClient';
+  import { getApiUrl } from '$lib/api';
   
   export let data: PageData;
   
   // Extract data with reactive declarations
-  $: ({ languageCode, languageName, sources, currentSort } = data);
+  $: ({ target_language_code: languageCode, languageName, sources, total } = data);
   
-  // Handle sorting by updating the URL with sort parameter
-  function handleSort(sortBy) {
-    goto(`/language/${languageCode}/sources?sort=${sortBy}`, { keepFocus: true });
+  // No need for user email caching anymore since we're displaying the ID directly
+  
+  // Transform API data to match database fields for consistent rendering
+  // Handle the case where sources might be undefined (during initial load or error)
+  const transformedSources = sources ? sources.map(source => ({
+    id: source.id,
+    path: source.name || source.path, // Handle different API formats
+    slug: source.slug,
+    description: source.description,
+    created_by_id: source.created_by_id || null,
+    updated_at: source.updated_at,
+    // Keep the statistics object for our accessor
+    statistics: source.statistics
+  })) : [];
+
+  // Define columns for the DataGrid
+  const columns = [
+    { 
+      id: 'path', 
+      header: 'Path',
+      accessor: row => `<span class="hz-column-primary-green">${row.path}</span>`,
+      isHtml: true
+    },
+    { 
+      id: 'file_count', 
+      header: 'Files',
+      accessor: row => {
+        // Use statistics if available or just display zero
+        if (row.statistics && typeof row.statistics.file_count === 'number') {
+          return row.statistics.file_count;
+        }
+        return 0;
+      },
+      width: 80
+    },
+    { 
+      id: 'created_by_id', 
+      header: 'Created By',
+      accessor: row => {
+        if (!row.created_by_id) return '';
+        return row.created_by_id;
+      },
+      width: 200
+    },
+    { 
+      id: 'updated_at', 
+      header: 'Modified',
+      accessor: row => {
+        if (!row.updated_at) return '';
+        try {
+          const date = new Date(row.updated_at);
+          const formatted = date.toLocaleString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          return `<span class="metadata-timestamp">${formatted}</span>`;
+        } catch (e) {
+          return row.updated_at;
+        }
+      },
+      isHtml: true
+    }
+  ];
+
+  // Set up the data provider with just the database columns
+  const loadData = supabaseDataProvider({
+    table: 'sourcedir',
+    selectableColumns: 'id,path,slug,description,created_by_id,updated_at', 
+    client: supabase
+  });
+
+  // Function to generate URLs for each row
+  function getSourcedirUrl(row: any): string {
+    return `/language/${languageCode}/source/${row.slug}`;
   }
   
-  onMount(() => {
-    console.log('Component mounted, sort type:', currentSort);
-  });
+  // Function to generate tooltips for each row
+  function getSourcedirTooltip(row: any): string | null {
+    return row.description || null;
+  }
   
   // Function to create a new source directory
   async function createNewSourceDir() {
@@ -45,43 +121,11 @@
         throw new Error(errorData.error || 'Failed to create directory');
       }
       
-      // Redirect to refresh the page
+      // Reload the page to show the updated list
       window.location.reload();
       
     } catch (error) {
       alert('Error creating directory: ' + (error instanceof Error ? error.message : String(error)));
-    }
-  }
-  
-  // Function to delete an empty source directory
-  async function deleteSourceDir(slug: string) {
-    try {
-      // Confirm deletion
-      if (!confirm('Are you sure you want to delete this directory?')) {
-        return;
-      }
-      
-      // API call to delete directory
-      const response = await fetch(
-        getApiUrl(RouteName.SOURCEDIR_API_DELETE_SOURCEDIR_API, { 
-          target_language_code: languageCode,
-          sourcedir_slug: slug
-        }),
-        {
-          method: 'DELETE',
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete directory');
-      }
-      
-      // Refresh the page
-      window.location.reload();
-      
-    } catch (error) {
-      alert('Error deleting directory: ' + (error instanceof Error ? error.message : String(error)));
     }
   }
 </script>
@@ -90,82 +134,53 @@
   <title>Sources | {languageName} | {SITE_NAME}</title>
 </svelte:head>
 
-<h1 class="mb-4">{languageName} Sources</h1>
-
-<!-- Navigation links -->
-<div class="mb-3">
-  <nav class="nav nav-pills gap-2">
-    <a class="nav-link active" href="/language/{languageCode}/sources">Sources</a>
-    <a class="nav-link" href="/language/{languageCode}/wordforms">Wordforms</a>
-    <a class="nav-link" href="/language/{languageCode}/lemmas">Lemmas</a>
-    <a class="nav-link" href="/language/{languageCode}/sentences">Sentences</a>
-    <a class="nav-link" href="/language/{languageCode}/phrases">Phrases</a>
-    <a class="nav-link" href="/language/{languageCode}/flashcards">Flashcards</a>
-  </nav>
-</div>
-
-<!-- Actions toolbar -->
-<div class="mb-4 d-flex justify-content-between align-items-center">
-  <button type="button" class="btn btn-success" on:click={createNewSourceDir}>
-    New Source Directory
-  </button>
-  <div class="actions">
-    <!-- Additional action buttons can go here -->
-  </div>
-</div>
-
-<!-- Sort options -->
-<div class="mb-4 text-secondary">
-  Sort by:
-  <button type="button" 
-    on:click={() => handleSort('alpha')}
-    class="btn btn-link text-decoration-none ms-2 me-2 p-0"
-    class:fw-bold={currentSort === 'alpha'} 
-    class:text-primary={currentSort === 'alpha'}>
-    Alphabetical
-  </button> |
-  <button type="button" 
-    on:click={() => handleSort('date')}
-    class="btn btn-link text-decoration-none ms-2 p-0"
-    class:fw-bold={currentSort === 'date'} 
-    class:text-primary={currentSort === 'date'}>
-    Recently Modified
-  </button>
-</div>
-
-<!-- Debug info (hidden in production) -->
-{#if typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production'}
-  <div class="d-none">
-    Current sort: {currentSort}
-    Sources count: {sources.length}
-  </div>
-{/if}
-
-{#if sources.length === 0}
-  <div class="alert alert-info">No sources available for {languageName} yet.</div>
-{:else}
-  <div class="list-group">
-    {#each sources as source}
-      <div class="d-flex align-items-center">
-        <SourceItem 
-          name={source.name}
-          displayName={source.display_name}
-          slug={source.slug}
-          {languageCode}
-          description={source.description}
-          statistics={source.statistics}
-          className="flex-grow-1"
-        />
-        {#if source.is_empty}
-          <button 
-            type="button" 
-            class="btn btn-danger btn-sm ms-2"
-            on:click={() => deleteSourceDir(source.slug)}
-          >
-            Delete
-          </button>
-        {/if}
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col">
+      <h1 class="mb-3">{languageName} Sources</h1>
+      
+      <!-- Navigation links -->
+      <div class="mb-3">
+        <nav class="nav nav-pills gap-2">
+          <a class="nav-link active" href="/language/{languageCode}/sources">Sources</a>
+          <a class="nav-link" href="/language/{languageCode}/wordforms">Wordforms</a>
+          <a class="nav-link" href="/language/{languageCode}/lemmas">Lemmas</a>
+          <a class="nav-link" href="/language/{languageCode}/sentences">Sentences</a>
+          <a class="nav-link" href="/language/{languageCode}/phrases">Phrases</a>
+          <a class="nav-link" href="/language/{languageCode}/flashcards">Flashcards</a>
+        </nav>
       </div>
-    {/each}
+      
+      <!-- Actions toolbar -->
+      <div class="mb-4 d-flex justify-content-between align-items-center">
+        <button type="button" class="btn btn-success" on:click={createNewSourceDir}>
+          New Source Directory
+        </button>
+      </div>
+    </div>
   </div>
-{/if} 
+  
+  <!-- DataGrid for sources -->
+  {#if sources.length > 0}
+    <DataGrid 
+      {columns}
+      loadData={loadData}
+      initialRows={transformedSources}
+      initialTotal={total}
+      getRowUrl={getSourcedirUrl}
+      getRowTooltip={getSourcedirTooltip}
+      queryModifier={(query) => query.eq('target_language_code', languageCode)}
+    />
+  {:else}
+    <div class="alert alert-info">
+      No sources found for {languageName}.
+    </div>
+  {/if}
+</div>
+
+<style>
+  .metadata-timestamp {
+    font-family: var(--bs-font-monospace, monospace);
+    font-size: 0.9em;
+  }
+</style>
