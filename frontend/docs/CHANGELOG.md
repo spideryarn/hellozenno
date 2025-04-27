@@ -16,6 +16,14 @@ Each changelog line should be at most a sentence or two describing things in a w
 
 For a change to merit a changelog line, it should be fairly major, e.g. we certainly don't want to include tweaks to formatting.
 
+
+## If you have been given already-generated data
+
+
+
+
+## If you haven't been given already-generated data
+
 To see info about the most recent Git commits, use e.g.:
 
 ```bash
