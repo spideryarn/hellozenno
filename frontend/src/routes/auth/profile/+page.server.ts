@@ -7,21 +7,27 @@ import { API_BASE_URL } from '$lib/config'; // Need base URL for placeholder
 import { apiFetch } from '$lib/api'; // Import apiFetch for placeholder
 import { RouteName } from '$lib/generated/routes'; // Import RouteName
 
-// Placeholder getProfile - replace with actual implementation using apiFetch
+// Get profile data from the API
 async function getProfile(supabaseClient: any) { 
-    console.warn("Using placeholder getProfile in profile/+page.server.ts");
-    // Example: Fetch from /api/profile using apiFetch
     try {
         // Using the correct PROFILE_API_GET_CURRENT_PROFILE_API
-        const profileData = await apiFetch({
+        const response = await apiFetch({
             supabaseClient: supabaseClient, // Pass the server client
             routeName: RouteName.PROFILE_API_GET_CURRENT_PROFILE_API, 
             params: {},
             options: { method: 'GET' }
         });
-        return profileData; 
+        
+        // Extract and return just the profile object from the API response
+        if (response && response.success && response.profile) {
+            console.log("Successfully retrieved profile with target_language_code:", response.profile.target_language_code);
+            return response.profile;
+        } else {
+            console.error("Unexpected profile API response format:", response);
+            throw new Error("Invalid profile data format");
+        }
     } catch (err: any) {
-         console.error("Placeholder getProfile failed:", err);
+         console.error("getProfile failed:", err);
          // Throw SvelteKit error to be caught by the main load function's catch block
          throw error(err.status || 500, err.message || 'Failed to fetch profile');
     }
