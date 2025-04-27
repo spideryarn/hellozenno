@@ -2,7 +2,7 @@
 import os
 import tempfile
 import json
-from typing import Optional, cast, Dict, Any
+from typing import Optional, cast, Dict, Any, Union
 from pathlib import Path
 import random
 from bs4 import BeautifulSoup
@@ -490,6 +490,8 @@ def get_sourcefile_details(
             "sourcefile_type": sourcefile_entry.sourcefile_type,
             "has_audio": bool(sourcefile_entry.audio_data),
             "has_image": bool(sourcefile_entry.image_data),
+            # Include title translation if available
+            "title_translation": sourcefile_entry.metadata.get("title_translation") if sourcefile_entry.metadata else None,
         },
         "sourcedir": {
             # Type ignored because Peewee models have this field at runtime
@@ -501,6 +503,11 @@ def get_sourcefile_details(
         "metadata": {
             "created_at": sourcefile_entry.created_at,
             "updated_at": sourcefile_entry.updated_at,
+            "num_words": sourcefile_entry.num_words,
+            "language_level": sourcefile_entry.language_level,
+            "url": sourcefile_entry.url,
+            "created_by_id": str(sourcefile_entry.created_by_id) if sourcefile_entry.created_by_id else None,
+            "title_translation": sourcefile_entry.metadata.get("title_translation") if sourcefile_entry.metadata else None,
         },
         "navigation": nav_info,
         "stats": {
@@ -714,6 +721,8 @@ def _create_text_sourcefile(
     description: Optional[str],
     metadata: Dict[str, Any],
     sourcefile_type: str = "text",
+    created_by_id: Optional[str] = None,
+    url: Optional[str] = None,
 ) -> Sourcefile:
     """Helper function to create a text-based Sourcefile.
 
@@ -726,12 +735,22 @@ def _create_text_sourcefile(
         description: Optional description text.
         metadata: Metadata dictionary.
         sourcefile_type: The type of sourcefile (default: "text").
+        created_by_id: Optional user ID who created the sourcefile.
+        url: Optional source URL for the content.
 
     Returns:
         The created Sourcefile object.
     """
     # Removed collision check logic for simplicity
     # Caller should handle collision checks if needed
+
+    # Count words in the text
+    from utils.word_utils import count_words
+    num_words = count_words(text_target, sourcedir_entry.target_language_code)
+
+    # Update metadata with URL if provided
+    if url and 'url' not in metadata:
+        metadata['url'] = url
 
     # Create sourcefile entry
     sourcefile = Sourcefile.create(
@@ -742,6 +761,8 @@ def _create_text_sourcefile(
         metadata=metadata,
         description=description,
         sourcefile_type=sourcefile_type,
+        created_by_id=created_by_id,
+        num_words=num_words,
     )
 
     return sourcefile

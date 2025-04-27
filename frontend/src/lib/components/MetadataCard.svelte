@@ -1,8 +1,17 @@
 <script lang="ts">
   // MetadataCard component for displaying creation and update timestamps
   // Used across various pages for consistent metadata display
+  import UserLookup from './UserLookup.svelte';
   
-  export let metadata: { created_at?: string; updated_at?: string } = {};
+  export let metadata: { 
+    created_at?: string; 
+    updated_at?: string;
+    num_words?: number;
+    language_level?: string;
+    url?: string;
+    created_by_id?: string;
+    title_translation?: string;
+  } = {};
   
   // Format the timestamp for display
   function formatTimestamp(timestamp: string): string {
@@ -29,18 +38,46 @@
       return timestamp;
     }
   }
+
+  // Get hostname from URL
+  function getHostname(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname;
+    } catch (e) {
+      return url;
+    }
+  }
 </script>
 
-{#if metadata && (metadata.created_at || metadata.updated_at)}
-  <div class="metadata-card">
-    {#if metadata.created_at}
-      <p class="metadata-item">Created: <span class="metadata-timestamp">{formatTimestamp(metadata.created_at)}</span></p>
-    {/if}
-    {#if metadata.updated_at}
-      <p class="metadata-item">Updated: <span class="metadata-timestamp">{formatTimestamp(metadata.updated_at)}</span></p>
-    {/if}
-  </div>
-{/if}
+<div class="metadata-card">
+  {#if metadata.created_at}
+    <p class="metadata-item">Created: <span class="metadata-timestamp">{formatTimestamp(metadata.created_at)}</span></p>
+  {/if}
+  {#if metadata.updated_at}
+    <p class="metadata-item">Updated: <span class="metadata-timestamp">{formatTimestamp(metadata.updated_at)}</span></p>
+  {/if}
+  
+  {#if metadata.num_words !== undefined && metadata.num_words !== null}
+    <p class="metadata-item">Word count: <span class="metadata-value">{metadata.num_words}</span></p>
+  {/if}
+  
+  {#if metadata.language_level}
+    <p class="metadata-item">Language level: <span class="metadata-value">{metadata.language_level.toUpperCase()}</span></p>
+  {/if}
+  
+  {#if metadata.url}
+    <p class="metadata-item">Source: <a href={metadata.url} target="_blank" rel="noopener noreferrer" class="metadata-link">{getHostname(metadata.url)}</a></p>
+  {/if}
+  
+  {#if metadata.created_by_id}
+    <p class="metadata-item">Created by: <UserLookup userId={metadata.created_by_id} loadingText="Loading..." /></p>
+  {/if}
+  
+  {#if metadata.title_translation}
+    <p class="metadata-item">Title: <span class="metadata-value">{metadata.title_translation}</span></p>
+  {/if}
+</div>
 
 <style>
   .metadata-card {
@@ -63,4 +100,18 @@
   .metadata-timestamp {
     font-family: var(--bs-font-monospace, monospace);
   }
-</style> 
+  
+  .metadata-value {
+    font-weight: 500;
+  }
+  
+  .metadata-link {
+    color: var(--hz-color-primary-green);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .metadata-link:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -17,11 +17,21 @@ export interface Sourcefile {
     has_audio: boolean;
     has_image: boolean;
     enhanced_text?: string | null;
+    title_translation?: string | null;
+    num_words?: number;
+    language_level?: string;
+    url?: string;
+    created_by_id?: string;
 }
 
 export interface Metadata {
     created_at: string;
     updated_at: string;
+    num_words?: number;
+    language_level?: string;
+    url?: string;
+    created_by_id?: string;
+    title_translation?: string;
     image_processing?: {
         original_size: number;
         final_size: number;
