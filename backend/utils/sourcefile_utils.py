@@ -748,10 +748,6 @@ def _create_text_sourcefile(
     from utils.word_utils import count_words
     num_words = count_words(text_target, sourcedir_entry.target_language_code)
 
-    # Update metadata with URL if provided
-    if url and 'url' not in metadata:
-        metadata['url'] = url
-
     # Create sourcefile entry
     sourcefile = Sourcefile.create(
         sourcedir=sourcedir_entry,
@@ -763,6 +759,7 @@ def _create_text_sourcefile(
         sourcefile_type=sourcefile_type,
         created_by_id=created_by_id,
         num_words=num_words,
+        url=url,  # Use the dedicated URL field
     )
 
     return sourcefile

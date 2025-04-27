@@ -408,9 +408,6 @@ For routes with `@api_auth_optional`, we should check if `g.user_id` exists befo
 created_by_id = getattr(g, 'user_id', None)
 ```
 
-### 4. Backward Compatibility
-
-The helper `get_source_url()` function ensures backward compatibility with code that might still use `metadata["source_url"]`.
 
 ## Documentation Update
 
@@ -457,4 +454,4 @@ The implementation can be done in phases:
 4. Update the UI to display the new information
 5. Add language level estimation last (most complex)
 
-This phased approach allows for testing at each step and maintains backward compatibility throughout the process.
+This phased approach allows for testing at each step.
