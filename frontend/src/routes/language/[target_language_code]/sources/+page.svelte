@@ -3,16 +3,23 @@
   import { RouteName } from '$lib/generated/routes';
   import { SITE_NAME } from '$lib/config';
   import DataGrid from '$lib/components/DataGrid.svelte';
+  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
   import { supabase } from '$lib/supabaseClient';
   import { getApiUrl } from '$lib/api';
+  import { onMount } from 'svelte';
   
   export let data: PageData;
   
   // Extract data with reactive declarations
   $: ({ target_language_code: languageCode, languageName, sources, total } = data);
   
-  // No need for user email caching anymore since we're displaying the ID directly
+  // Flag to show loading spinner when component first mounts
+  let loading = true;
+  onMount(() => {
+    // Set loading to false after a brief delay to avoid "No data" flash
+    setTimeout(() => loading = false, 300);
+  });
   
   // Transform API data to match database fields for consistent rendering
   // Handle the case where sources might be undefined (during initial load or error)
@@ -37,15 +44,19 @@
     },
     { 
       id: 'file_count', 
-      header: 'Files',
+      header: '# Sources',
       accessor: row => {
-        // Use statistics if available or just display zero
-        if (row.statistics && typeof row.statistics.file_count === 'number') {
+        // Use direct file_count column from our custom query if available
+        if (typeof row.file_count === 'number') {
+          return row.file_count;
+        }
+        // Fallback to statistics if available (for API format data)
+        else if (row.statistics && typeof row.statistics.file_count === 'number') {
           return row.statistics.file_count;
         }
         return 0;
       },
-      width: 80
+      width: 100
     },
     { 
       id: 'created_by_id', 
@@ -81,10 +92,24 @@
   ];
 
   // Set up the data provider with just the database columns
+  // Additional query to count number of sourcefiles per sourcedir
   const loadData = supabaseDataProvider({
     table: 'sourcedir',
     selectableColumns: 'id,path,slug,description,created_by_id,updated_at', 
-    client: supabase
+    client: supabase,
+    customQuery: `
+      SELECT 
+        sourcedir.id,
+        sourcedir.path,
+        sourcedir.slug,
+        sourcedir.description,
+        sourcedir.created_by_id,
+        sourcedir.updated_at,
+        COUNT(sourcefile.id) as file_count
+      FROM sourcedir
+      LEFT JOIN sourcefile ON sourcedir.id = sourcefile.sourcedir_id
+      GROUP BY sourcedir.id
+    `
   });
 
   // Function to generate URLs for each row
@@ -160,8 +185,12 @@
     </div>
   </div>
   
-  <!-- DataGrid for sources -->
-  {#if sources.length > 0}
+  <!-- Loading spinner or DataGrid for sources -->
+  {#if loading}
+    <div class="text-center py-5">
+      <LoadingSpinner size="lg" />
+    </div>
+  {:else if sources && sources.length > 0}
     <DataGrid 
       {columns}
       loadData={loadData}
@@ -169,6 +198,8 @@
       initialTotal={total}
       getRowUrl={getSourcedirUrl}
       getRowTooltip={getSourcedirTooltip}
+      defaultSortField="updated_at"
+      defaultSortDir="desc"
       queryModifier={(query) => query.eq('target_language_code', languageCode)}
     />
   {:else}
