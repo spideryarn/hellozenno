@@ -60,10 +60,11 @@ def random_flashcard_api(target_language_code: str):
         f"Fetching random flashcard: language={target_language_code}, sourcefile={sourcefile_slug}, sourcedir={sourcedir_slug}"
     )
     
-    # Get profile from auth context if available
+    # Get profile from flask g object if available
     profile = None
-    if hasattr(request, "auth") and request.auth and hasattr(request.auth, "profile"):
-        profile = request.auth.profile
+    from flask import g
+    if hasattr(g, "profile") and g.profile:
+        profile = g.profile
 
     # Use the shared utility function
     data = get_random_flashcard_data(
