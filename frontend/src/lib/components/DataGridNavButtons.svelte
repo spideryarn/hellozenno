@@ -167,8 +167,7 @@
     white-space: nowrap;
   }
 
-  .button:disabled,
-  .button.disabled {
+  .button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
   }

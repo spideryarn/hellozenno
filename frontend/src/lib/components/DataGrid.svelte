@@ -468,8 +468,4 @@
     text-decoration: none;
   }
   
-  /* Don't override the primary green color for links that contain spans with this class */
-  .grid-row-link .hz-column-primary-green {
-    color: var(--hz-color-primary-green) !important;
-  }
 </style> 

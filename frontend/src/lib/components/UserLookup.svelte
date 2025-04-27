@@ -1,7 +1,7 @@
 <script lang="ts">
   // User ID to display
   export let userId: string;
-  export let loadingText: string = "Loading...";
+  export const loadingText: string = "Loading...";
   
   // Format a UUID to be shorter and more readable
   function formatUserId(id: string): string {

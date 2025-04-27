@@ -96,14 +96,50 @@
   
   // Column configuration for DataGrid v1
   const columns = [
-    { id: 'filename', header: 'Filename', accessor: (row: any) => row.filename },
-    { id: 'sourcefile_type', header: 'Type' },
+    { 
+      id: 'filename', 
+      header: 'Filename', 
+      accessor: (row: any) => {
+        // Truncate to first 50 characters and add ellipsis if needed
+        const displayName = row.filename.length > 50 ? `${row.filename.substring(0, 50)}...` : row.filename;
+        return displayName;
+      }
+    },
     { id: 'wordform_count', header: 'Words', accessor: (row: any) => row.metadata?.wordform_count ?? 0, width: 80, class: 'text-end' },
+    { id: 'sourcefile_type', header: 'Type' },
+    { 
+      id: 'updated_at', 
+      header: 'Modified',
+      accessor: (row: any) => {
+        if (!row.updated_at) return '';
+        try {
+          const date = new Date(row.updated_at);
+          const formatted = date.toLocaleString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          return `<span class="metadata-timestamp">${formatted}</span>`;
+        } catch (e) {
+          return row.updated_at;
+        }
+      },
+      isHtml: true,
+      width: 180
+    },
   ];
   
   // URL generator function for DataGrid rows
   function getSourcefileUrl(row: any): string {
     return `/language/${target_language_code}/source/${sourcedir.slug}/${row.slug}`;
+  }
+  
+  // Tooltip generator function for DataGrid rows - show full filename
+  function getSourcefileTooltip(row: any): string | null {
+    return row.filename || null;
   }
   
   async function deleteSourcefile(slug: string) {
@@ -492,6 +528,9 @@
       rows={sourcefiles}
       pageSize={100}
       getRowUrl={getSourcefileUrl}
+      getRowTooltip={getSourcefileTooltip}
+      defaultSortField="filename"
+      defaultSortDir="asc"
     />
   {/if}
 </div>
@@ -673,14 +712,6 @@
 {/if} 
 
 <style>
-    /* File icon styling */
+    /* Any other styles would go here */
 
-  /* Existing styles... */
-  .file-icon i {
-    font-size: 1.5rem; /* Adjust as needed */
-    color: var(--hz-color-text-secondary);
-    margin-bottom: 0.5rem;
-  }
-
-  /* ... other existing styles ... */
 </style> 

@@ -117,10 +117,6 @@
     align-items: center;
   }
   
-  .btn > svg {
-      vertical-align: text-bottom;
-      margin-right: 0.25rem;
-  }
   
   .dropdown {
     position: relative;
