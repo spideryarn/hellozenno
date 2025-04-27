@@ -45,6 +45,22 @@ class BaseModel(Model):
 
     def save(self, *args, **kwargs):
         self.updated_at = datetime.now()
+        
+        # Check if this is a new instance (not yet in the database)
+        is_new = not self._pk  # _pk is None for new instances
+        
+        # Only for new instances, try to set created_by from Flask g object if field exists
+        if is_new and hasattr(self, 'created_by') and not getattr(self, 'created_by', None):
+            try:
+                # Import Flask's g object within the method to avoid circular imports
+                from flask import g
+                # Check if g has user_id and set it on the model
+                if hasattr(g, 'user_id') and g.user_id:
+                    self.created_by = g.user_id
+            except (ImportError, RuntimeError):
+                # Flask context might not be available (e.g., in scripts, tests)
+                pass
+        
         return super().save(*args, **kwargs)
 
     class Meta:
