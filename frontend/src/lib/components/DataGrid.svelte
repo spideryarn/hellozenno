@@ -243,7 +243,18 @@
                 <th scope="col" style="width: {col.width ?? 'auto'}" class={col.class}>{col.header}</th>
               {/if}
             {:else}
-              <th scope="col" style="width: {col.width ?? 'auto'}" class={col.class}>{col.header}</th>
+              <th scope="col" 
+                  style="width: {col.width ?? 'auto'}" 
+                  class={`${col.class ?? ''} ${col.id === sortField ? 'sorted' : ''}`}>
+                {col.header}
+                {#if col.id === sortField}
+                  {#if sortDir === 'asc'}
+                    ↑
+                  {:else if sortDir === 'desc'}
+                    ↓
+                  {/if}
+                {/if}
+              </th>
             {/if}
           {/each}
         </tr>
