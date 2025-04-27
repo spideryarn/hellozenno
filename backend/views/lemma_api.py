@@ -6,14 +6,12 @@ These endpoints follow the standard pattern:
 """
 
 from flask import Blueprint, jsonify, request
-from peewee import DoesNotExist, JOIN
-import time
+from peewee import DoesNotExist
 import logging
 import urllib.parse
-from datetime import datetime
 
 from utils.lang_utils import get_language_name
-from db_models import Lemma, LemmaExampleSentence, ProfileLemma, Profile
+from db_models import Lemma, UserLemma
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.sourcefile_utils import complete_lemma_metadata
 
@@ -215,104 +213,101 @@ def complete_lemma_metadata_api(target_language_code: str, lemma: str):
         return response
 
 
-@lemma_api_bp.route(
-    "/<target_language_code>/<lemma>/ignore", methods=["POST"]
-)
+@lemma_api_bp.route("/<target_language_code>/<lemma>/ignore", methods=["POST"])
 @api_auth_required
 def ignore_lemma_api(target_language_code: str, lemma: str):
     """Mark a lemma as ignored for the current user.
-    
+
     This endpoint requires authentication and will add the lemma
     to the user's list of ignored lemmas.
     """
     # URL decode the lemma parameter to handle non-Latin characters properly
     lemma = urllib.parse.unquote(lemma)
-    
+
     try:
         # Get the lemma model
         lemma_model = Lemma.get(
             (Lemma.lemma == lemma)
             & (Lemma.target_language_code == target_language_code)
         )
-        
-        # Get the profile from Flask g object where api_auth_required stores it
+
+        # Get the user ID from Flask g object where api_auth_required stores it
         from flask import g
-        profile = g.profile
-        
-        # Use the class method we defined in ProfileLemma
-        profile_lemma = ProfileLemma.ignore_lemma(profile, lemma_model)
-        
-        return jsonify({
-            "success": True,
-            "message": f"Lemma '{lemma}' ignored successfully",
-            "ignored_dt": profile_lemma.ignored_dt.isoformat() if profile_lemma.ignored_dt else None
-        })
-        
+
+        user_id = g.user_id
+
+        # Use the class method we defined in UserLemma
+        user_lemma = UserLemma.ignore_lemma(user_id, lemma_model)
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Lemma '{lemma}' ignored successfully",
+                "ignored_dt": (
+                    user_lemma.ignored_dt.isoformat() if user_lemma.ignored_dt else None
+                ),
+            }
+        )
+
     except DoesNotExist:
         response = jsonify(
             {"error": "Not Found", "description": f"Lemma '{lemma}' not found"}
         )
         response.status_code = 404
         return response
-        
+
     except Exception as e:
         logger.exception(f"Error ignoring lemma '{lemma}': {str(e)}")
-        response = jsonify(
-            {"error": "Failed to ignore lemma", "description": str(e)}
-        )
+        response = jsonify({"error": "Failed to ignore lemma", "description": str(e)})
         response.status_code = 500
         return response
 
 
-@lemma_api_bp.route(
-    "/<target_language_code>/<lemma>/unignore", methods=["POST"]
-)
+@lemma_api_bp.route("/<target_language_code>/<lemma>/unignore", methods=["POST"])
 @api_auth_required
 def unignore_lemma_api(target_language_code: str, lemma: str):
     """Remove a lemma from the user's ignored list.
-    
+
     This endpoint requires authentication and will remove the lemma
     from the user's list of ignored lemmas.
     """
     # URL decode the lemma parameter to handle non-Latin characters properly
     lemma = urllib.parse.unquote(lemma)
-    
+
     try:
         # Get the lemma model
         lemma_model = Lemma.get(
             (Lemma.lemma == lemma)
             & (Lemma.target_language_code == target_language_code)
         )
-        
-        # Get the profile from auth context
-        profile = request.auth.profile
-        
-        # Use the class method we defined in ProfileLemma
-        success = ProfileLemma.unignore_lemma(profile, lemma_model)
-        
+
+        # Get the user ID from Flask g object where api_auth_required stores it
+        from flask import g
+
+        user_id = g.user_id
+
+        # Use the class method we defined in UserLemma
+        success = UserLemma.unignore_lemma(user_id, lemma_model)
+
         if success:
-            return jsonify({
-                "success": True,
-                "message": f"Lemma '{lemma}' unignored successfully"
-            })
+            return jsonify(
+                {"success": True, "message": f"Lemma '{lemma}' unignored successfully"}
+            )
         else:
-            return jsonify({
-                "success": True,
-                "message": f"Lemma '{lemma}' was not ignored"
-            })
-        
+            return jsonify(
+                {"success": True, "message": f"Lemma '{lemma}' was not ignored"}
+            )
+
     except DoesNotExist:
         response = jsonify(
             {"error": "Not Found", "description": f"Lemma '{lemma}' not found"}
         )
         response.status_code = 404
         return response
-        
+
     except Exception as e:
         logger.exception(f"Error unignoring lemma '{lemma}': {str(e)}")
-        response = jsonify(
-            {"error": "Failed to unignore lemma", "description": str(e)}
-        )
+        response = jsonify({"error": "Failed to unignore lemma", "description": str(e)})
         response.status_code = 500
         return response
 
@@ -321,38 +316,42 @@ def unignore_lemma_api(target_language_code: str, lemma: str):
 @api_auth_required
 def get_ignored_lemmas_api(target_language_code: str):
     """Get all lemmas that the current user has ignored.
-    
+
     This endpoint requires authentication and returns the list of
     lemmas that the user has marked as ignored.
     """
     try:
-        # Get the profile from auth context
-        profile = request.auth.profile
-        
-        # Get all ignored lemmas for this profile and language
+        # Get the user ID from Flask g object where api_auth_required stores it
+        from flask import g
+
+        user_id = g.user_id
+
+        # Get all ignored lemmas for this user and language
         ignored_lemmas = (
-            ProfileLemma.select(ProfileLemma, Lemma)
+            UserLemma.select(UserLemma, Lemma)
             .join(Lemma)
             .where(
-                (ProfileLemma.profile == profile)
-                & (ProfileLemma.ignored_dt.is_null(False))
+                (UserLemma.user_id == user_id)
+                & (UserLemma.ignored_dt.is_null(False))
                 & (Lemma.target_language_code == target_language_code)
             )
-            .order_by(ProfileLemma.ignored_dt.desc())
+            .order_by(UserLemma.ignored_dt.desc())
         )
-        
+
         # Build response
         result = []
-        for pl in ignored_lemmas:
-            result.append({
-                "lemma": pl.lemma.lemma,
-                "target_language_code": pl.lemma.target_language_code,
-                "ignored_dt": pl.ignored_dt.isoformat() if pl.ignored_dt else None,
-                "translations": pl.lemma.translations
-            })
-            
+        for ul in ignored_lemmas:
+            result.append(
+                {
+                    "lemma": ul.lemma.lemma,
+                    "target_language_code": ul.lemma.target_language_code,
+                    "ignored_dt": ul.ignored_dt.isoformat() if ul.ignored_dt else None,
+                    "translations": ul.lemma.translations,
+                }
+            )
+
         return jsonify(result)
-        
+
     except Exception as e:
         logger.exception(f"Error getting ignored lemmas: {str(e)}")
         response = jsonify(

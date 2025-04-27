@@ -2,7 +2,7 @@ from typing import Optional
 import random
 
 from utils.audio_utils import ensure_audio_data
-from db_models import Sentence, Lemma, SentenceLemma, Wordform, Profile, ProfileLemma
+from db_models import Sentence, Lemma, SentenceLemma, Wordform, Profile, UserLemma
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import (
     anthropic_client,
@@ -150,10 +150,10 @@ def get_random_sentence(
                 base_query
                 .where(
                     ~(
-                        (SentenceLemma.lemma << ProfileLemma.select(ProfileLemma.lemma)
+                        (SentenceLemma.lemma << UserLemma.select(UserLemma.lemma)
                          .where(
-                             (ProfileLemma.profile == profile) & 
-                             (ProfileLemma.ignored_dt.is_null(False))
+                             (UserLemma.user_id == profile.user_id) & 
+                             (UserLemma.ignored_dt.is_null(False))
                          ))
                     )
                 )

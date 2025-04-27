@@ -718,7 +718,7 @@ export type Database = {
           antonyms: Json | null
           commonality: number | null
           created_at: string
-          created_by: string | null
+          created_by_id: string | null
           cultural_context: string | null
           easily_confused_with: Json | null
           etymology: string | null
@@ -741,7 +741,7 @@ export type Database = {
           antonyms?: Json | null
           commonality?: number | null
           created_at: string
-          created_by?: string | null
+          created_by_id?: string | null
           cultural_context?: string | null
           easily_confused_with?: Json | null
           etymology?: string | null
@@ -764,7 +764,7 @@ export type Database = {
           antonyms?: Json | null
           commonality?: number | null
           created_at?: string
-          created_by?: string | null
+          created_by_id?: string | null
           cultural_context?: string | null
           easily_confused_with?: Json | null
           etymology?: string | null
@@ -848,7 +848,7 @@ export type Database = {
           commonality: number | null
           component_words: Json | null
           created_at: string
-          created_by: string | null
+          created_by_id: string | null
           cultural_context: string | null
           difficulty_level: string | null
           etymology: string | null
@@ -870,7 +870,7 @@ export type Database = {
           commonality?: number | null
           component_words?: Json | null
           created_at: string
-          created_by?: string | null
+          created_by_id?: string | null
           cultural_context?: string | null
           difficulty_level?: string | null
           etymology?: string | null
@@ -892,7 +892,7 @@ export type Database = {
           commonality?: number | null
           component_words?: Json | null
           created_at?: string
-          created_by?: string | null
+          created_by_id?: string | null
           cultural_context?: string | null
           difficulty_level?: string | null
           etymology?: string | null
@@ -977,48 +977,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profilelemma: {
-        Row: {
-          created_at: string
-          id: number
-          ignored_dt: string | null
-          lemma_id: number
-          profile_id: number
-          updated_at: string
-        }
-        Insert: {
-          created_at: string
-          id?: number
-          ignored_dt?: string | null
-          lemma_id: number
-          profile_id: number
-          updated_at: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          ignored_dt?: string | null
-          lemma_id?: number
-          profile_id?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profilelemma_lemma_id_fkey"
-            columns: ["lemma_id"]
-            isOneToOne: false
-            referencedRelation: "lemma"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profilelemma_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profile"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       relatedphrase: {
         Row: {
           created_at: string
@@ -1065,7 +1023,7 @@ export type Database = {
         Row: {
           audio_data: string | null
           created_at: string
-          created_by: string | null
+          created_by_id: string | null
           id: number
           language_level: string | null
           lemma_words: Json | null
@@ -1078,7 +1036,7 @@ export type Database = {
         Insert: {
           audio_data?: string | null
           created_at: string
-          created_by?: string | null
+          created_by_id?: string | null
           id?: number
           language_level?: string | null
           lemma_words?: Json | null
@@ -1091,7 +1049,7 @@ export type Database = {
         Update: {
           audio_data?: string | null
           created_at?: string
-          created_by?: string | null
+          created_by_id?: string | null
           id?: number
           language_level?: string | null
           lemma_words?: Json | null
@@ -1145,7 +1103,7 @@ export type Database = {
       sourcedir: {
         Row: {
           created_at: string
-          created_by: string | null
+          created_by_id: string | null
           description: string | null
           id: number
           path: string
@@ -1155,7 +1113,7 @@ export type Database = {
         }
         Insert: {
           created_at: string
-          created_by?: string | null
+          created_by_id?: string | null
           description?: string | null
           id?: number
           path: string
@@ -1165,7 +1123,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string | null
+          created_by_id?: string | null
           description?: string | null
           id?: number
           path?: string
@@ -1180,7 +1138,7 @@ export type Database = {
           audio_data: string | null
           audio_filename: string | null
           created_at: string
-          created_by: string | null
+          created_by_id: string | null
           description: string | null
           filename: string
           id: number
@@ -1202,7 +1160,7 @@ export type Database = {
           audio_data?: string | null
           audio_filename?: string | null
           created_at: string
-          created_by?: string | null
+          created_by_id?: string | null
           description?: string | null
           filename: string
           id?: number
@@ -1224,7 +1182,7 @@ export type Database = {
           audio_data?: string | null
           audio_filename?: string | null
           created_at?: string
-          created_by?: string | null
+          created_by_id?: string | null
           description?: string | null
           filename?: string
           id?: number
@@ -1357,10 +1315,45 @@ export type Database = {
         }
         Relationships: []
       }
+      userlemma: {
+        Row: {
+          created_at: string
+          id: number
+          ignored_dt: string | null
+          lemma_id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at: string
+          id?: number
+          ignored_dt?: string | null
+          lemma_id: number
+          updated_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          ignored_dt?: string | null
+          lemma_id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "userlemma_lemma_id_fkey"
+            columns: ["lemma_id"]
+            isOneToOne: false
+            referencedRelation: "lemma"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wordform: {
         Row: {
           created_at: string
-          created_by: string | null
+          created_by_id: string | null
           id: number
           inflection_type: string | null
           is_lemma: boolean
@@ -1374,7 +1367,7 @@ export type Database = {
         }
         Insert: {
           created_at: string
-          created_by?: string | null
+          created_by_id?: string | null
           id?: number
           inflection_type?: string | null
           is_lemma: boolean
@@ -1388,7 +1381,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string | null
+          created_by_id?: string | null
           id?: number
           inflection_type?: string | null
           is_lemma?: boolean
