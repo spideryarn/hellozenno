@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Optional, TypedDict
 from flask import abort, g
 from peewee import DoesNotExist, prefetch
 import unicodedata
@@ -352,14 +352,14 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
 def count_words(text: Optional[str], language_code: str) -> int:
     """
     Count words in text based on the language.
-    
+
     Args:
         text: The text to count words in
         language_code: Language code (e.g., 'en', 'zh')
-        
+
     Returns:
         int: Number of words or characters in the text
-    
+
     Notes:
         - For most languages, splits on whitespace and counts tokens
         - For languages without spaces (zh, ja, th), counts characters
@@ -367,14 +367,13 @@ def count_words(text: Optional[str], language_code: str) -> int:
     """
     if not text:
         return 0
-    
+
     # Languages without word boundaries use characters as an approximation
-    languages_without_spaces = ['zh', 'ja', 'th']
-    
+    languages_without_spaces = ["zh", "ja", "th"]
+
     if language_code in languages_without_spaces:
         # Character count for languages without word boundaries
         return len(text.strip())
     else:
         # Word count for languages with word boundaries
         return len(text.split())
-
