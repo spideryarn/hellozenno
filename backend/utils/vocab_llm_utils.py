@@ -999,6 +999,7 @@ def process_phrases_from_text(
                 "component_words": phrase_d.get("component_words", []),
                 "usage_notes": phrase_d.get("usage_notes", ""),
                 "difficulty_level": phrase_d.get("difficulty_level", "intermediate"),
+                "language_level": phrase_d.get("language_level"),  # Store CEFR language level from LLM
             },
         )
 

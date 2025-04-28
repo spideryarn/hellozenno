@@ -21,6 +21,7 @@ def generate_sentence(
     translation: str,
     lemma_words: Optional[list] = None,
     should_play: bool = False,
+    language_level: Optional[str] = None,
 ) -> tuple[None, dict]:
     """Generate audio and metadata for a sentence.
 
@@ -30,6 +31,7 @@ def generate_sentence(
         translation: English translation
         lemma_words: List of lemmas/vocabulary words used in the sentence
         should_play: Whether to play the audio after generating
+        language_level: Optional CEFR language level (e.g., "A1", "B2", "C1")
 
     Returns:
         Tuple of (None, metadata_dict)
@@ -53,6 +55,7 @@ def generate_sentence(
         defaults={
             "translation": translation,
             "audio_data": audio_data,
+            "language_level": language_level,
         },
     )
 
@@ -61,9 +64,11 @@ def generate_sentence(
         if (
             db_sentence.translation != translation
             or db_sentence.audio_data != audio_data
+            or db_sentence.language_level != language_level
         ):
             db_sentence.translation = translation
             db_sentence.audio_data = audio_data
+            db_sentence.language_level = language_level
             db_sentence.save()
 
     # Add lemma relationships if provided
@@ -197,6 +202,7 @@ def get_random_sentence(
         "lemma_words": chosen.lemma_words,
         "target_language_code": target_language_code,
         "slug": chosen.slug,
+        "language_level": chosen.language_level,
     }
 
 
@@ -238,6 +244,7 @@ def generate_practice_sentences(
                 sentence=sentence_data["sentence"],
                 translation=sentence_data["translation"],
                 lemma_words=[lemma],
+                language_level=sentence_data.get("language_level"),  # Store language_level from LLM response
             )
 
 
@@ -321,6 +328,7 @@ def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
         "slug": sentence.slug,
         "target_language_code": sentence.target_language_code,
         "has_audio": bool(sentence.audio_data),
+        "language_level": sentence.language_level,
         "lemma_words": all_lemmas if all_lemmas else None,
     }
 

@@ -192,6 +192,7 @@ class Lemma(BaseModel):
             "guessability": self.guessability,
             "cultural_context": self.cultural_context,
             "mnemonics": self.mnemonics,
+            "language_level": self.language_level,  # Include CEFR language level
             "example_usage": [
                 {
                     "phrase": es.sentence.sentence,
@@ -607,6 +608,7 @@ class Sentence(BaseModel):
                     "target_language_code": sentence.target_language_code,
                     "slug": sentence.slug,
                     "has_audio": bool(sentence.audio_data),
+                    "language_level": sentence.language_level,
                 }
             )
 
@@ -649,6 +651,7 @@ class Phrase(BaseModel):
     component_words = JSONField(null=True)  # list[dict] with lemma, translation, notes
     usage_notes = TextField(null=True)  # general notes about usage
     difficulty_level = CharField(null=True)  # e.g. "intermediate"
+    language_level = CharField(null=True)  # CEFR language level (e.g. "A1", "B2", "C1")
     slug = CharField(
         max_length=255, null=True
     )  # URL-friendly version of the canonical form
@@ -688,6 +691,7 @@ class Phrase(BaseModel):
             "component_words": self.component_words,
             "usage_notes": self.usage_notes,
             "difficulty_level": self.difficulty_level,
+            "language_level": self.language_level,  # Include CEFR language level
             "slug": self.slug,
             "created_at": (
                 self.created_at.strftime("%Y-%m-%d %H:%M:%S")
@@ -848,6 +852,7 @@ class Sourcefile(BaseModel):
     language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
     url = CharField(null=True)  # original source URL if applicable
     title_target = CharField(null=True)  # title in target language
+    private = BooleanField(default=False)  # if True, file is only visible to owner
 
     def save(self, *args, **kwargs):
         # Always generate slug from current filename
