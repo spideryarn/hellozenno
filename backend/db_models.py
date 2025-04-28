@@ -852,7 +852,6 @@ class Sourcefile(BaseModel):
     language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
     url = CharField(null=True)  # original source URL if applicable
     title_target = CharField(null=True)  # title in target language
-    private = BooleanField(default=False)  # if True, file is only visible to owner
 
     def save(self, *args, **kwargs):
         # Always generate slug from current filename
