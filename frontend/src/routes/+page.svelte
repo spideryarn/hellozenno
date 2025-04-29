@@ -308,7 +308,7 @@
   /* Hero section styling */
   .hero-section {
     position: relative;
-    padding: 100px 0;
+    padding: 0px 0;
   }
   
   /* Remove bg-dark from sections since we have the nebula background */
