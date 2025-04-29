@@ -20,6 +20,7 @@ from typing import Optional
 
 # Relative imports for running from backend directory
 from config import SUPPORTED_LANGUAGES
+from utils.env_config import VITE_FRONTEND_URL
 from db_models import Sourcedir, Sourcefile
 from gjdutils.llm_utils import generate_gpt_from_template
 from utils.lang_utils import validate_language_code, validate_language_level
@@ -387,7 +388,7 @@ def generate(
         language_level=language_level,  # Pass language_level directly to use dedicated field
     )
 
-    logger.info(f"Created new sourcefile: {sourcefile.filename} ({sourcefile.id})")
+    logger.info(f"Created new sourcefile: {sourcefile.filename} ({sourcefile.id})")  # type: ignore
     logger.info(f"Content length: {len(generated_content.split())} words")
 
     # Show success message
@@ -397,9 +398,6 @@ def generate(
     )
     typer.echo(f"📝 Sourcefile ID: {sourcefile.id}")  # type: ignore
     typer.echo(f"🏷️ Tags: {tags_str}")
-
-    # Format the final URL with the frontend base URL
-    from utils.env_config import VITE_FRONTEND_URL
 
     sourcefile_path = f"{sourcedir}/{filename}"
     full_url = f"{VITE_FRONTEND_URL}/language/{target_language_code}/source/{sourcedir_entry.slug}/{sourcefile.slug}/text"
