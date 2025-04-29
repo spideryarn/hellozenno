@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
-  import { getApiUrl } from '$lib/api';
+  import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { 
     CollapsibleHeader, 
@@ -160,28 +160,31 @@
     
     try {
       moveError = '';
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_MOVE_SOURCEFILE_API,
-          {
-            target_language_code,
-            sourcedir_slug,
-            sourcefile_slug
-          }
-        ),
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ new_sourcedir_slug: newSourcedirSlug }),
-        }
-      );
       
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to move file');
+      // Use Supabase client to get auth token
+      if (!data.supabase) {
+        throw new Error('Authentication required to move files');
       }
       
-      const result = await response.json();
+      // Use apiFetch from imports for proper auth handling
+      
+      // Use apiFetch instead of raw fetch to ensure proper auth handling
+      const result = await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEFILE_API_MOVE_SOURCEFILE_API,
+        params: {
+          target_language_code,
+          sourcedir_slug,
+          sourcefile_slug
+        },
+        options: {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ new_sourcedir_slug: newSourcedirSlug })
+        }
+      });
       
       // After successful move, navigate to the file in its new location
       window.location.href = `/language/${target_language_code}/source/${newSourcedirSlug}/${result.new_sourcefile_slug}/text`;
@@ -306,23 +309,26 @@
     }
     
     try {
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_DELETE_SOURCEFILE_API,
-          {
-            target_language_code: target_language_code,
-            sourcedir_slug,
-            sourcefile_slug
-          }
-        ),
-        {
-          method: 'DELETE',
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to delete file: ${response.statusText}`);
+      // Use Supabase client to get auth token
+      if (!data.supabase) {
+        throw new Error('Authentication required to delete files');
       }
+      
+      // Use apiFetch from imports for proper auth handling
+      
+      // Use apiFetch instead of raw fetch to ensure proper auth handling
+      await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEFILE_API_DELETE_SOURCEFILE_API,
+        params: {
+          target_language_code,
+          sourcedir_slug,
+          sourcefile_slug
+        },
+        options: {
+          method: 'DELETE'
+        }
+      });
       
       // Navigate back to the sourcedir page using hard reload
       const sourcedirUrl = getPageUrl('sourcedir', {
@@ -341,30 +347,30 @@
     if (!newName || newName === sourcefile.filename) return;
     
     try {
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_RENAME_SOURCEFILE_API,
-          {
-            target_language_code: target_language_code,
-            sourcedir_slug,
-            sourcefile_slug
-          }
-        ),
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ new_name: newName }),
-        }
-      );
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || `Failed to rename file: ${response.statusText}`);
+      // Use Supabase client to get auth token
+      if (!data.supabase) {
+        throw new Error('Authentication required to rename files');
       }
       
-      const result = await response.json();
+      // Use apiFetch from imports for proper auth handling
+      
+      // Use apiFetch instead of raw fetch to ensure proper auth handling
+      const result = await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEFILE_API_RENAME_SOURCEFILE_API,
+        params: {
+          target_language_code,
+          sourcedir_slug,
+          sourcefile_slug
+        },
+        options: {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ new_name: newName })
+        }
+      });
       
       // Update the local state to reflect the filename change
       sourcefile.filename = newName;
@@ -403,27 +409,25 @@
   // Handle description save
   async function saveDescription(text: string) {
     try {
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API,
-          {
-            target_language_code: target_language_code,
-            sourcedir_slug,
-            sourcefile_slug
-          }
-        ),
-        {
+      // Use apiFetch from imports for proper auth handling
+      
+      // Use apiFetch instead of raw fetch to ensure proper auth handling
+      await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEFILE_API_UPDATE_SOURCEFILE_DESCRIPTION_API,
+        params: {
+          target_language_code,
+          sourcedir_slug,
+          sourcefile_slug
+        },
+        options: {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ description: text }),
+          body: JSON.stringify({ description: text })
         }
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to update description: ${response.statusText}`);
-      }
+      });
       
       // Update the local state to reflect the change
       sourcefile.description = text;
