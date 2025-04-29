@@ -33,6 +33,7 @@
         width: 80,
         accessor: row => row.difficulty_level || '—'
       },
+      createUserIdColumn({ header: 'Created By', width: 170 }),
       { 
         id: 'updated_at', 
         header: 'Modified', 
@@ -55,7 +56,6 @@
         },
         isHtml: true
       },
-      createUserIdColumn({ header: 'Created By', width: 170 }),
     ];
 
     // Use the supabase data provider
