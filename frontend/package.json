@@ -19,9 +19,9 @@
 		"build-storybook": "storybook build"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.9.5",
-		"@rollup/rollup-linux-x64-musl": "^4.9.5",
-		"@esbuild/linux-x64": "^0.19.8"
+		"@rollup/rollup-linux-x64-gnu": "^4.38.0",
+		"@rollup/rollup-linux-x64-musl": "^4.38.0",
+		"@esbuild/linux-x64": "^0.25.2"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^3",
