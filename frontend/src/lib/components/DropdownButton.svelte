@@ -90,6 +90,7 @@
           <a 
             class="dropdown-item {item.class || ''}"
             href={item.href || '#'}
+            on:click={() => handleItemClick(item)}
           >
             {item.text}
           </a>
