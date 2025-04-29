@@ -4,6 +4,7 @@
     import { SITE_NAME } from '$lib/config';
     import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
     import { supabase } from '$lib/supabaseClient';
+    import { createUserIdColumn } from '$lib/datagrid/utils';
     
     export let data: PageData;
     
@@ -26,6 +27,7 @@
         header: 'Level',
         width: 90
       },
+      createUserIdColumn({ header: 'Created By', width: 170 }),
       { 
         id: 'updated_at', 
         header: 'Modified', 
@@ -48,13 +50,13 @@
         },
         isHtml: true,
         width: 170
-      }
+      },
     ];
 
     // Use the supabase data provider
     const loadData = supabaseDataProvider({
       table: 'sentence',
-      selectableColumns: 'id,sentence,translation,language_level,updated_at,slug,lemma_words',
+      selectableColumns: 'id,sentence,translation,language_level,updated_at,slug,lemma_words,created_by_id',
       client: supabase,
       jsonArrayColumns: ['lemma_words']
     });

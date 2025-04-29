@@ -11,6 +11,7 @@
 
     import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
     import { supabase } from '$lib/supabaseClient';
+    import { createUserIdColumn } from '$lib/datagrid/utils';
 
     const columns = [
       { 
@@ -54,12 +55,13 @@
         },
         isHtml: true
       },
+      createUserIdColumn({ header: 'Created By', width: 170 }),
     ];
 
     // Use the supabase data provider
     const loadData = supabaseDataProvider({
       table: 'phrase',
-      selectableColumns: 'id,canonical_form,part_of_speech,translations,updated_at,usage_notes,slug,difficulty_level',
+      selectableColumns: 'id,canonical_form,part_of_speech,translations,updated_at,usage_notes,slug,difficulty_level,created_by_id',
       client: supabase,
     });
     

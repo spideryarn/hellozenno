@@ -243,6 +243,7 @@ def get_sourcedirs_for_language(target_language_code: str, sort_by: str = "date"
                 "description": sourcedir.description,
                 "created_at": sourcedir.created_at,
                 "updated_at": sourcedir.updated_at,
+                "created_by_id": sourcedir.created_by_id,
             }
         )
 
@@ -340,6 +341,8 @@ def get_sourcefiles_for_sourcedir(target_language_code: str, sourcedir_slug: str
                 "slug": sourcefile_entry.slug,
                 "sourcefile_type": sourcefile_entry.sourcefile_type,
                 "metadata": metadata,
+                "created_by_id": sourcefile_entry.created_by_id,
+                "updated_at": sourcefile_entry.updated_at
             }
         )
 

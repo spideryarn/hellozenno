@@ -10,6 +10,7 @@
 
     import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
     import { supabase } from '$lib/supabaseClient';
+    import { createUserIdColumn } from '$lib/datagrid/utils';
 
     const columns = [
       { 
@@ -48,12 +49,13 @@
         },
         isHtml: true
       },
+      createUserIdColumn({ header: 'Created By', width: 170 }),
     ];
 
     // Use the supabase data provider with the new column-based filterType approach
     const loadData = supabaseDataProvider({
       table: 'wordform',
-      selectableColumns: 'id,wordform,part_of_speech,translations,updated_at',
+      selectableColumns: 'id,wordform,part_of_speech,translations,updated_at,created_by_id',
       client: supabase,
       // We don't need to list jsonArrayColumns anymore since we use filterType in column definitions
     });

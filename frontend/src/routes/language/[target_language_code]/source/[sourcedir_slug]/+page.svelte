@@ -10,6 +10,7 @@
   import { DescriptionFormatted, SourcedirHeader } from '$lib';
   import { page } from '$app/stores';
   import DataGrid from '$lib/components/DataGrid.svelte';
+  import { createUserIdColumn } from '$lib/datagrid/utils';
   
   let { data }: { data: PageData } = $props();
   
@@ -130,6 +131,7 @@
       isHtml: true,
       width: 180
     },
+    createUserIdColumn({ header: 'Created By', width: 170 }),
   ];
   
   // URL generator function for DataGrid rows
