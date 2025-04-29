@@ -662,6 +662,7 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         title = data.get("title", "").strip()
         text_target = data.get("text_target", "").strip()
         description = data.get("description")
+        language_level = data.get("language_level")
         if description is not None:
             description = description.strip() or None
 
@@ -684,6 +685,7 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
                 metadata=metadata,
                 sourcefile_type="text",
                 created_by_id=g.user["id"] if g.user else None,
+                language_level=language_level,
             )
         except ValueError as e:  # Catch collision error from helper
             # Log the collision specifically
@@ -881,6 +883,7 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
             return jsonify({"error": "URL is required"}), 400
 
         url = data.get("url", "").strip()
+        language_level = data.get("language_level")
         if not url:
             return jsonify({"error": "URL cannot be empty"}), 400
 
@@ -980,6 +983,7 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
                 sourcefile_type="text",
                 created_by_id=g.user["id"] if g.user else None,
                 url=url,  # Pass the source URL
+                language_level=language_level,  # Pass language_level
             )
         except (
             ValueError

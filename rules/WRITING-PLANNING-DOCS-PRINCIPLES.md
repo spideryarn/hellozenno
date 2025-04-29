@@ -35,7 +35,7 @@ Update this doc regularly to keep the actions up-to-date. When you change it, ma
 - Don't number the stages, so that it's easier to move them around without having to renumber everything
 - Update task status as we go along
 - Include subtasks with clear acceptance criteria
-- Referring concretely to specific files/functions, so it's clear exactly what needs to be done
+- Refer concretely to specific files/functions, so it's clear exactly what needs to be done
 - Explicitly add tasks for writing automated tests, usually before writing code. (Perhaps one or two end-to-end tests first, then gradually adding more detailed tests as complexity grows). Explicitly add tasks for running the automated tests before ending each stage. see `docs/FRONTEND_TESTING.md`
 - If there are actions that the user needs to do, add those in too, so we can track progress and remind the user.
 - Ask the user whether we should have an early action to create a `yyMMdd_complex_project` Git branch (and move over any changes), and a final action to merge that back into `main`.

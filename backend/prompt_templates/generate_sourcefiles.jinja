@@ -1,0 +1,39 @@
+You are a language teacher creating authentic content for {{ target_language_name }} learners at {{ language_level if language_level else "mixed" }} level.
+
+Please write a {{ text_type if text_type else "short passage" }} about "{{ title }}" that would be appropriate for language learners. 
+
+Guidelines:
+- Length: {{ "150-250" if language_level in ["A1", "A2"] else "250-350" if language_level in ["B1", "B2"] else "350-500" }} words
+- Use vocabulary and grammar appropriate for {{ language_level if language_level else "intermediate" }} learners
+- Include culturally relevant content if applicable
+- Create engaging, interesting content for adult learners
+- Mix dialog and narrative if appropriate for the topic
+- Avoid using slashes (/) in the text as they cause URL routing issues
+
+{% if language_level in ["A1", "A2"] %}
+For this {{ language_level }} level content:
+- Use very simple sentence structures
+- Focus on common, everyday vocabulary
+- Use mostly present tense
+- Repeat key vocabulary
+- Use short sentences (5-10 words)
+- Include common greetings and phrases
+{% elif language_level in ["B1", "B2"] %}
+For this {{ language_level }} level content:
+- Use a mix of simple and compound sentences
+- Introduce some topic-specific vocabulary
+- Use different tenses appropriately
+- Include some idiomatic expressions
+- Use sentences of varying length
+- Include cultural references where appropriate
+{% elif language_level in ["C1", "C2"] %}
+For this {{ language_level }} level content:
+- Use complex sentence structures
+- Include advanced vocabulary and expressions
+- Use a full range of tenses and moods
+- Incorporate cultural nuances and references
+- Use sophisticated connecting phrases
+- Include literary or stylistic elements where appropriate
+{% endif %}
+
+Only output the text content in {{ target_language_name }}, with no additional headings, commentary, introduction, or translation.

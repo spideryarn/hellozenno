@@ -1,0 +1,24 @@
+Generate a diverse, engaging topic for a short text suitable for adult {{ language_level if language_level else "intermediate" }} level language learners of {{ target_language_name }}.
+
+You are selecting a topic for source material that will be included in a language learning platform. The topic should be suitable for the folder "{{ sourcedir_path }}".
+
+{% if existing_filenames %}
+The following topics have already been covered, so please generate something different:
+{% for filename in existing_filenames %}
+- {{ filename }}
+{% endfor %}
+{% endif %}
+
+Choose a topic from one of these categories:
+1. Everyday situations (shopping, travel, dining, etc.)
+2. Cultural traditions and celebrations unique to regions where {{ target_language_name }} is spoken
+3. Food and culinary experiences with cultural significance
+4. Brief biography of an interesting but lesser-known figure
+5. Historical events or places with engaging narratives
+6. Practical guides (simple recipes, directions, etc.)
+7. Surprising facts about places where {{ target_language_name }} is spoken
+8. Modern life topics (technology, social media, work)
+9. Travel-related topics specific to regions where {{ target_language_name }} is spoken
+10. Art, music, or literature from {{ target_language_name }}-speaking cultures
+
+Please provide just a short title (3-10 words) for the topic in English. Respond with ONLY the title, nothing else.

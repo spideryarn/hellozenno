@@ -723,6 +723,7 @@ def _create_text_sourcefile(
     sourcefile_type: str = "text",
     created_by_id: Optional[str] = None,
     url: Optional[str] = None,
+    language_level: Optional[str] = None,
 ) -> Sourcefile:
     """Helper function to create a text-based Sourcefile.
 
@@ -737,6 +738,7 @@ def _create_text_sourcefile(
         sourcefile_type: The type of sourcefile (default: "text").
         created_by_id: Optional user ID who created the sourcefile.
         url: Optional source URL for the content.
+        language_level: Optional CEFR level (A1, A2, B1, B2, C1, C2).
 
     Returns:
         The created Sourcefile object.
@@ -760,6 +762,7 @@ def _create_text_sourcefile(
         created_by_id=created_by_id,
         num_words=num_words,
         url=url,  # Use the dedicated URL field
+        language_level=language_level,  # Use dedicated language_level field
     )
 
     return sourcefile

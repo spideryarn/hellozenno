@@ -1,4 +1,6 @@
+from typing import Optional
 from pycountry import languages
+from utils.types import VALID_LANGUAGE_LEVELS
 from config import LANGUAGE_NAME_OVERRIDES, SUPPORTED_LANGUAGES
 
 VALID_target_language_codeS = set(
@@ -87,3 +89,29 @@ def get_target_language_code(lang_name_or_code: str) -> str:
             return code
 
     raise LookupError(f"Language {lang_name_or_code} not found")
+
+
+def validate_language_level(value: Optional[str]) -> Optional[str]:
+    """Validate that the language level is one of the valid CEFR levels."""
+    if value is None:
+        return None
+    
+    # Normalize user input (strip whitespace and convert to uppercase)
+    normalized_value = value.strip().upper()
+    
+    if normalized_value not in VALID_LANGUAGE_LEVELS:
+        raise ValueError(
+            f"Invalid language level. Choose from: {', '.join(VALID_LANGUAGE_LEVELS)}"
+        )
+    return normalized_value
+
+
+def validate_language_code(value: Optional[str]) -> Optional[str]:
+    """Validate that the language code is supported."""
+    if value is None:
+        return None
+    if value not in SUPPORTED_LANGUAGES:
+        raise ValueError(
+            f"Invalid language code. Must be one of the supported languages."
+        )
+    return value
