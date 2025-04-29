@@ -3,10 +3,10 @@
   import { RouteName } from '$lib/generated/routes';
   import { SITE_NAME } from '$lib/config';
   import DataGrid from '$lib/components/DataGrid.svelte';
-  import UserLookup from '$lib/components/UserLookup.svelte';
   import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
   import { supabase } from '$lib/supabaseClient';
   import { getApiUrl, apiFetch } from '$lib/api';
+  import { createUserIdColumn } from '$lib/datagrid/utils';
   
   export let data: PageData;
   
@@ -27,27 +27,7 @@
       accessor: row => row.file_count ?? 0,
       width: 100
     },
-    { 
-      id: 'created_by_id', 
-      header: 'Created By',
-      accessor: row => {
-        // If there's no user ID, return empty string
-        if (!row.created_by_id) return '';
-        
-        // Format UUID to show just the first segment without dots
-        function formatUserId(id) {
-          if (id && id.length > 8 && id.includes('-')) {
-            return id.split('-')[0];
-          }
-          return id;
-        }
-        
-        // Return styled user ID similar to UserLookup.svelte
-        return `<span class="user-id">${formatUserId(row.created_by_id)}</span>`;
-      },
-      width: 200,
-      isHtml: true
-    },
+    createUserIdColumn({ header: 'Created By' }),
     { 
       id: 'updated_at', 
       header: 'Modified',
@@ -185,10 +165,5 @@
     font-size: 0.9em;
   }
   
-  /* Match UserLookup.svelte styling */
-  :global(.user-id) {
-    opacity: 0.7;
-    font-family: var(--bs-font-monospace, monospace);
-    font-size: 0.85em;
-  }
+  /* UserLookup.svelte styling is now in global theme.css */
 </style>

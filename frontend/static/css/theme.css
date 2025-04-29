@@ -176,6 +176,13 @@ h6 {
     color: #212529 !important;
 }
 
+/* User ID formatting - used by UserLookup.svelte and DataGrid user columns */
+.user-id {
+    opacity: 0.7;
+    font-family: var(--bs-font-monospace, monospace);
+    font-size: 0.85em;
+}
+
 /* Animation utilities */
 .animate-float {
     animation: float 3s ease-in-out infinite;

@@ -2,14 +2,14 @@
   import type { PageData } from './$types';
   import DataGrid from '$lib/components/DataGrid.svelte';
   import { SITE_NAME } from '$lib/config';
+  import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
+  import { supabase } from '$lib/supabaseClient';
+  import { createUserIdColumn } from '$lib/datagrid/utils';
   
   export let data: PageData;
   
   // Destructure data for easier access
   const { target_language_code, language_name, lemmas, total } = data;
-
-  import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
-  import { supabase } from '$lib/supabaseClient';
 
   const columns = [
     { 
@@ -38,6 +38,10 @@
       accessor: row => row.commonality !== null ? row.commonality.toFixed(1) : '-',
       width: 110
     },
+    createUserIdColumn({ 
+      header: 'Created By', 
+      width: 170 
+    }),
     { 
       id: 'updated_at', 
       header: 'Modified', 
@@ -66,7 +70,7 @@
   // Use the supabase data provider
   const loadData = supabaseDataProvider({
     table: 'lemma',
-    selectableColumns: 'id,lemma,part_of_speech,translations,updated_at,language_level,is_complete,commonality,etymology',
+    selectableColumns: 'id,lemma,part_of_speech,translations,updated_at,language_level,is_complete,commonality,etymology,created_by_id',
     client: supabase,
     jsonArrayColumns: ['translations']
   });
@@ -144,6 +148,8 @@
   .metadata-timestamp {
     font-family: var(--bs-font-monospace, monospace);
   }
+  
+  /* UserLookup.svelte styling is now in global theme.css */
   
   /* Preserved styles for letter navigation if needed in the future
   .foreign-text {
