@@ -474,6 +474,7 @@
     sourcedir_slug={sourcedir.slug}
     {supported_languages} 
     metadata={data.metadata} 
+    {data}
     on:languageChange={handleHeaderLanguageChange} 
   />
 

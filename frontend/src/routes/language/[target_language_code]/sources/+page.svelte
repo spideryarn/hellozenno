@@ -5,7 +5,7 @@
   import DataGrid from '$lib/components/DataGrid.svelte';
   import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
   import { supabase } from '$lib/supabaseClient';
-  import { getApiUrl } from '$lib/api';
+  import { getApiUrl, apiFetch } from '$lib/api';
   
   export let data: PageData;
   
@@ -80,22 +80,24 @@
       const dirName = prompt('Enter new source directory name:');
       if (!dirName) return; // User cancelled
       
-      // API call to create directory
-      const response = await fetch(
-        getApiUrl(RouteName.SOURCEDIR_API_CREATE_SOURCEDIR_API, { target_language_code: languageCode }),
-        {
+      // Check if user is authenticated
+      if (!data.supabase) {
+        throw new Error('Authentication required to create directories');
+      }
+      
+      // API call to create directory using apiFetch
+      await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEDIR_API_CREATE_SOURCEDIR_API,
+        params: { target_language_code: languageCode },
+        options: {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ path: dirName }),
+          body: JSON.stringify({ path: dirName })
         }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create directory');
-      }
+      });
       
       // Reload the page to show the updated list
       window.location.reload();

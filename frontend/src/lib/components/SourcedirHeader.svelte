@@ -4,17 +4,21 @@
   import type { Language } from '$lib/types'; // Corrected type name to Language and path to $lib/types
   import { CollapsibleHeader, DescriptionSection, DirectoryOperationsSection, MetadataSection } from '$lib';
   import FolderOpen from 'phosphor-svelte/lib/FolderOpen';
-  import { getApiUrl } from '$lib/api'; // Added for API calls
+  import { getApiUrl, apiFetch } from '$lib/api'; // Added apiFetch import
   import { RouteName } from '$lib/generated/routes'; // Added for API calls
   import { goto } from '$app/navigation'; // Added for navigation
   import { getPageUrl } from '$lib/navigation'; // Added for navigation
   import { createEventDispatcher } from 'svelte'; // Added for language change event
+  import type { SupabaseClient } from '@supabase/supabase-js'; // Import type for supabase
 
   export let sourcedir: Sourcedir;
   export let target_language_code: string;
   export let sourcedir_slug: string;
   export let supported_languages: Language[]; // Use the correct type Language[]
   export let metadata: Metadata = { created_at: '', updated_at: '' }; // Add metadata prop with default empty values
+  
+  // Add Supabase client data to props with undefined as default
+  export let data: { supabase?: SupabaseClient } = {};
 
   const dispatch = createEventDispatcher(); // Added for language change event
 
@@ -26,28 +30,27 @@
     if (!sourcedir) return; // Guard against undefined sourcedir
 
     try {
-      const response = await fetch(
-        getApiUrl(
-          // Use the suggested RouteName
-          RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API, 
-          {
-            target_language_code: target_language_code,
-            sourcedir_slug
-          }
-        ),
-        {
+      // Use Supabase client to get auth token
+      if (!data.supabase) {
+        throw new Error('Authentication required to update description');
+      }
+
+      // Use apiFetch instead of raw fetch to ensure proper auth handling
+      await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEDIR_API_UPDATE_SOURCEDIR_DESCRIPTION_API,
+        params: {
+          target_language_code,
+          sourcedir_slug
+        },
+        options: {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ description: text }),
+          body: JSON.stringify({ description: text })
         }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({})); // Try to get error details
-        throw new Error(errorData.error || `Failed to update description: ${response.statusText}`);
-      }
+      });
 
       // Update the local state to reflect the change
       sourcedir.description = text;
@@ -65,29 +68,27 @@
     if (!newName || newName === sourcedir.path) return;
 
     try {
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEDIR_API_RENAME_SOURCEDIR_API, // Assumed RouteName
-          {
-            target_language_code: target_language_code,
-            sourcedir_slug
-          }
-        ),
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ new_name: newName }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || `Failed to rename directory: ${response.statusText}`);
+      // Use Supabase client to get auth token
+      if (!data.supabase) {
+        throw new Error('Authentication required to rename directories');
       }
 
-      const result = await response.json();
+      // Use apiFetch instead of raw fetch to ensure proper auth handling
+      const result = await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEDIR_API_RENAME_SOURCEDIR_API,
+        params: {
+          target_language_code,
+          sourcedir_slug
+        },
+        options: {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ new_name: newName })
+        }
+      });
       
       // Navigate to the renamed directory page
       const newSourcedirUrl = getPageUrl('sourcedir', {
@@ -109,29 +110,29 @@
     }
 
     try {
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEDIR_API_DELETE_SOURCEDIR_API, // Assumed RouteName
-          {
-            target_language_code: target_language_code,
-            sourcedir_slug
-          }
-        ),
-        {
-          method: 'DELETE',
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || `Failed to delete directory: ${response.statusText}`);
+      // Use Supabase client to get auth token
+      if (!data.supabase) {
+        throw new Error('Authentication required to delete directories');
       }
+
+      // Use apiFetch instead of raw fetch to ensure proper auth handling
+      await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEDIR_API_DELETE_SOURCEDIR_API,
+        params: {
+          target_language_code,
+          sourcedir_slug
+        },
+        options: {
+          method: 'DELETE'
+        }
+      });
 
       // Navigate back to the language sources page
       const sourcesUrl = getPageUrl('sources', {
         target_language_code
       });
-       window.location.href = sourcesUrl; // Force reload to update list
+      window.location.href = sourcesUrl; // Force reload to update list
 
     } catch (error) {
       console.error('Error deleting directory:', error);

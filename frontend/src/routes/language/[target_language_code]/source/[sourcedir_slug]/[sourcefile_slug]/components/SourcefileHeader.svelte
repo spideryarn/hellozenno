@@ -309,12 +309,28 @@
     }
     
     try {
+      // First, cancel any ongoing processing by immediately updating the processing state
+      processingState.update(state => ({
+        ...state,
+        isProcessing: false,
+        error: null,
+        progress: 0
+      }));
+      
+      // Clear any pending runs and auto-processing
+      pendingRuns = 0;
+      showAutoProcessNotification = false;
+      
+      // Clear any scheduled timeouts
+      if (successNotificationTimeout) {
+        clearTimeout(successNotificationTimeout);
+        successNotificationTimeout = null;
+      }
+      
       // Use Supabase client to get auth token
       if (!data.supabase) {
         throw new Error('Authentication required to delete files');
       }
-      
-      // Use apiFetch from imports for proper auth handling
       
       // Use apiFetch instead of raw fetch to ensure proper auth handling
       await apiFetch({
@@ -331,6 +347,7 @@
       });
       
       // Navigate back to the sourcedir page using hard reload
+      // Immediately redirect to avoid any possibility of further processing
       const sourcedirUrl = getPageUrl('sourcedir', {
         target_language_code,
         sourcedir_slug

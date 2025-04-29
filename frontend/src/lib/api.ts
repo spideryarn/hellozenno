@@ -110,6 +110,19 @@ export async function apiFetch<T extends RouteName, R = any>({
         throw error;        
     }
 
+    // Handle status codes that typically have empty bodies
+    if (response.status === 204 || response.status === 205 || response.status === 304) {
+        return {} as R; // Return empty object for empty responses
+    }
+    
+    // Check if response has content before trying to parse as JSON
+    const contentLength = response.headers.get('content-length');
+    const hasEmptyBody = contentLength === '0' || contentLength === null;
+    
+    if (hasEmptyBody) {
+        return {} as R; // Return empty object for empty responses
+    }
+    
     return response.json();
 }
 
