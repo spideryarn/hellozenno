@@ -3,6 +3,7 @@
   import { RouteName } from '$lib/generated/routes';
   import { SITE_NAME } from '$lib/config';
   import DataGrid from '$lib/components/DataGrid.svelte';
+  import UserLookup from '$lib/components/UserLookup.svelte';
   import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
   import { supabase } from '$lib/supabaseClient';
   import { getApiUrl, apiFetch } from '$lib/api';
@@ -29,8 +30,23 @@
     { 
       id: 'created_by_id', 
       header: 'Created By',
-      accessor: row => row.created_by_id || '',
-      width: 200
+      accessor: row => {
+        // If there's no user ID, return empty string
+        if (!row.created_by_id) return '';
+        
+        // Format UUID to show just the first segment without dots
+        function formatUserId(id) {
+          if (id && id.length > 8 && id.includes('-')) {
+            return id.split('-')[0];
+          }
+          return id;
+        }
+        
+        // Return styled user ID similar to UserLookup.svelte
+        return `<span class="user-id">${formatUserId(row.created_by_id)}</span>`;
+      },
+      width: 200,
+      isHtml: true
     },
     { 
       id: 'updated_at', 
@@ -86,7 +102,7 @@
       }
       
       // API call to create directory using apiFetch
-      await apiFetch({
+      const response = await apiFetch({
         supabaseClient: data.supabase,
         routeName: RouteName.SOURCEDIR_API_CREATE_SOURCEDIR_API,
         params: { target_language_code: languageCode },
@@ -99,8 +115,13 @@
         }
       });
       
-      // Reload the page to show the updated list
-      window.location.reload();
+      // Navigate to the new sourcedir using the slug from the response
+      if (response && response.slug) {
+        window.location.href = `/language/${languageCode}/source/${response.slug}`;
+      } else {
+        // Fallback to reload if slug is not available
+        window.location.reload();
+      }
       
     } catch (error) {
       alert('Error creating directory: ' + (error instanceof Error ? error.message : String(error)));
@@ -162,5 +183,12 @@
   .metadata-timestamp {
     font-family: var(--bs-font-monospace, monospace);
     font-size: 0.9em;
+  }
+  
+  /* Match UserLookup.svelte styling */
+  :global(.user-id) {
+    opacity: 0.7;
+    font-family: var(--bs-font-monospace, monospace);
+    font-size: 0.85em;
   }
 </style>
