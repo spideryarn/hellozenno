@@ -31,6 +31,9 @@ from utils.lang_utils import get_language_name, get_all_languages
 from utils.db_connection import init_db
 from utils.sourcefile_utils import _create_text_sourcefile
 
+# Constants
+DEFAULT_SOURCEDIR_NAME = "AI-generated examples"
+
 print(VITE_FRONTEND_URL)
 import sys
 
@@ -95,13 +98,13 @@ def find_language_with_no_sourcefiles() -> str:
 
 
 def get_or_create_ai_sourcedir(
-    target_language_code: str, sourcedir_path: str = "AI-generated"
+    target_language_code: str, sourcedir_path: str = DEFAULT_SOURCEDIR_NAME
 ) -> Sourcedir:
     """Get or create a sourcedir for the given language.
 
     Args:
         target_language_code: The language code (e.g., 'el' for Greek)
-        sourcedir_path: The path for the sourcedir (default: 'AI-generated')
+        sourcedir_path: The path for the sourcedir (default: DEFAULT_SOURCEDIR_NAME)
 
     Returns:
         A Sourcedir object
@@ -318,7 +321,7 @@ def generate(
         callback=validate_language_code,
     ),
     sourcedir: str = typer.Option(
-        "AI-generated", "--sourcedir", help="Source directory name"
+        DEFAULT_SOURCEDIR_NAME, "--sourcedir", help="Source directory name"
     ),
     title: Optional[str] = typer.Option(
         None,
