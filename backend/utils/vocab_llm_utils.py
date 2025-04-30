@@ -407,7 +407,7 @@ def extract_phrases_from_text(
     verbose: int = 0,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Extract idiomatic phrases and expressions from text.
-    
+
     Args:
         txt: Text to analyze in target language
         target_language_name: Full name of target language (e.g. "Greek")
@@ -415,7 +415,7 @@ def extract_phrases_from_text(
         max_new_phrases: Optional maximum number of phrases to extract
         ignore_phrases: Optional list of phrase canonical forms to ignore
         verbose: Verbosity level
-        
+
     Returns:
         Tuple of (phrases_dict, extra_info)
     """
@@ -965,15 +965,15 @@ def process_phrases_from_text(
         ):
             if phrase_entry.phrase and phrase_entry.phrase.canonical_form:
                 existing_phrases.append(phrase_entry.phrase.canonical_form)
-    
+
     # Extract phrases, ignoring existing ones
     phrases_d_orig, _ = extract_phrases_from_text(
-        txt, 
-        target_language_name, 
-        language_level, 
+        txt,
+        target_language_name,
+        language_level,
         max_new_phrases,
         ignore_phrases=existing_phrases,
-        verbose=verbose
+        verbose=verbose,
     )
     phrases_d = phrases_d_orig.get("phrases", [])
 
@@ -998,8 +998,9 @@ def process_phrases_from_text(
                 "mnemonics": phrase_d.get("mnemonics", []),
                 "component_words": phrase_d.get("component_words", []),
                 "usage_notes": phrase_d.get("usage_notes", ""),
-                "difficulty_level": phrase_d.get("difficulty_level", "intermediate"),
-                "language_level": phrase_d.get("language_level"),  # Store CEFR language level from LLM
+                "language_level": phrase_d.get(
+                    "language_level"
+                ),  # Store CEFR language level from LLM
             },
         )
 

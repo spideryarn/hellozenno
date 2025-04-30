@@ -854,6 +854,7 @@ export type Database = {
           etymology: string | null
           guessability: number | null
           id: number
+          language_level: string | null
           literal_translation: string | null
           mnemonics: Json | null
           part_of_speech: string
@@ -876,6 +877,7 @@ export type Database = {
           etymology?: string | null
           guessability?: number | null
           id?: number
+          language_level?: string | null
           literal_translation?: string | null
           mnemonics?: Json | null
           part_of_speech: string
@@ -898,6 +900,7 @@ export type Database = {
           etymology?: string | null
           guessability?: number | null
           id?: number
+          language_level?: string | null
           literal_translation?: string | null
           mnemonics?: Json | null
           part_of_speech?: string

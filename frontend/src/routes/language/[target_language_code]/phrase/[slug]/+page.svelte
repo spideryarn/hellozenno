@@ -73,8 +73,8 @@
         {#if phrase.part_of_speech}
           <span class="badge bg-secondary text-on-light me-2">{phrase.part_of_speech}</span>
         {/if}
-        {#if phrase.difficulty_level}
-          <span class="badge bg-info me-2">{phrase.difficulty_level}</span>
+        {#if phrase.language_level}
+          <span class="badge bg-info me-2">{phrase.language_level}</span>
         {/if}
         {#if phrase.register}
           <span class="badge bg-warning me-2">{phrase.register}</span>

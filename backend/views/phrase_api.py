@@ -83,7 +83,7 @@ def phrase_preview_api(target_language_code: str, phrase: str):
             "translations": phrase_model.translations,
             "part_of_speech": phrase_model.part_of_speech,
             "usage_notes": phrase_model.usage_notes,
-            "difficulty_level": phrase_model.difficulty_level,
+            "language_level": phrase_model.language_level,
             "register": phrase_model.register,
         }
 

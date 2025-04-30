@@ -45,22 +45,27 @@ class BaseModel(Model):
 
     def save(self, *args, **kwargs):
         self.updated_at = datetime.now()
-        
+
         # Check if this is a new instance (not yet in the database)
         is_new = not self._pk  # _pk is None for new instances
-        
+
         # Only for new instances, try to set created_by from Flask g object if field exists
-        if is_new and hasattr(self, 'created_by') and not getattr(self, 'created_by', None):
+        if (
+            is_new
+            and hasattr(self, "created_by")
+            and not getattr(self, "created_by", None)
+        ):
             try:
                 # Import Flask's g object within the method to avoid circular imports
                 from flask import g
+
                 # Check if g has user_id and set it on the model
-                if hasattr(g, 'user_id') and g.user_id:
+                if hasattr(g, "user_id") and g.user_id:
                     self.created_by = g.user_id
             except (ImportError, RuntimeError):
                 # Flask context might not be available (e.g., in scripts, tests)
                 pass
-        
+
         return super().save(*args, **kwargs)
 
     class Meta:
@@ -650,7 +655,6 @@ class Phrase(BaseModel):
     mnemonics = JSONField(null=True)  # list[str] of memory aids
     component_words = JSONField(null=True)  # list[dict] with lemma, translation, notes
     usage_notes = TextField(null=True)  # general notes about usage
-    difficulty_level = CharField(null=True)  # e.g. "intermediate"
     language_level = CharField(null=True)  # CEFR language level (e.g. "A1", "B2", "C1")
     slug = CharField(
         max_length=255, null=True
@@ -690,7 +694,6 @@ class Phrase(BaseModel):
             "mnemonics": self.mnemonics,
             "component_words": self.component_words,
             "usage_notes": self.usage_notes,
-            "difficulty_level": self.difficulty_level,
             "language_level": self.language_level,  # Include CEFR language level
             "slug": self.slug,
             "created_at": (
@@ -938,23 +941,23 @@ class Profile(BaseModel):
             # Create new profile with default values
             profile = cls.create(user_id=user_id)
             return profile, True
-            
+
     @classmethod
     def get_email_by_user_id(cls, user_id: str) -> Optional[str]:
         """Get a user's email by their user ID.
-        
+
         DEPRECATED: Use AuthUser model to get email directly from auth.users
-        
+
         Args:
             user_id: Supabase auth user ID
-            
+
         Returns:
             The user's email if found, or None
         """
         try:
             # Try to get email from auth.users via AuthUser model
             auth_user = AuthUser.get_by_id(user_id)
-            if hasattr(auth_user, 'email'):
+            if hasattr(auth_user, "email"):
                 return auth_user.email
             return None
         except DoesNotExist:
