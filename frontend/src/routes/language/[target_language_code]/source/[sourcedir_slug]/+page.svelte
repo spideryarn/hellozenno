@@ -5,6 +5,8 @@
   import Trash from 'phosphor-svelte/lib/Trash';
   import ArrowUp from 'phosphor-svelte/lib/ArrowUp';
   import Plus from 'phosphor-svelte/lib/Plus';
+  import Robot from 'phosphor-svelte/lib/Robot';
+  import User from 'phosphor-svelte/lib/User';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { onMount } from 'svelte';
   import { DescriptionFormatted, SourcedirHeader } from '$lib';
@@ -111,7 +113,26 @@
     { 
       id: 'ai_generated', 
       header: 'AI Gen', 
-      accessor: (row: any) => row.ai_generated ? '✓' : '', 
+      accessor: (row: any) => {
+        if (row.ai_generated) {
+          // Robot icon with fill weight for AI-generated content
+          return `<span title="AI-generated content" style="cursor:help;display:inline-flex;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--hz-color-accent-lavender)" viewBox="0 0 256 256">
+              <rect width="256" height="256" fill="none" />
+              <path d="M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48ZM172,96a12,12,0,1,1-12,12A12,12,0,0,1,172,96ZM96,184H80a16,16,0,0,1,0-32H96ZM84,120a12,12,0,1,1,12-12A12,12,0,0,1,84,120Zm60,64H112V152h32Zm32,0H160V152h16a16,16,0,0,1,0,32Z" />
+            </svg>
+          </span>`;
+        } else {
+          // User icon with fill weight for human-generated content
+          return `<span title="Human-generated content" style="cursor:help;display:inline-flex;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--hz-color-accent-peach)" viewBox="0 0 256 256">
+              <rect width="256" height="256" fill="none" />
+              <path d="M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z" />
+            </svg>
+          </span>`;
+        }
+      },
+      isHtml: true,
       width: 70, 
       class: 'text-center' 
     },

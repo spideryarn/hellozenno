@@ -2,6 +2,8 @@
   // MetadataCard component for displaying creation and update timestamps
   // Used across various pages for consistent metadata display
   import UserLookup from './UserLookup.svelte';
+  import Robot from 'phosphor-svelte/lib/Robot';
+  import User from 'phosphor-svelte/lib/User';
   
   export let metadata: { 
     created_at?: string; 
@@ -68,7 +70,19 @@
   {/if}
 
   {#if metadata.ai_generated !== undefined}
-    <p class="metadata-item">AI-generated? <span class="metadata-value">{metadata.ai_generated ? 'Yes' : 'No'}</span></p>
+    <p class="metadata-item">Human- or AI-generated? 
+      <span class="metadata-value metadata-icon-value">
+        {#if metadata.ai_generated}
+          <span class="icon-tooltip" title="AI-generated content">
+            <Robot weight="fill" size={16} color="var(--hz-color-accent-lavender)" />
+          </span>
+        {:else}
+          <span class="icon-tooltip" title="Human-generated content">
+            <User weight="fill" size={16} color="var(--hz-color-accent-peach)" />
+          </span>
+        {/if}
+      </span>
+    </p>
   {/if}
   
   {#if metadata.url}
@@ -108,6 +122,18 @@
   
   .metadata-value {
     font-weight: 500;
+  }
+  
+  .metadata-icon-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--bs-font-monospace, monospace);
+  }
+  
+  .icon-tooltip {
+    cursor: help;
+    display: inline-flex;
   }
   
   .metadata-link {
