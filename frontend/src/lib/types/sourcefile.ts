@@ -22,6 +22,7 @@ export interface Sourcefile {
     language_level?: string;
     url?: string;
     created_by_id?: string;
+    ai_generated: boolean;
 }
 
 export interface Metadata {
@@ -32,6 +33,7 @@ export interface Metadata {
     url?: string;
     created_by_id?: string;
     title_translation?: string;
+    ai_generated?: boolean;
     image_processing?: {
         original_size: number;
         final_size: number;

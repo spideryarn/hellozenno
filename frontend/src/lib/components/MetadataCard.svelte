@@ -11,6 +11,7 @@
     url?: string;
     created_by_id?: string;
     title_translation?: string;
+    ai_generated?: boolean;
   } = {};
   
   // Format the timestamp for display
@@ -64,6 +65,10 @@
   
   {#if metadata.language_level}
     <p class="metadata-item">Language level: <span class="metadata-value">{metadata.language_level.toUpperCase()}</span></p>
+  {/if}
+
+  {#if metadata.ai_generated !== undefined}
+    <p class="metadata-item">AI-generated? <span class="metadata-value">{metadata.ai_generated ? 'Yes' : 'No'}</span></p>
   {/if}
   
   {#if metadata.url}

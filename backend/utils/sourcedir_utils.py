@@ -342,7 +342,8 @@ def get_sourcefiles_for_sourcedir(target_language_code: str, sourcedir_slug: str
                 "sourcefile_type": sourcefile_entry.sourcefile_type,
                 "metadata": metadata,
                 "created_by_id": sourcefile_entry.created_by_id,
-                "updated_at": sourcefile_entry.updated_at
+                "updated_at": sourcefile_entry.updated_at,
+                "ai_generated": sourcefile_entry.ai_generated
             }
         )
 

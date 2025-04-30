@@ -109,6 +109,14 @@
     { id: 'wordform_count', header: 'Words', accessor: (row: any) => row.metadata?.wordform_count ?? 0, width: 80, class: 'text-end' },
     { id: 'sourcefile_type', header: 'Type' },
     { 
+      id: 'ai_generated', 
+      header: 'AI Gen', 
+      accessor: (row: any) => row.ai_generated ? '✓' : '', 
+      width: 70, 
+      class: 'text-center' 
+    },
+    createUserIdColumn({ header: 'Created By', width: 170 }),
+    { 
       id: 'updated_at', 
       header: 'Modified',
       accessor: (row: any) => {
@@ -131,7 +139,6 @@
       isHtml: true,
       width: 180
     },
-    createUserIdColumn({ header: 'Created By', width: 170 }),
   ];
   
   // URL generator function for DataGrid rows
