@@ -23,7 +23,13 @@ export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
         const languageData = await languageResponse.json();
         const languageName = languageData.language_name;
 
-        // Get list of sources directly from Supabase with sourcefile count
+        // Get list of sources directly from Supabase without sourcefile count
+        // PERFORMANCE FIX: Removed the "file_count:sourcefile(count)" from the query
+        // The previous query was causing a PostgreSQL statement timeout in production
+        // because it was using LEFT JOIN LATERAL with json_agg for each sourcedir row
+        // which becomes exponentially slower as the number of sourcedirs grows.
+        // TODO: Either add pagination, implement a more efficient counting method,
+        // or fall back to the backend API endpoint which has optimized counting.
         const { data: sourcedirs, error: sourcedirsError, count } = await supabase
             .from('sourcedir')
             .select(`
@@ -32,8 +38,7 @@ export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
                 slug,
                 description,
                 created_by_id,
-                updated_at,
-                file_count:sourcefile(count)
+                updated_at
             `, { count: 'exact' })
             .eq('target_language_code', target_language_code)
             .order('updated_at', { ascending: false });
@@ -42,8 +47,11 @@ export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
             throw new Error(`Failed to fetch sources: ${sourcedirsError.message}`);
         }
         
-        // No additional mapping needed: file_count is already a scalar
-        const sources = sourcedirs || [];
+        // Set file_count to 0 since we're no longer fetching it
+        const sources = (sourcedirs || []).map(source => ({
+            ...source,
+            file_count: 0 // Placeholder until we implement a better solution
+        }));
 
         return {
             target_language_code,
