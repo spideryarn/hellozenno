@@ -34,11 +34,6 @@ from utils.sourcefile_utils import _create_text_sourcefile
 # Constants
 DEFAULT_SOURCEDIR_NAME = "AI-generated examples"
 
-print(VITE_FRONTEND_URL)
-import sys
-
-sys.exit()
-
 
 # Initialize database connection
 init_db()

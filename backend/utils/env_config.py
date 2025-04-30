@@ -95,7 +95,8 @@ def decide_environment_file() -> Path:
     if is_vercel():
         return ENV_FILE_PROD
     if is_local_to_prod():
-        raise Exception("Local-to-prod is not supported in this script")
+        # raise Exception("Local-to-prod is not supported in this script")
+        return ENV_FILE_PROD
     return ENV_FILE_LOCAL
 
 
@@ -117,7 +118,12 @@ def decide_environment_and_load_dotenv_file():
     # require it to be there it's there. we're setting all the
     # production environment variables with `set_secrets_for_fly_cloud.sh`
     if env_file == ENV_FILE_PROD:
-        return None
+        if is_local_to_prod():
+            logger.warning(
+                "Using production environment variables in local-to-prod mode"
+            )
+        else:
+            return None
     assert env_file.exists(), f"Missing required {env_file}"
     logger.info("Loading environment from %s", env_file)
     # if we're testing, we want to be sure to override the environment variables,
