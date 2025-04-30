@@ -184,6 +184,47 @@ Example valid JSON responses using Greek (modern) as the target language:
 }
 </json_example>
 
+6. For a search that could be boiled down to a single-word response, e.g. "τα κενά"
+<json_example>
+{
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": "κενά",
+                "target_language_lemma": "κενό",
+                "part_of_speech": "noun",
+                ...
+            }
+        ],
+        "possible_misspellings": null
+    },
+    "english_results": {
+        "matches": [],
+        "possible_misspellings": null
+    }
+}
+</json_example>
+
+7. For a search where the user is providing extra context to try and scope the results, e.g. "flat (as in trousers), sounds a bit like farty"
+<json_example>
+{
+    "target_language_results": {
+        "matches": [
+            {
+                "target_language_wordform": "φαρδύ",
+                "target_language_lemma": "φαρδύς",
+                ...
+            }
+        ],
+        "possible_misspellings": null
+    },
+    "english_results": {
+        "matches": [],
+        "possible_misspellings": null
+    }
+}
+</json_example>
+
 Provide only the JSON output with no commentary:
 
 <json_schema>
