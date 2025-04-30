@@ -1,7 +1,5 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-// Remove API_BASE_URL if no longer needed directly
-// import { API_BASE_URL } from "$lib/config"; 
 import { getLemmaMetadata } from "$lib/api"; // Import the new helper
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -14,27 +12,39 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         // Call the helper function, passing the server client instance
         const lemmaResult = await getLemmaMetadata(supabase, target_language_code, lemma);
 
-        // The helper function returns the data directly if successful,
-        // or returns the specific error body for 401/404 cases.
-        // We just need to pass this result to the page.
+        // Check if authentication is required for generation and propagate the 401 status code
+        if (lemmaResult.authentication_required_for_generation) {
+            throw error(401, {
+                message: lemmaResult.description || 'Authentication required to generate lemma data',
+                body: lemmaResult // Include original error data for the error page
+            });
+        }
+
+        // Only reach here for successful results
         return {
             session: session, // Pass session for UI state
             lemmaResult: lemmaResult, // Pass the result (data or error body)
-            // No need for separate authError, target_language_code, etc. 
-            // if they are included within lemmaResult (either in lemma_metadata or error body)
-            // Verify the structure returned by getLemmaMetadata in both success/error cases.
-            // If needed, extract specific fields here, e.g.:
             target_language_code: target_language_code, // Keep passing this for clarity
             lemma: lemma, // Keep passing this for clarity
         };
 
     } catch (err: any) {
-        // Catch errors *thrown* by getLemmaMetadata (i.e., not the handled 401/404)
+        // If the error already has status and body, pass it through
+        if (err.status === 401) {
+            // Already handled above, just re-throw
+            throw err;
+        }
+        
+        // Handle other errors from getLemmaMetadata
         console.error("Error loading lemma in +page.server.ts:", err);
         // Throw SvelteKit error for unexpected issues
         throw error(
             err.status || 500, // Use status from error if available
-            `Failed to load lemma: ${err.message || String(err)}`,
+            {
+                message: `Failed to load lemma: ${err.message || String(err)}`,
+                // If there's a body from the API, include it
+                ...(err.body ? { body: err.body } : {})
+            }
         );
     }
 };
