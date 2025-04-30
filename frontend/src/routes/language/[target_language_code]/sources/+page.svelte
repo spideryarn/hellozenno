@@ -21,12 +21,6 @@
       accessor: row => `<span class="hz-column-primary-green">${row.path}</span>`,
       isHtml: true
     },
-    { 
-      id: 'file_count', 
-      header: '# Sources',
-      accessor: row => row.file_count ?? 0,
-      width: 100
-    },
     createUserIdColumn({ header: 'Created By' }),
     { 
       id: 'updated_at', 
@@ -52,10 +46,10 @@
     }
   ];
 
-  // Set up the data provider using Supabase's foreign table count feature
+  // Set up the data provider using Supabase
   const loadData = supabaseDataProvider({
     table: 'sourcedir',
-    selectableColumns: 'id,path,slug,description,created_by_id,updated_at,file_count:sourcefile(count)', 
+    selectableColumns: 'id,path,slug,description,created_by_id,updated_at', 
     client: supabase
   });
 
