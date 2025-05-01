@@ -5,7 +5,7 @@ import type { SearchResult } from "$lib/types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code, wordform } = params;
-    const { supabase, session } = locals;
+    const { supabase } = locals;
 
     try {
         // Use our enhanced search function to handle various result types
@@ -19,21 +19,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             session?.access_token ?? null
         );
 
-        // Check if authentication is required for generation and propagate the 401 status code
-        if (data.authentication_required_for_generation) {
-            throw error(401, {
-                message: data.description || 'Authentication required to generate wordform data',
-                body: data // Include original error data for the error page
-            });
-        }
-
         // Handle different response types based on status
         if (data.status === 'found') {
             // Direct wordform match found - return the data as is
             // This now includes newly generated wordforms too
             console.log(`Wordform found: ${wordform}`);
             return {
-                session,
                 wordformData: data.data || data,
             };
         } else if (data.status === 'multiple_matches') {
@@ -53,16 +44,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             // For older API responses that don't have a status field
             // console.log(`No status field, using data as is:`, data);
             return {
-                session,
                 wordformData: data,
             };
         }
-    } catch (err: any) {
-        if (err.status === 401) {
-            // Already handled above, just re-throw
-            throw err;
-        }
-
+    } catch (err) {
         if (err instanceof Response && err.status === 302) {
             // This is our redirect, pass it through
             throw err;
@@ -76,7 +61,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             // The client-side JS will retry fetching the data
             console.log("Request timed out, returning empty wordform data for client-side handling");
             return {
-                session,
                 wordformData: null,
             };
         }
@@ -86,14 +70,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             throw redirect(302, `/language/${target_language_code}/search/${encodeURIComponent(wordform)}`);
         }
         
-        // Throw SvelteKit error for unexpected issues
         throw error(
-            err.status || 500, // Use status from error if available
-            {
-                message: `Failed to load wordform: ${err.message || String(err)}`,
-                // If there's a body from the API, include it
-                ...(err.body ? { body: err.body } : {})
-            }
+            500,
+            `Failed to load wordform: ${
+                err instanceof Error ? err.message : String(err)
+            }`,
         );
     }
 };
