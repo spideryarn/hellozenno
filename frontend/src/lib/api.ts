@@ -339,6 +339,7 @@ export async function getWordformWithSearch(
     supabaseClient: SupabaseClient | null,
     target_language_code: string,
     wordform: string,
+    accessToken?: string | null,
 ) {
     try {
         // Use the type-safe API fetch to get wordform metadata with a longer timeout
@@ -349,25 +350,18 @@ export async function getWordformWithSearch(
             params: { target_language_code, wordform },
             options: {
                 method: "GET",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+                },
             },
             timeoutMs: 60000, // 60 second timeout to allow for synchronous wordform generation
         });
         return result;
     } catch (error: any) {
         console.error(`API: Error fetching wordform ${wordform}:`, error);
-        // Return structured body for 401 (authentication required), but **rethrow** 404 so that
-        // upstream callers (e.g. +page.server.ts) can handle it consistently (usually by
-        // redirecting to the search page). Swallowing the 404 here caused pages to remain stuck
-        // in the "Loading Wordform Data…" state in production because the caller thought it had
-        // valid data while the 404 body lacked `wordform_metadata`.
-
-        if (error.status === 401) {
-            console.log(`API: Got 401 for ${wordform}, returning error body for auth handling`);
-            return error.body || { error: error.message, status: error.status };
-        }
-        // For 404 and all other error statuses, rethrow so the caller can decide what to do.
-        if (error.status === 404) {
+        // For 401 and 404, rethrow so loaders can handle (redirect or show error page)
+        if (error.status === 401 || error.status === 404) {
             throw error;
         }
         // Re-throw other errors

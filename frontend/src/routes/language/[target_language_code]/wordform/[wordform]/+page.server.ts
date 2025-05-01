@@ -12,7 +12,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         
         // Set a reasonable timeout for server-side rendering
         // This is important since we now wait for wordform generation to complete
-        const data = await getWordformWithSearch(supabase, target_language_code, wordform);
+        const data = await getWordformWithSearch(
+            supabase,
+            target_language_code,
+            wordform,
+            session?.access_token ?? null
+        );
 
         // Check if authentication is required for generation and propagate the 401 status code
         if (data.authentication_required_for_generation) {
