@@ -1138,6 +1138,7 @@ export type Database = {
       }
       sourcefile: {
         Row: {
+          ai_generated: boolean
           audio_data: string | null
           audio_filename: string | null
           created_at: string
@@ -1160,6 +1161,7 @@ export type Database = {
           url: string | null
         }
         Insert: {
+          ai_generated: boolean
           audio_data?: string | null
           audio_filename?: string | null
           created_at: string
@@ -1182,6 +1184,7 @@ export type Database = {
           url?: string | null
         }
         Update: {
+          ai_generated?: boolean
           audio_data?: string | null
           audio_filename?: string | null
           created_at?: string
