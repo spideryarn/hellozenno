@@ -356,12 +356,19 @@ export async function getWordformWithSearch(
         return result;
     } catch (error: any) {
         console.error(`API: Error fetching wordform ${wordform}:`, error);
-        // For 401/404 errors specifically, try to return the body if possible
-        // Check error.status which was added in apiFetch error handling
-        if (error.status === 404 || error.status === 401) {
-            console.log(`API: Got ${error.status} for ${wordform}, returning error body if available`);
-             // The error object thrown by apiFetch should already contain the body
-            return error.body || { error: error.message, status: error.status }; 
+        // Return structured body for 401 (authentication required), but **rethrow** 404 so that
+        // upstream callers (e.g. +page.server.ts) can handle it consistently (usually by
+        // redirecting to the search page). Swallowing the 404 here caused pages to remain stuck
+        // in the "Loading Wordform Data…" state in production because the caller thought it had
+        // valid data while the 404 body lacked `wordform_metadata`.
+
+        if (error.status === 401) {
+            console.log(`API: Got 401 for ${wordform}, returning error body for auth handling`);
+            return error.body || { error: error.message, status: error.status };
+        }
+        // For 404 and all other error statuses, rethrow so the caller can decide what to do.
+        if (error.status === 404) {
+            throw error;
         }
         // Re-throw other errors
         throw error;
