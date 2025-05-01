@@ -62,15 +62,29 @@ export async function apiFetch<T extends RouteName, R = any>({
     // Only try to get session if we have a non-null client instance
     if (supabaseClient) {
       try {
-        const { data } = await supabaseClient.auth.getSession();
-        const session = data.session;
+        let {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+
+        // If the session is about to expire (or already expired), refresh it server-side
+        if (
+          session?.expires_at &&
+          session.expires_at * 1000 < Date.now() + 60 * 1000 // < 1 min buffer
+        ) {
+          const { data, error } = await supabaseClient.auth.refreshSession();
+          if (error) {
+            console.warn('Supabase refreshSession error:', error.message);
+          }
+          session = data.session ?? session; // fall back to old session if refresh failed
+        }
+
         if (session?.access_token) {
           // Trim any whitespace or newlines from the token
           const cleanToken = session.access_token.trim();
           headers.set('Authorization', `Bearer ${cleanToken}`);
         }
       } catch (sessionError) {
-        console.warn('Error getting session:', sessionError);
+        console.warn('Error preparing auth token:', sessionError);
         // Continue without auth token
       }
     }
