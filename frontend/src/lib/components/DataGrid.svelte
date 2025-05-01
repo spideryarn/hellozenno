@@ -99,6 +99,8 @@
   let total = 0;
   let isLoading = false;
   let serverRows: any[] = initialRows;
+  // Track if we've already tried loading data at least once
+  let hasLoadedOnce = initialRows.length > 0;
 
   // If initialTotal provided, use it; else fallback to initialRows length until first fetch.
   total = initialTotal ?? initialRows.length;
@@ -128,6 +130,7 @@
       const { rows: fetchedRows, total: fetchedTotal } = await loadData(params);
       serverRows = fetchedRows;
       total = fetchedTotal;
+      hasLoadedOnce = true;
     } finally {
       isLoading = false;
     }
@@ -295,7 +298,7 @@
       </thead>
     {/if}
     <tbody>
-      {#if isLoading || (visibleRows.length === 0 && loadData && showLoadingOnInitial)}
+      {#if isLoading || (visibleRows.length === 0 && loadData && showLoadingOnInitial && !hasLoadedOnce)}
         <tr>
           <td colspan={columns.length} class="text-center py-4">
             <LoadingSpinner />
