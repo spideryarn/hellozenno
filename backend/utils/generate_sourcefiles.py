@@ -168,14 +168,14 @@ def choose_language_level(target_language_code: str) -> str:
 def generate_topic(
     target_language_code: str,
     sourcedir_path: str,
-    language_level: Optional[str] = None,
+    language_level: str,
 ) -> str:
     """Generate a topic using the LLM.
 
     Args:
         target_language_code: The language code (e.g., 'el' for Greek)
         sourcedir_path: Path of the sourcedir to generate content for
-        language_level: Optional CEFR level (A1, A2, B1, B2, C1, C2)
+        language_level: CEFR level (A2, B1, B2, C1)
 
     Returns:
         The generated topic title
@@ -183,12 +183,9 @@ def generate_topic(
     # Get the language name for the template
     target_language_name = get_language_name(target_language_code)
 
-    # If no language level specified, choose one based on what's missing
-    if language_level is None:
-        language_level = choose_language_level(target_language_code)
-        logger.info(
-            f"No language level specified, selected {language_level} based on existing content"
-        )
+    # Expect caller to pass a concrete language_level. Validate non-empty.
+    if not language_level:
+        raise ValueError("language_level must be provided when calling generate_topic")
 
     # Get existing filenames from this sourcedir to avoid duplicates
     existing_filenames = []
@@ -234,7 +231,7 @@ def generate_topic(
 def generate_content(
     target_language_code: str,
     title: str,
-    language_level: Optional[str] = None,
+    language_level: str,
     text_type: Optional[str] = None,
 ) -> tuple[str, list[str]]:
     """Generate content using the LLM.
@@ -242,7 +239,7 @@ def generate_content(
     Args:
         target_language_code: The language code (e.g., 'el' for Greek)
         title: The title/topic for the content
-        language_level: Optional CEFR level (A1, A2, B1, B2, C1, C2)
+        language_level: CEFR level (A2, B1, B2, C1)
         text_type: Optional type of text (e.g., "story", "article")
 
     Returns:
@@ -251,11 +248,10 @@ def generate_content(
     # Get the language name for the template
     target_language_name = get_language_name(target_language_code)
 
-    # If no language level specified, choose one based on what's missing
-    if language_level is None:
-        language_level = choose_language_level(target_language_code)
-        logger.info(
-            f"No language level specified, selected {language_level} based on existing content"
+    # Caller must supply language_level
+    if not language_level:
+        raise ValueError(
+            "language_level must be provided when calling generate_content"
         )
 
     # Generate content using the template
@@ -336,6 +332,15 @@ def generate(
         target_language_code = find_language_with_no_sourcefiles()
         logger.info(
             f"Selected language with fewest sourcefiles: {target_language_code} ({get_language_name(target_language_code)})"
+        )
+
+    # ------------------------------------------------------------
+    # Determine the language level *once* so it propagates through
+    # ------------------------------------------------------------
+    if language_level is None:
+        language_level = choose_language_level(target_language_code)
+        logger.info(
+            f"No language level specified, selected {language_level} based on existing content"
         )
 
     # Get or create the sourcedir
