@@ -5,7 +5,7 @@ import type { SearchResult } from "$lib/types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code, wordform } = params;
-    const { supabase } = locals;
+    const { supabase, session } = locals;
 
     try {
         // Use our enhanced search function to handle various result types
