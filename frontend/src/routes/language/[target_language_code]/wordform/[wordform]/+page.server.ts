@@ -55,6 +55,30 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         
         console.error("Error loading wordform:", err);
         
+        // Check for the 401 Authentication Required error specifically
+        // The error thrown by apiFetch should be an object with status and body
+        if (
+            typeof err === 'object' && 
+            err !== null && 
+            'status' in err && 
+            err.status === 401 && 
+            'body' in err && 
+            typeof err.body === 'object' && 
+            err.body !== null && 
+            'authentication_required_for_generation' in err.body && 
+            err.body.authentication_required_for_generation
+        ) {
+            console.log("Authentication required for generation, returning specific state");
+            return {
+                wordformData: {
+                    authentication_required_for_generation: true,
+                    target_language_code: target_language_code,
+                    wordform: wordform,
+                    target_language_name: null // Language name is not directly available in locals here
+                }
+            };
+        }
+        
         // Handle timeout errors specifically
         if (err instanceof Error && err.message.includes('timed out')) {
             // If we time out during wordform generation, still return a loading state
