@@ -12,14 +12,23 @@
   const { wordformData } = data;
   
   // Make sure we have valid data before unwrapping
-  $: isValidData = wordformData && wordformData.wordform_metadata;
+  // Check both top-level and nested under 'data' for compatibility
+  $: isValidData = !!(wordformData?.wordform_metadata ?? wordformData?.data?.wordform_metadata);
   
-  // Unwrap the data from the response
-  $: wordform_metadata = isValidData ? wordformData.wordform_metadata : null;
-  $: lemma_metadata = isValidData ? wordformData.lemma_metadata : null;
-  $: target_language_code = isValidData ? wordformData.target_language_code : '';
-  $: target_language_name = isValidData ? wordformData.target_language_name : '';
-  $: metadata = isValidData ? wordformData.metadata : null;
+  // Unwrap the data from the response, accommodating potential nesting
+  $: wordform_metadata = isValidData 
+    ? (wordformData.wordform_metadata ?? wordformData.data?.wordform_metadata) 
+    : null;
+  $: lemma_metadata = isValidData 
+    ? (wordformData.lemma_metadata ?? wordformData.data?.lemma_metadata) 
+    : null;
+  // Assume target_language_code and target_language_name are always top-level for now
+  // If issues persist, these might need similar checks.
+  $: target_language_code = wordformData?.target_language_code ?? '';
+  $: target_language_name = wordformData?.target_language_name ?? '';
+  $: metadata = isValidData 
+    ? (wordformData.metadata ?? wordformData.data?.metadata) 
+    : null;
   
   // Access session from the page store
   $: session = $page.data.session;
