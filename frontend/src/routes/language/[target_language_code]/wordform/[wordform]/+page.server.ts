@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         // Set a reasonable timeout for server-side rendering
         // This is important since we now wait for wordform generation to complete
         const data = await getWordformWithSearch(
-            supabase,
+            null,
             target_language_code,
             wordform,
             session?.access_token ?? null
