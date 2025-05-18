@@ -1,15 +1,18 @@
 <script lang="ts">
   import type { Sentence, SentenceMetadata } from '$lib/types';
   import { MetadataCard, AudioPlayer } from '$lib';
-  import { getApiUrl } from '$lib/api';
+  import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { goto } from '$app/navigation';
   import Trash from 'phosphor-svelte/lib/Trash';
+  import type { SupabaseClient, Session } from '@supabase/supabase-js';
   
   // Props for the Sentence component
   export let sentence: Sentence;
   export let metadata: SentenceMetadata = {};
   export let enhanced_sentence_text: string = '';
+  export let supabase: SupabaseClient | null = null;
+  export let session: Session | null = null;
   
   // State for audio player
   let audioPlayer;
@@ -27,26 +30,32 @@
       return;
     }
     
+    if (!supabase) {
+      alert('Authentication context not available. Cannot delete sentence.');
+      return;
+    }
+    if (!session) {
+      alert('You must be logged in to delete this sentence.');
+      return;
+    }
+    
     isDeleting = true;
     
     try {
-      const deleteUrl = getApiUrl(RouteName.SENTENCE_API_DELETE_SENTENCE_API, {
-        target_language_code: sentence.target_language_code,
-        slug: sentence.slug
+      await apiFetch({
+        supabaseClient: supabase,
+        routeName: RouteName.SENTENCE_API_DELETE_SENTENCE_API,
+        params: {
+          target_language_code: sentence.target_language_code,
+          slug: sentence.slug
+        },
+        options: { method: 'DELETE' }
       });
-      
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to delete: ${response.status} ${response.statusText}`);
-      }
       
       // Redirect to sentences list after successful deletion
       goto(`/language/${sentence.target_language_code}/sentences`);
-    } catch (error) {
-      alert(`Error deleting sentence: ${error}`);
+    } catch (error: any) {
+      alert(`Error deleting sentence: ${error.message || 'Unknown error'}`);
       isDeleting = false;
     }
   }
@@ -57,7 +66,7 @@
     <div class="card-body">
       <!-- Metadata and Actions Row -->
       <div class="d-flex justify-content-between align-items-start mb-3">
-        <!-- Delete Button -->
+        <!-- Delete Button for individual sentence -->
         <div>
           <button 
             type="button" 
@@ -70,7 +79,7 @@
             {#if isDeleting}
               Deleting...
             {:else}
-              Delete
+              Delete sentence
             {/if}
           </button>
         </div>

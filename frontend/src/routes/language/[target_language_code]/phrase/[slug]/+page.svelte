@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getApiUrl } from '$lib/api';
+  import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/state';
   import { MetadataCard, Card } from '$lib';
@@ -11,7 +11,7 @@
   
   // Get parameters
   export let data;
-  const { phrase, target_language_code: languageCode } = data;
+  const { phrase, target_language_code: languageCode, supabase, session } = data;
   const { slug } = page.params;
   const target_language_code = languageCode;
   
@@ -21,27 +21,34 @@
     updated_at: phrase.updated_at
   };
 
-  function deletePhrase() {
+  async function deletePhrase() {
+    if (!supabase) {
+      console.error('Supabase client is not available for delete operation.');
+      alert('Authentication context not available. Please try refreshing the page.');
+      return;
+    }
+    if (!session) {
+      alert('You must be logged in to delete this phrase. Please refresh and log in.');
+      return;
+    }
+
     if (confirm('Are you sure you want to delete this phrase?')) {
-      const url = getApiUrl(RouteName.PHRASE_API_DELETE_PHRASE_API, {
-        target_language_code,
-        slug
-      });
-      
-      fetch(url, {
-        method: 'POST',
-        credentials: 'include'
-      }).then(async (response) => {
-        if (response.ok) {
-          goto(`/language/${languageCode}/phrases`);
-        } else {
-          const errorData = await response.json();
-          alert(errorData.description || 'Failed to delete phrase');
-        }
-      }).catch(err => {
+      try {
+        await apiFetch({
+          supabaseClient: supabase,
+          routeName: RouteName.PHRASE_API_DELETE_PHRASE_API,
+          params: {
+            target_language_code: target_language_code,
+            slug: slug
+          },
+          options: { method: 'POST' }
+        });
+
+        goto(`/language/${languageCode}/phrases`);
+      } catch (err: any) {
         console.error('Error deleting phrase:', err);
-        alert('An error occurred while trying to delete this phrase');
-      });
+        alert(`An error occurred while deleting the phrase: ${err.message || 'Unknown error'}`);
+      }
     }
   }
 </script>

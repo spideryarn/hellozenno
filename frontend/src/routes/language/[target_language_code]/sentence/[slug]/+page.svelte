@@ -6,6 +6,8 @@
   
   // Data from server-side load function
   export let data: PageData;
+  // Destructure supabase and session from data to pass to the Sentence component
+  const { supabase, session } = data;
 </script>
 
 <svelte:head>
@@ -27,6 +29,8 @@
     sentence={data.sentence}
     metadata={data.metadata}
     enhanced_sentence_text={data.enhanced_sentence_text}
+    supabase={supabase}
+    session={session}
   />
 </div>
 
