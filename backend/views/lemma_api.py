@@ -362,6 +362,7 @@ def get_ignored_lemmas_api(target_language_code: str):
 
 
 @lemma_api_bp.route("/<target_language_code>/lemma/<lemma>/delete", methods=["POST"])
+@api_auth_required
 def delete_lemma_api(target_language_code: str, lemma: str):
     """Delete a lemma and its associated wordforms via cascade delete."""
     # URL decode the lemma parameter to handle non-Latin characters properly

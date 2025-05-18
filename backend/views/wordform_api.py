@@ -15,7 +15,7 @@ from utils.word_utils import get_word_preview
 from utils.lang_utils import get_language_name
 
 # Import auth decorator
-from utils.auth_utils import api_auth_optional
+from utils.auth_utils import api_auth_optional, api_auth_required
 
 # Import exception
 from utils.exceptions import AuthenticationRequiredForGenerationError
@@ -162,6 +162,7 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
 @wordform_api_bp.route(
     "/<target_language_code>/wordform/<wordform>/delete", methods=["POST"]
 )
+@api_auth_required
 def delete_wordform_api(target_language_code: str, wordform: str):
     """Delete a wordform from the database."""
     # URL decode the wordform parameter to handle non-Latin characters properly

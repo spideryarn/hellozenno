@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';  
   import { Card, LemmaCard, MetadataCard, LemmaContent } from '$lib';
-  import { getApiUrl } from '$lib/api';
+  import { apiFetch, getApiUrl } from '$lib/api'; // Import apiFetch
   import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/stores'; // Import page store for current URL
   import { SITE_NAME } from '$lib/config';
@@ -10,7 +10,8 @@
   
   export let data: PageData;
   // Destructure lemmaResult which contains the API response, and the separately passed params
-  const { lemmaResult, target_language_code, lemma: lemmaParam } = data; 
+  // Also get the supabase client instance passed from +layout.ts
+  const { lemmaResult, target_language_code, lemma: lemmaParam, supabase: supabaseClient } = data; 
   
   // Extract the actual lemma data and potential error from lemmaResult
   const lemma_metadata = lemmaResult?.lemma_metadata || lemmaResult?.partial_lemma_metadata || {};
@@ -25,44 +26,48 @@
   // Define login URL with redirect back to current page
   $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
 
-  // Generate API URL for delete action (only if lemma exists properly)
-  // Use lemma_metadata.lemma which should be populated if the request was successful
-  const deleteUrl: string | undefined = lemma_metadata?.lemma ? getApiUrl(RouteName.LEMMA_API_DELETE_LEMMA_API, {
-    target_language_code: target_language_code,
-    lemma: lemma_metadata.lemma.lemma
-  }) : undefined;
-  
+  // Debugging logs
+  $: console.log('Lemma Page - data prop:', data);
+  $: console.log('Lemma Page - supabaseClient from data:', supabaseClient);
+  $: console.log('Lemma Page - lemma_metadata:', lemma_metadata);
+  $: console.log('Lemma Page - target_language_code:', target_language_code);
+  $: console.log('Lemma Page - lemma_metadata.lemma value for URL:', lemma_metadata?.lemma);
+  // deleteUrl is now constructed inside handleDeleteSubmit if using apiFetch directly with RouteName
+
   async function handleDeleteSubmit(event: SubmitEvent) {
-    // Prevent default so we can manage navigation ourselves.
     event.preventDefault();
 
     const confirmed = confirm('Are you sure you want to delete this lemma? All associated wordforms will also be deleted. This action cannot be undone.');
-    if (!confirmed) {
+    if (!confirmed) return;
+
+    if (!lemma_metadata?.lemma) {
+      console.error('Lemma value missing – cannot delete lemma.');
+      alert('Cannot delete lemma: lemma data is missing.');
       return;
     }
-
-    if (!deleteUrl) {
-      console.error('Delete URL missing – cannot delete lemma.');
+    
+    if (!supabaseClient) {
+      console.error('Supabase client is not available for API call.');
+      alert('Authentication context not available. Please try refreshing the page.');
       return;
     }
 
     try {
-      const res = await fetch(deleteUrl, {
-        method: 'POST',
-        credentials: 'include'
+      await apiFetch({
+        supabaseClient: supabaseClient, // Pass the client instance
+        routeName: RouteName.LEMMA_API_DELETE_LEMMA_API,
+        params: {
+          target_language_code: target_language_code,
+          lemma: lemma_metadata.lemma
+        },
+        options: { method: 'POST' } // apiFetch sets Content-Type and handles auth header
       });
 
-      if (!res.ok && res.status !== 302 && res.status !== 204) {
-        console.error('Failed to delete lemma:', res.status, await res.text());
-        alert('Failed to delete lemma.');
-        return;
-      }
-
-      // Redirect to the lemmas list page which is handled by the Svelte frontend.
+      // apiFetch throws on non-ok responses, so if we reach here, it was successful (or 204)
       goto(`/language/${target_language_code}/lemmas`);
-    } catch (err) {
-      console.error('Error deleting lemma:', err);
-      alert('An error occurred while deleting the lemma.');
+    } catch (err: any) {
+      console.error('Error deleting lemma (via apiFetch):', err);
+      alert(`Failed to delete lemma: ${err.message || 'An unknown error occurred.'}`);
     }
   }
 </script>
@@ -111,10 +116,9 @@
     </div>
   </div>
 
-  {#if deleteUrl} <!-- Only show delete if we have a valid URL -->
+  {#if lemma_metadata?.lemma} <!-- Only show delete if we have a lemma to delete -->
   <div class="mb-4">
-    <form action={deleteUrl} method="POST" 
-          on:submit={handleDeleteSubmit}>
+    <form on:submit={handleDeleteSubmit}> <!-- Removed action and method, handled by JS -->
       <button type="submit" class="btn btn-danger">Delete lemma</button>
     </form>
   </div>

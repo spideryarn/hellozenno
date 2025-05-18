@@ -11,7 +11,6 @@ import tempfile
 import random
 import time
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from flask import (
@@ -42,7 +41,6 @@ from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from utils.sourcedir_utils import (
     _get_sourcedir_entry,
     get_sourcedir_or_404,
-    _get_navigation_info,
     get_sourcedirs_for_language,
 )
 from utils.sourcefile_utils import (

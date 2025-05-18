@@ -8,6 +8,7 @@ These endpoints follow the standard pattern:
 import datetime
 from flask import Blueprint, flash, jsonify, redirect, request, url_for
 from peewee import DoesNotExist
+from slugify import slugify
 
 from config import (
     MAX_AUDIO_SIZE_UPLOAD_ALLOWED,
@@ -27,13 +28,6 @@ from utils.sourcedir_utils import (
 )
 from loguru import logger
 from utils.sourcefile_utils import process_uploaded_file
-from utils.url_registry import endpoint_for
-from views.sourcedir_views import sourcedir_views_bp, sourcefiles_for_sourcedir_vw
-from slugify import slugify
-
-from views.sourcefile_views import inspect_sourcefile_vw
-
-# Import the auth decorator
 from utils.auth_utils import api_auth_required
 
 # Create a blueprint with standardized prefix
@@ -308,7 +302,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
                 description = None
                 if "description" in metadata and metadata["description"] is not None:
                     description = metadata["description"]
-                    
+
                 if filename.endswith(".mp3"):
                     sourcefile_type = "audio"
                     image_data = None
@@ -427,8 +421,16 @@ def get_sourcedirs_for_language_api(target_language_code: str):
                 "display_name": sourcedir["path"],
                 "slug": sourcedir["slug"],
                 "description": sourcedir.get("description", ""),
-                "created_at": sourcedir.get("created_at").isoformat() if sourcedir.get("created_at") else None,
-                "updated_at": sourcedir.get("updated_at").isoformat() if sourcedir.get("updated_at") else None,
+                "created_at": (
+                    sourcedir.get("created_at").isoformat()
+                    if sourcedir.get("created_at")
+                    else None
+                ),
+                "updated_at": (
+                    sourcedir.get("updated_at").isoformat()
+                    if sourcedir.get("updated_at")
+                    else None
+                ),
                 "statistics": {
                     "file_count": stats.get("file_count", 0),
                     "sentence_count": stats.get("phrase_count", 0),
@@ -466,8 +468,16 @@ def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str
                 "slug": sourcedir_entry.slug,
                 "description": sourcedir_entry.description,
                 "target_language_code": sourcedir_entry.target_language_code,
-                "created_at": sourcedir_entry.created_at.isoformat() if sourcedir_entry.created_at else None,
-                "updated_at": sourcedir_entry.updated_at.isoformat() if sourcedir_entry.updated_at else None,
+                "created_at": (
+                    sourcedir_entry.created_at.isoformat()
+                    if sourcedir_entry.created_at
+                    else None
+                ),
+                "updated_at": (
+                    sourcedir_entry.updated_at.isoformat()
+                    if sourcedir_entry.updated_at
+                    else None
+                ),
             },
             "sourcefiles": result["sourcefiles"],
             "language_name": result["target_language_name"],

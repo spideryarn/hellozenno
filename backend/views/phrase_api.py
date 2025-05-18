@@ -6,7 +6,8 @@ These endpoints follow the standard pattern:
 """
 
 from flask import Blueprint, jsonify, request
-from peewee import DoesNotExist, fn
+from peewee import DoesNotExist
+from utils.auth_utils import api_auth_required
 from db_models import Phrase
 import urllib.parse
 from utils.phrase_utils import get_phrases_query, get_phrase_by_slug
@@ -121,6 +122,7 @@ def get_phrase_metadata_api(target_language_code: str, slug: str):
 
 
 @phrase_api_bp.route("/<target_language_code>/detail/<slug>/delete", methods=["POST"])
+@api_auth_required
 def delete_phrase_api(target_language_code: str, slug: str):
     """Delete a specific phrase using its slug.
 
