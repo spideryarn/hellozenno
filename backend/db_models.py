@@ -47,7 +47,7 @@ class BaseModel(Model):
         self.updated_at = datetime.now()
 
         # Check if this is a new instance (not yet in the database)
-        is_new = not self._pk  # _pk is None for new instances
+        is_new = self.get_id() is None  # _pk is None for new instances
 
         # Only for new instances, try to set created_by from Flask g object if field exists
         if (
@@ -245,9 +245,9 @@ class Lemma(BaseModel):
             query = (
                 cls.select(cls)
                 .distinct()
-                .join(Wordform, on=(Wordform.lemma_entry == cls.id))
+                .join(Wordform, on=(Wordform.lemma_entry == cls.id))  # type: ignore
                 .join(
-                    SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)
+                    SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)  # type: ignore
                 )
                 .where(
                     (cls.target_language_code == target_language_code)
@@ -259,11 +259,11 @@ class Lemma(BaseModel):
             query = (
                 cls.select(cls)
                 .distinct()
-                .join(Wordform, on=(Wordform.lemma_entry == cls.id))
+                .join(Wordform, on=(Wordform.lemma_entry == cls.id))  # type: ignore
                 .join(
-                    SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)
+                    SourcefileWordform, on=(SourcefileWordform.wordform == Wordform.id)  # type: ignore
                 )
-                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
+                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))  # type: ignore
                 .where(
                     (cls.target_language_code == target_language_code)
                     & (Sourcefile.sourcedir == sourcedir)
@@ -459,9 +459,9 @@ class Wordform(BaseModel):
             # Filter by specific sourcefile object and include junction data
             query = (
                 cls.select(cls, Lemma, SourcefileWordform)
-                .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))
+                .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))  # type: ignore
                 .switch(cls)
-                .join(Lemma, on=(cls.lemma_entry == Lemma.id))
+                .join(Lemma, on=(cls.lemma_entry == Lemma.id))  # type: ignore
                 .where(
                     (cls.target_language_code == target_language_code)
                     & (SourcefileWordform.sourcefile == sourcefile)
@@ -482,24 +482,24 @@ class Wordform(BaseModel):
             # Filter by sourcedir object
             query = (
                 cls.select(cls, Lemma)
-                .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))
-                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
+                .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))  # type: ignore
+                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))  # type: ignore
                 .switch(cls)
-                .join(Lemma, on=(cls.lemma_entry == Lemma.id))
+                .join(Lemma, on=(cls.lemma_entry == Lemma.id))  # type: ignore
                 .where(
                     (cls.target_language_code == target_language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
-                .group_by(cls.id, Lemma.id)
+                .group_by(cls.id, Lemma.id)  # type: ignore
             )
         elif sourcedir_slug:
             # Filter by sourcedir slug
             query = (
                 cls.select(cls, Lemma)
-                .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))
-                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))
-                .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))
-                .join(Lemma, on=(cls.lemma_entry == Lemma.id))
+                .join(SourcefileWordform, on=(SourcefileWordform.wordform == cls.id))  # type: ignore
+                .join(Sourcefile, on=(SourcefileWordform.sourcefile == Sourcefile.id))  # type: ignore
+                .join(Sourcedir, on=(Sourcefile.sourcedir == Sourcedir.id))  # type: ignore
+                .join(Lemma, on=(cls.lemma_entry == Lemma.id))  # type: ignore
                 .where(
                     (cls.target_language_code == target_language_code)
                     & (Sourcedir.slug == sourcedir_slug)
@@ -510,7 +510,7 @@ class Wordform(BaseModel):
             # No filter, get all wordforms for the language
             query = (
                 cls.select(cls, Lemma)
-                .join(Lemma, on=(cls.lemma_entry == Lemma.id))
+                .join(Lemma, on=(cls.lemma_entry == Lemma.id))  # type: ignore
                 .where(cls.target_language_code == target_language_code)
             )
 
@@ -592,7 +592,7 @@ class Sentence(BaseModel):
             lemma_query = (
                 SentenceLemma.select(SentenceLemma.sentence, Lemma.lemma)
                 .join(Lemma)
-                .where(SentenceLemma.sentence.in_(sentence_ids))
+                .where(SentenceLemma.sentence.in_(sentence_ids))  # type: ignore
             )
 
             # Group lemmas by sentence id
@@ -698,12 +698,12 @@ class Phrase(BaseModel):
             "slug": self.slug,
             "created_at": (
                 self.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                if self.created_at
+                if isinstance(self.created_at, datetime)
                 else None
             ),
             "updated_at": (
                 self.updated_at.strftime("%Y-%m-%d %H:%M:%S")
-                if self.updated_at
+                if isinstance(self.updated_at, datetime)
                 else None
             ),
         }
@@ -737,7 +737,7 @@ class Phrase(BaseModel):
             # Filter by specific sourcefile object and include junction data
             query = (
                 cls.select(cls, SourcefilePhrase)
-                .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
+                .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))  # type: ignore
                 .where(
                     (cls.target_language_code == target_language_code)
                     & (SourcefilePhrase.sourcefile == sourcefile)
@@ -758,13 +758,13 @@ class Phrase(BaseModel):
             # Filter by sourcedir object
             query = (
                 cls.select(cls)
-                .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))
-                .join(Sourcefile, on=(SourcefilePhrase.sourcefile == Sourcefile.id))
+                .join(SourcefilePhrase, on=(SourcefilePhrase.phrase == cls.id))  # type: ignore
+                .join(Sourcefile, on=(SourcefilePhrase.sourcefile == Sourcefile.id))  # type: ignore
                 .where(
                     (cls.target_language_code == target_language_code)
                     & (Sourcefile.sourcedir == sourcedir)
                 )
-                .group_by(cls.id)
+                .group_by(cls.id)  # type: ignore
             )
         else:
             # No filter, get all phrases for the language
@@ -808,7 +808,7 @@ class RelatedPhrase(BaseModel):
 
 
 class Sourcedir(BaseModel):
-    path = CharField()  # the directory path
+    path = CharField(max_length=1024)  # the directory path
     target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     slug = CharField(max_length=SOURCEDIR_SLUG_MAX_LENGTH)
     description = TextField(null=True)  # description of the directory content
@@ -835,13 +835,15 @@ class Sourcedir(BaseModel):
 
 class Sourcefile(BaseModel):
     sourcedir = ForeignKeyField(Sourcedir, backref="sourcefiles", on_delete="CASCADE")
-    filename = CharField()  # just the filename part
+    filename = CharField(max_length=1024)  # just the filename part
     description = TextField(null=True)  # description of the file content
     image_data = BlobField(null=True)  # the original image
     audio_data = BlobField(null=True)  # optional mp3 audio
     text_target = TextField()  # the source text in target language
     text_english = TextField()  # the English translation
-    audio_filename = CharField(null=True)  # optional reference to mp3 file
+    audio_filename = CharField(
+        max_length=1024, null=True
+    )  # optional reference to mp3 file
     metadata = JSONField()  # remaining metadata (words, phrases, etc.)
     slug = CharField(max_length=SOURCEFILE_SLUG_MAX_LENGTH)
     sourcefile_type = (
@@ -853,8 +855,8 @@ class Sourcefile(BaseModel):
     publication_date = DateTimeField(null=True)  # original publication date if known
     num_words = IntegerField(null=True)  # number of words in the text
     language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
-    url = CharField(null=True)  # original source URL if applicable
-    title_target = CharField(null=True)  # title in target language
+    url = CharField(max_length=2048, null=True)  # original source URL if applicable
+    title_target = CharField(max_length=2048, null=True)  # title in target language
     ai_generated = BooleanField(default=False)  # whether this file was generated by AI
 
     def save(self, *args, **kwargs):
@@ -918,11 +920,19 @@ class Profile(BaseModel):
     def to_dict(self) -> dict:
         """Convert profile model to dictionary format."""
         return {
-            "id": self.id,
+            "id": self.get_id(),
             "user_id": self.user_id,
             "target_language_code": self.target_language_code,
-            "created_at": (self.created_at.isoformat() if self.created_at else None),
-            "updated_at": (self.updated_at.isoformat() if self.updated_at else None),
+            "created_at": (
+                self.created_at.isoformat()
+                if isinstance(self.created_at, datetime)
+                else None
+            ),
+            "updated_at": (
+                self.updated_at.isoformat()
+                if isinstance(self.updated_at, datetime)
+                else None
+            ),
         }
 
     @classmethod

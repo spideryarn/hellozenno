@@ -100,8 +100,8 @@ VALID_SOURCEFILE_TYPES = {
 MAX_NUMBER_UPLOAD_FILES = 20  # Maximum number of files that can be uploaded at once
 
 # Maximum length for slugs
-SOURCEDIR_SLUG_MAX_LENGTH = 100  # Characters allowed in URL slugs
-SOURCEFILE_SLUG_MAX_LENGTH = 100  # Characters allowed in URL slugs
+SOURCEDIR_SLUG_MAX_LENGTH = 1024  # Characters allowed in URL slugs
+SOURCEFILE_SLUG_MAX_LENGTH = 1024  # Characters allowed in URL slugs
 
 # Maximum new words and phrases per processing run
 DEFAULT_MAX_NEW_WORDS_PER_PROCESSING = 8
