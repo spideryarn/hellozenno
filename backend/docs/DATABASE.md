@@ -18,7 +18,7 @@ The application uses PostgreSQL (via Supabase) in all environments:
 2. **Local Development**: Local PostgreSQL database
    - Default when no special environment variables are set
    - Uses connection string from `.env.local`
-   - Database name defaults to "hellozenno_development"
+   - Database name defaults to "postgres"
 
 3. **Local-to-Production**: Direct connection to Supabase for debugging
    - Uses connection string from `.env.prod`
@@ -78,6 +78,14 @@ Main database models (`db_models.py`):
 - `UserLemma`: Junction table linking `auth.users` directly to lemmas
 
 See [MODELS.md](./MODELS.md) for a comprehensive overview of all models, their fields, and relationships.
+
+### Linter Considerations
+
+Static analysis tools (like Pyright, used by Pylance in VS Code) may sometimes report false positive errors when working with Peewee models, particularly concerning dynamically generated attributes like `id` or field access within join conditions (e.g., `Model.id`).
+
+For example, you might see errors like "Cannot access attribute 'id' for class 'type[ModelName]*'". In many cases, if the Peewee code follows standard ORM patterns, these can be treated as linter misinterpretations due to Peewee's dynamic nature.
+
+Consider adding a comment `#  type: ignore` at the end of the line to suppress them.
 
 ### Cross-Schema References
 
@@ -188,10 +196,10 @@ To connect to the local development database with nice formatting:
 
 ```bash
 # Connect with expanded auto formatting and no pager
-psql -d hellozenno_development -P pager=off -x auto
+psql -d postgres -U postgres -h 127.0.0.1 -p 54322 -P pager=off -x auto
 
 # Or for one-off queries, use these flags:
-psql -d hellozenno_development -P pager=off -A -t -c "SELECT * FROM table;"
+psql -d postgres -U postgres -h 127.0.0.1 -p 54322 -P pager=off -A -t -c "SELECT * FROM table;"
 ```
 
 ## Useful tips

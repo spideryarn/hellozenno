@@ -112,11 +112,7 @@ See `migrations/004_fix_sourcedir_language.py` for an example.
 When using `add_columns` or `drop_columns`, you need to define model classes in both `migrate` and `rollback` functions:
 
 ```python
-class BaseModel(Model):
-    created_at = DateTimeField()
-    updated_at = DateTimeField()
-
-class MyModel(BaseModel):
+class MyModel(pw.Model):
     field = CharField()
 
     class Meta:
