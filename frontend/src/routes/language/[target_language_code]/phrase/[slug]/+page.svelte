@@ -7,6 +7,7 @@
   import { truncate } from '$lib/utils';
   import WordformCard from '$lib/components/WordformCard.svelte';
   import PhraseCard from '$lib/components/PhraseCard.svelte';
+  import { goto } from '$app/navigation';
   
   // Get parameters
   export let data;
@@ -28,10 +29,11 @@
       });
       
       fetch(url, {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include'
       }).then(async (response) => {
         if (response.ok) {
-          window.location.href = `/language/${languageCode}/phrases`;
+          goto(`/language/${languageCode}/phrases`);
         } else {
           const errorData = await response.json();
           alert(errorData.description || 'Failed to delete phrase');

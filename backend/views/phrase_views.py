@@ -60,15 +60,12 @@ def delete_phrase_vw(target_language_code, slug):
     """Delete a specific phrase using its slug."""
     try:
         phrase = get_phrase_by_slug(target_language_code, slug)
-        phrase_text = phrase.canonical_form
+        # phrase_text = phrase.canonical_form # Not needed if not flashing
         phrase.delete_instance()
-        flash(f"Phrase '{phrase_text}' has been deleted.", "success")
+        # flash(f"Phrase '{phrase_text}' has been deleted.", "success") # Flashing is for Jinja templates
     except DoesNotExist:
-        abort(404, description=f"Phrase with slug '{slug}' not found")
+        # If it doesn't exist, it's already gone. Client can treat as success.
+        pass  # Fall through to return 204
 
-    return redirect(
-        url_for(
-            "phrase_views.phrases_list_vw",
-            target_language_code=target_language_code,
-        )
-    )
+    # Return 204 No Content for successful deletion or if already deleted
+    return "", 204

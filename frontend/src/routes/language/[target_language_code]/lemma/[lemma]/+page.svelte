@@ -6,6 +6,7 @@
   import { page } from '$app/stores'; // Import page store for current URL
   import { SITE_NAME } from '$lib/config';
   import { truncate, generateMetaDescription } from '$lib/utils';
+  import { goto } from '$app/navigation';
   
   export let data: PageData;
   // Destructure lemmaResult which contains the API response, and the separately passed params
@@ -31,10 +32,37 @@
     lemma: lemma_metadata.lemma
   }) : undefined;
   
-  function handleDeleteSubmit(event: SubmitEvent) {
+  async function handleDeleteSubmit(event: SubmitEvent) {
+    // Prevent default so we can manage navigation ourselves.
+    event.preventDefault();
+
     const confirmed = confirm('Are you sure you want to delete this lemma? All associated wordforms will also be deleted. This action cannot be undone.');
     if (!confirmed) {
-      event.preventDefault();
+      return;
+    }
+
+    if (!deleteUrl) {
+      console.error('Delete URL missing – cannot delete lemma.');
+      return;
+    }
+
+    try {
+      const res = await fetch(deleteUrl, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (!res.ok && res.status !== 302 && res.status !== 204) {
+        console.error('Failed to delete lemma:', res.status, await res.text());
+        alert('Failed to delete lemma.');
+        return;
+      }
+
+      // Redirect to the lemmas list page which is handled by the Svelte frontend.
+      goto(`/language/${target_language_code}/lemmas`);
+    } catch (err) {
+      console.error('Error deleting lemma:', err);
+      alert('An error occurred while deleting the lemma.');
     }
   }
 </script>

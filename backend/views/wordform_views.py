@@ -126,16 +126,8 @@ def delete_wordform_vw(target_language_code: str, wordform: str):
             Wordform.target_language_code == target_language_code,
         )
         wordform_model.delete_instance()
-        return redirect(
-            url_for(
-                endpoint_for(wordforms_list_vw),
-                target_language_code=target_language_code,
-            )
-        )
+        # Return 204 No Content on successful deletion
+        return "", 204
     except DoesNotExist:
-        return redirect(
-            url_for(
-                endpoint_for(wordforms_list_vw),
-                target_language_code=target_language_code,
-            )
-        )
+        # Also return 204 if it doesn't exist, as the resource is effectively gone
+        return "", 204

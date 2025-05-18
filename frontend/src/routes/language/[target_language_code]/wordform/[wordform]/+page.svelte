@@ -7,6 +7,7 @@
   import { truncate, generateMetaDescription } from '$lib/utils';
   import { page } from '$app/stores'; // To access auth session
   import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
   
   export let data: PageData;
 
@@ -50,10 +51,35 @@
     wordform: wordform_metadata.wordform
   }) : '';
   
-  function handleDeleteSubmit(event: SubmitEvent) {
+  async function handleDeleteSubmit(event: SubmitEvent) {
+    // Always prevent the default browser form submission so we can handle the
+    // redirect ourselves (otherwise the browser will follow the 302 to the API
+    // domain, which is not what we want).
+    event.preventDefault();
+
     const confirmed = confirm('Are you sure you want to delete this wordform? This action cannot be undone.');
     if (!confirmed) {
-      event.preventDefault();
+      return;
+    }
+
+    try {
+      const res = await fetch(deleteUrl, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (!res.ok && res.status !== 302 && res.status !== 204) {
+        console.error('Failed to delete wordform:', res.status, await res.text());
+        alert('Failed to delete wordform.');
+        return;
+      }
+
+      // After successful deletion, navigate to the lemmas list page (handled by the
+      // Svelte frontend and therefore on the correct domain).
+      goto(`/language/${target_language_code}/lemmas`);
+    } catch (err) {
+      console.error('Error deleting wordform:', err);
+      alert('An error occurred while deleting the wordform.');
     }
   }
 </script>

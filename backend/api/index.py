@@ -43,8 +43,28 @@ def create_app():
     CORS(
         app,
         supports_credentials=True,
+        # Specify allowed origins. For development, this includes your SvelteKit dev server.
+        # For production, this should be your frontend's domain (e.g., "https://www.hellozenno.com").
+        origins=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "https://www.hellozenno.com",
+        ],  # Add your actual production frontend URL
         resources={
-            r"/api/*": {"origins": "*"},  # Allow all origins for API endpoints
+            r"/api/*": {
+                "origins": [
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173",
+                    "https://www.hellozenno.com",
+                ]
+            },
+            r"/language/*": {
+                "origins": [
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173",
+                    "https://www.hellozenno.com",
+                ]
+            },  # Ensure /language routes are covered
             # r"/lang/*/flashcards/*": {
             #     "origins": "*"
             # },  # Allow all origins for flashcard endpoints with new URL structure
@@ -171,7 +191,7 @@ def create_app():
             # Generate routes
             ts_output_path = generate_typescript_routes(app)
             logger.info(f"Generated TypeScript routes at {ts_output_path}")
-            
+
             # Generate language data
             lang_output_path = generate_typescript_language_data(app)
             logger.info(f"Generated TypeScript language data at {lang_output_path}")
@@ -232,14 +252,14 @@ def create_app():
         with app.app_context():
             ts_output_path = generate_typescript_routes(app)
         logger.info(f"Generated TypeScript routes at {ts_output_path}")
-    
+
     @app.cli.command("generate-language-data")
     def generate_language_data_command():
         """Generate TypeScript language data from application config."""
         with app.app_context():
             lang_output_path = generate_typescript_language_data(app)
         logger.info(f"Generated TypeScript language data at {lang_output_path}")
-    
+
     @app.cli.command("generate-all-ts")
     def generate_all_ts_command():
         """Generate all TypeScript files (routes and language data)."""
