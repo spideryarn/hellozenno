@@ -5,6 +5,12 @@ PROD_FRONTEND=false
 DEBUG_MODE=1
 FLASK_MODE="development"
 
+# should be run from PROJECT_ROOT, and *not* from backend/
+if [ ! -f "backend/api/index.py" ]; then
+    echo "Error: Not in project root"
+    exit 1
+fi
+
 # Function to display usage information
 function show_usage {
     echo "Usage: $0 [options]"

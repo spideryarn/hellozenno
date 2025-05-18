@@ -146,6 +146,10 @@ ELEVENLABS_API_KEY = get_env_var_and_track("ELEVENLABS_API_KEY", SecretStr)
 # Flask configuration
 FLASK_SECRET_KEY = get_env_var_and_track("FLASK_SECRET_KEY", SecretStr).get_secret_value().strip()  # type: ignore
 
+# Logging configuration
+LOGS_DIR = get_env_var_and_track("LOGS_DIR", str)
+print(f"LOGS_DIR: {LOGS_DIR}")
+
 # Local to prod configuration
 USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ignore
 

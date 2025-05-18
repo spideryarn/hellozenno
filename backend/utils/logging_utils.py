@@ -4,9 +4,8 @@ import logging
 from loguru import logger
 import os
 import sys
-from typing import Optional
 
-from utils.env_config import is_vercel
+from utils.env_config import LOGS_DIR as logs_dir
 
 
 class LimitingFileWriter:
@@ -89,8 +88,8 @@ class InterceptHandler(logging.Handler):
 def setup_logging(
     log_to_file: bool = True,
     max_lines: int = 100,
-    logs_dir: Optional[str] = None,
-    for_cloud: bool = False,
+    # logs_dir: Optional[str] = None,
+    # for_cloud: bool = False,
 ):
     """Configure logging for the application.
 
@@ -111,15 +110,7 @@ def setup_logging(
 
     # Add file logging if requested
     if log_to_file:
-        if is_vercel():
-            # In Vercel, only /tmp is writable
-            logs_dir = "/tmp"
-        elif logs_dir is None:
-            # Default to a logs directory in the application root
-            logs_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
-            )
-
+        assert logs_dir is not None, "LOGS_DIR is not set by .env.*"
         os.makedirs(logs_dir, exist_ok=True)
         log_file_path = os.path.join(logs_dir, "backend.log")
 
