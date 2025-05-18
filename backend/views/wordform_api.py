@@ -8,6 +8,7 @@ These endpoints follow the standard pattern:
 from flask import Blueprint, jsonify, send_file, abort, request
 from peewee import DoesNotExist
 import urllib.parse
+from loguru import logger
 
 from db_models import Wordform
 from utils.word_utils import get_word_preview, get_wordform_metadata
@@ -86,49 +87,72 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
     when a new wordform is being created.
     """
     # URL decode the wordform parameter to handle non-Latin characters properly
-    wordform = urllib.parse.unquote(wordform)
+    decoded_wordform = urllib.parse.unquote(wordform)
+    logger.info(
+        f"[Flask API] Received request for wordform: '{decoded_wordform}' (raw: '{wordform}'), lang: '{target_language_code}'"
+    )
 
     # Use the shared utility function to find or create the wordform
     from utils.word_utils import find_or_create_wordform
-    from loguru import logger
 
     logger.info(
         f"API request for wordform '{wordform}' in language '{target_language_code}'"
     )
     try:
-        result = find_or_create_wordform(target_language_code, wordform)
-        logger.info(f"Wordform processing complete with status: {result['status']}")
+        result = find_or_create_wordform(target_language_code, decoded_wordform)
+        logger.info(
+            f"[Flask API] find_or_create_wordform for '{decoded_wordform}' returned status: {result.get('status')}. Full result: {result}"
+        )
 
         # Handle different status responses
-        if result["status"] == "found":
-            # For both existing and newly created wordforms
-            return jsonify(result)
-        elif result["status"] == "multiple_matches":
-            # For multiple potential matches
-            return jsonify(result)
-        elif result["status"] == "redirect":
-            # Only used as a fallback now
-            return jsonify(result)
-        else:  # invalid
-            # For invalid wordforms
-            # For invalid, the 'data' part contains the error details
-            response = jsonify(result)
-            response.status_code = 404
-            return response
+        response_json = jsonify(result)
+        status_code = 200
 
-    except AuthenticationRequiredForGenerationError:
-        # Handle the case where generation requires login
+        if result.get("status") == "found":
+            logger.info(
+                f"[Flask API] Status 'found' for '{decoded_wordform}'. Sending {status_code}."
+            )
+        elif result.get("status") == "multiple_matches":
+            logger.info(
+                f"[Flask API] Status 'multiple_matches' for '{decoded_wordform}'. Sending {status_code}."
+            )
+        elif result.get("status") == "redirect":
+            logger.info(
+                f"[Flask API] Status 'redirect' for '{decoded_wordform}'. Sending {status_code}."
+            )
+        elif result.get("status") == "invalid":
+            status_code = 404
+            logger.info(
+                f"[Flask API] Status 'invalid' for '{decoded_wordform}'. Sending {status_code}."
+            )
+        else:
+            logger.warning(
+                f"[Flask API] Unknown status '{result.get('status')}' for '{decoded_wordform}'. Sending {status_code} by default. Result: {result}"
+            )
+
+        response_json.status_code = status_code
+        logger.debug(
+            f"[Flask API] About to send response for '{decoded_wordform}'. Status: {status_code}, Payload: {result}"
+        )
+        return response_json
+
+    except AuthenticationRequiredForGenerationError as e:
+        logger.warning(
+            f"[Flask API] AuthenticationRequiredForGenerationError for '{decoded_wordform}': {e}"
+        )
         error_data = {
             "error": "Authentication Required",
             "description": "Authentication required to search for or generate wordform details",
             "target_language_code": target_language_code,
             "target_language_name": get_language_name(target_language_code),
             "authentication_required_for_generation": True,  # Add a flag for frontend
-            "wordform": wordform,  # Include the original wordform searched
+            "wordform": decoded_wordform,  # Include the original wordform searched
         }
         return jsonify(error_data), 401
     except Exception as e:
-        logger.exception(f"Error getting wordform metadata for '{wordform}': {e}")
+        logger.exception(
+            f"[Flask API] Unhandled exception for '{decoded_wordform}': {e}"
+        )
         return (
             jsonify({"error": "Failed to process wordform", "description": str(e)}),
             500,

@@ -244,25 +244,49 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
     from peewee import DoesNotExist
     from loguru import logger
 
+    logger.info(
+        f"[find_or_create_wordform] Processing '{wordform}' for lang '{target_language_code}'."
+    )
     # Ensure wordform is properly handled
-    wordform = ensure_nfc(wordform)
+    normalized_wordform = ensure_nfc(wordform)
+    logger.info(
+        f"[find_or_create_wordform] Normalized '{wordform}' to '{normalized_wordform}'."
+    )
 
     try:
         # Try to find existing wordform in database
-        result = get_wordform_metadata(target_language_code, wordform)
+        logger.info(
+            f"[find_or_create_wordform] Attempting get_wordform_metadata for '{normalized_wordform}'."
+        )
+        result = get_wordform_metadata(target_language_code, normalized_wordform)
+        logger.info(
+            f"[find_or_create_wordform] Found existing metadata for '{normalized_wordform}'. Result: {result}"
+        )
         return {"status": "found", "data": result}
     except DoesNotExist:
+        logger.warning(
+            f"[find_or_create_wordform] '{normalized_wordform}' not found in DB. Proceeding to generation/search."
+        )
         # Wordform not found. Generation/AI search is needed.
         # Check if user is logged in.
         if not hasattr(g, "user") or g.user is None:
-            logger.warning(f"Auth required for wordform generation: '{wordform}'")
+            logger.warning(
+                f"Auth required for wordform generation: '{normalized_wordform}'"
+            )
             raise AuthenticationRequiredForGenerationError(
                 "Authentication required to search for or generate wordform details."
             )
 
         # User is logged in, proceed with AI search/generation
-        logger.info(f"Wordform '{wordform}' not found, generating with AI...")
-        search_result, _ = quick_search_for_wordform(wordform, target_language_code, 1)
+        logger.info(
+            f"[find_or_create_wordform] User logged in. Calling quick_search_for_wordform for '{normalized_wordform}'."
+        )
+        search_result, _ = quick_search_for_wordform(
+            normalized_wordform, target_language_code, 1
+        )
+        logger.info(
+            f"[find_or_create_wordform] quick_search_for_wordform for '{normalized_wordform}' returned: {search_result}"
+        )
 
         # Count total matches from both result types
         target_matches = search_result["target_language_results"]["matches"]
@@ -277,13 +301,15 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
 
         # If there are multiple matches or misspellings, return search results
         if total_matches > 1 or target_misspellings or english_misspellings:
-            logger.info(f"Multiple matches or misspellings found for '{wordform}'")
+            logger.info(
+                f"[find_or_create_wordform] Multiple matches or misspellings for '{normalized_wordform}'. Returning 'multiple_matches'."
+            )
             return {
                 "status": "multiple_matches",
                 "data": {
                     "target_language_code": target_language_code,
                     "target_language_name": get_language_name(target_language_code),
-                    "search_term": wordform,
+                    "search_term": normalized_wordform,
                     "target_language_results": search_result["target_language_results"],
                     "english_results": search_result["english_results"],
                 },
@@ -296,7 +322,9 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
             match_wordform = match.get("target_language_wordform")
 
             if match_wordform:
-                logger.info(f"Creating wordform '{match_wordform}' in database")
+                logger.info(
+                    f"[find_or_create_wordform] Single match found: '{match_wordform}'. Attempting to create in DB."
+                )
                 # Convert from new response format to metadata format
                 metadata = {
                     "wordform": match_wordform,
@@ -317,28 +345,44 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
                 # Now that the wordform is created, fetch the complete metadata
                 try:
                     # Directly return the complete data instead of redirecting
+                    logger.info(
+                        f"[find_or_create_wordform] Wordform '{match_wordform}' created/found. Fetching its full metadata."
+                    )
                     result = get_wordform_metadata(target_language_code, match_wordform)
-                    logger.info(f"Wordform '{match_wordform}' created successfully")
+                    logger.info(
+                        f"[find_or_create_wordform] Successfully fetched metadata for new/matched wordform '{match_wordform}'. Result: {result}"
+                    )
                     return {"status": "found", "data": result}
                 except Exception as e:
-                    logger.exception(
-                        f"Critical: Wordform '{match_wordform}' (lang: {target_language_code}) was created/found, but subsequent metadata retrieval failed."
+                    logger.error(
+                        f"[find_or_create_wordform] Error after creating/matching wordform '{match_wordform}': {e}. Returning 'redirect'."
                     )
-                    # Re-raise the exception to be caught by the view's error handler,
-                    # which should result in a 500 error. This is more aligned with
-                    # "Raise errors early, clearly & fatally".
-                    raise
+                    # Fallback to redirect if there's an error getting the complete data
+                    return {
+                        "status": "redirect",
+                        "data": {
+                            "error": "Internal Server Error",
+                            "description": "Error fetching wordform metadata",
+                            "target_language_code": target_language_code,
+                            "target_language_name": get_language_name(
+                                target_language_code
+                            ),
+                            "wordform": match_wordform,
+                        },
+                    }
 
         # If no matches or misspellings, return invalid word data
-        logger.info(f"No valid matches found for '{wordform}'")
+        logger.info(
+            f"[find_or_create_wordform] No valid matches found for '{normalized_wordform}'. Returning 'invalid'."
+        )
         return {
             "status": "invalid",
             "data": {
                 "error": "Not Found",
-                "description": f"Wordform '{wordform}' not found",
+                "description": f"Wordform '{normalized_wordform}' not found",
                 "target_language_code": target_language_code,
                 "target_language_name": get_language_name(target_language_code),
-                "wordform": wordform,
+                "wordform": normalized_wordform,
                 "possible_misspellings": target_misspellings,
             },
         }

@@ -7,6 +7,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     let { target_language_code, wordform } = params; // Make wordform mutable
     const { supabase, session } = locals;
 
+    console.log(
+        `[Wordform Page Server] Initiating load for wordform: "${wordform}", lang: "${target_language_code}"`
+    );
+
     // Ensure wordform is in NFC for consistent handling
     if (wordform) {
         wordform = wordform.normalize('NFC');
@@ -37,28 +41,36 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     try {
         // Use our enhanced search function to handle various result types
-
+        
         // Set a reasonable timeout for server-side rendering
         // This is important since we now wait for wordform generation to complete
-        const data = await getWordformWithSearch(
-            null,
+        console.log(
+            `[Wordform Page Server] Calling getWordformWithSearch for wordform: "${wordform}"`
+        );
+        const apiResult = await getWordformWithSearch(
+            supabase, // Pass supabase client
             target_language_code,
             wordform, // Use the potentially corrected wordform
             session?.access_token ?? null,
         );
 
+        console.log(
+            `[Wordform Page Server] Raw apiResult from getWordformWithSearch for "${wordform}":`,
+            JSON.stringify(apiResult, null, 2)
+        );
+
         // Handle different response types based on status
-        if (data.status === "found") {
+        if (apiResult && apiResult.status === "found") {
             // Direct wordform match found - return the data as is
             // This now includes newly generated wordforms too
-            console.log(`Wordform found: ${wordform}`);
+            console.log(`[Wordform Page Server] Wordform found: ${wordform}. Returning data.`);
             return {
-                wordformData: data.data,
+                wordformData: apiResult.data,
             };
-        } else if (data.status === "multiple_matches") {
+        } else if (apiResult && apiResult.status === "multiple_matches") {
             // Multiple matches found - redirect to search results page
             console.log(
-                `Multiple matches found for: ${wordform}, redirecting to search`,
+                `[Wordform Page Server] Multiple matches for: ${wordform}, redirecting to search.`
             );
             throw redirect(
                 302,
@@ -66,19 +78,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
                     encodeURIComponent(wordform)
                 }`,
             );
-        } else if (data.status === "redirect") {
+        } else if (apiResult && apiResult.status === "redirect") {
             // Should redirect to another wordform
             // This is now only used as a fallback
-            console.log(`Redirecting to: ${data.redirect_to}`);
+            console.log(`[Wordform Page Server] Redirecting to: ${apiResult.data.redirect_to}`);
             throw redirect(
                 302,
                 `/language/${target_language_code}/wordform/${
-                    encodeURIComponent(data.redirect_to)
+                    encodeURIComponent(apiResult.data.redirect_to)
                 }`,
             );
-        } else if (data.status === "invalid") {
+        } else if (apiResult && apiResult.status === "invalid") {
             // Invalid word - redirect to search to show the error
-            console.log(`Invalid word: ${wordform}, redirecting to search`);
+            console.log(`[Wordform Page Server] Invalid word: ${wordform}, redirecting to search.`);
             throw redirect(
                 302,
                 `/language/${target_language_code}/search/${
@@ -86,13 +98,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
                 }`,
             );
         } else {
-            // For older API responses that don't have a status field
-            // console.log(`No status field, using data as is:`, data);
+            // For older API responses that don't have a status field,
+            // or if apiResult is {}, which means apiFetch returned an empty object.
+            console.warn(
+                `[Wordform Page Server] Unexpected apiResult structure or empty object for "${wordform}". apiResult:`,
+                JSON.stringify(apiResult, null, 2)
+            );
             return {
-                wordformData: data,
+                wordformData: apiResult, // This will be {} if apiFetch returned an empty object
             };
         }
     } catch (err: any) {
+        console.error(
+            `[Wordform Page Server] Error during load for wordform "${wordform}":`,
+            err
+        );
         // Check if err is a SvelteKit redirect object (thrown by `redirect()`)
         // SvelteKit's redirect throws an error-like object with status and location
         if (err && typeof err.status === 'number' && typeof err.location === 'string') {
@@ -103,10 +123,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         // Keep existing check for native Response objects (though less likely here now)
         if (err instanceof Response && err.status === 302) {
             // This is our redirect, pass it through
+            console.log(`[Wordform Page Server] Propagating redirect for "${wordform}".`);
             throw err;
         }
 
-        console.error("Error loading wordform:", err);
+        console.error(
+            `[Wordform Page Server] Unhandled error for "${wordform}". Status: ${err?.status}, Message: ${err?.message}, Body: ${JSON.stringify(err?.body)}`
+        );
 
         // Check for the 401 Authentication Required error specifically
         // The error thrown by apiFetch should be an object with status and body
@@ -139,7 +162,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             // If we time out during wordform generation, still return a loading state
             // The client-side JS will retry fetching the data
             console.log(
-                "Request timed out, returning empty wordform data for client-side handling",
+                `[Wordform Page Server] Request timed out for "${wordform}", returning null wordformData.`
             );
             return {
                 wordformData: null,
@@ -148,6 +171,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
         // If it's a 404, redirect to search page to show not found
         if (err instanceof Error && err.message.includes("404")) {
+            console.log(
+                `[Wordform Page Server] Received 404 for "${wordform}", redirecting to search.`
+            );
             throw redirect(
                 302,
                 `/language/${target_language_code}/search/${
@@ -156,6 +182,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             );
         }
 
+        console.error(
+            `[Wordform Page Server] Throwing 500 error for "${wordform}". Original error: ${err?.message || err}`
+        );
         throw error(
             500,
             `Failed to load wordform: ${

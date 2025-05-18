@@ -55,6 +55,7 @@ export async function apiFetch<T extends RouteName, R = any>({
     timeoutMs?: number;
 }): Promise<R> {
     const url = getApiUrl(routeName, params);
+    console.log(`[apiFetch] Requesting URL: ${url}`);
     
     // Use the passed supabaseClient. It might be null or undefined.
     const headers = new Headers(options.headers);
@@ -103,11 +104,23 @@ export async function apiFetch<T extends RouteName, R = any>({
     const fetchPromise = fetch(url, fetchOptions);
     
     const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('API request timed out')), timeoutMs);
+        setTimeout(() => {
+            console.warn(`[apiFetch] Request to ${url} timed out after ${timeoutMs}ms.`);
+            reject(new Error('API request timed out'));
+        }, timeoutMs);
     });
     
     // Race the fetch against the timeout
-    const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+    let response: Response;
+    try {
+        response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+    } catch (e) {
+        console.error(`[apiFetch] Error during fetch for ${url}:`, e);
+        throw e; // Re-throw timeout or other race error
+    }
+
+    console.log(`[apiFetch] Response status for ${url}: ${response.status}`);
+    console.log(`[apiFetch] Response headers for ${url}:`, JSON.stringify(Object.fromEntries(response.headers.entries())));
 
     if (!response.ok) {
         let errorData: any = {};
@@ -131,13 +144,25 @@ export async function apiFetch<T extends RouteName, R = any>({
     
     // Check if response has content before trying to parse as JSON
     const contentLength = response.headers.get('content-length');
-    const hasEmptyBody = contentLength === '0' || contentLength === null;
-    
+    const contentType = response.headers.get('content-type');
+    const hasEmptyBody = contentLength === '0' || (contentLength === null && !contentType?.includes('json'));
+
+    console.log(`[apiFetch] Response for ${url} - Content-Length: ${contentLength}, Content-Type: ${contentType}, HasEmptyBody: ${hasEmptyBody}`);
+
     if (hasEmptyBody) {
+        console.warn(`[apiFetch] Returning empty object for ${url} due to empty body.`);
         return {} as R; // Return empty object for empty responses
     }
     
-    return response.json();
+    try {
+        const jsonData = await response.json();
+        console.log(`[apiFetch] Returning JSON data for ${url}.`);
+        return jsonData;
+    } catch (jsonError) {
+        console.error(`[apiFetch] Error parsing JSON for ${url}:`, jsonError);
+        console.warn(`[apiFetch] Returning empty object for ${url} due to JSON parsing error.`);
+        return {} as R; // Fallback for JSON parsing errors as well
+    }
 }
 
 /**
