@@ -38,6 +38,46 @@ This document outlines the authentication flow implemented in the SvelteKit fron
 4.  **Authenticated API Calls (`src/lib/api.ts`):**
     - The central `apiFetch` helper function accepts an optional `supabaseClient` argument.
     - **Crucially:** It uses the *passed* client instance (`locals.supabase` from server `load`, `data.supabase` from client `load` or components) to retrieve the current session token.
+    - For example, when performing an authenticated action triggered by user interaction within a Svelte page or component (e.g., clicking a delete button):
+      ```typescript
+      // In a +page.svelte or component script
+      // Assumes PageData (or the component's props) includes supabase and session 
+      // passed down from a load function (typically the root +layout.ts).
+      export let data: { supabase: SupabaseClient, session: Session | null /*, ...other props */ };
+
+      // Destructure supabase client and session from the data prop
+      $: ({ supabase, session } = data);
+
+      async function handleDeleteItem(itemId: string) {
+        if (!session) {
+          alert('You must be logged in to perform this action.');
+          return;
+        }
+        // It's also good practice to check if the supabase client itself is available,
+        // though it should always be if the layout structure is correct.
+        if (!supabase) {
+          alert('Authentication context not available. Please try refreshing.');
+          return;
+        }
+
+        try {
+          await apiFetch({
+            supabaseClient: supabase, // Pass the client instance
+            routeName: RouteName.SOME_PROTECTED_DELETE_API, // Replace with actual route
+            params: { id: itemId }, // Replace with actual params
+            options: { method: 'POST' } // Or 'DELETE', etc., as appropriate
+          });
+          // Handle success (e.g., refresh data, navigate, show a notification)
+          console.log('Item deleted successfully');
+          // Example: window.location.reload(); or invalidate('app:data');
+        } catch (error: any) {
+          // Handle error (e.g., show an error message to the user)
+          console.error('Failed to delete item:', error);
+          alert(`Error: ${error.message || 'Unknown error'}`);
+        }
+      }
+      ```
+      This ensures that `apiFetch` can access the current user's session token via the provided `supabaseClient`.
     - It automatically adds the `Authorization: Bearer <token>` header to outgoing API requests if a session token exists.
     - Helper functions wrapping `apiFetch` (e.g., `getLemmaMetadata`, `getWordformWithSearch`, `unifiedSearch`) also accept the `supabaseClient` instance and pass it down.
     - Error handling includes special cases for 401 responses with authentication-related flags.

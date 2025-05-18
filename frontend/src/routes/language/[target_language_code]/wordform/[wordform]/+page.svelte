@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';  
   import { Card, MetadataCard, LemmaDetails } from '$lib';
-  import { getApiUrl } from '$lib/api';
+  import { apiFetch } from '$lib/api'; // Import apiFetch
   import { RouteName } from '$lib/generated/routes';
   import { SITE_NAME } from '$lib/config';
   import { truncate, generateMetaDescription } from '$lib/utils';
@@ -45,17 +45,23 @@
     ? (wordformData.metadata ?? wordformData.wordform_metadata) // If metadata is distinct, check it, else default to wordform_metadata
     : null;
   
-  // Generate API URL for delete action only if we have valid data
-  $: deleteUrl = isValidData ? getApiUrl(RouteName.WORDFORM_API_DELETE_WORDFORM_API, {
-    target_language_code: target_language_code,
-    wordform: wordform_metadata.wordform
-  }) : '';
-  
   async function handleDeleteSubmit(event: SubmitEvent) {
-    // Always prevent the default browser form submission so we can handle the
-    // redirect ourselves (otherwise the browser will follow the 302 to the API
-    // domain, which is not what we want).
     event.preventDefault();
+
+    if (!supabase) {
+      console.error('Supabase client is not available for delete operation.');
+      alert('Authentication context not available. Please try refreshing the page.');
+      return;
+    }
+    if (!session) {
+      alert('You must be logged in to delete this wordform. Please refresh and log in.');
+      return;
+    }
+
+    if (!wordform_metadata?.wordform) {
+      alert('Cannot delete wordform: wordform data is missing.');
+      return;
+    }
 
     const confirmed = confirm('Are you sure you want to delete this wordform? This action cannot be undone.');
     if (!confirmed) {
@@ -63,23 +69,22 @@
     }
 
     try {
-      const res = await fetch(deleteUrl, {
-        method: 'POST',
-        credentials: 'include'
+      await apiFetch({
+        supabaseClient: supabase, // Use the supabase client from data prop
+        routeName: RouteName.WORDFORM_API_DELETE_WORDFORM_API,
+        params: {
+          target_language_code: target_language_code,
+          wordform: wordform_metadata.wordform
+        },
+        options: { method: 'POST' }
       });
 
-      if (!res.ok && res.status !== 302 && res.status !== 204) {
-        console.error('Failed to delete wordform:', res.status, await res.text());
-        alert('Failed to delete wordform.');
-        return;
-      }
-
-      // After successful deletion, navigate to the lemmas list page (handled by the
-      // Svelte frontend and therefore on the correct domain).
-      goto(`/language/${target_language_code}/lemmas`);
-    } catch (err) {
+      // After successful deletion, navigate to the lemmas list page
+      // (or wordforms list page, lemmas might be more appropriate if wordform belongs to one)
+      goto(`/language/${target_language_code}/wordforms`);
+    } catch (err: any) {
       console.error('Error deleting wordform:', err);
-      alert('An error occurred while deleting the wordform.');
+      alert(`An error occurred while deleting the wordform: ${err.message || 'Unknown error'}`);
     }
   }
 </script>
@@ -149,7 +154,7 @@
 
     <div class="row mb-4">
       <div class="col">
-        <form action={deleteUrl} method="POST" 
+        <form method="POST" 
               on:submit={handleDeleteSubmit}>
           <button type="submit" class="btn btn-sm btn-danger">Delete wordform</button>
         </form>
