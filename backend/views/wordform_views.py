@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request
 from gjdutils.dicts import dict_as_html
-from peewee import DoesNotExist
 import urllib.parse
 
 from utils.lang_utils import get_language_name
@@ -109,25 +108,3 @@ def get_wordform_metadata_vw(target_language_code: str, wordform: str):
             possible_misspellings=data["possible_misspellings"],
             metadata=None,
         )
-
-
-@wordform_views_bp.route(
-    "/<target_language_code>/wordform/<wordform>/delete", methods=["POST"]
-)
-def delete_wordform_vw(target_language_code: str, wordform: str):
-    """Delete a wordform from the database."""
-    # URL decode the wordform parameter to handle non-Latin characters properly
-    # Defense in depth: decode explicitly here, in addition to middleware
-    wordform = urllib.parse.unquote(wordform)
-
-    try:
-        wordform_model = Wordform.get(
-            Wordform.wordform == wordform,
-            Wordform.target_language_code == target_language_code,
-        )
-        wordform_model.delete_instance()
-        # Return 204 No Content on successful deletion
-        return "", 204
-    except DoesNotExist:
-        # Also return 204 if it doesn't exist, as the resource is effectively gone
-        return "", 204

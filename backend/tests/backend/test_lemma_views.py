@@ -2,6 +2,7 @@ import pytest
 from peewee import DoesNotExist
 from peewee import fn
 
+from backend.views.lemma_api import delete_lemma_api
 from db_models import (
     Lemma,
     Wordform,
@@ -13,7 +14,7 @@ from tests.fixtures_for_tests import TEST_TARGET_LANGUAGE_CODE, SAMPLE_LEMMA_DAT
 from utils.store_utils import load_or_generate_lemma_metadata
 from tests.backend.utils_for_testing import build_url_with_query
 from views.wordform_views import wordforms_list_vw
-from views.lemma_views import lemmas_list_vw, get_lemma_metadata_vw, delete_lemma_vw
+from views.lemma_views import lemmas_list_vw, get_lemma_metadata_vw
 
 
 def test_lemmas_list_basic(client, fixture_for_testing_db):
@@ -229,7 +230,7 @@ def test_delete_lemma(client, fixture_for_testing_db):
         # Use build_url_with_query instead of hardcoded URL
         delete_url = build_url_with_query(
             client,
-            delete_lemma_vw,
+            delete_lemma_api,
             target_language_code=TEST_TARGET_LANGUAGE_CODE,
             lemma="test_delete",
         )
@@ -264,7 +265,7 @@ def test_delete_nonexistent_lemma(client):
     # Use build_url_with_query instead of hardcoded URL
     delete_url = build_url_with_query(
         client,
-        delete_lemma_vw,
+        delete_lemma_api,
         target_language_code=TEST_TARGET_LANGUAGE_CODE,
         lemma="nonexistent",
     )

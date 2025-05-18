@@ -143,7 +143,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             languages_list_vw=languages_list_vw,
             sourcedirs_for_language_vw=sourcedirs_for_language_vw,
             lemmas_list_vw=lemmas_list_vw,
-            delete_lemma_vw=delete_lemma_vw,
+            delete_lemma_vw=delete_lemma_api,
             get_sentence_vw=get_sentence_vw,
             get_wordform_metadata_vw=get_wordform_metadata_vw,
             search_word_vw=search_word_vw,
@@ -161,24 +161,3 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
             lemmas_list_vw=lemmas_list_vw,
             search_landing_vw=search_landing_vw,
         )
-
-
-@lemma_views_bp.route("/<target_language_code>/lemma/<lemma>/delete", methods=["POST"])
-def delete_lemma_vw(target_language_code: str, lemma: str):
-    """Delete a lemma and its associated wordforms via cascade delete."""
-    # URL decode the lemma parameter to handle non-Latin characters properly
-    # Defense in depth: decode explicitly here, in addition to middleware
-    lemma = urllib.parse.unquote(lemma)
-
-    try:
-        lemma_model = Lemma.get(
-            Lemma.lemma == lemma,
-            Lemma.target_language_code == target_language_code,
-        )
-        # Simply delete the lemma - wordforms will be deleted by cascade
-        lemma_model.delete_instance()
-        # Return 204 No Content on successful deletion
-        return "", 204
-    except DoesNotExist:
-        # Also return 204 if it doesn't exist, as the resource is effectively gone
-        return "", 204

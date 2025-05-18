@@ -244,7 +244,7 @@ def ignore_lemma_api(target_language_code: str, lemma: str):
                 "success": True,
                 "message": f"Lemma '{lemma}' ignored successfully",
                 "ignored_dt": (
-                    user_lemma.ignored_dt.isoformat() if user_lemma.ignored_dt else None
+                    user_lemma.ignored_dt.isoformat() if user_lemma.ignored_dt else None  # type: ignore
                 ),
             }
         )
@@ -359,3 +359,24 @@ def get_ignored_lemmas_api(target_language_code: str):
         )
         response.status_code = 500
         return response
+
+
+@lemma_api_bp.route("/<target_language_code>/lemma/<lemma>/delete", methods=["POST"])
+def delete_lemma_api(target_language_code: str, lemma: str):
+    """Delete a lemma and its associated wordforms via cascade delete."""
+    # URL decode the lemma parameter to handle non-Latin characters properly
+    # Defense in depth: decode explicitly here, in addition to middleware
+    lemma = urllib.parse.unquote(lemma)
+
+    try:
+        lemma_model = Lemma.get(
+            Lemma.lemma == lemma,
+            Lemma.target_language_code == target_language_code,
+        )
+        # Simply delete the lemma - wordforms will be deleted by cascade
+        lemma_model.delete_instance()
+        # Return 204 No Content on successful deletion
+        return "", 204
+    except DoesNotExist:
+        # Also return 204 if it doesn't exist, as the resource is effectively gone
+        return "", 204

@@ -1,4 +1,5 @@
 import pytest
+from backend.views.wordform_api import delete_wordform_api
 from tests.fixtures_for_tests import (
     SAMPLE_PHRASE_DATA,
     TEST_TARGET_LANGUAGE_CODE,
@@ -22,7 +23,6 @@ from views.lemma_views import lemmas_list_vw, get_lemma_metadata_vw
 from views.wordform_views import (
     wordforms_list_vw,
     get_wordform_metadata_vw,
-    delete_wordform_vw,
 )
 from views.phrase_views import phrases_list_vw, get_phrase_metadata_vw
 from views.sourcedir_views import (
@@ -183,7 +183,7 @@ def test_delete_wordform_view(mock_search, client, fixture_for_testing_db):
 
     url = build_url_with_query(
         client,
-        delete_wordform_vw,
+        delete_wordform_api,
         target_language_code="el",
         wordform=wordform.wordform,
     )

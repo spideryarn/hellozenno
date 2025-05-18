@@ -11,7 +11,7 @@ import urllib.parse
 from loguru import logger
 
 from db_models import Wordform
-from utils.word_utils import get_word_preview, get_wordform_metadata
+from utils.word_utils import get_word_preview
 from utils.lang_utils import get_language_name
 
 # Import auth decorator
@@ -157,3 +157,25 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
             jsonify({"error": "Failed to process wordform", "description": str(e)}),
             500,
         )
+
+
+@wordform_api_bp.route(
+    "/<target_language_code>/wordform/<wordform>/delete", methods=["POST"]
+)
+def delete_wordform_api(target_language_code: str, wordform: str):
+    """Delete a wordform from the database."""
+    # URL decode the wordform parameter to handle non-Latin characters properly
+    # Defense in depth: decode explicitly here, in addition to middleware
+    wordform = urllib.parse.unquote(wordform)
+
+    try:
+        wordform_model = Wordform.get(
+            Wordform.wordform == wordform,
+            Wordform.target_language_code == target_language_code,
+        )
+        wordform_model.delete_instance()
+        # Return 204 No Content on successful deletion
+        return "", 204
+    except DoesNotExist:
+        # Also return 204 if it doesn't exist, as the resource is effectively gone
+        return "", 204

@@ -46,8 +46,8 @@
     : null;
   
   // Generate API URL for delete action only if we have valid data
-  $: deleteUrl = isValidData ? getApiUrl(RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW, {
-    target_language_code,
+  $: deleteUrl = isValidData ? getApiUrl(RouteName.WORDFORM_API_DELETE_WORDFORM_API, {
+    target_language_code: target_language_code,
     wordform: wordform_metadata.wordform
   }) : '';
   

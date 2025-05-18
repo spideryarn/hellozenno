@@ -27,9 +27,9 @@
 
   // Generate API URL for delete action (only if lemma exists properly)
   // Use lemma_metadata.lemma which should be populated if the request was successful
-  const deleteUrl: string | undefined = lemma_metadata?.lemma ? getApiUrl(RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW, {
-    target_language_code,
-    lemma: lemma_metadata.lemma
+  const deleteUrl: string | undefined = lemma_metadata?.lemma ? getApiUrl(RouteName.LEMMA_API_DELETE_LEMMA_API, {
+    target_language_code: target_language_code,
+    lemma: lemma_metadata.lemma.lemma
   }) : undefined;
   
   async function handleDeleteSubmit(event: SubmitEvent) {

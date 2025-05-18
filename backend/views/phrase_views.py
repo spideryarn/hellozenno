@@ -51,21 +51,3 @@ def get_phrase_metadata_vw(target_language_code: str, slug: str):
         phrase=phrase,
         metadata=metadata,  # Add metadata to template context
     )
-
-
-@phrase_views_bp.route(
-    "/<target_language_code>/phrases/<slug>/delete", methods=["POST"]
-)
-def delete_phrase_vw(target_language_code, slug):
-    """Delete a specific phrase using its slug."""
-    try:
-        phrase = get_phrase_by_slug(target_language_code, slug)
-        # phrase_text = phrase.canonical_form # Not needed if not flashing
-        phrase.delete_instance()
-        # flash(f"Phrase '{phrase_text}' has been deleted.", "success") # Flashing is for Jinja templates
-    except DoesNotExist:
-        # If it doesn't exist, it's already gone. Client can treat as success.
-        pass  # Fall through to return 204
-
-    # Return 204 No Content for successful deletion or if already deleted
-    return "", 204

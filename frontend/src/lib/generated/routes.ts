@@ -8,10 +8,8 @@ export enum RouteName {
   LANGUAGES_VIEWS_LANGUAGES_LIST_VW = "LANGUAGES_VIEWS_LANGUAGES_LIST_VW",
   WORDFORM_VIEWS_WORDFORMS_LIST_VW = "WORDFORM_VIEWS_WORDFORMS_LIST_VW",
   WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW = "WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW",
-  WORDFORM_VIEWS_DELETE_WORDFORM_VW = "WORDFORM_VIEWS_DELETE_WORDFORM_VW",
   LEMMA_VIEWS_LEMMAS_LIST_VW = "LEMMA_VIEWS_LEMMAS_LIST_VW",
   LEMMA_VIEWS_GET_LEMMA_METADATA_VW = "LEMMA_VIEWS_GET_LEMMA_METADATA_VW",
-  LEMMA_VIEWS_DELETE_LEMMA_VW = "LEMMA_VIEWS_DELETE_LEMMA_VW",
   SOURCEDIR_VIEWS_SOURCEDIRS_FOR_LANGUAGE_VW = "SOURCEDIR_VIEWS_SOURCEDIRS_FOR_LANGUAGE_VW",
   SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW = "SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW",
   SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW = "SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW",
@@ -27,7 +25,6 @@ export enum RouteName {
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW = "SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW",
   PHRASE_VIEWS_PHRASES_LIST_VW = "PHRASE_VIEWS_PHRASES_LIST_VW",
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW = "PHRASE_VIEWS_GET_PHRASE_METADATA_VW",
-  PHRASE_VIEWS_DELETE_PHRASE_VW = "PHRASE_VIEWS_DELETE_PHRASE_VW",
   SENTENCE_VIEWS_SENTENCES_LIST_VW = "SENTENCE_VIEWS_SENTENCES_LIST_VW",
   SENTENCE_VIEWS_GET_SENTENCE_VW = "SENTENCE_VIEWS_GET_SENTENCE_VW",
   SEARCH_VIEWS_SEARCH_LANDING_VW = "SEARCH_VIEWS_SEARCH_LANDING_VW",
@@ -47,6 +44,7 @@ export enum RouteName {
   WORDFORM_API_GET_MP3_API = "WORDFORM_API_GET_MP3_API",
   WORDFORM_API_WORDFORMS_LIST_API = "WORDFORM_API_WORDFORMS_LIST_API",
   WORDFORM_API_GET_WORDFORM_METADATA_API = "WORDFORM_API_GET_WORDFORM_METADATA_API",
+  WORDFORM_API_DELETE_WORDFORM_API = "WORDFORM_API_DELETE_WORDFORM_API",
   LEMMA_API_GET_LEMMA_DATA_API = "LEMMA_API_GET_LEMMA_DATA_API",
   LEMMA_API_LEMMAS_LIST_API = "LEMMA_API_LEMMAS_LIST_API",
   LEMMA_API_GET_LEMMA_METADATA_API = "LEMMA_API_GET_LEMMA_METADATA_API",
@@ -54,6 +52,7 @@ export enum RouteName {
   LEMMA_API_IGNORE_LEMMA_API = "LEMMA_API_IGNORE_LEMMA_API",
   LEMMA_API_UNIGNORE_LEMMA_API = "LEMMA_API_UNIGNORE_LEMMA_API",
   LEMMA_API_GET_IGNORED_LEMMAS_API = "LEMMA_API_GET_IGNORED_LEMMAS_API",
+  LEMMA_API_DELETE_LEMMA_API = "LEMMA_API_DELETE_LEMMA_API",
   PHRASE_API_PHRASES_LIST_API = "PHRASE_API_PHRASES_LIST_API",
   PHRASE_API_PHRASE_PREVIEW_API = "PHRASE_API_PHRASE_PREVIEW_API",
   PHRASE_API_GET_PHRASE_METADATA_API = "PHRASE_API_GET_PHRASE_METADATA_API",
@@ -111,10 +110,8 @@ export const ROUTES = {
   LANGUAGES_VIEWS_LANGUAGES_LIST_VW: "/languages",
   WORDFORM_VIEWS_WORDFORMS_LIST_VW: "/language/{target_language_code}/wordforms/",
   WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW: "/language/{target_language_code}/wordform/{wordform}",
-  WORDFORM_VIEWS_DELETE_WORDFORM_VW: "/language/{target_language_code}/wordform/{wordform}/delete",
   LEMMA_VIEWS_LEMMAS_LIST_VW: "/language/{target_language_code}/lemmas",
   LEMMA_VIEWS_GET_LEMMA_METADATA_VW: "/language/{target_language_code}/lemma/{lemma}",
-  LEMMA_VIEWS_DELETE_LEMMA_VW: "/language/{target_language_code}/lemma/{lemma}/delete",
   SOURCEDIR_VIEWS_SOURCEDIRS_FOR_LANGUAGE_VW: "/language/{target_language_code}/sources",
   SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW: "/language/{target_language_code}/source/{sourcedir_slug}",
   SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW: "/language/{target_language_code}/source/{sourcedir_slug}/{sourcefile_slug}",
@@ -130,7 +127,6 @@ export const ROUTES = {
   SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW: "/language/{target_language_code}/source/{sourcedir_slug}/{sourcefile_slug}/prev",
   PHRASE_VIEWS_PHRASES_LIST_VW: "/language/{target_language_code}/phrases",
   PHRASE_VIEWS_GET_PHRASE_METADATA_VW: "/language/{target_language_code}/phrase/{slug}",
-  PHRASE_VIEWS_DELETE_PHRASE_VW: "/language/{target_language_code}/phrases/{slug}/delete",
   SENTENCE_VIEWS_SENTENCES_LIST_VW: "/language/{target_language_code}/sentences",
   SENTENCE_VIEWS_GET_SENTENCE_VW: "/language/{target_language_code}/sentence/{slug}",
   SEARCH_VIEWS_SEARCH_LANDING_VW: "/language/{target_language_code}/search",
@@ -150,6 +146,7 @@ export const ROUTES = {
   WORDFORM_API_GET_MP3_API: "/api/lang/word/{target_language_code}/{word}/mp3",
   WORDFORM_API_WORDFORMS_LIST_API: "/api/lang/word/{target_language_code}/wordforms",
   WORDFORM_API_GET_WORDFORM_METADATA_API: "/api/lang/word/{target_language_code}/wordform/{wordform}",
+  WORDFORM_API_DELETE_WORDFORM_API: "/api/lang/word/{target_language_code}/wordform/{wordform}/delete",
   LEMMA_API_GET_LEMMA_DATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/data",
   LEMMA_API_LEMMAS_LIST_API: "/api/lang/lemma/{target_language_code}/lemmas",
   LEMMA_API_GET_LEMMA_METADATA_API: "/api/lang/lemma/{target_language_code}/lemma/{lemma}/metadata",
@@ -157,6 +154,7 @@ export const ROUTES = {
   LEMMA_API_IGNORE_LEMMA_API: "/api/lang/lemma/{target_language_code}/{lemma}/ignore",
   LEMMA_API_UNIGNORE_LEMMA_API: "/api/lang/lemma/{target_language_code}/{lemma}/unignore",
   LEMMA_API_GET_IGNORED_LEMMAS_API: "/api/lang/lemma/{target_language_code}/ignored",
+  LEMMA_API_DELETE_LEMMA_API: "/api/lang/lemma/{target_language_code}/lemma/{lemma}/delete",
   PHRASE_API_PHRASES_LIST_API: "/api/lang/phrase/{target_language_code}/phrases",
   PHRASE_API_PHRASE_PREVIEW_API: "/api/lang/phrase/{target_language_code}/preview/{phrase}",
   PHRASE_API_GET_PHRASE_METADATA_API: "/api/lang/phrase/{target_language_code}/detail/{slug}",
@@ -214,10 +212,8 @@ export type RouteParams = {
   [RouteName.LANGUAGES_VIEWS_LANGUAGES_LIST_VW]: {};
   [RouteName.WORDFORM_VIEWS_WORDFORMS_LIST_VW]: { target_language_code: string };
   [RouteName.WORDFORM_VIEWS_GET_WORDFORM_METADATA_VW]: { target_language_code: string; wordform: string };
-  [RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW]: { target_language_code: string; wordform: string };
   [RouteName.LEMMA_VIEWS_LEMMAS_LIST_VW]: { target_language_code: string };
   [RouteName.LEMMA_VIEWS_GET_LEMMA_METADATA_VW]: { target_language_code: string; lemma: string };
-  [RouteName.LEMMA_VIEWS_DELETE_LEMMA_VW]: { target_language_code: string; lemma: string };
   [RouteName.SOURCEDIR_VIEWS_SOURCEDIRS_FOR_LANGUAGE_VW]: { target_language_code: string };
   [RouteName.SOURCEDIR_VIEWS_SOURCEFILES_FOR_SOURCEDIR_VW]: { target_language_code: string; sourcedir_slug: string };
   [RouteName.SOURCEFILE_VIEWS_INSPECT_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
@@ -233,7 +229,6 @@ export type RouteParams = {
   [RouteName.SOURCEFILE_VIEWS_PREV_SOURCEFILE_VW]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.PHRASE_VIEWS_PHRASES_LIST_VW]: { target_language_code: string };
   [RouteName.PHRASE_VIEWS_GET_PHRASE_METADATA_VW]: { target_language_code: string; slug: string };
-  [RouteName.PHRASE_VIEWS_DELETE_PHRASE_VW]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_VIEWS_SENTENCES_LIST_VW]: { target_language_code: string };
   [RouteName.SENTENCE_VIEWS_GET_SENTENCE_VW]: { target_language_code: string; slug: string };
   [RouteName.SEARCH_VIEWS_SEARCH_LANDING_VW]: { target_language_code: string };
@@ -253,6 +248,7 @@ export type RouteParams = {
   [RouteName.WORDFORM_API_GET_MP3_API]: { target_language_code: string; word: string };
   [RouteName.WORDFORM_API_WORDFORMS_LIST_API]: { target_language_code: string };
   [RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API]: { target_language_code: string; wordform: string };
+  [RouteName.WORDFORM_API_DELETE_WORDFORM_API]: { target_language_code: string; wordform: string };
   [RouteName.LEMMA_API_GET_LEMMA_DATA_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_LEMMAS_LIST_API]: { target_language_code: string };
   [RouteName.LEMMA_API_GET_LEMMA_METADATA_API]: { target_language_code: string; lemma: string };
@@ -260,6 +256,7 @@ export type RouteParams = {
   [RouteName.LEMMA_API_IGNORE_LEMMA_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_UNIGNORE_LEMMA_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_GET_IGNORED_LEMMAS_API]: { target_language_code: string };
+  [RouteName.LEMMA_API_DELETE_LEMMA_API]: { target_language_code: string; lemma: string };
   [RouteName.PHRASE_API_PHRASES_LIST_API]: { target_language_code: string };
   [RouteName.PHRASE_API_PHRASE_PREVIEW_API]: { target_language_code: string; phrase: string };
   [RouteName.PHRASE_API_GET_PHRASE_METADATA_API]: { target_language_code: string; slug: string };

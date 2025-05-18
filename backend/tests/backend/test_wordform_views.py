@@ -3,6 +3,7 @@ from unittest.mock import patch
 from peewee import DoesNotExist
 from peewee import fn
 
+from backend.views.wordform_api import delete_wordform_api
 from db_models import Wordform
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
@@ -18,7 +19,6 @@ from views.sourcedir_views import sourcedirs_for_language_vw
 from views.wordform_views import (
     wordforms_list_vw,
     get_wordform_metadata_vw,
-    delete_wordform_vw,
 )
 
 
@@ -192,7 +192,7 @@ def test_delete_wordform(client, fixture_for_testing_db):
     # Delete the wordform
     delete_url = build_url_with_query(
         client,
-        delete_wordform_vw,
+        delete_wordform_api,
         target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform=wordform.wordform,
     )
@@ -217,7 +217,7 @@ def test_delete_nonexistent_wordform(client):
     """Test deleting a wordform that doesn't exist."""
     url = build_url_with_query(
         client,
-        delete_wordform_vw,
+        delete_wordform_api,
         target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="nonexistent",
     )
