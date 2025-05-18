@@ -889,11 +889,14 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
 
         # Fetch HTML content from URL
         try:
-            response = requests.get(url, timeout=15)  # 15 second timeout
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            response = requests.get(url, timeout=15, headers=headers)
             response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
             html_content = response.text
         except requests.exceptions.RequestException as e:
-            current_app.logger.error(f"Failed to fetch URL {url}: {str(e)}")
+            current_app.logger.error(f"Failed to fetch URL {url} with UA: {str(e)}")
             return jsonify({"error": f"Failed to fetch URL: {str(e)}"}), 400
         except Exception as e:
             current_app.logger.error(f"Unexpected error fetching URL {url}: {str(e)}")
@@ -919,6 +922,9 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
             )
             # Check if extracted text is meaningful
             if not extracted_text or extracted_text == "-":
+                current_app.logger.warning(
+                    f"LLM returned no meaningful text for {url}. Title: '{extracted_title}', Text: '{extracted_text}'"
+                )
                 return (
                     jsonify(
                         {"error": "Could not extract meaningful text from the URL."}
