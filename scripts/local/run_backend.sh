@@ -114,9 +114,6 @@ else
     export NODE_ENV=development
 fi
 
-# Add the parent directory to PYTHONPATH to ensure all imports work correctly
-export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/api
-
 # Ensure logs directory exists
 mkdir -p logs
 
