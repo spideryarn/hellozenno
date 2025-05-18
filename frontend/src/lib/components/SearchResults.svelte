@@ -48,18 +48,18 @@
 
 <div class="search-results">
   {#if results}
-    <h2>Search Results for "{results.search_term}"</h2>
+    <h2>Search Results for "{results.query}"</h2>
     
     {#if results.status === 'invalid'}
       <div class="card mb-4">
         <div class="card-body">
           <h5 class="card-title">No matches found</h5>
-          <p>No matches were found for "<span class="hz-foreign-text">{results.search_term}</span>" in {results.target_language_name}.</p>
+          <p>No matches were found for "<span class="hz-foreign-text">{results.query}</span>" in {results.target_language_name}.</p>
           
-          {#if results.possible_misspellings && results.possible_misspellings.length > 0}
+          {#if results.data?.possible_misspellings && results.data?.possible_misspellings.length > 0}
             <p>Did you mean:</p>
             <ul>
-              {#each results.possible_misspellings as suggestion}
+              {#each results.data.possible_misspellings as suggestion}
                 <li>
                   <a href="/language/{results.target_language_code}/wordform/{encodeURIComponent(suggestion)}" class="hz-foreign-text">
                     {suggestion}
@@ -72,16 +72,16 @@
       </div>
     {/if}
     
-    {#if results.status === 'multiple_matches' && results.target_language_results}
+    {#if results.status === 'multiple_matches' && results.data?.target_language_results}
       <!-- Target language matches -->
-      {#if results.target_language_results.matches && results.target_language_results.matches.length > 0}
+      {#if results.data.target_language_results.matches && results.data.target_language_results.matches.length > 0}
         <div class="card mb-4">
           <div class="card-header hz-card-header-primary">
             <h5 class="card-title mb-0">{results.target_language_name} Matches</h5>
           </div>
           <div class="card-body">
             <ul class="list-group list-group-flush">
-              {#each results.target_language_results.matches as match}
+              {#each results.data.target_language_results.matches as match}
                 <li class="list-group-item">
                   <button 
                     class="btn btn-link text-start w-100 text-decoration-none result-link" 
@@ -96,15 +96,15 @@
         </div>
       {/if}
       
-      <!-- Possible misspellings -->
-      {#if results.target_language_results.possible_misspellings && results.target_language_results.possible_misspellings.length > 0}
+      <!-- Possible misspellings for 'multiple_matches' status -->
+      {#if results.data?.target_language_results?.possible_misspellings && results.data.target_language_results.possible_misspellings.length > 0}
         <div class="card mb-4">
           <div class="card-header hz-card-header-warning">
             <h5 class="card-title mb-0">Possible Misspellings</h5>
           </div>
           <div class="card-body">
             <ul class="list-group list-group-flush">
-              {#each results.target_language_results.possible_misspellings as suggestion}
+              {#each results.data.target_language_results.possible_misspellings as suggestion}
                 <li class="list-group-item">
                   <a 
                     href="/language/{results.target_language_code}/wordform/{encodeURIComponent(suggestion)}" 
@@ -120,14 +120,14 @@
       {/if}
       
       <!-- English translation matches -->
-      {#if results.english_results && results.english_results.matches && results.english_results.matches.length > 0}
+      {#if results.data?.english_results && results.data.english_results.matches && results.data.english_results.matches.length > 0}
         <div class="card mb-4">
           <div class="card-header hz-card-header-secondary">
             <h5 class="card-title mb-0">English Translation Matches</h5>
           </div>
           <div class="card-body">
             <ul class="list-group list-group-flush">
-              {#each results.english_results.matches as match}
+              {#each results.data.english_results.matches as match}
                 <li class="list-group-item">
                   <button 
                     class="btn btn-link text-start w-100 text-decoration-none result-link" 
