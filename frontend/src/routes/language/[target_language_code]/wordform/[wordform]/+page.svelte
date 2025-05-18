@@ -9,36 +9,40 @@
   import { browser } from '$app/environment';
   
   export let data: PageData;
-  const { wordformData } = data;
+
+  $: wordformData = data.wordformData;
+  $: target_language_code = data.target_language_code;
+  $: language_name = data.language_name; // From root layout
+  $: ({ supabase, session, user } = data); // from root layout
+
+  // Client-side logging to inspect wordformData
+  $: if (browser && wordformData) {
+    console.log('WF page data received by client (+page.svelte):', JSON.parse(JSON.stringify(wordformData)));
+  }
   
   // Make sure we have valid data before unwrapping
-  // Check both top-level and nested under 'data' for compatibility
-  $: isValidData = !!(wordformData?.wordform_metadata ?? wordformData?.data?.wordform_metadata);
+  // After backend and server.ts changes, wordformData should directly contain metadata if found
+  $: isValidData = !!wordformData?.wordform_metadata;
   // Check if we specifically need authentication for generation
   $: requiresAuthForGeneration = !!wordformData?.authentication_required_for_generation;
   
-  // Unwrap the data from the response, accommodating potential nesting
+  // Unwrap the data from the response
   $: wordform_metadata = isValidData 
-    ? (wordformData.wordform_metadata ?? wordformData.data?.wordform_metadata) 
+    ? wordformData.wordform_metadata 
     : null;
   $: lemma_metadata = isValidData 
-    ? (wordformData.lemma_metadata ?? wordformData.data?.lemma_metadata) 
+    ? wordformData.lemma_metadata 
     : null;
   // Assume target_language_code and target_language_name are always top-level for now
   // If issues persist, these might need similar checks.
-  $: target_language_code = wordformData?.target_language_code ?? '';
   $: target_language_name = wordformData?.target_language_name ?? '';
+  // metadata might be a different field, let's check what it refers to.
+  // It seems metadata was a general purpose field in some older structures.
+  // If wordform_metadata contains everything, we might not need a separate 'metadata' field.
+  // For now, let's assume it might come from wordformData directly if not part of wordform_metadata
   $: metadata = isValidData 
-    ? (wordformData.metadata ?? wordformData.data?.metadata) 
+    ? (wordformData.metadata ?? wordformData.wordform_metadata) // If metadata is distinct, check it, else default to wordform_metadata
     : null;
-  
-  // Access session from the page store
-  $: session = $page.data.session;
-  
-  // Add debug logging for session status
-  $: if (browser) {
-    console.log('Wordform page - session status:', !!session);
-  }
   
   // Generate API URL for delete action only if we have valid data
   $: deleteUrl = isValidData ? getApiUrl(RouteName.WORDFORM_VIEWS_DELETE_WORDFORM_VW, {

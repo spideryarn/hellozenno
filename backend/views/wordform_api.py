@@ -102,16 +102,17 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
         # Handle different status responses
         if result["status"] == "found":
             # For both existing and newly created wordforms
-            return jsonify(result["data"])
+            return jsonify(result)
         elif result["status"] == "multiple_matches":
             # For multiple potential matches
-            return jsonify(result["data"])
+            return jsonify(result)
         elif result["status"] == "redirect":
             # Only used as a fallback now
-            return jsonify(result["data"])
+            return jsonify(result)
         else:  # invalid
             # For invalid wordforms
-            response = jsonify(result["data"])
+            # For invalid, the 'data' part contains the error details
+            response = jsonify(result)
             response.status_code = 404
             return response
 

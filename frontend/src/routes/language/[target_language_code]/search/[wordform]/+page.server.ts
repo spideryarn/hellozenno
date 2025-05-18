@@ -1,61 +1,70 @@
 import { error, redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { searchWord, getWordformWithSearch } from "$lib/api";
-import type { SearchResults } from "$lib/types";
+import { getWordformWithSearch } from "$lib/api";
+import type { SearchResult } from "$lib/types";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code, wordform } = params;
+    const { supabase } = locals;
 
     try {
-        // First try the legacy search API for compatibility
-        const simpleSearchData = await searchWord(target_language_code, wordform);
-
-        // If we have a redirect URL, use it immediately
-        if (simpleSearchData.redirect_url) {
-            throw redirect(302, simpleSearchData.redirect_url);
-        }
-
-        // If we get here, we need to try the more advanced search
-        const searchResults = await getWordformWithSearch(target_language_code, wordform);
+        const apiResponse = await getWordformWithSearch(supabase, target_language_code, wordform);
         
-        // Based on status, decide what to do
-        if (searchResults.status === 'found') {
-            // We found the wordform directly, return it for display
-            return {
-                searchResults
+        if (apiResponse.status === 'found') {
+            if (!apiResponse.data || !apiResponse.data.wordform_metadata || !apiResponse.data.wordform_metadata.wordform) {
+                console.error("Search 'found' status received, but wordform_metadata is missing in data:", apiResponse);
+                throw error(500, "Search error: Missing wordform data for 'found' status.");
+            }
+            throw redirect(302, `/language/${target_language_code}/wordform/${encodeURIComponent(apiResponse.data.wordform_metadata.wordform)}`);
+        } else if (apiResponse.status === 'redirect') {
+            if (!apiResponse.data || !apiResponse.data.redirect_to) {
+                console.error("Search 'redirect' status received, but redirect_to field is missing in data:", apiResponse);
+                throw error(500, "Search redirect error: Missing redirect target.");
+            }
+            throw redirect(302, `/language/${target_language_code}/wordform/${encodeURIComponent(apiResponse.data.redirect_to)}`);
+        } else if (apiResponse.status === 'multiple_matches' || apiResponse.status === 'invalid'){
+            // For these statuses, the API response's 'data' field contains the details.
+            // We need to construct the SearchResult object for the page.
+            const pageSearchResults: SearchResult = {
+                status: apiResponse.status,
+                query: apiResponse.data?.search_term || wordform, // Fallback to wordform from params if not in data
+                target_language_code: apiResponse.data?.target_language_code || target_language_code,
+                target_language_name: apiResponse.data?.target_language_name || "", // Page will try to fill this from layout
+                data: apiResponse.data, // The actual payload with matches or error details
+                error: apiResponse.status === 'invalid' ? (apiResponse.data?.error || "Invalid word") : undefined
             };
-        } else if (searchResults.status === 'redirect') {
-            // Redirect to the appropriate wordform
-            throw redirect(302, `/language/${target_language_code}/wordform/${encodeURIComponent(searchResults.redirect_to)}`);
-        } else {
-            // Multiple matches or invalid word case
             return {
-                searchResults
+                searchResults: pageSearchResults
+            };
+        } else {
+            console.warn("Unexpected search status:", apiResponse.status, apiResponse);
+            const errorSearchResults: SearchResult = {
+                status: 'error',
+                query: wordform,
+                target_language_code,
+                target_language_name: "",
+                data: {},
+                error: "Unexpected search result status from API."
+            };
+            return {
+                searchResults: errorSearchResults
             };
         }
     } catch (err) {
-        // Handle redirects specially
         if (err instanceof Response && err.status === 302) {
-            // This is our redirect, pass it through
             throw err;
         }
-
-        console.error("Error searching word:", err);
-        
-        // If this is a 404, it means the word wasn't found
-        // We'll return a specific error for displaying to the user
-        if (err instanceof Error && err.message.includes('404')) {
-            return {
-                searchResults: {
-                    status: 'invalid',
-                    target_language_code: target_language_code,
-                    target_language_name: "", // Will be filled client-side
-                    search_term: wordform,
-                    error: "Word not found"
-                } as SearchResults
-            };
-        }
-        
-        throw error(500, "Failed to search for word");
+        console.error(`Error on search page for '${wordform}':`, err);
+        const fallbackErrorResult: SearchResult = {
+            status: 'error',
+            query: wordform,
+            target_language_code: target_language_code,
+            target_language_name: "",
+            data: {},
+            error: err instanceof Error ? err.message : "Failed to search for word"
+        };
+        return {
+            searchResults: fallbackErrorResult
+        };
     }
 };
