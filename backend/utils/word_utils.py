@@ -321,18 +321,13 @@ def find_or_create_wordform(target_language_code: str, wordform: str):
                     logger.info(f"Wordform '{match_wordform}' created successfully")
                     return {"status": "found", "data": result}
                 except Exception as e:
-                    logger.error(f"Error after creating wordform: {e}")
-                    # Fallback to redirect if there's an error getting the complete data
-                    return {
-                        "status": "redirect",
-                        "data": {
-                            "target_language_code": target_language_code,
-                            "target_language_name": get_language_name(
-                                target_language_code
-                            ),
-                            "redirect_to": match_wordform,
-                        },
-                    }
+                    logger.exception(
+                        f"Critical: Wordform '{match_wordform}' (lang: {target_language_code}) was created/found, but subsequent metadata retrieval failed."
+                    )
+                    # Re-raise the exception to be caught by the view's error handler,
+                    # which should result in a 500 error. This is more aligned with
+                    # "Raise errors early, clearly & fatally".
+                    raise
 
         # If no matches or misspellings, return invalid word data
         logger.info(f"No valid matches found for '{wordform}'")

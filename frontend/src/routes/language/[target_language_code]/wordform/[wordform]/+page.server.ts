@@ -7,9 +7,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     let { target_language_code, wordform } = params; // Make wordform mutable
     const { supabase, session } = locals;
 
+    // Ensure wordform is in NFC for consistent handling
+    if (wordform) {
+        wordform = wordform.normalize('NFC');
+    }
+
     // Diagnostic: Log the wordform as received by SvelteKit
     console.log(
-        `[+page.server.ts] Initial params.wordform: "${wordform}" (Code points: ${
+        `[+page.server.ts] Initial params.wordform (normalized): "${wordform}" (Code points: ${
             Array.from(wordform).map((c) => c.charCodeAt(0).toString(16)).join(
                 " ",
             )
@@ -19,15 +24,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     // Attempt to fix a known malformation
     // "croisĂŠs" (c r o i s U+0102 U+00E9 s)
     // should be "croisés" (c r o i s U+00E9 s)
-    const malformedSequence = "crois\u0102\u00E9s"; // "croisĂŠs"
-    const correctSequence = "crois\u00E9s"; // "croisés"
+    // const malformedSequence = "crois\u0102\u00E9s"; // "croisĂŠs"
+    // const correctSequence = "crois\u00E9s"; // "croisés"
 
-    if (wordform === malformedSequence) {
-        console.log(
-            `[+page.server.ts] Detected malformed sequence "${malformedSequence}", correcting to "${correctSequence}"`,
-        );
-        wordform = correctSequence;
-    }
+    // if (wordform === malformedSequence) {
+    //     console.log(
+    //         `[+page.server.ts] Detected malformed sequence "${malformedSequence}", correcting to "${correctS
+    // equence}"`,
+    //     );
+    //     wordform = correctSequence;
+    // }
 
     try {
         // Use our enhanced search function to handle various result types
