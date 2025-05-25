@@ -1,7 +1,7 @@
 addict
 anthropic
 cryptography>=41.0.0  # For JWT and encryption support
-elevenlabs
+elevenlabs>=2.1.0
 flask
 beautifulsoup4
 # google-api-python-client
