@@ -1,8 +1,9 @@
-from db_models import Sentence, Sourcedir, Sourcefile, SourcefileWordform
+from db_models import Sentence, Sourcedir, Sourcefile, SourcefileWordform, Wordform
 from utils.audio_utils import ensure_model_audio_data
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_random_sentence
-from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
+from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas, normalize_text
+from utils.vocab_llm_utils import extract_tokens, create_interactive_word_data
 from utils.flashcard_utils import (
     get_flashcard_landing_data,
     get_flashcard_sentence_data,
@@ -59,10 +60,11 @@ def random_flashcard_api(target_language_code: str):
     logger.info(
         f"Fetching random flashcard: language={target_language_code}, sourcefile={sourcefile_slug}, sourcedir={sourcedir_slug}"
     )
-    
+
     # Get profile from flask g object if available
     profile = None
     from flask import g
+
     if hasattr(g, "profile") and g.profile:
         profile = g.profile
 
@@ -114,6 +116,44 @@ def random_flashcard_api(target_language_code: str):
             # Log error properly but continue - audio can be generated on demand
             logger.error(f"Error pre-generating audio: {str(e)}")
 
+    # Add word recognition data for enhanced text tooltips
+    recognized_words = []
+    try:
+        # Extract tokens from the sentence text
+        tokens_in_text = extract_tokens(str(sentence.sentence))
+
+        # Query database for all wordforms in this language that might be in the text
+        wordforms = list(
+            Wordform.select().where(
+                (Wordform.target_language_code == target_language_code)
+            )
+        )
+
+        # Filter wordforms in Python using normalize_text to match tokens
+        normalized_tokens = {normalize_text(t) for t in tokens_in_text}
+        matching_wordforms = [
+            wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
+        ]
+
+        # Convert to dictionary format for create_interactive_word_data
+        wordforms_d = []
+        for wordform in matching_wordforms:
+            wordform_d = wordform.to_dict()
+            wordforms_d.append(wordform_d)
+
+        # Create structured word recognition data
+        recognized_words, found_wordforms = create_interactive_word_data(
+            text=str(sentence.sentence),
+            wordforms=wordforms_d,
+            target_language_code=target_language_code,
+        )
+    except Exception as e:
+        # Log error but don't fail the entire request
+        logger.error(
+            f"Error generating word recognition data for sentence {sentence.id}: {e}"
+        )
+        recognized_words = []
+
     # Prepare response data
     response_data = {
         "id": sentence.id,
@@ -121,6 +161,7 @@ def random_flashcard_api(target_language_code: str):
         "text": sentence.sentence,
         "translation": sentence.translation,
         "lemma_words": sentence.lemma_words,
+        "recognized_words": recognized_words,  # Add word recognition data
         "audio_url": url_for(
             "sentence_api.get_sentence_audio_api",
             target_language_code=target_language_code,

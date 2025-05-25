@@ -291,9 +291,26 @@
             {#if currentStage >= 2}
               <!-- Replaced alert with a styled div -->
               <div class="flashcard-content-box border rounded p-4 mt-3 mb-3 bg-body-tertiary">
-                <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="text-decoration-none">
-                  <h3 class="text-center font-weight-bold fs-2 mb-0 hz-foreign-text">{data.text}</h3>
-                </a>
+                <div class="text-center">
+                  {#if data.recognized_words && data.recognized_words.length > 0}
+                    <!-- Enhanced text with interactive word tooltips for the main sentence.
+                         This makes individual words in the sentence hoverable with rich tooltips
+                         showing translations, etymology, etc. The backend provides word recognition
+                         data with positions, and EnhancedText handles the lazy-loaded tooltips. -->
+                    <div class="flashcard-sentence-enhanced">
+                      <EnhancedText 
+                        text={data.text}
+                        recognizedWords={data.recognized_words}
+                        target_language_code={data.metadata.target_language_code}
+                      />
+                    </div>
+                  {:else}
+                    <!-- Fallback to plain text if no word recognition data -->
+                    <a href={`/language/${data.metadata.target_language_code}/sentence/${data.slug}`} class="text-decoration-none">
+                      <h3 class="font-weight-bold fs-2 mb-0 hz-foreign-text">{data.text}</h3>
+                    </a>
+                  {/if}
+                </div>
               </div>
             {/if}
             
@@ -441,6 +458,43 @@
     font-size: 1rem;
     font-family: var(--hz-font-foreign) !important;
     font-style: italic;
+  }
+  
+  /* Flashcard sentence enhanced text styling */
+  .flashcard-sentence-enhanced {
+    display: block;
+    text-align: center;
+  }
+  
+  /* Override EnhancedText's default styles for the main sentence */
+  .flashcard-sentence-enhanced :global(.enhanced-text) {
+    font-size: 2rem;
+    font-weight: normal;
+    line-height: 1.2;
+    max-width: none;
+    text-align: center;
+    font-family: var(--hz-font-foreign) !important;
+    font-style: italic;
+  }
+  
+  /* Style the word links in the main sentence */
+  .flashcard-sentence-enhanced :global(.word-link) {
+    font-size: inherit;
+    font-weight: inherit;
+    font-family: inherit;
+    font-style: inherit;
+    color: var(--hz-color-primary-green);
+    text-decoration: none;
+    border-bottom: 2px dotted var(--hz-color-primary-green);
+    transition: all 0.2s ease-in-out;
+    padding: 0 2px;
+    margin: 0 1px;
+  }
+  
+  .flashcard-sentence-enhanced :global(.word-link:hover) {
+    color: var(--hz-color-primary-green-light);
+    background-color: rgba(var(--hz-color-primary-green-rgb), 0.1);
+    border-bottom-color: var(--hz-color-primary-green-light);
   }
   
   /* Typography styles using theme variables */

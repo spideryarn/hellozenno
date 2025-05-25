@@ -4,11 +4,12 @@ Utility functions for the flashcard system.
 
 from peewee import DoesNotExist
 
-from db_models import Sourcedir, Sourcefile, SourcefileWordform, Sentence
+from db_models import Sourcedir, Sourcefile, SourcefileWordform, Sentence, Wordform
 from utils.lang_utils import get_language_name
-from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
+from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas, normalize_text
 from utils.audio_utils import ensure_model_audio_data, get_or_create_sentence_audio
 from utils.sentence_utils import get_random_sentence
+from utils.vocab_llm_utils import extract_tokens, create_interactive_word_data
 from flask import url_for
 
 # Import the exception
@@ -155,6 +156,42 @@ def get_flashcard_sentence_data(
         except DoesNotExist:
             return {"error": "Sourcefile not found"}
 
+    # Add word recognition data for enhanced text tooltips
+    recognized_words = []
+    try:
+        # Extract tokens from the sentence text
+        tokens_in_text = extract_tokens(str(sentence.sentence))
+
+        # Query database for all wordforms in this language that might be in the text
+        wordforms = list(
+            Wordform.select().where(
+                (Wordform.target_language_code == target_language_code)
+            )
+        )
+
+        # Filter wordforms in Python using normalize_text to match tokens
+        normalized_tokens = {normalize_text(t) for t in tokens_in_text}
+        matching_wordforms = [
+            wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
+        ]
+
+        # Convert to dictionary format for create_interactive_word_data
+        wordforms_d = []
+        for wordform in matching_wordforms:
+            wordform_d = wordform.to_dict()
+            wordforms_d.append(wordform_d)
+
+        # Create structured word recognition data
+        recognized_words, found_wordforms = create_interactive_word_data(
+            text=str(sentence.sentence),
+            wordforms=wordforms_d,
+            target_language_code=target_language_code,
+        )
+    except Exception as e:
+        # Log error but don't fail the entire request
+        print(f"Error generating word recognition data for sentence {sentence.id}: {e}")
+        recognized_words = []
+
     # Build response data
     response_data = {
         "id": sentence.id,
@@ -162,6 +199,7 @@ def get_flashcard_sentence_data(
         "text": sentence.sentence,
         "translation": sentence.translation,
         "lemma_words": sentence.lemma_words,
+        "recognized_words": recognized_words,  # Add word recognition data
         "audio_url": (
             url_for(
                 "sentence_api.get_sentence_audio_api",
