@@ -36,10 +36,12 @@ Note: All dynamically generated sitemaps use the `sitemap-generated-` prefix to 
 
 We generate sitemaps during the deployment process to avoid serverless execution issues:
 
-1. A Python script queries the database during deployment
+1. A Python script queries the production database during deployment
 2. Generates sitemap files as static XML
 3. Updates the sitemap index with current timestamps
 4. Deploys these static files to Vercel
+
+Note: The sitemap generator uses the production database connection (from `.env.prod`) to ensure sitemaps reflect actual live content rather than local development data.
 
 Benefits:
 - No runtime performance impact
