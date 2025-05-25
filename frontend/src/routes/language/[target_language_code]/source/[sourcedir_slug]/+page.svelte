@@ -106,7 +106,8 @@
         // Truncate to first 50 characters and add ellipsis if needed
         const displayName = row.filename.length > 50 ? `${row.filename.substring(0, 50)}...` : row.filename;
         return displayName;
-      }
+      },
+      class: 'hz-column-primary-green'
     },
     { id: 'wordform_count', header: 'Words', accessor: (row: any) => row.metadata?.wordform_count ?? 0, width: 80, class: 'text-end' },
     { id: 'sourcefile_type', header: 'Type' },
