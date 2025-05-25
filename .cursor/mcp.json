@@ -24,26 +24,6 @@
                 "--repository",
                 "/Users/greg/Dropbox/dev/experim/hellozenno"
             ]
-        },
-        "Sequential_thinking": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-sequential-thinking"
-            ]
-        },
-        "Playwright": {
-            "command": "npx",
-            "args": [
-                "@playwright/mcp@latest"
-            ]
-        },
-        "puppeteer": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-puppeteer"
-            ]
         }
     }
 }
