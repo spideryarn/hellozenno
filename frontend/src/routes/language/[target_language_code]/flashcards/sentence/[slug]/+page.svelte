@@ -12,6 +12,7 @@
   import Alert from '$lib/components/Alert.svelte'; // Import Alert
   import { AudioPlayer } from '$lib';
   import { RouteName } from '$lib/generated/routes';
+  import EnhancedText from '$lib/components/EnhancedText.svelte';
   
   export let data;
   
@@ -22,7 +23,7 @@
   let isIgnoring = false; // Track if we're currently ignoring a lemma
   let ignoreError = ''; // Store any error messages during ignore operation
   let ignoreSuccess = ''; // Store success message after ignoring
-  let audioPlayer;
+  let audioPlayer: any;
   let audioReplayCount = 0; // Track how many times audio is replayed
   let userSelectedSpeed = false; // Track if user manually changed playback speed
   let autoplayWasBlocked = false; // Track if autoplay was blocked by browser
@@ -56,12 +57,12 @@
   }
   
   // Handle when user changes the playback speed
-  function handleSpeedChanged(event) {
+  function handleSpeedChanged(event: any) {
     userSelectedSpeed = true;
   }
   
   // Handle autoplay blocked event from AudioPlayer
-  function handleAutoplayBlocked(event) {
+  function handleAutoplayBlocked(event: any) {
     autoplayWasBlocked = true;
     console.log('Autoplay was blocked by browser policy, user needs to interact');
   }
@@ -105,7 +106,7 @@
   }
   
   // Function to clear filter and navigate back to all flashcards
-  function clearFilter(event) {
+  function clearFilter(event: Event) {
     event.preventDefault();
     const baseUrl = `/language/${data.metadata.target_language_code}/flashcards/random`;
     window.location.href = baseUrl;
@@ -319,7 +320,28 @@
                       <div class="d-flex flex-wrap justify-content-center align-items-center gap-3">
                         {#each data.lemma_words as lemma, i}
                           <div class="d-inline-flex align-items-center">
-                            <span class="fs-6 me-1 hz-foreign-text">{lemma}</span>
+                            <div class="lemma-enhanced-text me-1">
+                              <!-- We reuse the EnhancedText component here to get fancy tooltips for lemmas.
+                                   Even though EnhancedText is designed for text with multiple words, we can use it
+                                   for individual lemmas by treating each lemma as a single-word "text" with one
+                                   recognized word spanning the entire text. This gives us:
+                                   - Lazy loading tooltips (data fetched on hover)
+                                   - Rich tooltip content (translations, etymology, etc.)
+                                   - Consistent styling with other enhanced text in the app
+                                   - Automatic linking to the wordform page (which redirects to lemma page)
+                                   The wordform API endpoint handles lemmas fine since lemmas ARE wordforms. -->
+                              <EnhancedText 
+                                text={lemma}
+                                recognizedWords={[{
+                                  word: lemma,
+                                  start: 0,
+                                  end: lemma.length,
+                                  lemma: lemma,
+                                  translations: [], // Will be fetched on hover via the tooltip
+                                }]}
+                                target_language_code={data.metadata.target_language_code}
+                              />
+                            </div>
                             <button
                               class="btn btn-link p-0 border-0 text-secondary lh-1 ignore-btn"
                               title={`Ignore "${lemma}" in future flashcards`}
@@ -399,6 +421,26 @@
   .ignore-btn:focus {
     opacity: 1;
     color: var(--bs-danger) !important; /* Use theme danger color on hover */
+  }
+  
+  /* Lemma enhanced text styling */
+  .lemma-enhanced-text {
+    display: inline-block;
+    font-size: 1rem;
+  }
+  
+  /* Override EnhancedText's default styles for this context */
+  .lemma-enhanced-text :global(.enhanced-text) {
+    font-size: inherit;
+    line-height: inherit;
+    max-width: none;
+  }
+  
+  /* Ensure the word links in lemma list have appropriate styling */
+  .lemma-enhanced-text :global(.word-link) {
+    font-size: 1rem;
+    font-family: var(--hz-font-foreign) !important;
+    font-style: italic;
   }
   
   /* Typography styles using theme variables */

@@ -7,6 +7,7 @@
   import { apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
 
   // Define a type for the lemma row data
   interface LemmaRow {
@@ -152,7 +153,7 @@
     selectableColumns: 'id,lemma,part_of_speech,translations,updated_at,language_level,is_complete,commonality,etymology,created_by_id',
     client: supabaseClient,
     jsonArrayColumns: ['translations']
-  }) : null;
+  }) : undefined;
   
   // Function to generate URLs for each row
   function getLemmaUrl(row: LemmaRow): string {
@@ -230,7 +231,7 @@
     </div>
   </div>
 
-  {#if lemmas && lemmas.length > 0 && loadData}
+  {#if lemmas && lemmas.length > 0}
     <DataGrid {columns}
               {loadData} 
               initialRows={lemmas}
@@ -241,7 +242,7 @@
               defaultSortDir="asc"
               queryModifier={(query) => query.eq('target_language_code', target_language_code)}
     />
-  {:else if !loadData}
+  {:else if browser && !loadData}
     <div class="alert alert-danger">
       Could not initialize lemma data. Authentication context might be missing.
     </div>

@@ -10,10 +10,12 @@
     const { target_language_code, language_name, phrases, total, supabase: supabaseClient, session } = data;
 
     import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
+    // import { supabase } from '$lib/supabaseClient'; // page store not used, can be removed or commented if planned for future
     import { createUserIdColumn } from '$lib/datagrid/utils';
     import { apiFetch } from '$lib/api';
     import { RouteName } from '$lib/generated/routes';
     import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
 
     // Define a type for the phrase row data
     interface PhraseRow {
@@ -138,7 +140,7 @@
       table: 'phrase',
       selectableColumns: 'id,canonical_form,part_of_speech,translations,updated_at,usage_notes,slug,language_level,created_by_id',
       client: supabaseClient,
-    }) : null;
+    }) : undefined;
     
     // Function to generate URLs for each row
     function getPhraseUrl(row: PhraseRow): string {
@@ -194,7 +196,7 @@
         </div>
     </div>
     
-    {#if phrases.length > 0 && loadData}
+    {#if phrases.length > 0}
         <DataGrid {columns}
                   {loadData}
                   initialRows={phrases}
@@ -205,7 +207,7 @@
                   defaultSortDir="desc"
                   queryModifier={(query) => query.eq('target_language_code', target_language_code)}
         />
-    {:else if !loadData && phrases.length > 0}
+    {:else if browser && !loadData && phrases.length > 0}
         <div class="alert alert-danger">
             Could not initialize phrase data. Authentication context might be missing, or there was an issue loading the data provider.
         </div>

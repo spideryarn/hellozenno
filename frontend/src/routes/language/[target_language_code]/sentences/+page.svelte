@@ -7,6 +7,7 @@
     import { RouteName } from '$lib/generated/routes';
     import { createUserIdColumn } from '$lib/datagrid/utils';
     import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
     
     // Define a type for the sentence row data
     interface SentenceRow {
@@ -133,7 +134,7 @@
       selectableColumns: 'id,sentence,translation,language_level,updated_at,slug,lemma_words,created_by_id',
       client: supabaseClient,
       jsonArrayColumns: ['lemma_words']
-    }) : null;
+    }) : undefined;
     
     // Function to generate URLs for each row
     function getSentenceUrl(row: SentenceRow): string {
@@ -190,7 +191,7 @@
         </div>
     </div>
     
-    {#if sentences.length > 0 && loadData}
+    {#if sentences.length > 0}
         <DataGrid {columns}
                   {loadData} 
                   initialRows={sentences}
@@ -200,7 +201,7 @@
                   defaultSortDir="desc"
                   queryModifier={(query) => query.eq('target_language_code', target_language_code)}
         />
-    {:else if !loadData && sentences.length > 0}
+    {:else if browser && !loadData && sentences.length > 0}
         <div class="alert alert-danger">
             Could not initialize sentence data. Authentication context might be missing, or there was an issue loading the data provider.
         </div>

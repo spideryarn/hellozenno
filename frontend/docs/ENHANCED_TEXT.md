@@ -6,17 +6,147 @@ see `planning/250412_enhanced_text_transition.md`
 
 ## Overview
 
-Enhanced text is a key feature of Hello Zenno that transforms plain sentences into interactive language learning experiences. It uses HTML formatting and augments sentences with hoverable & clickable word links that provide additional learning context.
+Enhanced text is a key feature of Hello Zenno that transforms plain sentences into interactive language learning experiences. It identifies words in text and makes them clickable with rich hover tooltips that provide additional learning context.
 
 ## How Enhanced Text Works
 
-The enhanced text system processes raw text sentences through several steps:
+The enhanced text system has evolved from HTML-based to a structured data approach:
 
-1. **Word Recognition**: The application analyzes sentences to identify known words and their forms
-2. **Link Generation**: Recognized words are converted into HTML links that connect to corresponding wordform pages
-3. **Formatting**: The text is formatted with proper paragraph structure, line breaks, and indentation
-4. **Display**: The enhanced text is rendered as HTML in the SvelteKit frontend using Svelte's `{@html}` directive. (HANG ON maybe this should/does use the `EnhancedText.svelte` component???)
+1. **Backend Processing**: The backend identifies recognized words in text and returns structured data with word positions
+2. **Frontend Rendering**: The `EnhancedText.svelte` component renders the text with interactive word links
+3. **Lazy Loading**: Tooltips fetch word data on-demand when users hover, keeping initial page loads fast
+4. **Rich Tooltips**: Uses Tippy.js to display lemma, translations, etymology, and more
 
+## User Experience
+
+When viewing enhanced text (e.g., in a Sourcefile text view):
+
+- **Desktop**: Hover over any highlighted word to see a tooltip with word details
+- **Mobile/Tablet**: Tap on a word to reveal the tooltip
+- **Click**: Opens the wordform page in a new tab
+- **Loading State**: Shows "Loading..." while fetching data
+- **Error Handling**: Shows "Error loading word information" if something goes wrong
+
+## Technical Implementation
+
+### Backend API
+
+The word preview API (`/api/lang/word/<target_language_code>/<word>/preview`) returns:
+
+```python
+{
+    "lemma": str,           # Dictionary form of the word
+    "translation": str,     # English translations joined with semicolons
+    "etymology": str|None,  # Word origins and cognates
+    "inflection_type": str|None  # Grammar information
+}
+```
+
+The API handles various lookup strategies:
+1. Exact match
+2. Case-insensitive match
+3. Normalized match (without diacritics)
+
+### Frontend Component
+
+The `EnhancedText.svelte` component supports two modes:
+
+#### 1. Structured Data Mode (Preferred)
+```svelte
+<EnhancedText 
+  text="Ο σεισμός κομμάτιασε το κτίριο."
+  recognizedWords={[
+    {
+      word: "σεισμός",
+      start: 2,
+      end: 8,
+      lemma: "σεισμός",
+      translations: ["earthquake"]
+    },
+    // ... more words
+  ]}
+  target_language_code="el"
+/>
+```
+
+#### 2. HTML Mode (Legacy)
+```svelte
+<EnhancedText 
+  html='<p>Ο <a href="/lang/el/wordform/σεισμός" class="word-link">σεισμός</a>...</p>'
+  target_language_code="el"
+/>
+```
+
+### Tooltip Content
+
+The tooltip displays:
+- **Lemma** (dictionary form) as a clickable link
+- **Translations** from the wordform
+- **Inflection type** (e.g., "nominative singular")
+- **Etymology** if available
+- **"View details →"** link at the bottom
+
+### Lazy Loading Behavior
+
+The tooltips are truly lazy-loaded:
+
+1. Initial render shows just the highlighted words
+2. On hover, the tooltip appears with "Loading..."
+3. The component fetches data from the word preview API
+4. The tooltip updates with the fetched content
+5. Subsequent hovers use cached data (1-minute cache)
+
+## Use Cases
+
+### 1. Text Content (Original Use)
+Used in sourcefile text views to make entire passages interactive:
+```svelte
+<SourcefileText 
+  text={sourcefileText}
+  recognized_words={recognizedWords}
+  target_language_code="el"
+/>
+```
+
+### 2. Individual Words (New Use)
+Can be used for individual words by treating them as single-word texts:
+```svelte
+<!-- In flashcards, showing lemmas with tooltips -->
+{#each lemma_words as lemma}
+  <EnhancedText 
+    text={lemma}
+    recognizedWords={[{
+      word: lemma,
+      start: 0,
+      end: lemma.length,
+      lemma: lemma,
+      translations: []  // Fetched on hover
+    }]}
+    target_language_code={language_code}
+  />
+{/each}
+```
+
+This approach works because:
+- Lemmas ARE wordforms (the dictionary form)
+- The word preview API handles lemmas correctly
+- We get consistent tooltips across the app
+
+## Benefits
+
+1. **Performance**: Only loads data when needed
+2. **Consistency**: Same tooltip experience everywhere
+3. **Flexibility**: Works for full texts or individual words
+4. **Maintainability**: Single component handles all enhanced text needs
+5. **Progressive Enhancement**: Falls back gracefully if data loading fails
+
+## Implementation Notes
+
+- Text is normalized to NFC (Unicode Normalization Form C) for consistent handling
+- The component handles both touch and mouse interactions
+- Tooltips are positioned intelligently to stay on screen
+- All links open in new tabs with proper security attributes
+- The component cleans up tooltip instances on unmount to prevent memory leaks
 
 ## How does it feel to the user?
 
@@ -39,44 +169,6 @@ For each hyperlink:
   - If the Lemma is incomplete, send a request from the client in the background to `backend/views/lemma_api.py` `get_lemma_metadata_api()`, because that will call `load_or_generate_lemma_metadata()`, which will generate the rest of the Lemma (so that if we hover again later, it'll be there).
 
 All the API stuff lives in `backend/views/*_api.py`.
-
-
-## Technical Implementation
-
-The enhanced text is generated on the backend via the `create_interactive_word_links` function in `utils/vocab_llm_utils.py`:
-
-```python
-def create_interactive_word_links(
-    text: str,
-    wordforms: list[dict],
-    target_language_code: str,
-) -> tuple[str, set[str]]:
-    """Enhance the input text by wrapping tricky wordforms with HTML links."""
-    # Implementation details...
-```
-
-The function performs the following operations:
-
-1. Normalizes text for consistent pattern matching
-2. Identifies wordforms that appear in the text
-3. Wraps matched words with HTML links: `<a href="/lang/{target_language_code}/wordform/{wordform}" class="word-link">{word}</a>`
-4. Formats paragraphs with `<p>` tags and proper indentation
-5. Wraps long lines at approximately 65 characters with `<br>` tags
-
-## Example Transformation
-
-Original text:
-```
-Μπορείς να μεταφέρεις τις φωτογραφίες από την κάρτα μνήμης στον υπολογιστή;
-```
-
-Enhanced text (simplified):
-```html
-<p>
- Μπορείς να μεταφέρεις τις φωτογραφίες από την <a href="/lang/el/wordform/κάρτα μνήμης" class="word-link">κάρτα μνήμης</a> στον<br>
- υπολογιστή;
-</p>
-```
 
 ## Data Flow for a sentence
 
