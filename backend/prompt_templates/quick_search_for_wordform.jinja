@@ -4,6 +4,8 @@ The input is probably a {{ target_language_name }} word, but it might be a word 
 
 We will respond with a JSON data structure (see below) that contains zero/one/more {{ target_language_name }} results and zero/one/more English results. The ideal case is when we return exactly one result across both languages, because then we can redirect to that page, otherwise we'll have to show a results page for the user to select from.
 
+Try to avoid returning duplicate/almost-identical results.
+
 Note: even if the input is an English word, the wordform(s) that we return will be in {{ target_language_name }},i.e. translation(s) of the English word.
 
 Your task is to analyze the input and return appropriate metadata based on these cases:
