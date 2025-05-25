@@ -4,6 +4,8 @@ This document provides a concise overview of the main database models in HelloZe
 
 Based on the full model declaration in `backend/db_models.py` 
 
+see `backend/docs/DATABASE.md` for more information on connecting to the database.
+
 ## Core Models
 
 ### BaseModel

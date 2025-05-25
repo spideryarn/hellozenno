@@ -185,6 +185,10 @@ Don't ever make changes directly to the database, only as part of a migration (t
 
 ### Querying the local development database
 
+**Tip**: by far the simplest way to connect to the local development database is to use the Supabase_local MCP if that is available.
+
+Failing that, you can use the terminal... see below.
+
 Database credentials are stored in environment files:
 - `.env.local` for local development
 - `.env.testing` for test environment
