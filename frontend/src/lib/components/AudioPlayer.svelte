@@ -109,7 +109,7 @@
   <div class="audio-container">
     {#if isLoading}
       <div class="loading-container">
-        <LoadingSpinner size="small" />
+        <LoadingSpinner size="sm" />
         <span>Loading audio...</span>
       </div>
     {/if}

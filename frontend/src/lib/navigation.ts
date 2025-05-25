@@ -58,7 +58,7 @@ export async function redirectBasedOnProfile(
   try {
     const profile = await apiFetch({
       supabaseClient,
-      routeName: RouteName.PROFILE_API_GET_PROFILE_API,
+      routeName: RouteName.PROFILE_API_GET_CURRENT_PROFILE_API,
       params: {},
       options: { method: 'GET' }
     });

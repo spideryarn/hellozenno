@@ -18,14 +18,14 @@
     { 
       id: 'path', 
       header: 'Path',
-      accessor: row => `<span class="hz-column-primary-green">${row.path}</span>`,
+      accessor: (row: any) => `<span class="hz-column-primary-green">${row.path}</span>`,
       isHtml: true
     },
     createUserIdColumn({ header: 'Created By' }),
     { 
       id: 'updated_at', 
       header: 'Modified',
-      accessor: row => {
+      accessor: (row: any) => {
         if (!row.updated_at) return '';
         try {
           const date = new Date(row.updated_at);
@@ -59,8 +59,8 @@
   }
   
   // Function to generate tooltips for each row
-  function getSourcedirTooltip(row: any): string | null {
-    return row.description || null;
+  function getSourcedirTooltip(row: any): string {
+    return row.description || '';
   }
   
   // Function to create a new source directory

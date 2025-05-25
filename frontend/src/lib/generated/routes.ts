@@ -316,10 +316,10 @@ export function resolveRoute<T extends RouteName>(
   routeName: T, 
   params: RouteParams[T]
 ): string {
-  let url = ROUTES[routeName];
+  let url: string = ROUTES[routeName];
   
   // Replace template parameters with actual values
-  Object.entries(params).forEach(([key, value]) => {
+  Object.entries(params as Record<string, string | number>).forEach(([key, value]) => {
     url = url.replace(`{${key}}`, encodeURIComponent(String(value)));
   });
   

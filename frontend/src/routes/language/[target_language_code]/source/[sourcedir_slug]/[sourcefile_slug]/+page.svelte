@@ -28,13 +28,13 @@
   } = data;
   
   // Extract nested data needed by child components from textData
-  const sourcefile = textData.sourcefile;
-  const sourcedir = textData.sourcedir;
-  const metadata = textData.metadata;
-  const navigation = textData.navigation;
+  const sourcefile = textData?.sourcefile || {};
+  const sourcedir = textData?.sourcedir || {};
+  const metadata = textData?.metadata || {};
+  const navigation = textData?.navigation || {};
   
   // Explicitly get stats from the top-level data object
-  const stats = data.stats;
+  const stats = data?.stats || {};
   
   // Determine active tab based on URL path
   $: path = $page.url.pathname;
@@ -124,7 +124,8 @@
     {target_language_code}
     {sourcedir_slug}
     {sourcefile_slug}
-    available_sourcedirs={sourcefileData.available_sourcedirs || []}
+    available_sourcedirs={sourcefileData?.available_sourcedirs || []}
+    {data}
   />
   
   <NavTabs {tabs} />
@@ -138,12 +139,12 @@
       />
     {:else if activeTab === 'words'}
       <SourcefileWords 
-        wordforms={wordsData.wordforms || []}
+        wordforms={wordsData?.wordforms || []}
         {target_language_code}
       />
     {:else if activeTab === 'phrases'}
       <SourcefilePhrases 
-        phrases={phrasesData.phrases || []}
+        phrases={phrasesData?.phrases || []}
         {target_language_code}
       />
     {:else if activeTab === 'image' && isImageFile}

@@ -36,7 +36,6 @@
   {data}
 >
   <SourcefileTranslation 
-    {sourcefile}
     text_english={sourcefile.text_english}
     {navigation}
     {target_language_code}

@@ -95,11 +95,13 @@
       console.error('Error fetching lemma details:', err);
       isLoading = false;
       
-      if (err.status === 401) {
+      if (err && typeof err === 'object' && 'status' in err && err.status === 401) {
         console.log('Auth error when fetching lemma details:', err);
         authError = true;
       } else {
-        error = err.message || 'Failed to load lemma data';
+        error = (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') 
+          ? err.message 
+          : 'Failed to load lemma data';
       }
       
       return false; // Signal failed fetch
