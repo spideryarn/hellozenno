@@ -29,7 +29,7 @@ Each tab has its own route handler, with routes redirecting from the base path t
 
 The content in the text tab is displayed using "Enhanced Text" functionality which provides interactive word links - see `frontend/docs/ENHANCED_TEXT.md` for details on this implementation.
 
-See also: `planning/250405_speeding_up_Sourcefile.md` for a discussion on refactoring, overlap, and performance.
+See also: `docs/planning/250405_speeding_up_Sourcefile.md` for a discussion on refactoring, overlap, and performance.
 
 ## Components Organization
 

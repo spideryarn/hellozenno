@@ -12,7 +12,7 @@ Hello Zenno uses a dual-architecture approach:
 For more detailed information on the architecture:
 - [SvelteKit Architecture](../../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)
 - [Flask API Integration](../../frontend/docs/BACKEND_FLASK_API_INTEGRATION.md)
-- [Vercel Setup Plan](../../planning/250331_Vercel_setup_for_SvelteKit.md)
+- [Vercel Setup Plan](../../docs/planning/250331_Vercel_setup_for_SvelteKit.md)
 - See also: [Database Documentation](../../docs/DATABASE.md) and [Migrations Guide](../../docs/MIGRATIONS.md)
 - `frontend/docs/AUTH.md`
 

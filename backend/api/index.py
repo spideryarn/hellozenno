@@ -152,7 +152,7 @@ def create_app():
     app.register_blueprint(search_api_bp)
     app.register_blueprint(profile_api_bp)
 
-    # Add middleware to handle URL decoding for all routes - see planning/250316_vercel_url_encoding_fix.md
+    # Add middleware to handle URL decoding for all routes - see docs/planning/250316_vercel_url_encoding_fix.md
     app.before_request(decode_url_params)
 
     # Configure WhiteNoise for static file serving - still needed for audio, downloads, etc.

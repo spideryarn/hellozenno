@@ -5,6 +5,8 @@
   import { page } from '$app/stores'; 
   import type { LayoutData } from './$types'; // Import the type for LayoutData
   import { SITE_NAME, TAGLINE, CONTACT_EMAIL } from '$lib/config'; // Added Import
+  import { getPageUrl } from '$lib/navigation';
+  import { getLanguageName } from '$lib/generated/languages';
   import NebulaBackground from '$lib/components/NebulaBackground.svelte';
   import DropdownButton from '$lib/components/DropdownButton.svelte';
   import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
@@ -14,6 +16,17 @@
   export let data: LayoutData;
   $: ({ supabase, session } = data); // Destructure supabase and session reactively
   
+  // Extract target language from profile (handle both envelope and direct shapes)
+  $: targetLanguageCode = (data as any)?.profile?.profile?.target_language_code 
+    || (data as any)?.profile?.target_language_code 
+    || null;
+  $: myLanguageUrl = targetLanguageCode 
+    ? getPageUrl('sources', { target_language_code: targetLanguageCode }) 
+    : null;
+  $: myLanguageText = targetLanguageCode 
+    ? `My Language: ${getLanguageName(targetLanguageCode)}` 
+    : null;
+  
   // Set Supabase client in context for child components to access
   $: if (supabase) {
     setContext('supabase', supabase);
@@ -21,7 +34,7 @@
 
   // Handle auth state changes on the client
   onMount(() => {
-    const { data: { subscription } } = supabase?.auth.onAuthStateChange((event, newSession) => {
+    const { data: { subscription } } = supabase?.auth.onAuthStateChange((event: any, newSession: any) => {
       // Important: Check if the session has actually changed to avoid infinite loops
       if (newSession?.access_token !== session?.access_token) {
         console.log('Auth state changed detected in root layout, invalidating...');
@@ -51,6 +64,21 @@
   }
 
   let isMenuOpen = false;
+  
+  // Build dropdown items reactively so we can include the language shortcut when available
+  $: dropdownItems = [
+    { type: 'header' as const, text: session?.user?.email || '' },
+    ...(myLanguageUrl 
+      ? [
+          { type: 'divider' as const },
+          { type: 'link' as const, text: myLanguageText || '', href: myLanguageUrl },
+          { type: 'divider' as const },
+        ] 
+      : []),
+    { type: 'link' as const, text: 'Edit Profile', href: '/auth/profile' },
+    { type: 'divider' as const },
+    { type: 'button' as const, text: 'Logout', onClick: handleLogout }
+  ];
 </script>
 
 <!-- Add the svelte:head block for the title -->
@@ -143,12 +171,7 @@
                   buttonClass="btn btn-sm btn-secondary text-on-light"
                   tooltipText="Logged in as {session.user.email}"
                   bind:isOpen={isMenuOpen}
-                  items={[
-                    { type: 'header', text: session.user.email },
-                    { type: 'link', text: 'Edit Profile', href: '/auth/profile' },
-                    { type: 'divider' },
-                    { type: 'button', text: 'Logout', onClick: handleLogout }
-                  ]}
+                  items={dropdownItems}
                 />
               </div>
             {:else}

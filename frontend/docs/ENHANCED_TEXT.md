@@ -2,7 +2,7 @@
 
 THIS PAGE IS OUT OF DATE. The user experience is still the same, but we are shifting to using `create_interactive_word_data()` throughout, instead of `create_interactive_word_links()`. In other words, the backend returns structured data instead of HTML.
 
-see `planning/250412_enhanced_text_transition.md`
+see `docs/planning/250412_enhanced_text_transition.md`
 
 ## Overview
 

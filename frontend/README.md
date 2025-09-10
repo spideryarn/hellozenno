@@ -18,7 +18,7 @@ This project's documentation is organized into the following sections:
 
 ## Project Status and Roadmap
 
-See [planning/250329_SvelteKit.md](../planning/250329_SvelteKit.md) for the detailed migration plan from using Flask/Jinja to SvelteKit.
+See [planning/250329_SvelteKit.md](../docs/planning/250329_SvelteKit.md) for the detailed migration plan from using Flask/Jinja to SvelteKit.
 
 ## Related Resources
 

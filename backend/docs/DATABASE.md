@@ -63,7 +63,7 @@ Located in `scripts/prod/` and `scripts/local/`:
 - `scripts/local/backup_db.sh`: Creates a backup of the local database
 - `scripts/local/migrations_list.sh`: Lists all available migrations
 
-N.B. We used to host our Postgres database on Fly.io, but now we use Supabase for that. If you see references to Fly.io and databases, please update them. See `planning/250216_Supabase_database_migration.md`
+N.B. We used to host our Postgres database on Fly.io, but now we use Supabase for that. If you see references to Fly.io and databases, please update them. See `docs/planning/250216_Supabase_database_migration.md`
 
 ## Models
 

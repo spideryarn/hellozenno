@@ -13,7 +13,7 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
       })
     : null; // Don't create server client here, hook does that
 
-  const { session, user } = data; // Get session/user passed from server load
+  const { session, user, profile } = data as any; // Get session/user/profile passed from server load
 
-  return { supabase, session, user };
+  return { supabase, session, user, profile } as any;
 }; 

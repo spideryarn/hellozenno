@@ -1,7 +1,7 @@
 """Test sourcedir views.
 
 These tests have been updated to use the new standardized API URL structure
-(/api/lang/sourcedir/...) as described in planning/250317_API_URL_Structure_Standardization.md.
+(/api/lang/sourcedir/...) as described in docs/planning/250317_API_URL_Structure_Standardization.md.
 """
 
 from io import BytesIO

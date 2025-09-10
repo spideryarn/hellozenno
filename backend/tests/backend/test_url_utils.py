@@ -1,7 +1,7 @@
 """
 Tests for URL utilities including encoding/decoding functions.
 
-see planning/250316_vercel_url_encoding_fix.md
+see docs/planning/250316_vercel_url_encoding_fix.md
 """
 
 import pytest

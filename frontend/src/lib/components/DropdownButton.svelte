@@ -7,7 +7,8 @@
   // Props
   export let buttonText: string = '';
   export let buttonContent: string = ''; // Alternative to buttonText for icon/HTML content
-  export let buttonSvelteContent = null; // For Svelte component content (like Phosphor icons)
+  // Allow passing a Svelte component for the button content (e.g., an icon)
+  export let buttonSvelteContent: any = null; // Typed as any to keep usage flexible
   export let buttonClass: string = 'btn btn-secondary';
   export let tooltipText: string = ''; // Optional tooltip for the button
   export let items: Array<{

@@ -101,5 +101,5 @@ Valid `section` parameter values include:
 - `sources` - Source texts (default)
 - `wordforms` - Word forms list
 
-Implementation details can be found in `/planning/250423_redirect_query_param_languages_page.md`.
+Implementation details can be found in `/docs/planning/250423_redirect_query_param_languages_page.md`.
 
