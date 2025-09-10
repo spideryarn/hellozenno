@@ -713,6 +713,342 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_calls: {
+        Row: {
+          completed_at: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          created_by: string | null
+          document_id: string | null
+          error_code: string | null
+          error_message: string | null
+          extra: Json | null
+          extra_usage: Json | null
+          finish_reason: string | null
+          id: string
+          latency_ms: number | null
+          model_id: string
+          prompt_input: string
+          prompt_template: string | null
+          prompt_tokens: number | null
+          prompt_type: string
+          reasoning_tokens: number | null
+          response_text: string | null
+          status: string
+          total_tokens: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completion_tokens?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          extra?: Json | null
+          extra_usage?: Json | null
+          finish_reason?: string | null
+          id?: string
+          latency_ms?: number | null
+          model_id: string
+          prompt_input: string
+          prompt_template?: string | null
+          prompt_tokens?: number | null
+          prompt_type: string
+          reasoning_tokens?: number | null
+          response_text?: string | null
+          status: string
+          total_tokens?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          completion_tokens?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          extra?: Json | null
+          extra_usage?: Json | null
+          finish_reason?: string | null
+          id?: string
+          latency_ms?: number | null
+          model_id?: string
+          prompt_input?: string
+          prompt_template?: string | null
+          prompt_tokens?: number | null
+          prompt_type?: string
+          reasoning_tokens?: number | null
+          response_text?: string | null
+          status?: string
+          total_tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_calls_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_calls_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "ai_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_models: {
+        Row: {
+          context_window: number
+          created_at: string | null
+          description: string | null
+          display_name: string
+          extra: Json | null
+          id: string
+          input_token_cost: number | null
+          max_output_tokens: number
+          model_id: string
+          output_token_cost: number | null
+          provider: string
+          supports_thinking: boolean | null
+          updated_at: string | null
+          version: string
+        }
+        Insert: {
+          context_window: number
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          extra?: Json | null
+          id?: string
+          input_token_cost?: number | null
+          max_output_tokens: number
+          model_id: string
+          output_token_cost?: number | null
+          provider: string
+          supports_thinking?: boolean | null
+          updated_at?: string | null
+          version: string
+        }
+        Update: {
+          context_window?: number
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          extra?: Json | null
+          id?: string
+          input_token_cost?: number | null
+          max_output_tokens?: number
+          model_id?: string
+          output_token_cost?: number | null
+          provider?: string
+          supports_thinking?: boolean | null
+          updated_at?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          ai_call_id: string | null
+          content: string
+          created_at: string | null
+          extra: Json | null
+          id: string
+          role: string
+          sequence_number: number
+          thread_id: string
+        }
+        Insert: {
+          ai_call_id?: string | null
+          content: string
+          created_at?: string | null
+          extra?: Json | null
+          id?: string
+          role: string
+          sequence_number: number
+          thread_id: string
+        }
+        Update: {
+          ai_call_id?: string | null
+          content?: string
+          created_at?: string | null
+          extra?: Json | null
+          id?: string
+          role?: string
+          sequence_number?: number
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_ai_call_id_fkey"
+            columns: ["ai_call_id"]
+            isOneToOne: false
+            referencedRelation: "ai_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          document_id: string | null
+          extra: Json | null
+          id: string
+          model_id: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          extra?: Json | null
+          id?: string
+          model_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          extra?: Json | null
+          id?: string
+          model_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_threads_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_threads_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "ai_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_enhancements: {
+        Row: {
+          ai_call_id: string | null
+          content: Json
+          created_at: string | null
+          document_id: string
+          extra: Json | null
+          id: string
+          subtype: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_call_id?: string | null
+          content: Json
+          created_at?: string | null
+          document_id: string
+          extra?: Json | null
+          id?: string
+          subtype?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_call_id?: string | null
+          content?: Json
+          created_at?: string | null
+          document_id?: string
+          extra?: Json | null
+          id?: string
+          subtype?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_enhancements_ai_call_id_fkey"
+            columns: ["ai_call_id"]
+            isOneToOne: false
+            referencedRelation: "ai_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_enhancements_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          html_content: string
+          id: string
+          is_public: boolean | null
+          language_code: string | null
+          original_file_type: string | null
+          plaintext_content: string
+          slug: string
+          source_url: string | null
+          storage_path: string | null
+          title: string
+          updated_at: string | null
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          html_content: string
+          id?: string
+          is_public?: boolean | null
+          language_code?: string | null
+          original_file_type?: string | null
+          plaintext_content: string
+          slug: string
+          source_url?: string | null
+          storage_path?: string | null
+          title: string
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          is_public?: boolean | null
+          language_code?: string | null
+          original_file_type?: string | null
+          plaintext_content?: string
+          slug?: string
+          source_url?: string | null
+          storage_path?: string | null
+          title?: string
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Relationships: []
+      }
       lemma: {
         Row: {
           antonyms: Json | null
@@ -976,6 +1312,30 @@ export type Database = {
           id?: number
           target_language_code?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          preferences: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1425,21 +1785,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1457,14 +1821,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1480,14 +1846,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1503,14 +1871,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -1518,14 +1888,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

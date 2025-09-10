@@ -32,7 +32,10 @@ cd "$PROJECT_ROOT/frontend"
 # Generate Supabase types
 echo "Generating Supabase database types..."
 # Use local database for type generation including auth schema
-npx supabase gen types typescript --local --schema public --schema auth > src/lib/database.types.ts
+if ! npx supabase gen types typescript --local --schema public --schema auth > src/lib/database.types.ts 2>&1; then
+    echo "❌ ERROR: Docker Desktop app is not running and/or run \`supabase start\`"
+    exit 1
+fi
 # If you prefer using your project ID instead of local, use:
 # npx supabase gen types typescript --project-id "$PROJECT_ID" --schema public --schema auth > src/lib/database.types.ts
 echo "Supabase types generated successfully!"
