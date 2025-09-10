@@ -27,38 +27,50 @@
     if (!searchQuery.trim() || !targetLanguageCode) return '';
     return `/language/${targetLanguageCode}/search?q=${encodeURIComponent(searchQuery)}`;
   }
+  function buildSearchUrl(query: string) {
+    if (!query.trim() || !targetLanguageCode) return '';
+    return `/language/${targetLanguageCode}/search?q=${encodeURIComponent(query)}`;
+  }
   
   function isOnSearchPage() {
     if (!browser) return false; // Default to false during SSR
     return window.location.pathname.includes(`/language/${targetLanguageCode}/search`);
   }
   
-  async function handleSearch(event: MouseEvent | KeyboardEvent) {
-    if (!searchQuery.trim()) return;
-    
+  async function navigateToSearch(query: string, event?: MouseEvent | KeyboardEvent) {
+    if (!browser) return;
+    if (!query.trim()) return;
     if (!targetLanguageCode) {
       console.error('Target language code not provided to SearchBarMini component');
       return;
     }
-    
-    // If we're on the search page, use goto navigation to stay in the same tab
+
+    // Respect user modifier keys or middle-click to let the browser handle it
+    if (event instanceof MouseEvent && (event.metaKey || event.ctrlKey || event.button === 1)) {
+      return;
+    }
+
+    const url = buildSearchUrl(query);
+    if (!url) return;
+
     if (isOnSearchPage()) {
-      // Set loading state
       isSearching = true;
-      
       try {
-        await goto(getSearchUrl());
+        await goto(url);
       } finally {
-        // Reset loading state after navigation completes
         isSearching = false;
       }
-      
-      // Prevent default for anchor click when handling with goto
-      if (event instanceof MouseEvent) {
-        event.preventDefault();
-      }
+    } else {
+      window.open(url, '_blank', 'noopener');
     }
-    // For all other cases, the default anchor behavior will open in a new tab
+
+    if (event instanceof MouseEvent) {
+      event.preventDefault();
+    }
+  }
+
+  async function handleSearch(event: MouseEvent | KeyboardEvent) {
+    await navigateToSearch(searchQuery, event);
   }
   
   function clearSearch() {
@@ -77,9 +89,9 @@
       if (searchInput) {
         searchInput.focus();
       }
-      // Auto-trigger search if there's text pasted
-      if (text.trim() && searchButton) {
-        searchButton.click();
+      // Trigger search directly using the pasted text
+      if (text.trim()) {
+        navigateToSearch(text);
       }
     } catch (error) {
       console.error('Failed to read clipboard:', error);
@@ -144,9 +156,7 @@
         on:keydown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            if (searchButton) {
-              searchButton.click();
-            }
+            navigateToSearch(searchQuery);
           } else if (e.key === 'Escape') {
             e.preventDefault();
             clearSearch();
