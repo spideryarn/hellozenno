@@ -1,5 +1,4 @@
 credentials/
-gjdutils/
 _secrets.py
 .env.*
 .pytest_cache/**/*
@@ -10,7 +9,6 @@ __pycache__/
 .DS_Store
 backup/
 obsolete/
-.cursor/rules/gjdutils_rules
 
 # Frontend-related entries
 node_modules/
