@@ -43,12 +43,54 @@ Both types of source files support:
 - Interactive word linking
 - Practice sentence generation
 
-## Getting Started
+## Quick Start for Developers
 
-See the following documentation for setup and development:
-- `docs/DEVOPS.md` for development setup and infrastructure details
-- `docs/DATABASE.md` for database configuration
-- `.env.example` for required environment variables
-- [Changelog](/changelog) for recent updates and changes
+### Prerequisites
+- Docker Desktop app installed and running
+- Node.js and npm installed
+- Python 3.10+ installed
+- Supabase CLI installed (`brew install supabase/tap/supabase`)
 
-Copy `.env.example` to `.env.local` and fill in your credentials to get started. 
+### Setup Steps
+
+1. **Start Docker and Supabase:**
+   ```bash
+   # Make sure Docker Desktop app is running first
+   supabase start
+   ```
+
+2. **Configure environment:**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env.local
+   # Edit .env.local and fill in your credentials
+   ```
+
+3. **Run the backend (Terminal 1):**
+   ```bash
+   source .env.local
+   export FLASK_PORT=3000
+   ./scripts/local/run_backend.sh
+   ```
+   The Flask API will run on http://localhost:3000
+
+4. **Run the frontend (Terminal 2):**
+   ```bash
+   source .env.local
+   ./scripts/local/run_frontend.sh
+   ```
+   The SvelteKit app will run on http://localhost:5173
+
+5. **View the application:**
+   Open http://localhost:5173 in your browser
+
+### Detailed Documentation
+
+For more detailed setup and development information:
+- `backend/docs/DEVOPS.md` - Full development setup and infrastructure details
+- `backend/docs/DATABASE.md` - Database configuration and management
+- `backend/docs/MIGRATIONS.md` - Database migration procedures
+- `frontend/docs/AUTH.md` - Authentication setup with Supabase
+- `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` - Frontend architecture overview
+- `.env.example` - Required environment variables reference
+- [Changelog](/changelog) - Recent updates and changes 
