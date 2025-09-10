@@ -53,6 +53,14 @@ pytest -k test_name  # Single test
 
 The project uses Vercel for deployment with separate projects for backend and frontend.
 
+#### Prerequisites
+The deployment script requires a Python virtual environment with backend dependencies:
+```bash
+# Activate virtual environment (e.g., /Users/greg/.venvs/hellozenno__backend)
+source /path/to/venv/bin/activate
+pip install -r backend/requirements.txt
+```
+
 #### Full Deployment
 ```bash
 ./scripts/prod/deploy.sh  # Deploy both backend and frontend to production

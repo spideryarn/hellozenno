@@ -85,6 +85,7 @@ cd frontend && npm run check
 ./scripts/local/migrations_list.sh # Check status
 
 # Production
-./scripts/prod/deploy.sh          # Deploy
+source /Users/greg/.venvs/hellozenno__backend/bin/activate
+./scripts/prod/deploy.sh          # Deploy (see backend/docs/DEVOPS.md)
 ./scripts/prod/backup_db.sh       # Backup DB
 ```
