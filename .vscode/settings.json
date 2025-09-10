@@ -28,5 +28,6 @@
   "python.testing.unittestEnabled": false,
   "terminal.integrated.env.osx": {
     "GOOGLE_APPLICATION_CREDENTIALS": "${workspaceFolder}/credentials/google-service-account-key.json"
-  }
+},
+"python.languageServer": "None"
 }
