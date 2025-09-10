@@ -1,217 +1,90 @@
-# HelloZenno Project Reference
+# HelloZenno AI Agent Instructions
 
-## 1. Application Purpose
+AI-powered language learning app with interactive vocabulary and audio generation.
 
-HelloZenno is an AI-powered language learning application for intermediate/advanced learners that provides:
-- Interactive vocabulary exploration with rich dictionary metadata 
-- Enhanced text with hover explanations for unfamiliar words
-- Audio generation for words and sentences
-- Flashcards and listening practice exercises
+See also:
+- `README.md` - Project overview and quick start
+- `docs/DOCUMENTATION_ORGANISATION.md` - Complete documentation guide
+- `docs/PROJECT_STRUCTURE.md` - Directory structure and data flow
 
-For more details, see `./README.md`
+## Architecture
 
-## 2. Project Architecture
+**Stack**: SvelteKit frontend + Flask API + Supabase (PostgreSQL + Auth)
 
-HelloZenno uses a SvelteKit/TypeScript frontend with a Flask API backend and Supabase for authentication and database:
+**Key files**:
+- Backend entry: `backend/api/index.py`
+- Frontend routes: `frontend/src/routes/`
+- Database models: `backend/db_models.py`
+- Migrations: `backend/migrations/`
 
-```
-┌─────────────────────┐      ┌─────────────────────┐      ┌─────────────────────┐
-│                     │      │                     │      │                     │
-│  SvelteKit Frontend │◄────►│    Flask Backend    │◄────►│ Supabase PostgreSQL │
-│                     │      │                     │      │                     │
-└─────────────────────┘      └─────────────────────┘      └─────────────────────┘
-        ▲                              ▲                            ▲
-        │                              │                            │
-        ▼                              │                            │
-┌─────────────────────┐               │                            │
-│                     │               │                            │
-│  Supabase Auth      │◄──────────────┴────────────────────────────┘
-│                     │
-└─────────────────────┘
-```
+**Documentation**:
+- Architecture: `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`
+- Database: `backend/docs/DATABASE.md`, `backend/docs/MODELS.md`
+- Auth: `frontend/docs/AUTH.md`
 
-- **Backend (Flask + PostgreSQL)**
-  - `api/index.py` - Main Flask application entry point
-  - `views/` - Route handlers and API functions
-  - `utils/` - Helper functions
-  - See `backend/docs/MODELS.md` for database schema overview
-  - `db_models.py` - for detailed definition of database models (using Peewee ORM)
-  - `migrations/` - Database migration scripts
-  
-- **SvelteKit Frontend**
-  - `frontend/src/routes/` - SvelteKit routes and pages
-  - `frontend/src/lib/components/` - Reusable Svelte components
-  - `frontend/src/lib/generated/routes.ts` - Auto-generated API route types
-  - `frontend/static/` - Static assets and CSS
-  - See `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` for architecture overview
+## Coding Principles
 
-## 3. Coding Principles
+See `docs/instructions/CODING-PRINCIPLES.md` for full principles.
 
-- Prioritise simplicity, debuggability, and readability
-- Keep changes minimal and focused on the task at hand
-- Fix root causes cleanly rather than applying bandaids
-- Raise errors early, clearly & fatally; avoid excessive try/except
-- Use sub-functions to make long/complex functions clearer
-- Comment sparingly - only explain surprising or confusing sections
-- Start simple, get v1 working, then add complexity
-- Question things that don't make sense rather than proceeding blindly
-- Use lowercase types for type hints (we use a recent Python version, so `list[str]` instead of `List[str]` from typing)
+Key points:
+- Keep changes minimal and focused
+- Fix root causes, not symptoms
+- Start simple, add complexity later
+- Use lowercase type hints (`list[str]` not `List[str]`)
 
-## 4. Development Guidelines
+## Key Development Info
 
-### 4.1 Authentication
+### Authentication
+- Supabase JWT tokens
+- Backend decorators: `@api_auth_required`, `@api_auth_optional`
+- See: `frontend/docs/AUTH.md`
 
-HelloZenno uses Supabase Authentication with JWT tokens:
+### Environment
+- `.env.local` (development)
+- `.env.testing` (test)
+- `.env.prod` (production)
 
-- Frontend: Uses `@supabase/ssr` for server-side rendering compatibility
-- Backend: Uses decorators in `auth_utils.py` to protect routes:
-  - `@api_auth_required`: Requires valid JWT token
-  - `@api_auth_optional`: Checks token if present but allows anonymous access
+### Database
+- PostgreSQL via Supabase
+- Peewee ORM
+- Migrations: `./scripts/local/migrate.sh`
+- See: `backend/docs/MIGRATIONS.md`
 
-See `frontend/docs/AUTH.md` for comprehensive details on auth implementation.
+### Logging
+- Backend: `/logs/backend.log` (Loguru)
+- Frontend: `/logs/frontend.log`
+- Usage: `from loguru import logger`
 
-### 4.2 Environment Setup
+### Frontend
+- **Styling**: Bootstrap dark theme, `--hz-color-*` variables
+- **Components**: Enhanced text, DataGrid, Cards
+- **API**: Type-safe with generated routes
+- See: `frontend/docs/STYLING.md`, `frontend/docs/ENHANCED_TEXT.md`
 
-Configuration uses environment files:
-- `.env.local` - Local development
-- `.env.testing` - Test environment
-- `.env.prod` - Production environment
+### Testing & Debugging
+- Frontend type check: `cd frontend && npm run check`
+- Debug logs: Check `/logs/backend.log` and `/logs/frontend.log`
+- See: `backend/docs/DEBUGGING.md`
 
-Required variables include database connection, Supabase keys, and API endpoints.
+### AI Development Modes
+- See `docs/instructions/` for special modes
 
-### 4.3 Database & Migrations
-
-- Always follow `backend/docs/MIGRATIONS.md`
-- PostgreSQL via Supabase, accessed through Peewee ORM
-- Migrations managed via `peewee-migrate`
-- Always run migrations through scripts, never modify directly
+## Common Commands
 
 ```bash
-# Run migrations locally
-./scripts/local/migrate.sh
+# Development (user has these running)
+source .env.local
+./scripts/local/run_backend.sh    # Flask on :3000
+./scripts/local/run_frontend.sh   # SvelteKit on :5173
 
-# Check applied migrations
-./scripts/local/migrations_list.sh
-
-# Connect to database with nice formatting
-psql -d hellozenno_development -P pager=off -x auto
-```
-
-See `backend/docs/DATABASE.md` and `backend/docs/MIGRATIONS.md` for details.
-
-### 4.4 Logging
-
-- **Backend logs**: `/logs/backend.log` (Loguru)
-- **SvelteKit logs**: `/logs/frontend.log`
-
-Import and use logger in Python code:
-```python
-from loguru import logger
-logger.info("Message")
-logger.debug("Debug info")
-logger.warning("Warning message")
-logger.error("Error message")
-```
-
-See `backend/docs/DEBUGGING.md` for troubleshooting tips and `backend/docs/CODING_PYTHON.md` for Python style guidelines.
-
-### 4.5 Frontend Development
-
-#### UI Components & Styling
-
-HelloZenno uses Bootstrap with a custom dark theme and a component library:
-
-- `Card.svelte`, `Sentence.svelte`, `EnhancedText.svelte`, etc.
-- Custom CSS variables in `theme-variables.css` (always use `--hz-color-*` variables)
-- Phosphor icons with consistent sizing and weights
-
-See `frontend/docs/STYLING.md` and `frontend/docs/SITE_ORGANISATION.md` for details.
-
-#### Type-Safe API Integration
-
-```typescript
-import { RouteName } from '$lib/generated/routes';
-import { apiFetch, getApiUrl } from '$lib/api';
-import { getPageUrl } from '$lib/navigation';
-
-// API call with type checking
-const data = await apiFetch({
-  routeName: RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
-  params: { target_language_code: 'el', wordform: 'γεια' }
-});
-
-// Generate URLs
-const apiUrl = getApiUrl(RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, 
-  { target_language_code: 'el', wordform: 'γεια' });
-const pageUrl = getPageUrl('wordform', { target_language_code: 'el', wordform: 'γεια' });
-```
-
-See `backend/docs/URL_REGISTRY.md` and `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md` for details.
-
-#### Enhanced Text & Search
-
-- **Enhanced Text**: Interactive word highlighting with hover tooltips
-- **Search**: Unified search with exact, case-insensitive, normalized, and translation matching
-
-See `frontend/docs/ENHANCED_TEXT.md` and `frontend/docs/SEARCH.md` for implementation details.
-
-#### Sourcefile Processing
-
-Source files (text, image, audio) form the core content:
-- Text tab: Enhanced interactive text
-- Words tab: Extracted vocabulary
-- Phrases tab: Multi-word expressions
-- Translation tab: English translation
-- Image/Audio tabs: Original media
-
-See `frontend/docs/SOURCEFILE_PAGES.md` for details.
-
-### 4.6 Testing & Debugging
-
-- Frontend: Use Playwright MCP for browser testing
-- Use Perplexity_ask/Fetch_url MCPs for web research
-- Test API endpoints with curl or Postman
-
-```bash
-# Run Python tests - currently OUT OF DATE
-cd backend && python -m pytest
-
-# Check frontend type safety
-cd frontend && npm run check
-```
-
-See `backend/docs/TESTING.md` for testing patterns.
-
-### 4.7 Development Modes
-
-Special Claude modes for specific tasks:
-- `docs/instructions/ARCHITECT-MODE.md`: For high-level design discussions
-- `docs/instructions/SURGEON-MODE.md`: For precise code surgery
-- `docs/instructions/SOUNDING-BOARD-MODE.md`: For brainstorming and feedback
-- `docs/instructions/detective-scientist-mode.md`: For investigating issues
-
-## 5. Common Commands
-
-### Development
-```bash
-# Run Flask server - the user will always have this running in another terminal
-source .env.local && ./scripts/local/run_backend.sh
-
-# Run SvelteKit development server - the user will always have this running in another terminal
-source .env.local && ./scripts/local/run_frontend.sh
-
-# Check for type errors
+# Type checking
 cd frontend && npm run check
 
-# Generate routes typescript file - this runs automatically when we restart Flask dev server
-cd backend && FLASK_APP=api.index flask generate-routes-ts
-```
+# Database
+./scripts/local/migrate.sh        # Run migrations
+./scripts/local/migrations_list.sh # Check status
 
-### Deployment
-```bash
-# Deploy to production (user should run this)
-./scripts/prod/deploy.sh
-
-# Backup production database (user should run this)
-./scripts/prod/backup_db.sh
+# Production
+./scripts/prod/deploy.sh          # Deploy
+./scripts/prod/backup_db.sh       # Backup DB
 ```
