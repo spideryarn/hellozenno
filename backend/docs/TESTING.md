@@ -76,3 +76,58 @@ Test-specific mocks should remain in their respective test files.
 6. Use the `test_data` fixture for common test data
 7. Clean up after tests using the `clean_tables` fixture
 8. Use mocks for external services and slow operations
+
+
+## Integration-first strategy and common failure modes (backend)
+
+Prioritize end-to-end view/API tests over unit tests. Keep a small, representative set of high-value integration tests; avoid duplicative unit tests that re-check ORM details or template internals.
+
+When writing or fixing backend tests, watch for these common issues:
+
+1) Missing blueprint registration in the test app (High impact)
+   - Symptom: Jinja `url_for('languages_views.languages_list_vw')` BuildError in templates like `base.jinja`.
+   - Fix: Ensure `languages_views_bp` is registered in the test client app (in `tests/backend/conftest.py`).
+     ```python
+     from views.languages_views import languages_views_bp
+     app.register_blueprint(languages_views_bp)
+     ```
+
+2) Auth-protected API endpoints returning 401 in tests (High impact)
+   - Many `/api/*` routes use `@api_auth_required`. In tests, either attach an Authorization header with a valid test token, or temporarily bypass auth.
+   - Simple bypass for the suite (recommended for integration tests that don't care about auth itself):
+     ```python
+     # in tests/backend/conftest.py
+     import pytest
+     @pytest.fixture(autouse=True)
+     def bypass_api_auth(monkeypatch):
+         from utils import auth_utils
+         def fake_attempt():
+             from flask import g
+             g.user = {"id": "00000000-0000-0000-0000-000000000000", "email": "test@example.com"}
+             g.user_id = g.user["id"]
+             g.profile = None
+             return True
+         monkeypatch.setattr(auth_utils, "_attempt_authentication_and_set_g", fake_attempt)
+     ```
+
+3) External services called during tests (Medium impact)
+   - Never call ElevenLabs/Whisper/YouTube in tests. Use mocks from `tests/mocks/`.
+   - Prefer module/fixture-level mocking so route-level tests don’t accidentally hit the network:
+     ```python
+     # Example: ensure TTS is mocked across tests that might trigger audio generation
+     @pytest.fixture(autouse=True)
+     def mock_tts(monkeypatch):
+         def _fake_outloud(*args, **kwargs):
+             mp3_filen = kwargs.get("mp3_filen")
+             if mp3_filen:
+                 with open(mp3_filen, "wb") as f:
+                     f.write(b"test audio data")
+         monkeypatch.setattr(
+             "gjdutils.outloud_text_to_speech.outloud_elevenlabs", _fake_outloud
+         )
+     ```
+
+4) Language segmentation resources (Low impact)
+   - Chinese/Japanese ICU dictionaries may be unavailable in CI. Related tests skip when dictionaries are missing; that’s expected.
+
+Guidance: keep a lean suite focused on page/API flows and critical behaviors; remove or consolidate low-signal unit tests that duplicate coverage or require heavy mocking.
