@@ -1,6 +1,15 @@
+<script module lang="ts">
+  import { defineMeta } from '@storybook/addon-svelte-csf';
+  import DataGridComponent from '$lib/components/DataGrid.svelte';
+  
+  const { Meta, Story, Template } = defineMeta({
+    title: 'Components/DataGrid',
+    component: DataGridComponent
+  });
+</script>
+
 <script lang="ts">
   import DataGrid from '$lib/components/DataGrid.svelte';
-  import { Meta, Story, Template } from '@storybook/addon-svelte-csf';
 
   const columns = [
     { id: 'id', header: 'ID', width: 60 },
@@ -16,7 +25,7 @@
   }
 </script>
 
-<Meta title="Components/DataGrid" component={DataGrid} />
+<Meta />
 
 <Template let:args>
   <div style="margin: 1em;">
