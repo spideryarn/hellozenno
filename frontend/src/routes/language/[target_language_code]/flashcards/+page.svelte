@@ -40,7 +40,7 @@
   let startUrl = getStartUrl();
   
   // Function to clear filter and navigate
-  function clearFilter(event) {
+  function clearFilter(event: Event) {
     event.preventDefault();
     window.location.href = `/language/${target_language_code}/flashcards`;
   }

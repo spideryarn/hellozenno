@@ -2,7 +2,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import DataGridComponent from '$lib/components/DataGrid.svelte';
   
-  const { Meta, Story, Template } = defineMeta({
+  const { Story } = defineMeta({
     title: 'Components/DataGrid',
     component: DataGridComponent
   });
@@ -25,13 +25,7 @@
   }
 </script>
 
-<Meta />
-
-<Template let:args>
-  <div style="margin: 1em;">
-    <DataGrid {...args} />
-  </div>
-</Template>
+<!-- Disabled meta/template to avoid svelte-check errors in disabled story -->
 
 <Story name="Default (No Links)" args={{ columns, rows }} />
 

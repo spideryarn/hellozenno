@@ -500,13 +500,21 @@ def create_interactive_word_data(
     # Normalize input text for consistent offsets
     text_nfc = ensure_nfc(text)
 
+    # Language-aware normalization: for scripts like Thai/Chinese/Japanese/Korean,
+    # avoid stripping combining marks; compare in NFC directly.
+    def normalize_for_lang(s: str) -> str:
+        s_nfc = ensure_nfc(s)
+        if target_language_code.lower() in {"th", "zh", "ja", "ko"}:
+            return s_nfc
+        return normalize_text(s_nfc)
+
     # Build lookup maps for known wordforms (normalized)
     normalized_form_to_metadata: dict[str, dict] = {}
     for wf in wordforms:
         wf_wordform_nfc = ensure_nfc(wf.get("wordform", "") or "")
         if not wf_wordform_nfc:
             continue
-        normalized_key = normalize_text(wf_wordform_nfc)
+        normalized_key = normalize_for_lang(wf_wordform_nfc)
         # Prefer first seen; later duplicates won't overwrite
         normalized_form_to_metadata.setdefault(normalized_key, wf)
 
@@ -516,7 +524,7 @@ def create_interactive_word_data(
         wordlike_spans = [s for s in spans if s[3]]
         for start_pos, end_pos, token, _is_wordlike in wordlike_spans:
             token_nfc = ensure_nfc(token)
-            token_norm = normalize_text(token_nfc)
+            token_norm = normalize_for_lang(token_nfc)
             wf = normalized_form_to_metadata.get(token_norm)
             if not wf:
                 continue
@@ -564,7 +572,7 @@ def create_interactive_word_data(
         for match in pattern.finditer(text_nfc):
             word = match.group(0)
             start_pos, end_pos = match.start(), match.end()
-            normalized_word = normalize_text(ensure_nfc(word))
+            normalized_word = normalize_for_lang(ensure_nfc(word))
             wf = normalized_form_to_metadata.get(normalized_word)
             if not wf:
                 continue

@@ -1,9 +1,12 @@
-<script lang="ts">
-  // Accept either categories-based structure (for FAQ) or flat items (for blog posts)
+<script context="module" lang="ts">
   export type TocItem = { id: string; title: string };
   export type TocCategory = { title: string; faqs: { id: string; question?: string; title?: string }[] };
-  export let categories: TocCategory[] | null = null;
-  export let items: TocItem[] | null = null;
+</script>
+
+<script lang="ts">
+  // Accept either categories-based structure (for FAQ) or flat items (for blog posts)
+  export let categories: import('./TableOfContents.svelte').TocCategory[] | null = null;
+  export let items: import('./TableOfContents.svelte').TocItem[] | null = null;
   export let title = "";
 </script>
 
