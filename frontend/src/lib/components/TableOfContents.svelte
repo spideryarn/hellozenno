@@ -1,7 +1,9 @@
 <script lang="ts">
   // Accept either categories-based structure (for FAQ) or flat items (for blog posts)
-  export let categories = null;
-  export let items = null;
+  export type TocItem = { id: string; title: string };
+  export type TocCategory = { title: string; faqs: { id: string; question?: string; title?: string }[] };
+  export let categories: TocCategory[] | null = null;
+  export let items: TocItem[] | null = null;
   export let title = "";
 </script>
 

@@ -15,6 +15,9 @@
   
   let query = data.query || '';
   let result: SearchResult | null = data.initialResult || null;
+  // Normalize possibly undefined values for strict typing
+  const targetLanguageCode = data.target_language_code ?? '';
+  const langName = data.langName ?? 'Language';
   let loading = false;
   
   // Ensure query is properly set from URL on mount and perform search if needed
@@ -36,8 +39,8 @@
       result = {
         status: 'empty_query',
         query: '',
-        target_language_code: data.target_language_code,
-        target_language_name: data.langName,
+        target_language_code: targetLanguageCode,
+        target_language_name: langName,
         data: {}
       };
     }
@@ -63,19 +66,19 @@
     
     try {
       // Use the supabase client from the data prop
-      result = await unifiedSearch(supabase, data.target_language_code, searchQuery);
+      result = await unifiedSearch(supabase, targetLanguageCode, searchQuery);
       
       // Handle direct navigation for single matches
       if (result.status === 'redirect') {
-        goto(`/language/${data.target_language_code}/wordform/${result.data.redirect_to}`);
+        goto(`/language/${targetLanguageCode}/wordform/${result.data.redirect_to}`);
       } else if (result.status === 'found') {
         const wordform = result.data.wordform_metadata.wordform;
         const lemma = result.data.wordform_metadata.lemma;
         
         if (wordform === lemma) {
-          goto(`/language/${data.target_language_code}/lemma/${encodeURIComponent(lemma)}`);
+          goto(`/language/${targetLanguageCode}/lemma/${encodeURIComponent(lemma)}`);
         } else {
-          goto(`/language/${data.target_language_code}/wordform/${encodeURIComponent(wordform)}`);
+          goto(`/language/${targetLanguageCode}/wordform/${encodeURIComponent(wordform)}`);
         }
       }
     } catch (error: any) {
@@ -91,8 +94,8 @@
       result = {
         status: 'error',
         query: searchQuery,
-        target_language_code: data.target_language_code,
-        target_language_name: data.langName,
+        target_language_code: targetLanguageCode,
+        target_language_name: langName,
         error: error instanceof Error ? error.message : 'Unknown error',
         data: {}
       };
@@ -105,18 +108,18 @@
 <svelte:head>
   <title>
     {query 
-      ? `"${truncate(query, 20)}" | Search | ${data.langName} | ${SITE_NAME}`
-      : `Search | ${data.langName} | ${SITE_NAME}`}
+      ? `"${truncate(query, 20)}" | Search | ${langName} | ${SITE_NAME}`
+      : `Search | ${langName} | ${SITE_NAME}`}
   </title>
 </svelte:head>
 
 <div class="container">
-  <h1>Search {data.langName || result?.target_language_name || 'Language'} Words</h1>
+  <h1>Search {langName || result?.target_language_name || 'Language'} Words</h1>
   
   <div class="mb-4">
     <SearchBarMini 
-      targetLanguageCode={data.target_language_code} 
-      languageName={data.langName || result?.target_language_name || 'Language'} 
+      targetLanguageCode={targetLanguageCode} 
+      languageName={langName || result?.target_language_name || 'Language'} 
       autofocus={true}
       initialQuery={query}
     />
@@ -148,11 +151,11 @@
       {#if result.status === 'empty_query'}
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Search {data.langName || 'Language'} Words</h5>
+            <h5 class="card-title">Search {langName || 'Language'} Words</h5>
             <p>Enter a word to search. You can search for:</p>
             <ul>
-              <li>Words in {data.langName || 'this language'}</li>
-              <li>English words to find {data.langName || 'foreign language'} translations</li>
+              <li>Words in {langName || 'this language'}</li>
+              <li>English words to find {langName || 'foreign language'} translations</li>
               <li>Word forms and dictionary forms (lemmas)</li>
             </ul>
             

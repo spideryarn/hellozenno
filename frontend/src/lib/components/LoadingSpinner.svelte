@@ -1,8 +1,9 @@
 <script lang="ts">
 	// Support for size variants and custom styling using the new runes syntax
-	let { size = undefined, style = '' }: { 
+	let { size = undefined, style = '', className = '' }: { 
 		size?: 'sm' | 'md' | 'lg', 
-		style?: string 
+		style?: string,
+		className?: string 
 	} = $props();
 	
 	// Determine size based on the size prop using the new runes syntax
@@ -54,7 +55,7 @@
 	height="1em"
 	fill="currentColor"
 	viewBox="0 0 256 256"
-	class="spinner-svg {sizeClass}"
+	class="spinner-svg {sizeClass} {className}"
 	role="status"
 	aria-live="polite"
 	aria-label="Loading..."

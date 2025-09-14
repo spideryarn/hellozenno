@@ -26,7 +26,16 @@
   }
   
   // Define error-specific data
-  const errorInfo = {
+  const errorInfo: Record<number, {
+    title: string;
+    message: string;
+    icon: string;
+    actionText?: string;
+    actionUrl?: string;
+    actionIcon?: string;
+    class: string;
+    headerClass: string;
+  }> = {
     401: {
       title: 'Authentication Required',
       message: 'Login required to access this content',
@@ -61,7 +70,16 @@
   };
   
   // Get the appropriate error information or fall back to default
-  const currentError = errorInfo[page.status] || {
+  const currentError: {
+    title: string;
+    message: string;
+    icon: string;
+    actionText?: string;
+    actionUrl?: string;
+    actionIcon?: string;
+    class: string;
+    headerClass: string;
+  } = errorInfo[page.status] || {
     title: 'Error',
     message: 'An unexpected error occurred',
     icon: 'ph-warning-circle',
@@ -70,8 +88,10 @@
   };
   
   // Check for authentication_required_for_generation flag in error body
-  const isAuthRequiredForGeneration = page.error?.body?.authentication_required_for_generation || 
-                                     page.error?.body?.audio_requires_login;
+  type KitError = Error & { body?: any; stack?: string };
+  const err = (page.error ?? null) as KitError | null;
+  const isAuthRequiredForGeneration = err?.body?.authentication_required_for_generation || 
+                                     err?.body?.audio_requires_login;
   
   // Override with auth-required details if detected
   if (isAuthRequiredForGeneration) {
@@ -86,8 +106,8 @@ Error Details:
 - URL: ${page.url.toString()}
 - User Agent: ${typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'}
 - Time: ${new Date().toISOString()}
-- Message: ${page.error?.message || currentError.title}
-${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
+- Message: ${err?.message || currentError.title}
+${err?.stack ? '\nStack Trace:\n' + err.stack : ''}
   `.trim();
   
   onMount(async () => {
@@ -112,7 +132,7 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
         <div class={`card-header ${currentError.headerClass}`}>
           <h2 class="mb-0">
             <i class={`${currentError.icon} me-2`}></i>
-            {page.status} - {page.error?.message || currentError.title}
+            {page.status} - {err?.message || currentError.title}
           </h2>
         </div>
         <div class="card-body">
@@ -164,7 +184,7 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
           </ul>
         </div>
         
-        {#if dev && page.error}
+        {#if dev && err}
           <div class="card-footer bg-dark border-top border-danger p-0">
             <div class="accordion" id="errorDetails">
               <div class="accordion-item bg-dark text-white border-0">
@@ -188,11 +208,11 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
                 >
                   <div class="accordion-body">
                     <h5>Error:</h5>
-                    <pre class="bg-dark text-danger p-3 rounded">{page.status}: {page.error.message}</pre>
+                    <pre class="bg-dark text-danger p-3 rounded">{page.status}: {err.message}</pre>
                     
-                    {#if page.error.stack}
+                    {#if err.stack}
                       <h5 class="mt-3">Stack Trace:</h5>
-                      <pre class="bg-dark text-light p-3 rounded" style="overflow-x: auto; max-height: 300px;">{page.error.stack}</pre>
+                      <pre class="bg-dark text-light p-3 rounded" style="overflow-x: auto; max-height: 300px;">{err.stack}</pre>
                     {/if}
                     
                     <h5 class="mt-3">Route Information:</h5>
@@ -213,9 +233,9 @@ ${page.error?.stack ? '\nStack Trace:\n' + page.error.stack : ''}
                       <pre class="bg-dark text-light p-3 rounded" style="overflow-x: auto; max-height: 300px;">{JSON.stringify(page.data, null, 2)}</pre>
                     {/if}
                     
-                    {#if page.error.body}
+                    {#if err.body}
                       <h5 class="mt-3">Error Body:</h5>
-                      <pre class="bg-dark text-light p-3 rounded" style="overflow-x: auto; max-height: 300px;">{JSON.stringify(page.error.body, null, 2)}</pre>
+                      <pre class="bg-dark text-light p-3 rounded" style="overflow-x: auto; max-height: 300px;">{JSON.stringify(err.body, null, 2)}</pre>
                     {/if}
                   </div>
                 </div>

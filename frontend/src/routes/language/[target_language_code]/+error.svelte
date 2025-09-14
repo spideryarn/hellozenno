@@ -1,6 +1,6 @@
 <script lang="ts">
   // Import from root error component
-  import ErrorComponent from '/src/routes/+error.svelte';
+  import ErrorComponent from '../../+error.svelte';
 </script>
 
 <ErrorComponent />

@@ -7,8 +7,9 @@ text to ensure parity with rendering.
 
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import unicodedata
+import os
 
 try:  # Optional dependency
     from icu import (
@@ -57,6 +58,60 @@ def icu_locale_for(lang_code: str) -> str:
     return supported.get(lc, lc or "und")
 
 
+def _thai_contains_letter(token: str) -> bool:
+    for ch in token:
+        code = ord(ch)
+        if 0x0E00 <= code <= 0x0E7F:  # Thai block
+            return True
+    return False
+
+
+def _segment_text_with_pythainlp(text_nfc: str) -> Optional[List[Tuple[int, int, str, bool]]]:
+    try:
+        from pythainlp.tokenize import word_tokenize  # type: ignore
+    except Exception:
+        return None
+
+    engine = os.getenv("PYTHAINLP_ENGINE", "newmm").strip() or "newmm"
+    tokens = word_tokenize(text_nfc, engine=engine)
+
+    spans: List[Tuple[int, int, str, bool]] = []
+    cursor = 0
+    n = len(text_nfc)
+    for tok in tokens:
+        if tok == "":
+            continue
+        # Find next occurrence of token at/after cursor
+        pos = text_nfc.find(tok, cursor)
+        if pos == -1:
+            # Fallback: advance one char to avoid infinite loop
+            if cursor < n:
+                spans.append((cursor, cursor + 1, text_nfc[cursor : cursor + 1], False))
+                cursor += 1
+            continue
+        if pos > cursor:
+            # Non-token gap (whitespace or punctuation)
+            spans.append((cursor, pos, text_nfc[cursor:pos], False))
+        start = pos
+        end = pos + len(tok)
+        spans.append((start, end, tok, _thai_contains_letter(tok)))
+        cursor = end
+
+    if cursor < n:
+        spans.append((cursor, n, text_nfc[cursor:n], False))
+    return spans
+
+
+def _choose_engine_for(lang_code: str) -> str:
+    # Per-language override via env e.g. SEGMENTATION_TH=pythainlp
+    override = os.getenv(f"SEGMENTATION_{lang_code.upper()}")
+    if override:
+        return override.strip().lower()
+    # Global default
+    default_engine = os.getenv("SEGMENTATION_DEFAULT", "icu").strip().lower()
+    return default_engine or "icu"
+
+
 def segment_text_to_word_spans(text: str, lang_code: str) -> List[Tuple[int, int, str, bool]]:
     """Segment text into word spans using ICU when available.
 
@@ -68,6 +123,13 @@ def segment_text_to_word_spans(text: str, lang_code: str) -> List[Tuple[int, int
     """
 
     text_nfc = ensure_nfc(text)
+
+    # Thai plugin path if explicitly chosen
+    engine = _choose_engine_for(lang_code)
+    if lang_code.lower() == "th" and engine == "pythainlp":
+        spans = _segment_text_with_pythainlp(text_nfc)
+        if spans is not None:
+            return spans
 
     if _ICU_AVAILABLE:
         locale = Locale(icu_locale_for(lang_code))
@@ -88,7 +150,7 @@ def segment_text_to_word_spans(text: str, lang_code: str) -> List[Tuple[int, int
             start = end
         return spans
 
-    # Fallback: naive segmentation on whitespace and punctuation boundaries.
+    # Fallback: if ICU unavailable or plugin import failed, naive segmentation.
     # This is only to keep functionality when ICU isn't present; it is not
     # sufficient for languages like Thai/Chinese/Japanese.
     spans: List[Tuple[int, int, str, bool]] = []

@@ -3,7 +3,7 @@ import type { PageLoad } from "./$types";
 import { getApiUrl } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: PageLoad = async ({ params, fetch, parent }) => {
     // Use target_language_code for API calls, mapping from the route parameter
     const { target_language_code, slug } = params;
 
@@ -26,10 +26,12 @@ export const load: PageLoad = async ({ params, fetch }) => {
         }
 
         const phraseData = await response.json();
+        const { session } = await parent();
 
         return {
             phrase: phraseData,
             target_language_code,
+            session,
         };
     } catch (err) {
         console.error("Error in load function:", err);

@@ -41,6 +41,7 @@ from views.sentence_views import sentence_views_bp
 from views.search_views import search_views_bp
 from views.auth_views import auth_views_bp
 from views.system_views import system_views_bp
+from views.languages_views import languages_views_bp
 
 # Commented out missing API blueprint
 # from views.core_api import core_api_bp
@@ -169,6 +170,7 @@ def client(fixture_for_testing_db):
 
     # Register blueprints
     app.register_blueprint(core_views_bp)
+    app.register_blueprint(languages_views_bp)
     app.register_blueprint(wordform_views_bp)
     app.register_blueprint(lemma_views_bp)
     app.register_blueprint(sourcedir_views_bp)
@@ -222,3 +224,37 @@ def client(fixture_for_testing_db):
 
     with app.test_client() as client:
         yield client
+
+
+@pytest.fixture(autouse=True)
+def bypass_api_auth(monkeypatch):
+    """Bypass API auth for tests that don't care about authentication.
+
+    Sets a dummy user and profile so @api_auth_required passes without touching DB or external services.
+    """
+    from utils import auth_utils
+
+    def fake_attempt():
+        from flask import g
+        g.user = {"id": "00000000-0000-0000-0000-000000000000", "email": "test@example.com"}
+        g.user_id = g.user["id"]
+        # Non-None sentinel to satisfy decorator checks without DB
+        g.profile = {"id": 1}
+        return True
+
+    monkeypatch.setattr(auth_utils, "_attempt_authentication_and_set_g", fake_attempt)
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_autouse(monkeypatch):
+    """Mock ElevenLabs TTS globally so tests never hit the network."""
+
+    def _fake_outloud(*args, **kwargs):
+        mp3_filen = kwargs.get("mp3_filen")
+        if mp3_filen:
+            with open(mp3_filen, "wb") as f:
+                f.write(b"test audio data")
+
+    monkeypatch.setattr(
+        "gjdutils.outloud_text_to_speech.outloud_elevenlabs", _fake_outloud
+    )

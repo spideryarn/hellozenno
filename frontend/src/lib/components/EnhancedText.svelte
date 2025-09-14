@@ -445,7 +445,7 @@
     {#each processTextWithWords() as segment}
       {#if segment.type === 'word'}
         <a
-          href={`/language/${target_language_code}/wordform/${encodeURIComponent(segment.word)}`}
+          href={`/language/${target_language_code}/wordform/${encodeURIComponent(segment.word ?? '')}`}
           class="word-link"
           data-word={segment.word}
           data-lemma={segment.lemma ?? ''}

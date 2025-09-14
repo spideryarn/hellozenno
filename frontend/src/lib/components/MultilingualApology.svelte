@@ -45,7 +45,7 @@
     .slice(0, count - 1);
   
   // Combine English with random languages  
-  const selectedApologies = [english, ...randomLanguages];
+  const selectedApologies = [english, ...randomLanguages].filter(Boolean) as { language: string; text: string; code: string }[];
 </script>
 
 <div class={`multilingual-apology ${className}`}>

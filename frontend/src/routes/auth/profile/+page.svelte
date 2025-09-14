@@ -115,11 +115,11 @@
                 </div>
                 
                 {#if errorMessage}
-                    <Alert type="danger" class="mt-3">{errorMessage}</Alert>
+                    <Alert type="danger" className="mt-3">{errorMessage}</Alert>
                 {/if}
 
                 {#if successMessage}
-                    <Alert type="success" class="mt-3">{successMessage}</Alert>
+                    <Alert type="success" className="mt-3">{successMessage}</Alert>
                 {/if}
 
                 {#if data.profile}
@@ -158,7 +158,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <button type="submit" class="btn btn-primary" disabled={isLoading}>
                                 {#if isLoading}
-                                    <LoadingSpinner size="sm" class="me-2" />
+                                    <LoadingSpinner size="sm" className="me-2" />
                                     <span>Saving...</span>
                                 {:else}
                                     <FloppyDisk size={18} weight="fill" class="me-2" />

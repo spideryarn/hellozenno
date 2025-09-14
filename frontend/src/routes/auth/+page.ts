@@ -30,6 +30,7 @@ export const load = (({ url, parent }) => {
         }
         
         return {
+            session,
             nextUrl: validatedNextUrl
         };
     });
