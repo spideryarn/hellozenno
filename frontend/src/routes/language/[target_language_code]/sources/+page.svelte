@@ -121,6 +121,7 @@
           <a class="nav-link" href="/language/{languageCode}/sentences">Sentences</a>
           <a class="nav-link" href="/language/{languageCode}/phrases">Phrases</a>
           <a class="nav-link" href="/language/{languageCode}/flashcards">Flashcards</a>
+          <!-- Generate moved to Sourcedir page Add Files dropdown -->
         </nav>
       </div>
       

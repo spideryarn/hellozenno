@@ -90,3 +90,22 @@ Success output includes:
 - **Level Balancing**: Ensures even distribution across CEFR levels
 - **Topic Relevance**: Generates culturally appropriate topics for each language
 - **Automatic Tagging**: Categorizes content based on title keywords
+
+## Web UI
+
+You can generate content directly from the browser (logged-in users):
+
+1. Open a sourcedir page, e.g. `/language/{code}/source/{sourcedir_slug}`.
+2. Click “Add Files” → “Generate AI Content…”.
+3. Optionally provide a Title, choose a Language Level (or leave Auto). The new file will be created inside the currently viewed sourcedir.
+4. Submit to create the Sourcefile. On success you’ll be redirected to the new file’s Text tab.
+
+Backend endpoint:
+- `POST /api/lang/sourcefile/{code}/generate`
+  - Body: `{ title?: string, language_level?: 'A1'|'A2'|'B1'|'B2'|'C1'|'C2', sourcedir_path?: string }`
+  - Response: `{ sourcedir_slug, sourcefile_slug, url_text_tab }`
+
+References:
+- `backend/views/sourcefile_api.py` → `generate_sourcefile_api`
+- `backend/utils/generate_sourcefiles.py` → helper functions
+- `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/+page.svelte` → Sourcedir page (Generate AI Content modal)

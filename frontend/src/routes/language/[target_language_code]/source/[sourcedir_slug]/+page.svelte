@@ -109,6 +109,13 @@
   let isUrlLoading = $state(false);
   let urlErrorMessage = $state('');
   let urlSuccessMessage = $state('');
+  // Generate AI Content modal state
+  let showGenerateModal = $state(false);
+  let genTitle = $state('');
+  let genLevel = $state(''); // '' means Auto
+  const GEN_LEVELS = ['Auto','A1','A2','B1','B2','C1','C2'];
+  let isGenerating = $state(false);
+  let genError = $state('');
   
   // Column configuration for DataGrid v1
   const columns = [
@@ -522,6 +529,39 @@
       isCreatingText = false; // Reset only on error, since on success we navigate away
     }
   }
+
+  // Generate AI Content submit
+  async function submitGenerate() {
+    if (isGenerating) return;
+    genError = '';
+    isGenerating = true;
+    try {
+      const body: any = {};
+      if (genTitle.trim()) body.title = genTitle.trim();
+      if (genLevel && genLevel !== 'Auto') body.language_level = genLevel;
+      // Ensure generated file is created in this sourcedir
+      body.sourcedir_path = sourcedir.path;
+
+      const result = await apiFetch({
+        supabaseClient: data.supabase,
+        routeName: RouteName.SOURCEFILE_API_GENERATE_SOURCEFILE_API,
+        params: { target_language_code },
+        options: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        },
+        timeoutMs: 120000,
+      });
+
+      const url = (result as any)?.url_text_tab || `/language/${target_language_code}/source/${sourcedir.slug}`;
+      window.location.href = url;
+    } catch (e: any) {
+      genError = e?.message || 'Failed to generate content';
+    } finally {
+      isGenerating = false;
+    }
+  }
   
   // YouTube Modal Functions
   function openYoutubeModal() {
@@ -689,6 +729,8 @@
                         title="<strong>Format:</strong><br>For files with descriptions, use:<br><code>Description text<br>----<br>Main content</code>">Upload Text Files</button></li>
             <li><button class="dropdown-item" type="button" onclick={() => isUrlModalOpen = true}>Upload from URL</button></li>
             <li><button class="dropdown-item" type="button" onclick={openCreateTextModal}>Create From Text</button></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item" type="button" onclick={() => showGenerateModal = true}>Generate AI Content…</button></li>
             <!-- Uncomment if YouTube upload is desired -->
             <!-- <li><button class="dropdown-item" type="button" onclick={openYoutubeModal}>Upload YouTube Video</button></li> -->
           </ul>
@@ -777,6 +819,44 @@
             {:else}
               Create
             {/if}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Generate AI Content Modal -->
+{#if showGenerateModal}
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+      <div class="modal-content" role="dialog" aria-labelledby="generate-modal-title" tabindex="-1">
+        <div class="modal-header">
+          <h5 class="modal-title" id="generate-modal-title">Generate AI Content</h5>
+          <button type="button" class="btn-close" aria-label="Close" onclick={() => showGenerateModal = false}></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="genTitle">Title (optional)</label>
+            <input id="genTitle" class="form-control" bind:value={genTitle} placeholder="e.g. A day at the market" />
+          </div>
+          <div class="mb-2">
+            <label class="form-label" for="genLevel">Language Level</label>
+            <select id="genLevel" class="form-select" bind:value={genLevel}>
+              {#each GEN_LEVELS as lvl}
+                <option value={lvl === 'Auto' ? '' : lvl}>{lvl}</option>
+              {/each}
+            </select>
+            <div class="form-text">Default is Auto (recommended)</div>
+          </div>
+          {#if genError}
+            <div class="alert alert-danger mt-2">{genError}</div>
+          {/if}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" onclick={() => showGenerateModal = false} disabled={isGenerating}>Cancel</button>
+          <button class="btn btn-success" type="button" onclick={submitGenerate} disabled={isGenerating}>
+            {#if isGenerating}Generating…{:else}Generate{/if}
           </button>
         </div>
       </div>
