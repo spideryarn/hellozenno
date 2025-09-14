@@ -39,7 +39,11 @@ def flashcard_sentence_api(target_language_code: str, slug: str):
     )
 
     if "error" in data:
-        return jsonify({"error": data["error"]}), 404
+        status_code = data.get("status_code", 404)
+        error_body = {k: v for k, v in data.items() if k in ("error", "error_code", "details")}
+        if "error" not in error_body and isinstance(data.get("error"), str):
+            error_body["error"] = data["error"]
+        return jsonify(error_body), status_code
 
     # Remove the sentence model from the API response
     if "sentence" in data:
@@ -81,106 +85,35 @@ def random_flashcard_api(target_language_code: str):
         status_code = data.get("status_code", 404)
         # Log the error with appropriate level based on status code
         if status_code >= 500:
-            logger.error(f"Error getting random flashcard: {data['error']}")
-        elif status_code == 204:
-            logger.info(f"No matching sentences found: {data['error']}")
+            logger.error(
+                f"Error getting random flashcard: {data.get('error')} ({data.get('error_code')})"
+            )
         else:
-            logger.warning(f"Issue getting random flashcard: {data['error']}")
-
-        return jsonify({"error": data["error"]}), status_code
-
-    # Get the full sentence object to include more information
-    try:
-        sentence = Sentence.get(
-            (Sentence.target_language_code == target_language_code)
-            & (Sentence.id == data["id"])  # type: ignore
-        )
-    except DoesNotExist:
-        logger.error(
-            f"Sentence not found with ID {data['id']} for language {target_language_code}"
-        )
-        return jsonify({"error": "Sentence not found"}), 404
-    except Exception as e:
-        logger.exception(f"Error getting random flashcard: {str(e)}")
-        return jsonify({"error": "Error getting random flashcard"}), 500
-
-    # Pre-generate audio if needed
-    if not sentence.audio_data:
-        try:
-            ensure_model_audio_data(
-                model=sentence,
-                should_add_delays=True,
-                verbose=1,
+            logger.warning(
+                f"Issue getting random flashcard: {data.get('error')} ({data.get('error_code')})"
             )
-        except Exception as e:
-            # Log error properly but continue - audio can be generated on demand
-            logger.error(f"Error pre-generating audio: {str(e)}")
 
-    # Add word recognition data for enhanced text tooltips
-    recognized_words = []
-    try:
-        # Extract tokens from the sentence text
-        tokens_in_text = extract_tokens(str(sentence.sentence))
+        error_body = {k: v for k, v in data.items() if k in ("error", "error_code", "details")}
+        if "error" not in error_body and isinstance(data.get("error"), str):
+            error_body["error"] = data["error"]
+        return jsonify(error_body), status_code
 
-        # Query database for all wordforms in this language that might be in the text
-        wordforms = list(
-            Wordform.select().where(
-                (Wordform.target_language_code == target_language_code)
-            )
-        )
-
-        # Filter wordforms in Python using normalize_text to match tokens
-        normalized_tokens = {normalize_text(t) for t in tokens_in_text}
-        matching_wordforms = [
-            wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
-        ]
-
-        # Convert to dictionary format for create_interactive_word_data
-        wordforms_d = []
-        for wordform in matching_wordforms:
-            wordform_d = wordform.to_dict()
-            wordforms_d.append(wordform_d)
-
-        # Create structured word recognition data
-        recognized_words, found_wordforms = create_interactive_word_data(
-            text=str(sentence.sentence),
-            wordforms=wordforms_d,
-            target_language_code=target_language_code,
-        )
-    except Exception as e:
-        # Log error but don't fail the entire request
-        logger.error(
-            f"Error generating word recognition data for sentence {sentence.id}: {e}"
-        )
-        recognized_words = []
-
-    # Prepare response data
+    # Keep the random endpoint lightweight; return minimal routing info
     response_data = {
-        "id": sentence.id,
-        "slug": sentence.slug,
-        "text": sentence.sentence,
-        "translation": sentence.translation,
-        "lemma_words": sentence.lemma_words,
-        "recognized_words": recognized_words,  # Add word recognition data
-        "audio_url": url_for(
-            "sentence_api.get_sentence_audio_api",
-            target_language_code=target_language_code,
-            sentence_id=sentence.id,
-        ),
+        "id": data.get("id"),
+        "slug": data.get("slug"),
         "metadata": {
             "target_language_code": target_language_code,
             "language_name": get_language_name(target_language_code),
         },
     }
-
-    # Add source information if present
     if sourcefile_slug:
         response_data["metadata"]["sourcefile"] = sourcefile_slug
     if sourcedir_slug:
         response_data["metadata"]["sourcedir"] = sourcedir_slug
 
     logger.info(
-        f"Successfully retrieved random flashcard with sentence ID {sentence.id}"
+        f"Successfully retrieved random flashcard with sentence ID {response_data.get('id')}"
     )
     return jsonify(response_data)
 
@@ -199,6 +132,10 @@ def flashcard_landing_api(target_language_code: str):
     )
 
     if "error" in data:
-        return jsonify({"error": data["error"]}), 404
+        status_code = data.get("status_code", 404)
+        error_body = {k: v for k, v in data.items() if k in ("error", "error_code", "details")}
+        if "error" not in error_body and isinstance(data.get("error"), str):
+            error_body["error"] = data["error"]
+        return jsonify(error_body), status_code
 
     return jsonify(data)

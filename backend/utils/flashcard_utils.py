@@ -16,6 +16,23 @@ from flask import url_for
 from utils.exceptions import AuthenticationRequiredForGenerationError
 
 
+def _make_error(
+    *, error_code: str, message: str, status_code: int = 404, details: dict | None = None
+) -> dict:
+    """Create a structured error payload for flashcard endpoints.
+
+    Includes an error_code, human message, HTTP-ish status_code hint, and optional details.
+    """
+    payload = {
+        "error": message,
+        "error_code": error_code,
+        "status_code": status_code,
+    }
+    if details:
+        payload["details"] = details
+    return payload
+
+
 def get_flashcard_landing_data(
     target_language_code: str, sourcefile_slug=None, sourcedir_slug=None
 ):
@@ -41,7 +58,10 @@ def get_flashcard_landing_data(
     # If sourcedir is provided, get lemma count
     if sourcedir_slug:
         try:
-            sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
+            sourcedir_entry = Sourcedir.get(
+                (Sourcedir.slug == sourcedir_slug)
+                & (Sourcedir.target_language_code == target_language_code)
+            )
             lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
             lemma_count = len(lemmas) if lemmas else 0
         except DoesNotExist:
@@ -49,10 +69,14 @@ def get_flashcard_landing_data(
     # If sourcefile is provided, get its lemma count
     elif sourcefile_slug:
         try:
+            # Validate the sourcefile belongs to the target language via its sourcedir
             sourcefile_entry = (
                 Sourcefile.select()
-                .join(SourcefileWordform)
-                .where(Sourcefile.slug == sourcefile_slug)
+                .join(Sourcedir)
+                .where(
+                    (Sourcefile.slug == sourcefile_slug)
+                    & (Sourcedir.target_language_code == target_language_code)
+                )
                 .get()
             )
             lemmas = get_sourcefile_lemmas(
@@ -135,7 +159,10 @@ def get_flashcard_sentence_data(
     # If sourcedir is provided, get lemma count
     if sourcedir_slug:
         try:
-            sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
+            sourcedir_entry = Sourcedir.get(
+                (Sourcedir.slug == sourcedir_slug)
+                & (Sourcedir.target_language_code == target_language_code)
+            )
             lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
             lemma_count = len(lemmas)
         except DoesNotExist:
@@ -143,10 +170,14 @@ def get_flashcard_sentence_data(
     # If sourcefile is provided, get its lemma count
     elif sourcefile_slug:
         try:
+            # Validate the sourcefile belongs to the target language via its sourcedir
             sourcefile_entry = (
                 Sourcefile.select()
-                .join(SourcefileWordform)
-                .where(Sourcefile.slug == sourcefile_slug)
+                .join(Sourcedir)
+                .where(
+                    (Sourcefile.slug == sourcefile_slug)
+                    & (Sourcedir.target_language_code == target_language_code)
+                )
                 .get()
             )
             lemmas = get_sourcefile_lemmas(
@@ -262,34 +293,116 @@ def get_random_flashcard_data(
     # If sourcedir is provided, get lemmas for filtering
     if sourcedir_slug:
         try:
-            sourcedir_entry = Sourcedir.get(Sourcedir.slug == sourcedir_slug)
+            sourcedir_entry = Sourcedir.get(
+                (Sourcedir.slug == sourcedir_slug)
+                & (Sourcedir.target_language_code == target_language_code)
+            )
             lemmas = get_sourcedir_lemmas(target_language_code, sourcedir_slug)
+            if not lemmas:
+                return _make_error(
+                    error_code="sourcedir_has_no_vocabulary",
+                    message="Directory contains no processed vocabulary",
+                    status_code=404,
+                    details={
+                        "target_language_code": target_language_code,
+                        "sourcedir_slug": sourcedir_slug,
+                        "lemma_count": 0,
+                    },
+                )
         except DoesNotExist:
-            return {"error": "Sourcedir not found", "status_code": 404}
+            return _make_error(
+                error_code="invalid_sourcedir_slug",
+                message="Sourcedir not found",
+                status_code=404,
+                details={
+                    "target_language_code": target_language_code,
+                    "sourcedir_slug": sourcedir_slug,
+                },
+            )
     # If sourcefile is provided, get its lemmas for filtering
     elif sourcefile_slug:
         try:
             sourcefile_entry = (
                 Sourcefile.select()
-                .join(SourcefileWordform)
-                .where(Sourcefile.slug == sourcefile_slug)
+                .join(Sourcedir)
+                .where(
+                    (Sourcefile.slug == sourcefile_slug)
+                    & (Sourcedir.target_language_code == target_language_code)
+                )
                 .get()
             )
             lemmas = get_sourcefile_lemmas(
                 target_language_code, sourcefile_entry.sourcedir.slug, sourcefile_slug
             )
+            if not lemmas:
+                return _make_error(
+                    error_code="sourcefile_has_no_vocabulary",
+                    message="Source file contains no processed vocabulary",
+                    status_code=404,
+                    details={
+                        "target_language_code": target_language_code,
+                        "sourcefile_slug": sourcefile_slug,
+                        "sourcedir_slug": sourcefile_entry.sourcedir.slug,
+                        "lemma_count": 0,
+                    },
+                )
         except DoesNotExist:
-            return {"error": "Sourcefile not found", "status_code": 404}
+            return _make_error(
+                error_code="invalid_sourcefile_slug",
+                message="Sourcefile not found",
+                status_code=404,
+                details={
+                    "target_language_code": target_language_code,
+                    "sourcefile_slug": sourcefile_slug,
+                },
+            )
+
+    # If there are no sentences at all for this language, surface that specifically
+    total_sentences = (
+        Sentence.select()
+        .where(Sentence.target_language_code == target_language_code)
+        .count()
+    )
+    if total_sentences == 0:
+        return _make_error(
+            error_code="no_sentences_for_language",
+            message="No sentences available for this language",
+            status_code=404,
+            details={
+                "target_language_code": target_language_code,
+                "total_sentences": 0,
+            },
+        )
 
     # Get random sentence
     sentence_data = get_random_sentence(
         target_language_code=target_language_code,
         required_lemmas=lemmas if lemmas else None,
         profile=profile,
+        generate_missing_audio=False,
     )
 
     if not sentence_data:
-        # Return 204 (No Content) to distinguish between "no data" and actual errors
-        return {"error": "No matching sentences found", "status_code": 204}
+        # Differentiate between no results with lemmas vs generic no results
+        if lemmas:
+            return _make_error(
+                error_code="no_sentences_match_required_lemmas",
+                message="No sentences contain the selected vocabulary",
+                status_code=404,
+                details={
+                    "target_language_code": target_language_code,
+                    "lemma_count": len(lemmas),
+                    "sample_lemmas": list(lemmas)[:5] if isinstance(lemmas, list) else None,
+                },
+            )
+        return _make_error(
+            error_code="no_sentences_for_language",
+            message="No sentences available for this language",
+            status_code=404,
+            details={
+                "target_language_code": target_language_code,
+                "total_sentences": 0,
+            },
+        )
 
     return sentence_data
