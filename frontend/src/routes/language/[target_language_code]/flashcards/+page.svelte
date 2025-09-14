@@ -14,6 +14,10 @@
   // Get error message from URL if present
   let error = '';
   let isError = false;
+  let errorCode = '';
+  let errorLemmaCount: number | null = null;
+  let errorSourcefile = '';
+  let errorSourcedir = '';
   
   // Helper for generating the start button URL
   function getStartUrl() {
@@ -49,15 +53,35 @@
   }
   
   onMount(() => {
-    // Check for error message in URL
+    // Check for structured error message in URL
     const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.has('error')) {
+    const ec = searchParams.get('error_code');
+    if (ec) {
       isError = true;
-      const errorType = searchParams.get('error');
-      if (errorType === 'no_sentences_found') {
-        error = 'No matching sentences found for this language.';
-      } else {
-        error = 'An error occurred while loading flashcards.';
+      errorCode = ec;
+      errorLemmaCount = searchParams.get('lemma_count') ? Number(searchParams.get('lemma_count')) : null;
+      errorSourcefile = searchParams.get('sourcefile') || '';
+      errorSourcedir = searchParams.get('sourcedir') || '';
+
+      switch (errorCode) {
+        case 'sourcefile_has_no_vocabulary':
+          error = 'This file has no processed vocabulary yet.';
+          break;
+        case 'sourcedir_has_no_vocabulary':
+          error = 'This directory has no processed vocabulary yet.';
+          break;
+        case 'invalid_sourcefile_slug':
+        case 'invalid_sourcedir_slug':
+          error = 'Not found. Check the link or try a different filter.';
+          break;
+        case 'no_sentences_match_required_lemmas':
+          error = 'No sentences contain the selected words.';
+          break;
+        case 'no_sentences_for_language':
+          error = 'No sentences are available for this language yet.';
+          break;
+        default:
+          error = 'An error occurred while loading flashcards.';
       }
     }
 

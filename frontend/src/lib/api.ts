@@ -47,14 +47,28 @@ export async function apiFetch<T extends RouteName, R = any>({
     params,
     options = {},
     timeoutMs = 30000, // Default 30 second timeout
+    searchParams,
 }: {
     supabaseClient?: SupabaseClient | null; // Allow optional/null
     routeName: T;
     params: RouteParams[T];
     options?: RequestInit;
     timeoutMs?: number;
+    searchParams?: Record<string, string | number | boolean | undefined>;
 }): Promise<R> {
-    const url = getApiUrl(routeName, params);
+    let url = getApiUrl(routeName, params);
+    if (searchParams && Object.keys(searchParams).length > 0) {
+        const usp = new URLSearchParams();
+        Object.entries(searchParams).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== "") {
+                usp.append(k, String(v));
+            }
+        });
+        const qs = usp.toString();
+        if (qs) {
+            url = `${url}?${qs}`;
+        }
+    }
     console.log(`[apiFetch] Requesting URL: ${url}`);
     
     // Use the passed supabaseClient. It might be null or undefined.

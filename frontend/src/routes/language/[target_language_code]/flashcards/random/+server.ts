@@ -32,7 +32,11 @@ export const GET: RequestHandler = async ({ params, url, locals, fetch }) => {
         const data = await apiFetch({
             supabaseClient: locals.supabase, // Server-side Supabase client from locals
             routeName: RouteName.FLASHCARD_API_RANDOM_FLASHCARD_API,
-            params: apiParams,
+            params: { target_language_code },
+            searchParams: {
+                ...(sourcefile ? { sourcefile } : {}),
+                ...(sourcedir ? { sourcedir } : {}),
+            },
             options: { method: 'GET' }
         });
 
@@ -66,21 +70,35 @@ export const GET: RequestHandler = async ({ params, url, locals, fetch }) => {
                 Location: redirectUrl,
             },
         });
-    } catch (err) {
+    } catch (err: any) {
         // If it's already a redirect, just pass it through
         if (err instanceof Response && err.status === 302) {
             throw err;
         }
 
-        // Otherwise, redirect to the flashcards landing page with an error
+        // Otherwise, redirect to the flashcards landing page with a structured error
         console.error("Error fetching random flashcard:", err);
+
+        const errorCode = err?.body?.error_code || 'unknown_error';
+        const details = err?.body?.details || {};
+
+        const redirectParams = new URLSearchParams();
+        redirectParams.set('error_code', String(errorCode));
+        if (details.sourcedir_slug || details.sourcedir) {
+            redirectParams.set('sourcedir', String(details.sourcedir_slug || details.sourcedir));
+        }
+        if (details.sourcefile_slug || details.sourcefile) {
+            redirectParams.set('sourcefile', String(details.sourcefile_slug || details.sourcefile));
+        }
+        if (typeof details.lemma_count === 'number') {
+            redirectParams.set('lemma_count', String(details.lemma_count));
+        }
+
+        const location = `/language/${target_language_code}/flashcards` + (redirectParams.toString() ? `?${redirectParams.toString()}` : '');
 
         return new Response(null, {
             status: 302,
-            headers: {
-                Location:
-                    `/language/${target_language_code}/flashcards?error=no_sentences_found`,
-            },
+            headers: { Location: location },
         });
     }
 };
