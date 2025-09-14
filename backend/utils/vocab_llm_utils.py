@@ -489,7 +489,11 @@ def create_interactive_word_data(
     Returns (recognized_words, found_wordforms).
     """
     from utils.word_utils import ensure_nfc, normalize_text
-    from utils.segmentation import segment_text_to_word_spans, is_icu_available
+    from utils.segmentation import (
+        segment_text_to_word_spans,
+        is_icu_available,
+        get_engine_name_for,
+    )
 
     # Track which wordforms we actually find in the text
     found_wordforms: set[str] = set()
@@ -522,6 +526,34 @@ def create_interactive_word_data(
         # Use segmentation-first path
         spans = segment_text_to_word_spans(text_nfc, target_language_code)
         wordlike_spans = [s for s in spans if s[3]]
+        if os.getenv("HZ_DEBUG_SEGMENTATION", "0").strip() == "1":
+            # Emit debug info: first 100 tokens and engine name
+            engine_name = get_engine_name_for(target_language_code)
+            sample_tokens = [tok for _s, _e, tok, is_w in wordlike_spans[:100]]
+            # Compute intersection diagnostics
+            token_norms = [normalize_for_lang(ensure_nfc(tok)) for _s, _e, tok, _ in wordlike_spans]
+            token_norm_set = set(token_norms)
+            db_norm_keys = set(normalized_form_to_metadata.keys())
+            intersect = token_norm_set & db_norm_keys
+            miss_tokens = list((token_norm_set - db_norm_keys))[:20]
+            db_miss = list((db_norm_keys - token_norm_set))[:20]
+            logger.info(
+                json.dumps(
+                    {
+                        "debug": "segmentation_tokens",
+                        "lang": target_language_code,
+                        "engine": engine_name,
+                        "num_tokens": len(wordlike_spans),
+                        "sample": sample_tokens,
+                        "intersection_count": len(intersect),
+                        "token_norm_count": len(token_norm_set),
+                        "db_wordforms_count": len(db_norm_keys),
+                        "miss_sample": miss_tokens,
+                        "db_miss_sample": db_miss,
+                    },
+                    ensure_ascii=False,
+                )
+            )
         for start_pos, end_pos, token, _is_wordlike in wordlike_spans:
             token_nfc = ensure_nfc(token)
             token_norm = normalize_for_lang(token_nfc)
@@ -553,7 +585,65 @@ def create_interactive_word_data(
         if recognized_words:
             return recognized_words, found_wordforms
 
-        # If nothing found, and legacy is allowed, try legacy regex as a last resort
+        # If nothing found, try known-word fast path before legacy regex
+        if (
+            len(recognized_words) == 0
+            and target_language_code.lower() in {"th", "zh", "ja", "ko"}
+            and os.getenv(
+            "RECOGNITION_KNOWN_WORD_SEARCH", "0"
+            ).strip()
+            == "1"
+        ):
+            try:
+                import ahocorasick  # type: ignore
+
+                automaton = ahocorasick.Automaton()
+                # Insert all known wordforms keyed by their normalized form
+                for norm_key, wf in normalized_form_to_metadata.items():
+                    # Store the original surface for slicing comparison and metadata
+                    automaton.add_word(norm_key, (norm_key, wf))
+                automaton.make_automaton()
+
+                # Scan the normalized text
+                for end_index, (norm_key, wf) in automaton.iter(
+                    normalize_for_lang(text_nfc)
+                ):
+                    start_index = end_index - len(norm_key) + 1
+                    # Map back to original NFC text indices by locating the substring
+                    surface = text_nfc[start_index : end_index + 1]
+                    # Validate the slice matches normalization key
+                    if normalize_for_lang(surface) != norm_key:
+                        continue
+                    found_wordforms.add(wf["wordform"])  # type: ignore[index]
+                    translations = wf.get("translations", [])
+                    if not translations and wf.get("translated_word"):
+                        translations = [
+                            wf.get("translated_word")
+                        ]  # type: ignore[list-item]
+                    recognized_words.append(
+                        {
+                            "word": surface,
+                            "start": start_index,
+                            "end": end_index + 1,
+                            "lemma": wf.get("lemma"),
+                            "translations": translations,
+                            "part_of_speech": wf.get("part_of_speech", "unknown"),
+                            "inflection_type": wf.get("inflection_type", "unknown"),
+                        }
+                    )
+
+                recognized_words.sort(key=lambda w: w["start"])  # Stable ordering
+                logger.info(
+                    f"[known_word_search] lang={target_language_code} recognized_words={len(recognized_words)}"
+                )
+                if recognized_words:
+                    return recognized_words, found_wordforms
+            except Exception as e:  # pragma: no cover - best-effort path
+                logger.warning(
+                    f"[known_word_search] disabled due to error: {type(e).__name__}: {e}"
+                )
+
+        # If still nothing found, and legacy is allowed, try legacy regex as a last resort
         if not use_legacy_regex:
             use_legacy_regex = True
 

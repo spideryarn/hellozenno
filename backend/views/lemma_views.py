@@ -131,6 +131,7 @@ def get_lemma_metadata_vw(target_language_code: str, lemma: str):
         # Import here to avoid circular dependencies
         from views.wordform_views import get_wordform_metadata_vw
         from views.sentence_views import get_sentence_vw
+        from views.lemma_api import delete_lemma_api
 
         return render_template(
             "lemma.jinja",

@@ -182,3 +182,23 @@ def segment_text_to_word_spans(text: str, lang_code: str) -> List[Tuple[int, int
     return spans
 
 
+
+def get_engine_name_for(lang_code: str) -> str:
+    """Return the segmentation engine name that would be used for a language.
+
+    Values: "pythainlp" | "icu" | "naive"
+    """
+
+    engine = _choose_engine_for(lang_code)
+    if lang_code.lower() == "th" and engine == "pythainlp":
+        try:
+            from pythainlp.tokenize import word_tokenize  # type: ignore  # noqa: F401
+
+            return "pythainlp"
+        except Exception:
+            # Fall through to ICU/naive
+            pass
+    if _ICU_AVAILABLE:
+        return "icu"
+    return "naive"
+

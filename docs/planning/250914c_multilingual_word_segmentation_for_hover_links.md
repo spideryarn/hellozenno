@@ -301,3 +301,68 @@ Default mapping proposal:
 Licensing summary (commercial-friendly): ICU (ICU License); PyICU (permissive); PyThaiNLP (Apache 2.0); jieba (MIT); SudachiPy (Apache 2.0). No known conflicts for open source or future commercial use.
 
 
+### Current findings, hypotheses, and actions (2025-09-15)
+
+Findings:
+- Implemented ICU segmentation + NFC offset normalization + Thai plugin path (PyThaiNLP) with env flags:
+  - `SEGMENTATION_TH=pythainlp`, optional `PYTHAINLP_ENGINE=newmm|attacut`.
+- Backend logs on Thai sample route show:
+  - `[segmentation] lang=th segmented_tokens=49 recognized_words=0`
+  - `[legacy_regex] lang=th recognized_words=1`
+- Live API check for `th/luke/mindfulness-teaching-txt` returns `recognized_words_count=1` (word: `เบิกบาน`).
+- DB verification (linked wordforms for that sourcefile) shows many candidates, e.g.: `ระลึก, ย่างก้าว, ของขวัญ, สงบ, เมตตา, ปัญญา, ปัจจุบันขณะ, เบิกบาน, ตื่น, ลมหายใจ, รอยยิ้ม, แห่ง, เดิน, อย่าง, คิด, อยู่, ระลึกถึง, ความมีค่า, ชีวิต, พูด, ใจ, ขึ้นมา, แต่ละ, เช้า`.
+- Tests: segmentation unit tests and Thai offset parity pass; per-language recognition tests skip zh/ja if ICU dicts unavailable.
+
+Hypotheses:
+1) Token–wordform surface mismatch for Thai:
+   - Tokenizer may split compounds (e.g., DB has `ปัจจุบันขณะ` while tokens might be `ปัจจุบัน` + `ขณะ`).
+   - Some DB entries include function words (e.g., `แห่ง`) that should match; mismatch suggests a normalization or mapping gap rather than segmentation quality.
+2) Normalization parity is correct (NFC enforced for both text and DB on save), but our language-aware comparator might still differ on some marks or ZWJ/ZWSP (zero-width) characters in the text.
+3) The `wordforms_for_links` object is correct (dicts with `wordform`, `lemma`, etc.), but our lookup uses a single normalized key; multiple visually identical forms with different codepoints could be missing due to hidden characters.
+4) For languages without whitespace, relying exclusively on segmentation may miss multi-morpheme DB entries. We need a known-word pass independent of segmentation boundaries.
+
+Actions:
+- [x] Add temporary debug instrumentation (guarded by env `HZ_DEBUG_SEGMENTATION=1`) to log:
+  - First 100 word-like tokens from the segmenter (Thai engine in use and token list).
+  - Intersection counts between token set and DB wordform set (both NFC), plus a sample of misses for quick diagnostics.
+- [x] Add an endpoint or structured log block to retrieve segmentation tokens for a specific sourcefile/language for repro.
+- [x] Implement known-word fast path (Aho–Corasick) over the NFC text:
+  - Build automaton from all DB wordforms for the sourcefile/language (NFC, no diacritic stripping for Thai).
+  - Find all matches; merge with segmentation output by preferring AC matches when segmentation returns zero or few hits, or by intersecting/ranking when both produce candidates.
+  - Keep feature flag: `RECOGNITION_KNOWN_WORD_SEARCH=1`.
+- [ ] Re-run Thai sample with `SEGMENTATION_TH=pythainlp` and AC fast path enabled; expect >10 matches if DB list above is present in text.
+- [ ] If AC improves coverage, consider keeping segmentation primarily for offset sanity and fall back to AC for CJK/Thai languages when appropriate.
+- [ ] Investigate zero-width characters in the source text by logging `repr(text)` around problematic spans; strip or normalize if needed.
+
+Commands / Repro notes:
+```bash
+# Run backend on :3000 with Thai plugin
+SEGMENTATION_TH=pythainlp FLASK_PORT=3000 ./scripts/local/run_backend.sh
+
+# Query API summary for the Thai sample
+curl -sS http://localhost:3000/api/lang/sourcefile/th/luke/mindfulness-teaching-txt/text \
+| jq '{recognized_words_count: (.recognized_words|length), sample: (.recognized_words | [.[0:10][] | {word, start, end}])}'
+
+# DB wordforms linked to the sample (verified via Supabase local)
+-- SELECT (see SQL section below) --
+```
+
+SQL used for DB verification:
+```sql
+SELECT w.wordform
+FROM wordform w
+JOIN sourcedir sd ON sd.target_language_code = w.target_language_code
+JOIN sourcefile sf ON sf.sourcedir_id = sd.id
+JOIN sourcefilewordform swf ON swf.sourcefile_id = sf.id AND swf.wordform_id = w.id
+WHERE sd.target_language_code = 'th'
+  AND sd.slug = 'luke'
+  AND sf.slug = 'mindfulness-teaching-txt'
+ORDER BY swf.ordering ASC
+LIMIT 100;
+```
+
+Exit criteria for this stage:
+- Thai sample route shows multiple recognized links (>= 10) matching DB wordforms.
+- Logs show token–wordform intersection > 50% for Thai on this text.
+- Offset parity tests remain green.
+

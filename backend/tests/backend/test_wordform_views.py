@@ -197,13 +197,8 @@ def test_delete_wordform(client, fixture_for_testing_db):
         wordform=wordform.wordform,
     )
     response = client.post(delete_url)
-    assert response.status_code == 302  # Redirect after deletion
-
-    # Check that it redirects to wordforms list
-    wordforms_url = build_url_with_query(
-        client, wordforms_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
-    )
-    assert response.headers["Location"].endswith(wordforms_url)
+    # API returns 204 No Content on successful delete
+    assert response.status_code == 204
 
     # Verify the wordform is deleted from the database
     with pytest.raises(DoesNotExist):
@@ -222,13 +217,8 @@ def test_delete_nonexistent_wordform(client):
         wordform="nonexistent",
     )
     response = client.post(url)
-    assert response.status_code == 302  # Should redirect even if wordform doesn't exist
-
-    # Check that it redirects to wordforms list
-    wordforms_url = build_url_with_query(
-        client, wordforms_list_vw, target_language_code=TEST_TARGET_LANGUAGE_CODE
-    )
-    assert response.headers["Location"].endswith(wordforms_url)
+    # API returns 204 No Content even if resource does not exist
+    assert response.status_code == 204
 
 
 def test_wordforms_list_sorting(client, fixture_for_testing_db):

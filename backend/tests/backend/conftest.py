@@ -132,6 +132,18 @@ def fixture_for_testing_db():
     database.drop_tables(MODELS, safe=True, cascade=True)
     database.create_tables(MODELS)
 
+    # Ensure a dummy auth user exists matching the test g.user_id used in fixtures
+    try:
+        database.execute_sql(
+            """
+            INSERT INTO auth.users (id, email)
+            VALUES ('00000000-0000-0000-0000-000000000000', 'test@example.com')
+            ON CONFLICT (id) DO NOTHING;
+            """
+        )
+    except Exception:
+        pass
+
     yield database
 
     # Cleanup
@@ -227,7 +239,7 @@ def client(fixture_for_testing_db):
 
 
 @pytest.fixture(autouse=True)
-def bypass_api_auth(monkeypatch):
+def bypass_api_auth(monkeypatch, client):
     """Bypass API auth for tests that don't care about authentication.
 
     Sets a dummy user and profile so @api_auth_required passes without touching DB or external services.
@@ -243,6 +255,17 @@ def bypass_api_auth(monkeypatch):
         return True
 
     monkeypatch.setattr(auth_utils, "_attempt_authentication_and_set_g", fake_attempt)
+
+    # Also ensure g is set for every request served by the test client
+    @client.application.before_request
+    def _inject_test_user():
+        from flask import g as _g
+        _g.user = {"id": "00000000-0000-0000-0000-000000000000", "email": "test@example.com"}
+        _g.user_id = _g.user["id"]
+        _g.profile = {"id": 1}
+
+
+# Note: Avoid pushing a global app or request context here to prevent teardown conflicts
 
 
 @pytest.fixture(autouse=True)
