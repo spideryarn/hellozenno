@@ -234,9 +234,15 @@
                 <th scope="col"
                     style="width: {col.width ?? 'auto'}"
                     class={`${col.class ?? ''} ${col.id === sortField ? 'sorted' : ''}`}
-                    role="button"
                     aria-sort={col.id === sortField ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    tabindex="0"
                     on:click={() => cycleSort(col.id)}
+                    on:keydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        cycleSort(col.id);
+                      }
+                    }}
                 >
                   {col.header}
                   {#if col.id === sortField}

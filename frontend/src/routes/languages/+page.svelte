@@ -298,7 +298,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-fill-color: transparent;
+    color: transparent;
     letter-spacing: -0.03em;
   }
   
@@ -467,7 +467,7 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-fill-color: transparent;
+    color: transparent;
   }
   
   :global(.card:hover) .card-background-letter {

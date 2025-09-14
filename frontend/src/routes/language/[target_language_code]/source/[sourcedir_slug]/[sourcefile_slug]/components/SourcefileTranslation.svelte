@@ -33,6 +33,7 @@
     {navigation}
     {target_language_code}
     {sourcedir_slug}
+    {sourcefile_slug}
     view="translation"
     contentRef={translationContentElement}
     minContentHeight={500}

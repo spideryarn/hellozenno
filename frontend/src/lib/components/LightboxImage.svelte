@@ -151,7 +151,6 @@
         class="close-button" 
         on:click={closeLightbox} 
         aria-label="Close lightbox"
-        autofocus
       >
         ×
       </button>

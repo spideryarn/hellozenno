@@ -73,9 +73,19 @@
     </div>
   {:else}
     <div class="d-flex align-items-start mb-3 p-3 border rounded {cssClass}">
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
       <div class="description-content w-100" 
            on:click={editable ? startEditing : undefined} 
-           class:editable={editable}>
+           class:editable={editable}
+           role={editable ? 'button' : undefined}
+           tabindex={editable ? 0 : undefined}
+           on:keydown={(e) => {
+             if (!editable) return;
+             if (e.key === 'Enter' || e.key === ' ') {
+               e.preventDefault();
+               startEditing();
+             }
+           }}>
         {#if description}
           <div>
             {#each description.split(/\n\n+/).map(para => para.trim()) as paragraph, i}

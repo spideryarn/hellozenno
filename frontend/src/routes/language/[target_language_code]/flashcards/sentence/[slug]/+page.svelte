@@ -508,10 +508,7 @@
     font-style: normal;
   }
   
-  /* Optional: Style for the content boxes if needed beyond Bootstrap */
-  .flashcard-content-box {
-    /* Add custom styles if bg-body-tertiary and border aren't enough */
-  }
+  /* Optional: Additional customizations can be added here if needed */
   
   /* Clear filter button styling */
   .clear-filter {
@@ -549,7 +546,6 @@
   }
   
   /* Apply animation when audio element reports it needs interaction */
-  audio:not([autoplay]):not([controls]) ~ .row .play-audio-btn,
   .audio-player-needs-interaction ~ .row .play-audio-btn {
     animation: gentle-pulse 2s infinite;
     background-color: var(--hz-color-primary-green);
