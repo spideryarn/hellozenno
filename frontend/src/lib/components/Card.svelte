@@ -15,9 +15,11 @@
   <a href={linkUrl} class="text-decoration-none">
     <div class="card hz-language-item {className}" style={cardColor ? `--card-color: ${cardColor}` : ''}>
       <div class="card-body">
-        {#if title}
-          <h2 class="card-title">{title}</h2>
-        {/if}
+        <slot name="title">
+          {#if title}
+            <h2 class="card-title">{title}</h2>
+          {/if}
+        </slot>
         {#if subtitle}
           <p class="hz-language-code">{subtitle}</p>
         {/if}
@@ -28,9 +30,11 @@
 {:else}
   <div class="card hz-language-item {className}" style={cardColor ? `--card-color: ${cardColor}` : ''}>
     <div class="card-body">
-      {#if title}
-        <h2 class="card-title">{title}</h2>
-      {/if}
+      <slot name="title">
+        {#if title}
+          <h2 class="card-title">{title}</h2>
+        {/if}
+      </slot>
       {#if subtitle}
         <p class="hz-language-code">{subtitle}</p>
       {/if}
