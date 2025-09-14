@@ -47,7 +47,6 @@
       {navigation}
       {target_language_code}
       {sourcedir_slug}
-      {sourcefile_slug}
       view="phrases"
       contentRef={phrasesContainerElement}
       minContentHeight={500}

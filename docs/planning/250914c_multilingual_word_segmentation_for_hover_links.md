@@ -151,8 +151,8 @@ Acceptance criteria:
 - [ ] Frontend verification (manual for now):
   - Run `./scripts/local/run_backend.sh` and `./scripts/local/run_frontend.sh` and open `http://localhost:5173/language/th/source/luke/mindfulness-teaching-txt/text`.
   - Confirm underlined-hover-links appear widely in the text; hover shows tooltips.
-- [ ] Type-check/UI check:
-  - `cd frontend && npm run check` passes.
+- [x] Type-check/UI check:
+  - `cd frontend && npm run check` passes (0 errors; a11y/CSS warnings remain).
 
 Notes:
 - Per-language test skips: In environments without ICU dictionaries for zh/ja, segmentation may be coarse. Tests skip those cases to keep CI green; Thai passes locally with ICU.
@@ -333,6 +333,13 @@ Actions:
 - [ ] Re-run Thai sample with `SEGMENTATION_TH=pythainlp` and AC fast path enabled; expect >10 matches if DB list above is present in text.
 - [ ] If AC improves coverage, consider keeping segmentation primarily for offset sanity and fall back to AC for CJK/Thai languages when appropriate.
 - [ ] Investigate zero-width characters in the source text by logging `repr(text)` around problematic spans; strip or normalize if needed.
+
+Results (2025-09-15, local dev):
+- Enabled `SEGMENTATION_TH=pythainlp`, `HZ_DEBUG_SEGMENTATION=1`, `RECOGNITION_KNOWN_WORD_SEARCH=1`.
+- Thai sample API now returns `recognized_words_count=21` (>= 10) with tokens like `ลมหายใจ, ของขวัญ, ปัจจุบัน, ระลึกถึง, ย่างก้าว, รอยยิ้ม, ชีวิต, แห่ง, เบิกบาน`.
+- Debug logs: `engine=pythainlp`, `segmented_tokens=43`, `intersection_count=18`, `db_wordforms_count=24`.
+- AC fast path did not trigger (segmentation already produced matches).
+- Frontend type check passes (warnings only); manual UI verification still pending.
 
 Commands / Repro notes:
 ```bash
