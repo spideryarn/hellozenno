@@ -112,6 +112,21 @@ def fixture_for_testing_db():
     # Create tables
     database.connect()
 
+    # Ensure Supabase auth schema and minimal users table exist for FK references
+    try:
+        database.execute_sql("CREATE SCHEMA IF NOT EXISTS auth;")
+        database.execute_sql(
+            """
+            CREATE TABLE IF NOT EXISTS auth.users (
+                id UUID PRIMARY KEY,
+                email TEXT
+            );
+            """
+        )
+    except Exception:
+        # If running on an engine without schema support, ignore
+        pass
+
     # Drop tables if they exist and recreate them to ensure schema is up-to-date
     database.drop_tables(MODELS, safe=True, cascade=True)
     database.create_tables(MODELS)

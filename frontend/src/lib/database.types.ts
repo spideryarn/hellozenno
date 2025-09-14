@@ -1,5 +1,3 @@
-Using workdir /Users/greg/Dropbox/dev/experim/hellozenno
-Connecting to db 5432
 export type Json =
   | string
   | number

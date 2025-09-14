@@ -58,9 +58,9 @@ Build a simple, logged-in web UI to generate AI Sourcefile content, mirroring th
   - [x] Errors: 400 for invalid `language_level` via `validate_language_level`; 500 with message
 - [x] Update URL registry (auto) and TS route constants in dev
   - Route constant: `RouteName.SOURCEFILE_API_GENERATE_SOURCEFILE_API`
-- [ ] Add backend tests: `tests/backend/test_generate_sourcefile_api.py`
-  - [ ] Happy path creates file and returns slugs/url
-  - [ ] Validates language level and auth required
+- [x] Add backend tests: `tests/backend/test_generate_sourcefile_api.py`
+  - [x] Happy path creates file and returns slugs/url
+  - [x] Validates language level and auth required
 
 
 #### Frontend: sourcedir modal
@@ -87,7 +87,7 @@ Build a simple, logged-in web UI to generate AI Sourcefile content, mirroring th
 
 #### Docs and logging
 - [x] Update `backend/docs/CONTENT_GENERATION.md` with web UI usage snippet (Sourcedir → Add Files → Generate)
-- [ ] Note new endpoint in `backend/docs/URL_REGISTRY.md` examples if helpful
+- [x] Note new endpoint in `backend/docs/URL_REGISTRY.md` examples if helpful
 - [x] Add minimal log lines around generation start/finish and parameters
 
 

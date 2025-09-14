@@ -528,7 +528,14 @@ def get_sourcefile_details(
     # Add purpose-specific data
     if purpose in ["text", "translation"]:
         # Add text content for both text and translation tabs
-        result["sourcefile"]["text_target"] = sourcefile_entry.text_target
+        from utils.word_utils import ensure_nfc
+        text_target_nfc = (
+            ensure_nfc(sourcefile_entry.text_target)
+            if sourcefile_entry.text_target
+            else sourcefile_entry.text_target
+        )
+        # Note: We only normalize the target text (used for offsets). English is left as-is
+        result["sourcefile"]["text_target"] = text_target_nfc
         result["sourcefile"]["text_english"] = sourcefile_entry.text_english
 
     # Generate enhanced text only for text tab (requires wordforms)
@@ -557,7 +564,7 @@ def get_sourcefile_details(
 
         # Generate new structured data format for the updated component
         recognized_words, found_wordforms_data = create_interactive_word_data(
-            text=str(sourcefile_entry.text_target),
+            text=str(text_target_nfc),
             wordforms=wordforms_for_links,
             target_language_code=target_language_code,
         )
@@ -566,7 +573,7 @@ def get_sourcefile_details(
         result["enhanced_text"] = enhanced_text  # Legacy format (HTML)
         result["recognized_words"] = recognized_words  # New format (structured data)
         result["text_data"] = {
-            "text": str(sourcefile_entry.text_target),  # Original plain text
+            "text": str(text_target_nfc),  # NFC-normalized plain text used for offsets
             "recognized_words": recognized_words,  # Words with positions and metadata
         }
 

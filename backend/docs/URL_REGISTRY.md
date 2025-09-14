@@ -163,6 +163,17 @@ When you add new routes to the Flask application:
    - Run `FLASK_APP=api.index flask generate-routes-ts` to manually regenerate TypeScript definitions
 4. For production, TypeScript routes are automatically regenerated during deployment
 
+### Example: Generate Sourcefile API
+
+```python
+from views.sourcefile_api import generate_sourcefile_api
+from utils.url_registry import endpoint_for
+from flask import url_for
+
+# Build URL for Greek (el)
+url = url_for(endpoint_for(generate_sourcefile_api), target_language_code='el')
+```
+
 ## In Python test code
 
 Use the `build_url_with_query` helper from `tests/backend/utils_for_testing.py`:

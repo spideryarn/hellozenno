@@ -209,6 +209,24 @@ def api_auth_required(f: Callable) -> Callable:
 # Remove the old complex implementation of api_auth_required that handled required=False
 
 
+def page_auth_required(f: Callable) -> Callable:
+    """Decorator for page views that require authentication.
+
+    If authentication fails, redirect to the auth page with a next parameter.
+    """
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        authenticated = _attempt_authentication_and_set_g()
+        if not authenticated:
+            next_url = request.full_path if request.query_string else request.path
+            # Use explicit path to avoid circular imports here
+            return redirect(f"/auth?next={next_url}")
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 def get_user_by_id(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Profile]]:
     """Get a user's information by their user ID.
     

@@ -12,6 +12,7 @@ import random
 import time
 from datetime import datetime
 from pathlib import Path
+import uuid
 
 from flask import (
     Blueprint,
@@ -135,6 +136,12 @@ def _inspect_sourcefile_core(
             available_sourcedirs.append(source)
 
         response_data["available_sourcedirs"] = available_sourcedirs
+
+        # Include recognized_words/text_data at the top-level for clients that expect it
+        if "recognized_words" in details:
+            response_data["recognized_words"] = details["recognized_words"]
+        if "text_data" in details:
+            response_data["text_data"] = details["text_data"]
 
         # Add purpose-specific data
         if purpose == "text" and "enhanced_text" in details:
@@ -882,6 +889,15 @@ def generate_sourcefile_api(target_language_code: str):
         }
 
         # Create Sourcefile
+        # Validate created_by_id is a UUID if present; otherwise omit
+        created_by_id: str | None = None
+        if user_id:
+            try:
+                _ = uuid.UUID(str(user_id))
+                created_by_id = str(user_id)
+            except Exception:
+                created_by_id = None
+
         sourcefile = _create_text_sourcefile(
             sourcedir_entry=sourcedir_entry,
             filename=filename,
@@ -889,7 +905,7 @@ def generate_sourcefile_api(target_language_code: str):
             description=description,
             metadata=metadata,
             sourcefile_type="text",
-            created_by_id=(g.user.get("id") if g.user else None),
+            created_by_id=created_by_id,
             language_level=language_level,
             ai_generated=True,
         )

@@ -3,8 +3,10 @@ from flask import (
     render_template,
     redirect,
     url_for,
+    send_from_directory,
 )
 import logging
+import os
 
 from utils.url_registry import endpoint_for
 from views.languages_views import languages_list_vw
@@ -50,3 +52,16 @@ def experim_vw():
         "experim.jinja",
         sample_lemmas=sample_lemmas,
     )
+
+
+@core_views_bp.route("/favicon.ico")
+def favicon_vw():
+    """Serve the site's favicon.
+
+    We explicitly serve the favicon from the backend static directory to ensure
+    it works consistently in tests and production.
+    """
+    static_img_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "../static/img"
+    )
+    return send_from_directory(static_img_dir, "favicon.ico")

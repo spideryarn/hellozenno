@@ -1,11 +1,13 @@
 import json
 import time
+import os
 from anthropic import Anthropic
 from openai import OpenAI
 from pprint import pprint
 import re
 from typing import Any, Optional
 from slugify import slugify
+from loguru import logger
 
 from gjdutils.llm_utils import generate_gpt_from_template
 from utils.prompt_utils import get_prompt_template_path
@@ -478,126 +480,118 @@ def create_interactive_word_data(
     wordforms: list[dict],
     target_language_code: str,
 ) -> tuple[list[dict], set[str]]:
-    """Analyze the input text and return structured data about recognized words.
+    """Analyze input text and return recognized word occurrences.
 
-    Instead of generating HTML, this function returns structured data that can be
-    used by the frontend to render the text with interactive elements.
+    Segmentation-first approach using ICU via utils.segmentation when available.
+    Falls back to legacy regex boundary matching only when explicitly enabled via
+    environment variable HZ_USE_LEGACY_REGEX_RECOGNITION=1.
 
-    Returns:
-        Tuple of (recognized_words, found_wordforms) where:
-        - recognized_words is a list of dictionaries, each containing information about a recognized word:
-          {
-            "word": str,             # The exact word as it appears in the text
-            "start": int,            # Character position where the word starts
-            "end": int,              # Character position where the word ends
-            "lemma": str,            # The dictionary form of the word
-            "translations": list,    # List of English translations
-            "part_of_speech": str,   # Part of speech (noun, verb, etc.)
-            "inflection_type": str,  # Grammatical form (e.g., "past tense")
-          }
-        - found_wordforms is a set of wordforms that were found in the text
+    Returns (recognized_words, found_wordforms).
     """
-    from utils.store_utils import load_or_generate_lemma_metadata
     from utils.word_utils import ensure_nfc, normalize_text
+    from utils.segmentation import segment_text_to_word_spans, is_icu_available
 
     # Track which wordforms we actually find in the text
-    found_wordforms = set()
-    recognized_words = []
+    found_wordforms: set[str] = set()
+    recognized_words: list[dict] = []
 
-    # Sort wordforms by length in descending order to handle overlapping words
-    sorted_wordforms = sorted(
-        wordforms, key=lambda wf: len(wf["wordform"]), reverse=True
-    )
+    use_legacy_regex = os.getenv("HZ_USE_LEGACY_REGEX_RECOGNITION", "0").strip() == "1"
 
-    # First, normalize the input text to NFC for consistent pattern matching
+    # Normalize input text for consistent offsets
     text_nfc = ensure_nfc(text)
 
-    # Create a regex pattern that matches both original and normalized forms
-    pattern_parts = []
-    wordform_variations = {}  # Map normalized forms to their variations
+    # Build lookup maps for known wordforms (normalized)
+    normalized_form_to_metadata: dict[str, dict] = {}
+    for wf in wordforms:
+        wf_wordform_nfc = ensure_nfc(wf.get("wordform", "") or "")
+        if not wf_wordform_nfc:
+            continue
+        normalized_key = normalize_text(wf_wordform_nfc)
+        # Prefer first seen; later duplicates won't overwrite
+        normalized_form_to_metadata.setdefault(normalized_key, wf)
 
-    for wf in sorted_wordforms:
-        # Ensure wordform is in NFC form for consistent pattern matching
-        nfc_wordform = ensure_nfc(wf["wordform"])
-        normalized_form = normalize_text(nfc_wordform)
+    if not use_legacy_regex and (is_icu_available() or True):
+        # Use segmentation-first path
+        spans = segment_text_to_word_spans(text_nfc, target_language_code)
+        wordlike_spans = [s for s in spans if s[3]]
+        for start_pos, end_pos, token, _is_wordlike in wordlike_spans:
+            token_nfc = ensure_nfc(token)
+            token_norm = normalize_text(token_nfc)
+            wf = normalized_form_to_metadata.get(token_norm)
+            if not wf:
+                continue
+            found_wordforms.add(wf["wordform"])  # type: ignore[index]
+            translations = wf.get("translations", [])
+            if not translations and wf.get("translated_word"):
+                translations = [wf.get("translated_word")]  # type: ignore[list-item]
+            recognized_words.append(
+                {
+                    "word": token,
+                    "start": start_pos,
+                    "end": end_pos,
+                    "lemma": wf.get("lemma"),
+                    "translations": translations,
+                    "part_of_speech": wf.get("part_of_speech", "unknown"),
+                    "inflection_type": wf.get("inflection_type", "unknown"),
+                }
+            )
 
-        # Initialize the variations set if we haven't seen this normalized form before
-        if normalized_form not in wordform_variations:
-            wordform_variations[normalized_form] = {
-                "original_wordform": wf["wordform"],
-                "variations": set(),
-                "metadata": wf,
-            }
+        # Observability
+        logger.info(
+            f"[segmentation] lang={target_language_code} segmented_tokens={len(wordlike_spans)} recognized_words={len(recognized_words)}"
+        )
 
-        # Add the original form to the variations
-        wordform_variations[normalized_form]["variations"].add(nfc_wordform)
-        pattern_parts.append(re.escape(nfc_wordform))
+        recognized_words.sort(key=lambda w: w["start"])  # Stable ordering
+        if recognized_words:
+            return recognized_words, found_wordforms
 
-        # Add any case variations found in the text
-        text_words = re.findall(r"\b\w+\b", text_nfc, re.UNICODE)
-        for word in text_words:
-            # Ensure word is in NFC form before comparison
-            nfc_word = ensure_nfc(word)
-            if normalize_text(nfc_word) == normalized_form:
-                wordform_variations[normalized_form]["variations"].add(nfc_word)
-                pattern_parts.append(re.escape(nfc_word))
+        # If nothing found, and legacy is allowed, try legacy regex as a last resort
+        if not use_legacy_regex:
+            use_legacy_regex = True
 
-    # If no pattern parts, return empty results
-    if not pattern_parts:
-        return [], set()
+    if use_legacy_regex:
+        # Legacy regex path (word-boundary based) - may fail for languages without spaces
+        pattern_parts = []
+        for wf in wordforms:
+            nfc_wordform = ensure_nfc(wf.get("wordform", "") or "")
+            if nfc_wordform:
+                pattern_parts.append(re.escape(nfc_wordform))
 
-    # Create the pattern with all unique variations
-    pattern = re.compile(
-        r"\b(" + "|".join(set(pattern_parts)) + r")\b",
-        re.UNICODE,
-    )
+        if not pattern_parts:
+            return [], set()
 
-    # Find all matches in the text
-    for match in pattern.finditer(text_nfc):
-        word = match.group(0)  # Original word with case and accents preserved
-        start_pos = match.start()
-        end_pos = match.end()
+        pattern = re.compile(r"\b(" + "|".join(set(pattern_parts)) + r")\b", re.UNICODE)
+        for match in pattern.finditer(text_nfc):
+            word = match.group(0)
+            start_pos, end_pos = match.start(), match.end()
+            normalized_word = normalize_text(ensure_nfc(word))
+            wf = normalized_form_to_metadata.get(normalized_word)
+            if not wf:
+                continue
+            found_wordforms.add(wf["wordform"])  # type: ignore[index]
+            translations = wf.get("translations", [])
+            if not translations and wf.get("translated_word"):
+                translations = [wf.get("translated_word")]  # type: ignore[list-item]
+            recognized_words.append(
+                {
+                    "word": word,
+                    "start": start_pos,
+                    "end": end_pos,
+                    "lemma": wf.get("lemma"),
+                    "translations": translations,
+                    "part_of_speech": wf.get("part_of_speech", "unknown"),
+                    "inflection_type": wf.get("inflection_type", "unknown"),
+                }
+            )
 
-        # First ensure the word is in NFC form for consistent matching
-        word_nfc = ensure_nfc(word)
-        normalized_word = normalize_text(word_nfc)
+        recognized_words.sort(key=lambda w: w["start"])
+        logger.info(
+            f"[legacy_regex] lang={target_language_code} recognized_words={len(recognized_words)}"
+        )
+        return recognized_words, found_wordforms
 
-        # Find which wordform this matches
-        for norm_form, data in wordform_variations.items():
-            if any(
-                normalize_text(var) == normalized_word for var in data["variations"]
-            ):
-                wf = data["metadata"]
-                found_wordforms.add(wf["wordform"])  # Track that we found this wordform
-
-                # Gather word data
-                lemma = wf["lemma"]
-                translations = wf.get("translations", [])
-                if not translations and wf.get("translated_word"):
-                    translations = [wf.get("translated_word")]
-
-                # Add this word occurrence to our results
-                recognized_words.append(
-                    {
-                        "word": word,  # Original word from text
-                        "start": start_pos,  # Position in text
-                        "end": end_pos,  # End position in text
-                        "lemma": lemma,  # Dictionary form
-                        "translations": translations,  # English meanings
-                        "part_of_speech": wf.get(
-                            "part_of_speech", "unknown"
-                        ),  # Noun, verb, etc
-                        "inflection_type": wf.get(
-                            "inflection_type", "unknown"
-                        ),  # Grammatical form
-                    }
-                )
-                break
-
-    # Sort recognized words by their position in the text
-    recognized_words.sort(key=lambda w: w["start"])
-
-    return recognized_words, found_wordforms
+    # Default empty
+    return [], set()
 
 
 # DEPRECATED: This function is maintained only for backward compatibility.

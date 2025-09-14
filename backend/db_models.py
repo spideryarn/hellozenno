@@ -58,10 +58,16 @@ class BaseModel(Model):
             try:
                 # Import Flask's g object within the method to avoid circular imports
                 from flask import g
+                import uuid
 
-                # Check if g has user_id and set it on the model
+                # Check if g has user_id and set it on the model if valid UUID
                 if hasattr(g, "user_id") and g.user_id:
-                    self.created_by = g.user_id
+                    try:
+                        _ = uuid.UUID(str(g.user_id))
+                        self.created_by = g.user_id
+                    except Exception:
+                        # Ignore non-UUID test ids
+                        pass
             except (ImportError, RuntimeError):
                 # Flask context might not be available (e.g., in scripts, tests)
                 pass
