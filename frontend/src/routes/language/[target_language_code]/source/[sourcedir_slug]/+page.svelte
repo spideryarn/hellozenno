@@ -13,6 +13,14 @@
   import { page } from '$app/stores';
   import DataGrid from '$lib/components/DataGrid.svelte';
   import { createUserIdColumn } from '$lib/datagrid/utils';
+  // PDF rendering library (browser-side)
+  // We use a worker distributed with pdfjs-dist via Vite's ?url import to produce a URL string
+  // @ts-ignore - types for GlobalWorkerOptions are not available in our env
+  import * as pdfjsLib from 'pdfjs-dist';
+  // @ts-ignore - Vite worker URL import
+  import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
+  // @ts-ignore - configure worker source at runtime
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
   
   let { data }: { data: PageData } = $props();
   
@@ -89,6 +97,11 @@
   let isCreatingText = $state(false);
   let isDownloadingYoutube = $state(false);
   let isRenamingDir = $state(false);
+  // PDF conversion state
+  let isPdfConverting = $state(false);
+  let pdfProgressValue = $state(0);
+  let pdfProgressText = $state('');
+  let pdfCancelRequested = $state(false);
   
   // New state for URL Upload Modal
   let isUrlModalOpen = $state(false);
@@ -169,8 +182,8 @@
   }
   
   // Tooltip generator function for DataGrid rows - show full filename
-  function getSourcefileTooltip(row: any): string | null {
-    return row.filename || null;
+  function getSourcefileTooltip(row: any): string {
+    return row.filename || '';
   }
   
   async function deleteSourcefile(slug: string) {
@@ -242,6 +255,140 @@
     if (inputElement.files && inputElement.files.length > 0) {
       uploadFiles(inputElement.files);
     }
+  }
+
+  // Handle PDF selection and conversion to images
+  async function handlePdfSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    try {
+      isPdfConverting = true;
+      pdfCancelRequested = false;
+      pdfProgressValue = 0;
+      pdfProgressText = 'Loading PDF…';
+
+      const imageFiles = await convertPdfToImages(file, (current, total) => {
+        // Update progress text and bar
+        pdfProgressText = `Rendering page ${current} of ${total}`;
+        pdfProgressValue = Math.round(((current - 1) / total) * 100);
+      });
+
+      if (pdfCancelRequested) {
+        // User cancelled; do not upload
+        isPdfConverting = false;
+        alert('PDF conversion cancelled.');
+        return;
+      }
+
+      // Create a FileList from the array via DataTransfer to reuse uploadFiles
+      const dt = new DataTransfer();
+      for (const f of imageFiles) dt.items.add(f);
+      pdfProgressText = 'Uploading pages…';
+      pdfProgressValue = 100;
+
+      await uploadFiles(dt.files);
+    } catch (err: any) {
+      const message = err?.message || String(err) || 'Unknown error';
+      alert(`PDF conversion failed: ${message}`);
+    } finally {
+      isPdfConverting = false;
+      pdfProgressValue = 0;
+      pdfProgressText = '';
+      pdfCancelRequested = false;
+      // Reset the input so selecting the same file again triggers change
+      if (input) input.value = '';
+    }
+  }
+
+  // Convert a single PDF file to an array of JPEG image Files (one per page)
+  async function convertPdfToImages(
+    pdfFile: File,
+    onProgress?: (current: number, total: number) => void,
+  ): Promise<File[]> {
+    const MAX_BYTES = 3.5 * 1024 * 1024; // Keep below Vercel limit with headroom
+    const TARGET_WIDTH = 1700; // Reasonable width for OCR and mobile memory
+    const MIN_WIDTH = 900; // Do not shrink below this
+    const INITIAL_QUALITY = 0.82;
+
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    // load document
+    // @ts-ignore - pdfjs types not present
+    const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    const totalPages = doc.numPages || 0;
+    const basename = (pdfFile.name || 'document').replace(/\.[^.]+$/, '');
+    const out: File[] = [];
+
+    for (let p = 1; p <= totalPages; p++) {
+      if (pdfCancelRequested) break;
+      onProgress?.(p, totalPages);
+
+      const page = await doc.getPage(p);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale = Math.min(TARGET_WIDTH / baseViewport.width, 2);
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context not available');
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      const blob = await compressCanvasToJpeg(canvas, MAX_BYTES, INITIAL_QUALITY, MIN_WIDTH);
+      if (!blob) throw new Error('Failed to generate image from PDF page');
+      const filename = `${basename}_p${String(p).padStart(2, '0')}.jpg`;
+      out.push(new File([blob], filename, { type: 'image/jpeg' }));
+
+      // Clean up to help mobile memory
+      try {
+        canvas.width = 0; canvas.height = 0;
+      } catch {}
+    }
+
+    if (pdfCancelRequested) return out; // partial conversion intentionally allowed on cancel
+    if (out.length === 0) throw new Error('No pages could be converted');
+    return out;
+  }
+
+  function toBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((b) => b ? resolve(b) : reject(new Error('Canvas toBlob returned null')), 'image/jpeg', quality);
+    });
+  }
+
+  async function compressCanvasToJpeg(
+    canvas: HTMLCanvasElement,
+    maxBytes: number,
+    initialQuality: number,
+    minWidth: number,
+  ): Promise<Blob | null> {
+    let quality = initialQuality;
+    let workingCanvas = canvas;
+
+    // First try decreasing quality, then progressively shrink dimensions
+    for (let i = 0; i < 8; i++) {
+      const blob = await toBlob(workingCanvas, quality);
+      if (blob && blob.size <= maxBytes) return blob;
+
+      if (quality > 0.62) {
+        quality = Math.max(0.62, quality - 0.12);
+      } else {
+        const nextWidth = Math.round(workingCanvas.width * 0.9);
+        const nextHeight = Math.round(workingCanvas.height * 0.9);
+        if (nextWidth < minWidth) return blob; // return best-effort even if still large
+        const tmp = document.createElement('canvas');
+        const ctx = tmp.getContext('2d');
+        if (!ctx) return blob;
+        tmp.width = nextWidth; tmp.height = nextHeight;
+        ctx.drawImage(workingCanvas, 0, 0, nextWidth, nextHeight);
+        workingCanvas = tmp;
+      }
+    }
+    return await toBlob(workingCanvas, Math.max(0.6, quality));
   }
   
   async function uploadFiles(files: FileList) {
@@ -505,7 +652,7 @@
     sourcedir_slug={sourcedir.slug}
     {supported_languages} 
     metadata={data.metadata} 
-    {data}
+    data={{ supabase: data.supabase }}
     on:languageChange={handleHeaderLanguageChange} 
   />
 
@@ -535,6 +682,7 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('fileInput')?.click()}>Upload Image Files</button></li>
+            <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('pdfInput')?.click()}>Upload PDF</button></li>
             <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('audioInput')?.click()}>Upload Audio Files</button></li>
             <li><button class="dropdown-item" type="button" onclick={() => document.getElementById('textInput')?.click()} 
                         data-bs-toggle="tooltip" data-bs-placement="left" data-bs-html="true" 
@@ -569,6 +717,7 @@
 
 <!-- Hidden File Inputs (needed for upload buttons in dropdown) -->
 <input type="file" id="fileInput" class="d-none" multiple accept="image/*" onchange={handleFileSelect}>
+<input type="file" id="pdfInput" class="d-none" accept=".pdf" onchange={handlePdfSelect}>
 <input type="file" id="audioInput" class="d-none" multiple accept=".mp3" onchange={handleFileSelect}>
 <input type="file" id="textInput" class="d-none" multiple accept=".txt,.md" onchange={handleFileSelect}>
 
@@ -635,6 +784,32 @@
   </div>
 {/if}
 
+<!-- PDF Conversion Modal -->
+{#if isPdfConverting}
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+      <div class="modal-content" role="dialog" aria-labelledby="pdf-convert-modal-title" tabindex="-1">
+        <div class="modal-header">
+          <h5 class="modal-title" id="pdf-convert-modal-title">Converting PDF</h5>
+          <button type="button" class="btn-close" aria-label="Close" onclick={() => pdfCancelRequested = true}></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <LoadingSpinner />
+            <div>{pdfProgressText}</div>
+          </div>
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={pdfProgressValue}>
+            <div class="progress-bar" style={`width: ${pdfProgressValue}%`}></div>
+          </div>
+          <div class="form-text mt-2">You can cancel to stop further pages; already converted pages will not be uploaded.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" onclick={() => pdfCancelRequested = true}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
 <!-- YouTube URL Modal -->
 {#if showYoutubeModal}
   <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
