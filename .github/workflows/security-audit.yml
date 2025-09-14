@@ -1,0 +1,56 @@
+name: Security audit (frontend npm, backend pip)
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  frontend-npm-audit:
+    name: Frontend npm audit (prod deps)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install (clean, no scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Audit production deps (fail on high+)
+        run: npm audit --omit=dev --audit-level=high
+
+  backend-pip-audit:
+    name: Backend pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pip-audit
+
+      - name: Run pip-audit on backend requirements
+        env:
+          # Prefer binary wheels when resolving to avoid building sdists in CI
+          PIP_PREFER_BINARY: '1'
+          PIP_ONLY_BINARY: ':all:'
+        run: |
+          cd backend
+          python -m pip_audit -r requirements.txt
+
