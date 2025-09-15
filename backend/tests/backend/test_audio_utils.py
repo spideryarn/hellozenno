@@ -105,7 +105,7 @@ def test_ensure_audio_data(mock_elevenlabs):
     mock_elevenlabs.assert_called_once()
     assert mock_elevenlabs.call_args[1]["text"] == "Test text"
 
-    # Verify voice selection
+    # Verify voice selection (display name passed into resolver)
     assert mock_elevenlabs.call_args[1]["bot_name"] in [
         "Charlotte",
         "Serena",
@@ -151,7 +151,13 @@ def test_ensure_model_audio_data(
         ensure_model_audio_data(sentence)
     # Reload from DB to observe changes
     sentence_db = Sentence.get_by_id(sentence.id)
-    assert sentence_db.audio_data == b"fake mp3 data"
+    stored = sentence_db.audio_data
+    # Peewee may return memoryview on some backends
+    try:
+        stored_bytes = bytes(stored)
+    except Exception:
+        stored_bytes = stored  # already bytes
+    assert stored_bytes == b"fake mp3 data"
 
     # Test with Sourcefile model
     sourcefile = Sourcefile.create(
@@ -162,7 +168,11 @@ def test_ensure_model_audio_data(
         metadata={},
         sourcefile_type="text",
     )
-    ensure_model_audio_data(sourcefile)
+    # Ensure we run within request context for non-Sentence branch as it accesses g
+    with client.application.test_request_context():
+        from flask import g
+        g.user = {"id": "00000000-0000-0000-0000-000000000000"}
+        ensure_model_audio_data(sourcefile)
     assert sourcefile.audio_data == b"fake mp3 data"
 
     # Test with empty text
@@ -171,8 +181,12 @@ def test_ensure_model_audio_data(
         sentence="",
         translation="",
     )
-    with pytest.raises(ValueError, match="No text available for audio generation"):
-        ensure_model_audio_data(empty_sentence)
+    # For sentence branch this checks g; run in request context
+    with client.application.test_request_context():
+        from flask import g
+        g.user = {"id": "00000000-0000-0000-0000-000000000000"}
+        with pytest.raises(ValueError, match="No text available for audio generation"):
+            ensure_model_audio_data(empty_sentence)
 
     # Test with existing audio
     mock_elevenlabs.reset_mock()

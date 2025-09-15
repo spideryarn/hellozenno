@@ -294,6 +294,13 @@ def mock_tts_autouse(monkeypatch):
         # If import fails during collection, skip secondary patch
         pass
 
+    # Also patch direct import used in views.sourcefile_api
+    try:
+        from views import sourcefile_api as _sfa  # noqa: F401
+        monkeypatch.setattr("views.sourcefile_api.outloud_elevenlabs", _fake_outloud)
+    except Exception:
+        pass
+
 
 @pytest.fixture(autouse=True)
 def mock_llm_autouse(monkeypatch):
