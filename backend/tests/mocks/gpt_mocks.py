@@ -72,5 +72,6 @@ def mock_gpt_from_template(monkeypatch):
             return SAMPLE_LEMMA_DATA, {}
         return "Unexpected template", {}
 
-    monkeypatch.setattr("vocab_llm_utils.generate_gpt_from_template", mock_generate)
+    # Ensure both local and fully-qualified imports are mocked
+    monkeypatch.setattr("utils.vocab_llm_utils.generate_gpt_from_template", mock_generate)
     monkeypatch.setattr("gjdutils.llm_utils.generate_gpt_from_template", mock_generate)

@@ -2,7 +2,7 @@ import pytest
 from peewee import DoesNotExist
 from peewee import fn
 
-from backend.views.lemma_api import delete_lemma_api
+from views.lemma_api import delete_lemma_api
 from db_models import (
     Lemma,
     Wordform,
@@ -242,8 +242,8 @@ def test_delete_lemma(client, fixture_for_testing_db):
         )
 
         response = client.post(delete_url)
-        assert response.status_code == 302  # Redirect after deletion
-        assert response.headers["Location"].endswith(expected_redirect_url)
+        # API returns 204 No Content on successful delete
+        assert response.status_code == 204
 
         # Verify the lemma is deleted from the database
         with pytest.raises(DoesNotExist):
@@ -275,8 +275,8 @@ def test_delete_nonexistent_lemma(client):
     )
 
     response = client.post(delete_url)
-    assert response.status_code == 302  # Should redirect even if lemma doesn't exist
-    assert response.headers["Location"].endswith(expected_redirect_url)
+    # API returns 204 No Content even if resource does not exist
+    assert response.status_code == 204
 
 
 def test_wordforms_list_with_no_lemma(client, fixture_for_testing_db):

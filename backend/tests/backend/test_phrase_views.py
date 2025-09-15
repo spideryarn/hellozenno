@@ -9,7 +9,7 @@ def test_phrase_url_generation(client):
     # Test basic URL generation
     url1 = build_url_with_query(client, phrases_list_vw, target_language_code="el")
     assert url1
-    assert "/lang/el/phrases" in url1
+    assert "/language/el/phrases" in url1
 
     url2 = build_url_with_query(
         client,
@@ -18,7 +18,7 @@ def test_phrase_url_generation(client):
         slug="kathome-kai-skeftome",
     )
     assert url2
-    assert "/lang/el/phrases/kathome-kai-skeftome" in url2
+    assert "/language/el/phrase/kathome-kai-skeftome" in url2
 
 
 def test_phrases_list_basic(client, fixture_for_testing_db):

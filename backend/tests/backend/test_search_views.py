@@ -36,9 +36,10 @@ def test_search_landing_with_query_redirects(client):
     )
     response = client.get(url)
     assert response.status_code == 302
+    # Redirect now goes directly to the wordform view
     assert build_url_with_query(
         client,
-        search_word_vw,
+        get_wordform_metadata_vw,
         target_language_code=TEST_TARGET_LANGUAGE_CODE,
         wordform="test",
     ) in response.headers.get("Location")

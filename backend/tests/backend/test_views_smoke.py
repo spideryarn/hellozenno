@@ -1,5 +1,5 @@
 import pytest
-from backend.views.wordform_api import delete_wordform_api
+from views.wordform_api import delete_wordform_api
 from tests.fixtures_for_tests import (
     SAMPLE_PHRASE_DATA,
     TEST_TARGET_LANGUAGE_CODE,

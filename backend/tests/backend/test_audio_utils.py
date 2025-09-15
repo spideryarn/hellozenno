@@ -135,7 +135,7 @@ def test_ensure_audio_data(mock_elevenlabs):
 
 
 def test_ensure_model_audio_data(
-    mock_elevenlabs, fixture_for_testing_db, test_sourcedir
+    mock_elevenlabs, fixture_for_testing_db, test_sourcedir, client
 ):
     """Test generating audio for model instances."""
     # Test with Sentence model

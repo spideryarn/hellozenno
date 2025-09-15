@@ -44,7 +44,7 @@ def test_build_url_with_query(client):
     )
 
     # The URL should contain the route parameters
-    assert "/lang/el/lemma/test" in url
+    assert "/language/el/lemma/test" in url
 
     # Test with query parameters
     url = build_url_with_query(
@@ -57,8 +57,8 @@ def test_build_url_with_query(client):
 
     # The URL should contain both route and query parameters
     assert (
-        "/lang/el/lemma/test?tab=sentences&page=2" in url
-        or "/lang/el/lemma/test?page=2&tab=sentences" in url
+        "/language/el/lemma/test?tab=sentences&page=2" in url
+        or "/language/el/lemma/test?page=2&tab=sentences" in url
     )
 
 

@@ -26,6 +26,8 @@ from db_models import (
     Sourcefile,
     SourcefileWordform,
     SourcefilePhrase,
+    Profile,
+    UserLemma,
 )
 from tests.fixtures_for_tests import (
     TEST_TARGET_LANGUAGE_CODE,
@@ -73,6 +75,8 @@ MODELS = [
     Sourcefile,
     SourcefileWordform,
     SourcefilePhrase,
+    Profile,
+    UserLemma,
 ]
 
 

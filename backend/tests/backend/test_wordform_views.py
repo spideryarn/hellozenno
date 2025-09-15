@@ -3,7 +3,7 @@ from unittest.mock import patch
 from peewee import DoesNotExist
 from peewee import fn
 
-from backend.views.wordform_api import delete_wordform_api
+from views.wordform_api import delete_wordform_api
 from db_models import Wordform
 from tests.mocks import mock_quick_search_for_wordform
 from tests.fixtures_for_tests import (
