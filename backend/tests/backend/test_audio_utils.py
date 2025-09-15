@@ -179,6 +179,7 @@ def test_ensure_model_audio_data(
     # Ensure we run within request context so g is available
     with client.application.test_request_context():
         from flask import g
+
         g.user = {"id": "00000000-0000-0000-0000-000000000000"}
         ensure_model_audio_data(sentence)
     # Reload from DB to observe changes
@@ -203,6 +204,7 @@ def test_ensure_model_audio_data(
     # Ensure we run within request context for non-Sentence branch as it accesses g
     with client.application.test_request_context():
         from flask import g
+
         g.user = {"id": "00000000-0000-0000-0000-000000000000"}
         ensure_model_audio_data(sourcefile)
     assert sourcefile.audio_data == b"fake mp3 data"
@@ -216,6 +218,7 @@ def test_ensure_model_audio_data(
     # For sentence branch this checks g; run in request context
     with client.application.test_request_context():
         from flask import g
+
         g.user = {"id": "00000000-0000-0000-0000-000000000000"}
         with pytest.raises(ValueError, match="No text available for audio generation"):
             ensure_model_audio_data(empty_sentence)

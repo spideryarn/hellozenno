@@ -124,7 +124,7 @@
       const supabaseClient = $page.data.supabase;
       
       try {
-        // Use apiFetch to handle auth properly per the AUTH.md pattern
+        // Use apiFetch to handle auth properly per the AUTHENTICATION_AUTHORISATION.md pattern
         const result = await apiFetch({
           supabaseClient,
           routeName: RouteName.LEMMA_API_IGNORE_LEMMA_API,

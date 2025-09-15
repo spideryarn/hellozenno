@@ -10,6 +10,8 @@
   import LemmaContent from '$lib/components/LemmaContent.svelte';
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
   import CaretRight from 'phosphor-svelte/lib/CaretRight';
+  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  // Use dynamic import for p-queue to avoid build-time type resolution issues
 
   // No exported props required for this page in MVP
 
@@ -44,6 +46,37 @@
   let preparedCards: typeof cards = [];
   let preparedError: string | null = null;
   let preloadedAudios: HTMLAudioElement[] = [];
+  let loadingLemmaMap: Record<string, boolean> = {};
+  let warmingQueue: any = null;
+  let showWordsPanel = true;
+  let practiceSectionEl: HTMLElement | null = null;
+  let autoScrollPending = false;
+  async function ensureWarmingQueue() {
+    if (warmingQueue) return warmingQueue;
+    try {
+      const mod = await import('p-queue');
+      const PQueue = (mod as any).default ?? (mod as any);
+      warmingQueue = new PQueue({ concurrency: 2 });
+    } catch (e) {
+      // Fallback minimal queue with concurrency 1
+      const tasks: Array<() => Promise<any>> = [];
+      let running = false;
+      const runNext = async () => {
+        if (running) return;
+        running = true;
+        while (tasks.length) {
+          const t = tasks.shift()!;
+          try { await t(); } finally {}
+        }
+        running = false;
+      };
+      warmingQueue = {
+        add(fn: () => Promise<any>) { tasks.push(fn); runNext(); return Promise.resolve(); },
+        onIdle() { return Promise.resolve(); }
+      };
+    }
+    return warmingQueue;
+  }
 
   $: target_language_code = $page.params.target_language_code;
   $: sourcedir_slug = $page.params.sourcedir_slug;
@@ -53,13 +86,15 @@
     loadingSummary = true;
     summaryError = null;
     try {
-      const url = `${API_BASE_URL}/api/lang/learn/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/summary?top=20`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        const err = await safeJson(res);
-        throw new Error(err?.message || `Failed summary (${res.status})`);
-      }
-      const js = await res.json();
+      // Authenticated request so backend can generate lemma metadata on-demand
+      const js = await apiFetch({
+        supabaseClient: ($page.data as any).supabase ?? null,
+        routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_SUMMARY_API,
+        params: { target_language_code, sourcedir_slug, sourcefile_slug },
+        options: { method: 'GET' },
+        searchParams: { top: 20 },
+        timeoutMs: 60000,
+      });
       lemmas = js?.lemmas || [];
 
       // Also fetch the original source text for context sentence extraction
@@ -101,6 +136,9 @@
     }
     // Kick off background preparation once summary is available
     if (!summaryError && lemmas.length > 0) {
+      await ensureWarmingQueue();
+      // Warm currently visible lemma and a small lookahead in background
+      warmTopLemmasInBackground(visibleLemmas.slice(0, 5).map((l) => l.lemma));
       preparePracticeInBackground();
     }
   }
@@ -228,6 +266,43 @@
     startPractice();
   }
 
+  function startPracticeAndNavigate() {
+    showWordsPanel = false;
+    autoScrollPending = true;
+    startOrShowPractice();
+    // Defer scroll slightly to let DOM update
+    setTimeout(() => {
+      const el = document.getElementById('learn-practice-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
+
+  function warmTopLemmasInBackground(lemmasToWarm: string[]) {
+    if (!lemmasToWarm || lemmasToWarm.length === 0) return;
+    const supabase = ($page.data as any).supabase ?? null;
+    for (const lemma of lemmasToWarm) {
+      if (!lemma) continue;
+      if (loadingLemmaMap[lemma]) continue;
+      loadingLemmaMap[lemma] = true;
+      // Queue each warming task with low priority
+      ensureWarmingQueue().then(() => warmingQueue.add(async () => {
+        try {
+          await apiFetch({
+            supabaseClient: supabase,
+            routeName: RouteName.LEMMA_API_GET_LEMMA_METADATA_API,
+            params: { target_language_code, lemma },
+            options: { method: 'GET' },
+            timeoutMs: 60000,
+          });
+        } catch (e) {
+          // ignore
+        } finally {
+          loadingLemmaMap[lemma] = false;
+        }
+      }, { priority: 0 }));
+    }
+  }
+
   // For complete keyboard shortcuts reference, see frontend/docs/KEYBOARD_SHORTCUTS.md
   function handleKeyDown(event: KeyboardEvent) {
     // If practice hasn't started yet, use arrows to browse priority words
@@ -279,7 +354,7 @@
   <meta name="description" content="Priority words and generated audio flashcards" />
 </svelte:head>
 
-<div class="container my-4">
+<div class="container my-4 learn-container">
   <!-- Top actions bar -->
   <div class="d-flex align-items-center justify-content-between flex-wrap mb-3 top-actions">
     <div class="small text-muted">
@@ -292,14 +367,18 @@
       {/if}
     </div>
     <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-primary py-2" on:click={startOrShowPractice} disabled={generating || preparing || !lemmas.length}>
+      <button class="btn btn-primary py-2" on:click={startPracticeAndNavigate} disabled={generating || preparing || !lemmas.length}>
         {preparing ? 'Preparing…' : 'Start practice'}
+      </button>
+      <button class="btn btn-outline-secondary py-2" on:click={() => showWordsPanel = !showWordsPanel}>
+        {showWordsPanel ? 'Hide words' : 'Show words'}
       </button>
     </div>
   </div>
 
   <div class="row g-4">
     <div class="col-12 col-xl-5">
+      {#if showWordsPanel}
       <Card title="Priority words">
         {#if loadingSummary}
           <div class="text-center py-3">Loading…</div>
@@ -337,20 +416,30 @@
 
           {#if visibleLemmas.length}
             <div class="priority-words one-at-a-time">
-              <LemmaContent
-                lemma_metadata={visibleLemmas[currentLemmaIndex]}
-                target_language_code={target_language_code}
-                showFullLink={false}
-                isAuthError={false}
-                context_sentence={getContextSentence(sourceText, visibleLemmas[currentLemmaIndex]?.lemma)}
-                source_wordforms={sourcefileWordforms[visibleLemmas[currentLemmaIndex]?.lemma] || []}
-                showIgnore={true}
-                on:ignore={(e) => ignoreLemma(e.detail.lemma)}
-              />
+              {#if loadingLemmaMap[visibleLemmas[currentLemmaIndex]?.lemma]}
+                <div class="d-flex justify-content-center py-4"><LoadingSpinner /></div>
+              {:else}
+                <LemmaContent
+                  lemma_metadata={visibleLemmas[currentLemmaIndex]}
+                  target_language_code={target_language_code}
+                  showFullLink={false}
+                  isAuthError={false}
+                  context_sentence={getContextSentence(sourceText, visibleLemmas[currentLemmaIndex]?.lemma)}
+                  source_wordforms={sourcefileWordforms[visibleLemmas[currentLemmaIndex]?.lemma] || []}
+                  showIgnore={true}
+                  on:ignore={(e) => ignoreLemma(e.detail.lemma)}
+                />
+              {/if}
             </div>
           {/if}
+          <div class="mt-3">
+            <button class="btn btn-primary w-100 py-3" on:click={startPracticeAndNavigate} disabled={generating || preparing || !lemmas.length}>
+              {preparing ? 'Preparing…' : 'Start practice'}
+            </button>
+          </div>
         {/if}
       </Card>
+      {/if}
 
       {#if generateError}
         <div class="mt-2"><Alert type="danger">{generateError}</Alert></div>
@@ -358,10 +447,9 @@
     </div>
 
     <div class="col-12 col-xl-7">
+      <div id="learn-practice-section" bind:this={practiceSectionEl}></div>
+      {#if cards.length > 0}
       <Card title="Practice">
-        {#if cards.length === 0}
-          <div class="text-center py-4 text-muted">Click "Start practice" to generate flashcards.</div>
-        {:else}
           <div class="mb-3">
             <div class="row g-2">
               <div class="col-6">
@@ -379,30 +467,32 @@
                 {/if}
               </div>
               <div class="col-12 mt-2">
-                <button class="btn btn-primary w-100 py-3" on:click={nextCard} disabled={currentIndex >= cards.length - 1}>
+                <button class="btn btn-primary w-100 py-3" on:click={() => { if (currentIndex < cards.length - 1) { currentIndex += 1; currentStage = 1; } }} disabled={currentIndex >= cards.length - 1}>
                   Next card (Enter)
                 </button>
               </div>
             </div>
           </div>
 
-          <div class="mb-3">
-            <AudioPlayer bind:this={audioPlayer} src={cards[currentIndex].audio_data_url} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
-          </div>
+          {#key currentIndex}
+            <div class="mb-3">
+              <AudioPlayer bind:this={audioPlayer} src={cards[currentIndex].audio_data_url} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
+            </div>
 
           {#if currentStage >= 2}
             <div class="flashcard-box sentence-box">
               <h3 class="hz-foreign-text text-center mb-0">{cards[currentIndex].sentence}</h3>
             </div>
           {/if}
+          {/key}
 
           {#if currentStage >= 3}
             <div class="flashcard-box translation-box">
               <p class="text-center mb-0 fs-4">{cards[currentIndex].translation}</p>
             </div>
           {/if}
-        {/if}
       </Card>
+      {/if}
     </div>
   </div>
 </div>
@@ -421,6 +511,15 @@
   /* Remove hover accent from Card headers inside priority words list to avoid thicker dividers */
   .priority-words :global(.lemma-details-card.card::before) { display: none; }
   .priority-words :global(.lemma-details-card.card:hover) { transform: none; box-shadow: none; }
+
+  /* Match wider layout on large screens (like other sourcefile pages) */
+  @media (min-width: 992px) {
+    .learn-container {
+      max-width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
 </style>
 
 

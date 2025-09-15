@@ -1,4 +1,4 @@
-import { Queue } from 'queue-typescript';
+import PQueue from 'p-queue';
 import { writable } from 'svelte/store';
 import { getApiUrl } from './api';
 import { RouteName } from './generated/routes';
@@ -49,7 +49,7 @@ export const processingState = writable({
 });
 
 export class SourcefileProcessingQueue {
-  private queue: Queue<QueuedStep>;
+  private queue: PQueue;
   private sourcefileData: {
     target_language_code: string;
     sourcedir_slug: string;
@@ -65,7 +65,8 @@ export class SourcefileProcessingQueue {
     sourcefile_slug: string,
     sourcefile_type: 'text' | 'image' | 'audio' // Pass type during construction
   ) {
-    this.queue = new Queue<QueuedStep>();
+    // Default concurrency 1 to preserve step ordering; can be tuned later
+    this.queue = new PQueue({ concurrency: 1 });
     this.supabaseClient = supabaseClient; // Store the passed client
     this.sourcefileData = {
       target_language_code,
@@ -350,66 +351,78 @@ export class SourcefileProcessingQueue {
       progress: 0 // Reset progress counter
     }));
 
-    // Build full queue with prioritized order:
-    // - Process all normal steps for each iteration
-    // - Then process all lemma metadata steps once at the end
-    this.queue = new Queue<QueuedStep>();
+    // Build queue with desired order and preserve sequential execution.
+    // Recreate queue instance to ensure empty state for this run.
+    this.queue = new PQueue({ concurrency: 1 });
+
+    // Track iteration UI state; must be declared before scheduling tasks
+    let currentStepIndex = 1;
+    let currentIterationTracking = 1;
+    const stepsInCurrentIteration = normalSteps.length;
+    let aborted = false;
 
     // 4. Process normal steps for each iteration
     for (let i = 0; i < iterations; i++) {
       const currentIteration = i + 1;
       console.log(`--- Queueing normal steps for iteration ${currentIteration}/${iterations} ---`);
       
-      // Add all normal steps to the queue
+      // Add all normal steps to the queue as scheduled tasks
       for (const step of normalSteps) {
-        this.queue.enqueue({...step}); // Clone step object to avoid reference issues
+        const stepCopy = { ...step } as QueuedStep;
+        this.queue.add(async () => {
+          if (aborted) {
+            return;
+          }
+          // Update iteration counter for the UI prior to running the task
+          if (stepCopy.type !== 'lemma_metadata') {
+            if (currentStepIndex > stepsInCurrentIteration) {
+              currentIterationTracking++;
+              currentStepIndex = 1;
+            } else {
+              currentStepIndex++;
+            }
+            processingState.update(state => ({ 
+              ...state, 
+              currentIteration: currentIterationTracking 
+            }));
+          }
+          const success = await this.processSingleStep(stepCopy);
+          if (!success) {
+            overallSuccess = false;
+            aborted = true;
+            return;
+          }
+          return;
+        });
       }
     }
 
     // 5. Add all lemma metadata steps to the end of the queue (only once)
     console.log(`--- Queueing ${lemmaMetadataSteps.length} lemma metadata steps ---`);
     for (const step of lemmaMetadataSteps) {
-      this.queue.enqueue({...step});
-    }
-
-    // 6. Process all steps in the queue
-    let currentStepIndex = 1;
-    let currentIterationTracking = 1;
-    let stepsInCurrentIteration = normalSteps.length;
-
-    while (this.queue.length > 0) {
-      const step = this.queue.dequeue();
-      
-      // Update iteration counter for the UI
-      if (step.type !== 'lemma_metadata') {
-        if (currentStepIndex > stepsInCurrentIteration) {
-          currentIterationTracking++;
-          currentStepIndex = 1;
-        } else {
-          currentStepIndex++;
+      const stepCopy = { ...step } as QueuedStep;
+      this.queue.add(async () => {
+        if (aborted) {
+          return;
         }
-        
-        processingState.update(state => ({ 
-          ...state, 
-          currentIteration: currentIterationTracking 
-        }));
-      } else {
         // For lemma metadata, we're in a special "finishing" phase
         processingState.update(state => ({ 
           ...state, 
           currentIteration: iterations,
-          description: step.description 
+          description: stepCopy.description 
         }));
-      }
-      
-      const success = await this.processSingleStep(step);
-
-      if (!success) {
-        console.error(`Step ${step.type} failed. Aborting further processing.`);
-        overallSuccess = false;
-        break; // Stop processing on failure
-      }
+        const success = await this.processSingleStep(stepCopy);
+        if (!success) {
+          overallSuccess = false;
+          aborted = true;
+          return;
+        }
+      });
     }
+
+    // 6. Process all steps in the queue
+
+    await this.queue.onIdle();
 
     // Final state update
     console.log("Processing finished. Fetching final data...");
