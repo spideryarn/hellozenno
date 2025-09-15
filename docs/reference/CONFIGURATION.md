@@ -13,8 +13,7 @@ Backend and frontend read configuration from code defaults, with optional enviro
 - Conversation: `docs/conversations/250914b_multilingual_segmentation_strategy_icu_only.md`
 
 ### Principles, key decisions
-- Prefer code defaults for critical behavior; environment variables only as overrides.
-- Keep runtime dependencies slim for Vercel Serverless; heavy/optional deps are excluded.
+- Prefer to use config.py and config.ts rather than environment variables for feature flags
 - Maintain parity: the same `backend/requirements.txt` and defaults run locally and in prod.
 
 ### Defaults and overrides
