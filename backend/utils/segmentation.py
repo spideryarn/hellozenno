@@ -10,6 +10,11 @@ from __future__ import annotations
 from typing import List, Tuple, Optional
 import unicodedata
 import os
+from config import (
+    SEGMENTATION_DEFAULT as CFG_SEG_DEFAULT,
+    SEGMENTATION_PER_LANG_DEFAULTS as CFG_SEG_LANG_DEFAULTS,
+    PYTHAINLP_ENGINE_DEFAULT as CFG_THAI_ENGINE_DEFAULT,
+)
 
 try:  # Optional dependency
     from icu import (
@@ -72,7 +77,7 @@ def _segment_text_with_pythainlp(text_nfc: str) -> Optional[List[Tuple[int, int,
     except Exception:
         return None
 
-    engine = os.getenv("PYTHAINLP_ENGINE", "newmm").strip() or "newmm"
+    engine = os.getenv("PYTHAINLP_ENGINE", CFG_THAI_ENGINE_DEFAULT).strip() or CFG_THAI_ENGINE_DEFAULT
     tokens = word_tokenize(text_nfc, engine=engine)
 
     spans: List[Tuple[int, int, str, bool]] = []
@@ -107,8 +112,28 @@ def _choose_engine_for(lang_code: str) -> str:
     override = os.getenv(f"SEGMENTATION_{lang_code.upper()}")
     if override:
         return override.strip().lower()
-    # Global default
-    default_engine = os.getenv("SEGMENTATION_DEFAULT", "icu").strip().lower()
+    # Per-language defaults from config (with env override)
+    if lang_code.lower() in CFG_SEG_LANG_DEFAULTS:
+        return os.getenv(
+            f"SEGMENTATION_{lang_code.upper()}", CFG_SEG_LANG_DEFAULTS[lang_code.lower()]
+        ).strip().lower()
+
+    # Global default from config (with env override)
+    default_engine = os.getenv("SEGMENTATION_DEFAULT", CFG_SEG_DEFAULT).strip().lower()
+
+    # Sensible fallback: if ICU is unavailable and Thai is requested, prefer
+    # PyThaiNLP when installed to avoid producing a single giant token with the
+    # naive engine. This mirrors the typical desired behavior in production
+    # without requiring a specific env flag.
+    if lang_code.lower() == "th" and not _ICU_AVAILABLE:
+        try:  # Detect availability without importing globally
+            from pythainlp.tokenize import word_tokenize  # type: ignore  # noqa: F401
+
+            return "pythainlp"
+        except Exception:
+            # Fall through to the configured default
+            pass
+
     return default_engine or "icu"
 
 

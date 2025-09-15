@@ -8,6 +8,7 @@ import re
 from typing import Any, Optional
 from slugify import slugify
 from loguru import logger
+from config import RECOGNITION_KNOWN_WORD_SEARCH_DEFAULT as CFG_KNOWN_WORD_DEFAULT
 
 from gjdutils.llm_utils import generate_gpt_from_template
 from utils.prompt_utils import get_prompt_template_path
@@ -586,13 +587,19 @@ def create_interactive_word_data(
             return recognized_words, found_wordforms
 
         # If nothing found, try known-word fast path before legacy regex
+        enable_known_word_search = (
+            os.getenv("RECOGNITION_KNOWN_WORD_SEARCH", None)
+        )
+        if enable_known_word_search is None:
+            # Use code default when env not provided
+            enable_known_word_search_bool = CFG_KNOWN_WORD_DEFAULT
+        else:
+            enable_known_word_search_bool = enable_known_word_search.strip() == "1"
+
         if (
             len(recognized_words) == 0
             and target_language_code.lower() in {"th", "zh", "ja", "ko"}
-            and os.getenv(
-            "RECOGNITION_KNOWN_WORD_SEARCH", "0"
-            ).strip()
-            == "1"
+            and enable_known_word_search_bool
         ):
             try:
                 import ahocorasick  # type: ignore

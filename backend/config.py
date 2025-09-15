@@ -116,3 +116,18 @@ DB_POOL_CONFIG = {
     "autoconnect": True,
     "thread_safe": True,
 }
+
+# Segmentation and recognition defaults (can be overridden via environment vars)
+# - These provide code-based defaults so we don't depend on Vercel env configuration.
+# - Env overrides (if set) still take precedence, e.g. SEGMENTATION_TH, SEGMENTATION_DEFAULT.
+SEGMENTATION_DEFAULT: str = "naive"  # Global default when no per-language override
+SEGMENTATION_PER_LANG_DEFAULTS: dict[str, str] = {
+    "th": "pythainlp",  # Prefer PyThaiNLP for Thai when ICU is unavailable
+    # Add more language-specific defaults if needed, e.g. "zh": "jieba"
+}
+
+# Known-word fast path (Aho–Corasick) default. Env RECOGNITION_KNOWN_WORD_SEARCH overrides when provided.
+RECOGNITION_KNOWN_WORD_SEARCH_DEFAULT: bool = True
+
+# Thai tokenizer engine default for PyThaiNLP when no env PYTHAINLP_ENGINE is provided
+PYTHAINLP_ENGINE_DEFAULT: str = "newmm"

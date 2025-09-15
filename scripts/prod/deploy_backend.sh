@@ -4,6 +4,9 @@
 set -e
 
 source ./scripts/utils/common.sh
+
+# Resolve project root for reading shared files like .env.prod
+PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 # echo "Setting API environment variables..."
 echo_warning "Skipping API environment variables..."
 # ./scripts/prod/set_secrets_backend.sh
@@ -49,22 +52,26 @@ fi
 # Build the environment variables command line arguments
 echo "Building environment variables for deployment..."
 ENV_ARGS=""
-if [ -f .env.prod ]; then
+ENV_FILE="$PROJECT_ROOT/.env.prod"
+if [ -f "$ENV_FILE" ]; then
+    echo "Loading environment variables from $ENV_FILE..."
     while IFS= read -r line; do
         # Skip comments and empty lines
         [[ $line =~ ^#.*$ ]] && continue
         [[ -z $line ]] && continue
-        
+
         # Extract key and value
         key=$(echo "$line" | cut -d'=' -f1)
         value=$(echo "$line" | cut -d'=' -f2-)
-        
+
         # Add to environment arguments
         ENV_ARGS="$ENV_ARGS -e $key=\"$value\""
-    done < .env.prod
-    
+    done < "$ENV_FILE"
+
     # Add VERCEL=1
     ENV_ARGS="$ENV_ARGS -e VERCEL=1"
+else
+    echo_warning "Missing .env.prod at $ENV_FILE; proceeding without env injection"
 fi
 
 # Deploy to Vercel - set the root option to the current directory
