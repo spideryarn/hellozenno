@@ -1,11 +1,10 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const { supabase, session, user } = locals;
-
-  // The /admin/+layout.server.ts already enforced admin. Here we just pass supabase for apiFetch.
+  const { session, user } = locals;
+  // Do not return Supabase client here; it's not serializable and causes 500s.
+  // Admin enforcement happens in /admin/+layout.server.ts.
   return {
-    supabase,
     session,
     user,
   } as any;

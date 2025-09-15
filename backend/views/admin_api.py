@@ -60,7 +60,9 @@ def list_users():
         Profile.created_at.alias("profile_created_at"),
         Profile.updated_at.alias("profile_updated_at"),
     ).join(
-        Profile, JOIN.LEFT_OUTER, on=(Profile.user_id == fn.CAST(AuthUser.id, "text"))
+        Profile,
+        JOIN.LEFT_OUTER,
+        on=(Profile.user_id == AuthUser.id.cast("text")),
     )
 
     # Sorting map
@@ -76,7 +78,7 @@ def list_users():
         query = query.order_by(order)
     else:
         # Default sort: created_at desc (most recent first)
-        query = query.order_by(AuthUser.created_at.desc(nulls="LAST"))
+        query = query.order_by(AuthUser.created_at.desc())
 
     # Total before pagination
     try:

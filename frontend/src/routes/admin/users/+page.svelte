@@ -4,7 +4,10 @@
   import type { PageData } from './$types';
 
   export let data: PageData;
-  const supabaseClient = (data as any)?.supabase ?? null;
+  let supabaseClient: any = null;
+  // Get supabase from root layout data (provided client-side only)
+  import { page } from '$app/stores';
+  $: supabaseClient = ($page.data as any)?.supabase ?? null;
 
   interface UserRow {
     id: string;
