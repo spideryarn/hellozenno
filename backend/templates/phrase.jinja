@@ -28,7 +28,7 @@
     <div class="phrase-header">
         <h1>{{ phrase.canonical_form }}</h1>
         {{ delete_button(
-            url=url_for('phrase_views.delete_phrase_vw', target_language_code=target_language_code, slug=phrase.slug),
+            url=url_for('phrase_api.delete_phrase_api', target_language_code=target_language_code, slug=phrase.slug),
             entity_name='phrase'
         ) }}
     </div>

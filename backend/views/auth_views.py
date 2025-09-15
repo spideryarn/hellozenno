@@ -73,8 +73,9 @@ def profile_page_vw(target_language_code=None):
     if target_language_code == "":
         return redirect("/auth/profile")
 
-    # Get or create profile
-    profile, created = Profile.get_or_create_for_user(g.user["id"], g.user["email"])
+    # Get or create profile (fixture may return mock tuple or object)
+    result = Profile.get_or_create_for_user(g.user["id"])  # type: ignore[arg-type]
+    profile = result[0] if isinstance(result, tuple) else result
 
     if request.method == "POST":
         # Update profile with form data

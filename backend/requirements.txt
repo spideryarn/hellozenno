@@ -31,6 +31,5 @@ yt-dlp>=2023.12.30  # For YouTube audio downloads
 flask-cors>=4.0.0  # For cross-origin API access
 whitenoise>=6.6.0  # For static file serving on Vercel
 # pytest-postgresql>=5.0.0
-PyICU>=2.12  # ICU-based multilingual segmentation
 pythainlp>=5.0.0  # Thai tokenization (optional plugin)
 pyahocorasick>=1.4.4  # Known-word multi-pattern search (optional fast path)
