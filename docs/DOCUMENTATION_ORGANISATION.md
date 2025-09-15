@@ -23,7 +23,8 @@ This guide helps you navigate HelloZenno's documentation structure.
 - [backend/docs/MIGRATIONS.md](../backend/docs/MIGRATIONS.md) - Database migration procedures
 - [frontend/docs/SETUP.md](../frontend/docs/SETUP.md) - Frontend-specific setup notes
 
-### Architecture & Design
+-### Architecture & Design
+- **[reference/ARCHITECTURE.md](reference/ARCHITECTURE.md)** - High-level system architecture
 - **[frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md](../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)** - Frontend architecture overview
 - [backend/docs/MODELS.md](../backend/docs/MODELS.md) - Database schema and models
 - [backend/docs/URL_REGISTRY.md](../backend/docs/URL_REGISTRY.md) - API URL pattern system
@@ -36,10 +37,11 @@ This guide helps you navigate HelloZenno's documentation structure.
 ### Frontend Development
 - [frontend/docs/ENHANCED_TEXT.md](../frontend/docs/ENHANCED_TEXT.md) - Interactive text with hover tooltips
 - [frontend/docs/SOURCEFILE_PAGES.md](../frontend/docs/SOURCEFILE_PAGES.md) - Core content pages implementation
-- [frontend/docs/STYLING.md](../frontend/docs/STYLING.md) - CSS variables and Bootstrap theming
+- [frontend/docs/VISUAL_DESIGN_STYLING.md](../frontend/docs/VISUAL_DESIGN_STYLING.md) - CSS variables and Bootstrap theming
 - [frontend/docs/SITE_ORGANISATION.md](../frontend/docs/SITE_ORGANISATION.md) - Site structure and navigation
 - [frontend/docs/DATAGRID.md](../frontend/docs/DATAGRID.md) - DataGrid component usage
 - [frontend/docs/SEARCH.md](../frontend/docs/SEARCH.md) - Unified search implementation
+- [frontend/docs/KEYBOARD_SHORTCUTS.md](../frontend/docs/KEYBOARD_SHORTCUTS.md) - Keyboard navigation reference
 
 ### Backend Development
 - [backend/docs/CODING_PYTHON.md](../backend/docs/CODING_PYTHON.md) - Python style guidelines
@@ -55,6 +57,7 @@ This guide helps you navigate HelloZenno's documentation structure.
 
 ### User Experience
 - [frontend/docs/USER_EXPERIENCE.md](../frontend/docs/USER_EXPERIENCE.md) - UX principles and patterns
+- [frontend/docs/KEYBOARD_SHORTCUTS.md](../frontend/docs/KEYBOARD_SHORTCUTS.md) - Complete keyboard navigation reference
 - [frontend/docs/AUDIO.md](../frontend/docs/AUDIO.md) - Audio functionality documentation
 - [frontend/docs/SITEMAP.md](../frontend/docs/SITEMAP.md) - Site structure and pages
 
@@ -86,7 +89,7 @@ Recent planning documents in [docs/planning/](planning/) track ongoing work and 
 
 ### Frontend Developer
 1. [frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md](../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)
-2. [frontend/docs/STYLING.md](../frontend/docs/STYLING.md)
+2. [frontend/docs/VISUAL_DESIGN_STYLING.md](../frontend/docs/VISUAL_DESIGN_STYLING.md)
 3. [frontend/docs/BACKEND_FLASK_API_INTEGRATION.md](../frontend/docs/BACKEND_FLASK_API_INTEGRATION.md)
 
 ### Backend Developer

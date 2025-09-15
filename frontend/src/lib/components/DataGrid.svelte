@@ -238,6 +238,7 @@
                     tabindex="0"
                     on:click={() => cycleSort(col.id)}
                     on:keydown={(e) => {
+                      // For complete keyboard shortcuts reference, see frontend/docs/KEYBOARD_SHORTCUTS.md
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         cycleSort(col.id);

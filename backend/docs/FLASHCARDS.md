@@ -54,6 +54,8 @@ The buttons should be really big and arranged so that it's really easy to press 
 - RIGHT arrow to proceed forward through stages within a sentence
 - ENTER for "Next" (i.e. next random sentence flashcard)
 
+For complete keyboard shortcut reference, see `frontend/docs/KEYBOARD_SHORTCUTS.md`.
+
 ## Relevant Files
 
 - `flashcard_views.py`

@@ -154,6 +154,7 @@
         bind:value={searchQuery}
         bind:this={searchInput}
         on:keydown={(e) => {
+          // For complete keyboard shortcuts reference, see frontend/docs/KEYBOARD_SHORTCUTS.md
           if (e.key === 'Enter') {
             e.preventDefault();
             navigateToSearch(searchQuery);

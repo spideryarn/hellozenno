@@ -1,6 +1,6 @@
 # User Experience Guidelines
 
-This document outlines user experience guidelines for the HelloZenno application. For styling information, see [STYLING.md](./STYLING.md).
+This document outlines user experience guidelines for the HelloZenno application. For styling information, see [VISUAL_DESIGN_STYLING.md](./VISUAL_DESIGN_STYLING.md).
 
 ## Modal Dialogs
 
@@ -9,6 +9,8 @@ This document outlines user experience guidelines for the HelloZenno application
 - **ESC**: Cancel/close the modal
 - **ENTER**: Submit form (for single input forms like YouTube URL)
 - **CTRL+ENTER**: Submit form (for multi-input forms like Create From Text)
+
+For complete keyboard shortcut reference across all components, see [KEYBOARD_SHORTCUTS.md](KEYBOARD_SHORTCUTS.md).
 
 Implementation:
 ```svelte
@@ -22,7 +24,7 @@ Implementation:
 </div>
 ```
 
-For ARIA attributes and accessibility guidelines for modals, see [STYLING.md](./STYLING.md#accessibility-guidelines).
+For ARIA attributes and accessibility guidelines for modals, see [ACCESSIBILITY.md](./ACCESSIBILITY.md#modal-dialogs).
 
 ### Loading States
 
@@ -61,7 +63,7 @@ If there's an obvious focus either when the page loads or because some new actio
   <input type="text" use:focusOnMount>
   ```
 
-For accessibility considerations when using autofocus, see [STYLING.md](./STYLING.md#accessibility-guidelines).
+For accessibility considerations when using autofocus, see [ACCESSIBILITY.md](./ACCESSIBILITY.md#focus-management).
 
 ### Preventing Double Submission
 
@@ -93,7 +95,7 @@ For accessibility considerations when using autofocus, see [STYLING.md](./STYLIN
   </button>
   ```
 
-- For icon library information, common icons, and Svelte 5 import syntax, see [STYLING.md](./STYLING.md#icons).
+- For icon library information, common icons, and Svelte 5 import syntax, see [ICONS_SYMBOLS.md](./ICONS_SYMBOLS.md).
 
 - Use icons with buttons for better clarity:
   ```svelte
@@ -135,4 +137,4 @@ For accessibility considerations when using autofocus, see [STYLING.md](./STYLIN
   <a href="/path" on:click={handleClick}>Link</a>
   ```
 
-See [STYLING.md](./STYLING.md) for more information on component styling and theme usage.
+See [VISUAL_DESIGN_STYLING.md](./VISUAL_DESIGN_STYLING.md) for more information on component styling and theme usage.

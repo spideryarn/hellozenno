@@ -72,6 +72,7 @@ test('renders recognized words', () => {
 
 - Backend testing: `../../backend/docs/BACKEND_TESTING.md`
 - Reference signpost: `../../docs/reference/TESTING.md`
+- Keyboard interactions: `KEYBOARD_SHORTCUTS.md` - Reference for testing keyboard navigation and shortcuts
 
 ### Frontend testing
 

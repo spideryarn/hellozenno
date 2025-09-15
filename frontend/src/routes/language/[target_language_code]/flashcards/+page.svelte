@@ -46,6 +46,7 @@
   }
   
   // Handle keyboard events
+  // For complete keyboard shortcuts reference, see frontend/docs/KEYBOARD_SHORTCUTS.md
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       window.location.href = startUrl;
