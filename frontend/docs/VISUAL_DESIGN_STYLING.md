@@ -9,6 +9,8 @@ This document covers the visual design system, theming, and core styling pattern
 - [ANIMATION.md](./ANIMATION.md) - Animation patterns and guidelines
 - [ACCESSIBILITY.md](./ACCESSIBILITY.md) - Accessibility requirements
 - [PAGE_TITLES_SEO.md](./PAGE_TITLES_SEO.md) - Page titles and SEO best practices
+- [COLOUR.md](./COLOUR.md) - Colour variables, palette and Bootstrap role mapping
+- [LAYOUT.md](./LAYOUT.md) - Root layout shell, background, header and footer composition
 
 ## CSS Structure
 
@@ -23,35 +25,22 @@ static/css/
         └── bootstrap.min.css  # Bootstrap core CSS
 ```
 
+### Code references
+
+- `../src/app.html` — CSS entry point; loads `base.css`
+- `../static/css/base.css` — Imports Bootstrap, then `theme.css`, then `components.css`
+- `../static/css/theme-variables.css` — Defines `--hz-color-*`, font families, and Bootstrap variable overrides
+- `../static/css/theme.css` — Applies variables to components; defines `.text-on-light`, `.text-primary-green`, `.feature-card`, `.nebula-bg`, `.hz-foreign-text`
+- `../static/css/components.css` — Legacy component styles; prefer global utility classes in `theme.css`
+- `../src/lib/components/NebulaBackground.svelte` — Full-screen nebula background wrapper used by root layout
+- `../src/lib/components/DropdownButton.svelte` — Reusable dropdown; see usage with `.btn-secondary.text-on-light`
+- `../src/routes/+layout.svelte` — Header example using `btn-secondary text-on-light`
+
 ## Theming
 
 The app uses a dark theme with a "friendly elegant pastel" color palette defined in `theme-variables.css`. Colours are defined using CSS variables prefixed with `--hz-color-`.
 
-**Important:** Always use the defined `--hz-color-*` variables from [`theme-variables.css`](../static/css/theme-variables.css) for styling. Avoid using hardcoded hex codes, RGB values, or named colours (like `white`, `black`, `green`) directly in component styles or other CSS files. This ensures consistency and maintainability.
-
-### Core Palette
-
-| Variable Name                   | Hex       | Description                       |
-|---------------------------------|-----------|-----------------------------------|
-| `--hz-color-primary-green`        | `#669A73` | Primary Brand Green (Logo)      |
-| `--hz-color-primary-green-light`  | `#80B890` | Lighter Green (Hover/Link Hover)|
-| `--hz-color-primary-green-dark`   | `#537E5C` | Darker Green (Active/Focus)     |
-| `--hz-color-background`         | `#0b0b0e` | Near-black Background (`body`)  |
-| `--hz-color-surface`            | `#1e1e1e` | Dark Gray Surface (Cards)       |
-| `--hz-color-border`             | `#333333` | Subtle Border (Cards)           |
-| `--hz-color-text-main`          | `#f8f9fa` | Near-white Main Text            |
-| `--hz-color-text-secondary`     | `#d7dadd` | Light Gray Secondary Text       |
-
-### Accent Palette (Pastel)
-
-| Variable Name                   | Hex       | Description                       |
-|---------------------------------|-----------|-----------------------------------|
-| `--hz-color-accent-peach`       | `#F5B8A8` | Soft Peach Accent (Secondary)   |
-| `--hz-color-accent-lavender`    | `#D0C0E8` | Gentle Lavender Accent (Tertiary)|
-| `--hz-color-accent-sky-blue`    | `#A8D8F0` | Muted Sky Blue Accent (Info)    |
-| `--hz-color-accent-gold`        | `#F8DDA8` | Soft Gold Accent (Alert/Warning)|
-
-**Note:** When using lavender (`--hz-color-accent-lavender`) as a background color (e.g., in buttons or badges), use the `.text-on-light` class for consistent dark text styling. This ensures proper contrast and consistent appearance across UI elements.
+**Important:** Always use the defined `--hz-color-*` variables from [`theme-variables.css`](../static/css/theme-variables.css) for styling. Avoid using hardcoded hex codes, RGB values, or named colours directly in component styles. See [COLOUR.md](./COLOUR.md) for the full palette, semantic mapping, Bootstrap roles, and usage guidance. Core class definitions (e.g., `.text-on-light`, `.text-primary-green`) live in [`theme.css`](../static/css/theme.css).
 
 ### UI Effects
 
@@ -83,6 +72,8 @@ We provide reusable Svelte components to maintain consistent styling:
 - `DropdownButton.svelte`: Reusable dropdown menu component with tooltip support and click-outside behavior
 
 ## Custom CSS Classes
+
+Definitions for the classes below live primarily in [`theme.css`](../static/css/theme.css).
 
 ### New Homepage-Specific Classes
 
@@ -125,7 +116,7 @@ Primary action buttons use the primary green color. Rounded pill shape is often 
 </a>
 ```
 
-Style properties (defined in `theme.css` using variables):
+Style properties (defined in [`theme.css`](../static/css/theme.css) using variables):
 - Background: `var(--hz-color-primary-green)`
 - Hover background: `var(--hz-color-primary-green-light)`
 - Text color: White (`#fff` generally, ensure contrast)
@@ -143,10 +134,12 @@ Secondary buttons use the lavender accent color (`--hz-color-accent-lavender`) v
 </button>
 ```
 
-Style properties:
+Style properties (see `.btn-secondary` and `.text-on-light` in [`theme.css`](../static/css/theme.css)):
 - Background: `var(--hz-color-accent-lavender)` 
 - Text color: Dark (`#212529`) using `.text-on-light` class
 - Hover: Slightly darker lavender with dark text
+
+Example in code: header profile menu uses `btn btn-sm btn-secondary text-on-light` in [`+layout.svelte`](../src/routes/+layout.svelte).
 
 ## Static Assets
 
@@ -179,7 +172,7 @@ For new images, follow these guidelines:
 
 ## Animations
 
-For animation patterns, transitions, and performance guidelines, see [ANIMATION.md](./ANIMATION.md).
+For animation patterns, transitions, and performance guidelines, see [ANIMATION.md](./ANIMATION.md). The `float` animation used by `.animate-float` is defined in [`theme.css`](../static/css/theme.css).
 
 ## Accessibility
 
