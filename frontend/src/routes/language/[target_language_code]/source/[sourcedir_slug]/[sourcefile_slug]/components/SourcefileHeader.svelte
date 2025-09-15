@@ -513,6 +513,9 @@
   $: flashcardsUrl = getPageUrl('flashcards', {
     target_language_code
   }, { sourcefile: sourcefile_slug });
+  
+  // Temporary direct path until learn route is added to getPageUrl
+  $: learnUrl = `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/learn`;
 </script>
 
 <CollapsibleHeader
@@ -593,6 +596,10 @@
         <div class="section-divider"></div>
         <a href={flashcardsUrl} class="button">
           Practice Flashcards
+        </a>
+        <div class="section-divider"></div>
+        <a href={learnUrl} class="button">
+          Learn (MVP)
         </a>
       </div>
     {/if}
