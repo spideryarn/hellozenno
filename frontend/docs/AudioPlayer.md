@@ -1,10 +1,4 @@
-# Audio docs moved
-
-This page has moved to [AudioPlayer.md](./AudioPlayer.md).
-
-For system-wide audio architecture, see [../../docs/reference/AUDIO.md](../../docs/reference/AUDIO.md).
-
----
+# Audio Player Component
 
 The application has several places where audio playback is needed - sentence display, source file audio, and flashcards. This document outlines our shared `AudioPlayer` component that provides consistent audio functionality across the application.
 
@@ -61,8 +55,8 @@ The component exposes several methods and properties for controlling audio playb
 |----------------|-------------|
 | `play()` | Start playing the audio |
 | `pause()` | Pause the audio |
-| `setPlaybackRate(rate)` | Set the playback rate (0.9, 1.0, or 1.2) |
-| `isPlaying` | Boolean property indicating if audio is currently playing |
+| `setPlaybackRate(rate)` | Set the playback rate (0.8, 0.85, 0.9, 0.95, 1.0, or 1.2) |
+| `isPlaying()` | Returns a boolean indicating if audio is currently playing |
 
 ## Events
 
@@ -74,6 +68,8 @@ The component exposes several methods and properties for controlling audio playb
 | `on:error` | Fired when an error occurs during playback |
 | `on:loadstart` | Fired when loading starts |
 | `on:canplay` | Fired when audio can start playing |
+| `on:autoplayBlocked` | Fired when the browser blocks autoplay |
+| `on:speedChanged` | Fired when playback speed is changed via UI |
 
 ## Example Implementations
 
@@ -114,7 +110,7 @@ The component exposes several methods and properties for controlling audio playb
 ## Implementation Details
 
 - Consistent UI styling using Bootstrap and project CSS variables
-- Audio playback speed options: 0.9x, 1.0x, and 1.2x
+- Audio playback speed options: 0.8x, 0.85x, 0.9x, 0.95x, 1.0x, and 1.2x
 - Error message display on playback failure
 - Loading state using `LoadingSpinner` component
 - Standardized approach using Svelte binding for audio element referencing
@@ -142,3 +138,8 @@ The component uses the application's theme variables for styling consistency:
 - Native audio controls provide built-in accessibility features
 - Additional buttons include appropriate ARIA labels
 - Keyboard navigation supported for all controls
+
+## See also
+
+- `../../docs/reference/AUDIO.md` – System-wide audio architecture and lemma variant design
+

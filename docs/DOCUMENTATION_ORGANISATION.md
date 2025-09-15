@@ -63,7 +63,7 @@ Status: stable • Last updated: 2025-09-15
 ### User Experience
 - [frontend/docs/USER_EXPERIENCE.md](../frontend/docs/USER_EXPERIENCE.md) - UX principles and patterns
 - [frontend/docs/KEYBOARD_SHORTCUTS.md](../frontend/docs/KEYBOARD_SHORTCUTS.md) - Complete keyboard navigation reference
-- [frontend/docs/AUDIO.md](../frontend/docs/AUDIO.md) - Audio functionality documentation
+- [frontend/docs/AudioPlayer.md](../frontend/docs/AudioPlayer.md) - Audio component usage
 - [frontend/docs/SITEMAP.md](../frontend/docs/SITEMAP.md) - Site structure and pages
 
 ## Planning & History
