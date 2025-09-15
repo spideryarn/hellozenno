@@ -413,27 +413,10 @@
    * - Convert single newlines to line breaks (<br>)
    */
   function processLineBreaks(text: string): string {
-    // Split text by double or more newlines to create paragraphs
-    const paragraphs = text.split(/\n\n+/);
-    
-    // Process each paragraph: replace single newlines with <br> tags
-    const processedParagraphs = paragraphs.map(para => {
-      // IMPORTANT: Do not trim() – we must preserve leading/trailing spaces
-      // Replace single newlines with <br> tags while keeping spaces intact
-      return para.replace(/\n/g, '<br>');
-    });
-    
-    // Join paragraphs with paragraph tags
-    if (processedParagraphs.length === 1) {
-      // If there's only one paragraph, just return it with proper line breaks
-      return processedParagraphs[0];
-    } else {
-      // Wrap multiple paragraphs in <p> tags
-      return processedParagraphs
-        .filter(para => para.trim().length > 0) // Skip empty paragraphs
-        .map(para => `<p>${para}</p>`)
-        .join('');
-    }
+    // Simple conversion: keep all spaces, convert all newlines to <br>.
+    // Double newlines naturally become <br><br>, avoiding paragraph wrappers
+    // that could split around inline word links.
+    return text.replace(/\n/g, '<br>');
   }
 </script>
 
