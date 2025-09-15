@@ -394,18 +394,7 @@ def process_individual_words_api(target_language_code, sourcedir_slug, sourcefil
         print(f"Done processing sourcefile {sourcefile_slug}")
 
         # Return information about what was processed
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "sourcefile_slug": sourcefile_slug,
-                    "total_lemmas": len(unique_lemmas),
-                    "processed_lemmas": processed_lemmas,
-                    "failed_lemmas": failed_lemmas,
-                }
-            ),
-            200,
-        )
+        return "", 204
     except Exception as e:
         response = jsonify({"success": False, "error": str(e)})
         response.status_code = 500
@@ -681,8 +670,9 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         if not text_target:
             return jsonify({"error": "Text content is required"}), 400
 
-        # Prepare data for helper function
-        filename = f"{title}.txt"
+        # Prepare data for helper function - slugify the title for filename
+        from slugify import slugify as _slugify
+        filename = f"{_slugify(title)}.txt"
         metadata = {"text_format": "plain"}
 
         # Use helper to create sourcefile (handles collision)

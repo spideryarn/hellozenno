@@ -25,7 +25,7 @@ from db_models import (
     Sourcedir,
 )
 from utils.audio_utils import transcribe_audio
-from gjdutils.dt import dt_str
+from utils.sourcefile_processing import dt_str
 from gjdutils.jsons import jsonify
 from utils.image_utils import resize_image_to_target_size
 from utils.misc_utils import pop_multi

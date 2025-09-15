@@ -16,6 +16,7 @@ from utils.auth_utils import (
 from utils.url_registry import endpoint_for
 from db_models import Profile
 from config import SUPPORTED_LANGUAGES
+from utils.lang_utils import get_all_languages
 
 # Create auth-specific blueprint
 auth_views_bp = Blueprint("auth_views", __name__, url_prefix="/auth")
@@ -87,11 +88,14 @@ def profile_page_vw(target_language_code=None):
 
     # GET request - show the profile form
     # Explicitly set target_language_code to None to avoid language lookup errors in templates
+    # Build mapping {code: name} for template
+    languages_map = {item["code"]: item["name"] for item in get_all_languages()}
+
     return render_template(
         "profile.jinja",
         user=g.user,
         profile=profile,
-        languages=SUPPORTED_LANGUAGES,
+        languages=languages_map,
         target_language_code=None,  # Pass None to avoid template errors
         target_language_name=None,  # Explicitly pass None for target_language_name
     )

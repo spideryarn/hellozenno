@@ -60,7 +60,7 @@ def create_sourcedir_api(target_language_code: str):
         return jsonify({"error": "Directory already exists"}), 409
 
     # Check if a sourcedir with the same slug exists for this language
-    test_slug = slugify(str(path))
+    test_slug = slugify(str(path))[:100]
     if (
         Sourcedir.select()
         .where(
@@ -76,6 +76,7 @@ def create_sourcedir_api(target_language_code: str):
         sourcedir = Sourcedir.create(
             path=path,
             target_language_code=target_language_code,
+            slug=test_slug,
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
         )
