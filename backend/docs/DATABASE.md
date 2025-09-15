@@ -41,13 +41,13 @@ Supabase offers three main connection methods:
    - Ideal for persistent servers with few connections
    - Connection string format: `postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres`
 
-2. **Session Pooler** (current setup):
+2. **Session Pooler**:
    - Connects via a proxy on port 5432
    - Ideal for persistent servers when IPv6 is not supported
    - Supports all PostgreSQL features including prepared statements
    - Good for applications with fewer clients that maintain long sessions
 
-3. **Transaction Pooler**:
+3. **Transaction Pooler** (preferred in production and serverless):
    - Connects via a proxy on port 6543
    - Ideal for serverless or edge functions with many transient connections
    - Does NOT support prepared statements
@@ -63,7 +63,7 @@ Located in `scripts/prod/` and `scripts/local/`:
 - `scripts/local/backup_db.sh`: Creates a backup of the local database
 - `scripts/local/migrations_list.sh`: Lists all available migrations
 
-N.B. We used to host our Postgres database on Fly.io, but now we use Supabase for that. If you see references to Fly.io and databases, please update them. See `docs/planning/250216_Supabase_database_migration.md`
+Note: We migrated from Fly.io-hosted Postgres to Supabase. Historical notes are in `docs/planning/finished/250216_Supabase_database_migration.md`. All current environments should use Supabase.
 
 ## Models
 
@@ -118,7 +118,7 @@ Our models often reference Supabase's `auth.users` table. When working with such
 
 The database connection (`utils/db_connection.py`) features:
 
-- Connection pooling via Supabase's transaction pooler
+- Connection pooling via Supabase's transaction pooler (port 6543)
 - Automatic environment detection
 - Connection monitoring and logging
 - Request-scoped connections in Flask
