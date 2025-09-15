@@ -7,6 +7,15 @@ See also:
 - `docs/DOCUMENTATION_ORGANISATION.md` - Complete documentation guide
 - `docs/reference/PROJECT_STRUCTURE.md` - Directory structure and data flow
 
+## Project Navigation
+
+**Core directories**:
+- `frontend/` - SvelteKit app (routes in `src/routes/`)
+- `backend/` - Flask API (entry: `api/index.py`)
+- `docs/` - Documentation (instructions, planning, reference)
+- `scripts/` - Build and deployment scripts
+- `logs/` - Application logs
+
 ## Architecture
 
 **Stack**: SvelteKit frontend + Flask API + Supabase (PostgreSQL + Auth)
@@ -17,10 +26,11 @@ See also:
 - Database models: `backend/db_models.py`
 - Migrations: `backend/migrations/`
 
-**Documentation**:
-- Architecture: `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`
+**Essential docs**:
+- Architecture: `docs/reference/ARCHITECTURE.md`, `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`
 - Database: `backend/docs/DATABASE.md`, `backend/docs/MODELS.md`
 - Auth: `frontend/docs/AUTH.md`
+- API: `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md`
 
 ## Coding Principles
 
@@ -30,6 +40,8 @@ Key points:
 - Keep changes minimal and focused
 - Fix root causes, not symptoms
 - Start simple, add complexity later
+- Raise errors early (avoid try/except wrapping)
+- Comment sparingly
 - Use lowercase type hints (`list[str]` not `List[str]`)
 
 ## Key Development Info
@@ -72,6 +84,10 @@ Key points:
 ### Debugging
 - Logs: `/logs/backend.log`, `/logs/frontend.log`
 - See: `backend/docs/DEBUGGING.md`
+
+### Git Workflow
+- Atomic commits: `git reset HEAD unwanted && git add wanted && git commit -m "type: message"`
+- See: `gjdutils/docs/instructions/GIT_COMMIT_CHANGES.md`
 
 ### AI Development Modes
 - See `docs/instructions/` for special modes
