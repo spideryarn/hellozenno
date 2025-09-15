@@ -9,6 +9,8 @@ Related Docs:
 
 ## Context & Goals
 
+See also: `docs/planning/250914c_multilingual_word_segmentation_for_hover_links.md`
+
 Adopt a single, robust multilingual word segmentation system to power inline hover-links across all target languages (Thai, Chinese, Japanese, Korean, and space-delimited languages) without developer/user setup. Clarify whether language-specific tokenizers ("plugins") are required, and whether to standardize on one approach.
 
 ## Key Background

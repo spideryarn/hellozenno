@@ -1,5 +1,7 @@
 ### Goal, context
 
+See also: `docs/conversations/250914b_multilingual_segmentation_strategy_icu_only.md`
+
 - Implement robust multilingual word segmentation to power inline underlined-hover-links (tooltips) across languages, especially those without whitespace word boundaries (e.g., Thai), while preserving existing product behavior and URLs.
 - Root cause today: `recognized_words` is often empty for Thai because backend matching relies on regex word boundaries (\b), which are not appropriate for Thai. The UI then falls back to legacy HTML and shows only a rare match where punctuation/spacing happens to align.
 - We will adopt ICU-based segmentation as the durable default (Python: PyICU; browser: Intl.Segmenter), and keep optional language-specific plugins for accuracy improvements (Thai: PyThaiNLP; Chinese: jieba; Japanese: SudachiPy) behind simple switches.

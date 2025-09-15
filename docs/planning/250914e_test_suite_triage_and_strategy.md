@@ -35,8 +35,28 @@ These bring the suite closer to an integration-first baseline and turn many envi
 - Remove tests that re-assert ORM-level validations already enforced by models unless regression-prone.
 - Keep URL registry smoke checks but avoid brittle string assertions beyond presence of key endpoints.
 
+## Critique (strengthen the plan)
+
+- **Strengths**: Focuses on integration-first value, targets real failure modes (missing blueprint, auth, external services), and proposes low-effort, high-impact harness fixes.
+- **Concerns**:
+  - Some tests import `backend.views.*` which breaks when `pythonpath=.`; this isn’t noted. Standardize imports to `views.*` in tests.
+  - The auth bypass sets a minimal `g.profile`; ensure it matches code paths that expect fields like `id` to avoid None-related errors.
+  - Pruning guidance is good but lacks explicit de-duplication targets (e.g., multiple delete/rename tests across resources doing the same assertion).
+  - CI env assumptions (ICU dictionaries) should be explicitly handled with skips to avoid flaky failures.
+- **Alternatives**:
+  - Instead of bypassing auth globally, parametrize an auth fixture to allow opt-in auth tests where needed; default remains bypassed.
+  - Consider a minimal API smoke matrix using `pytest.mark.parametrize` to reduce repetitive endpoint tests.
+- **Recommendations**:
+  - Replace remaining `from backend.views.*` imports in tests with `from views.*` (and `from backend.views.*` for API should become `from views.*_api`).
+  - Keep the autouse auth bypass but document an opt-out marker (e.g., `@pytest.mark.require_auth`) for dedicated auth tests that monkeypatch differently.
+  - Add explicit `@pytest.mark.skipif` guards around zh/ja segmentation when ICU dicts are unavailable.
+  - As part of pruning, retain: 1 list, 1 detail, 1 write-action, 1 API happy path, 1 failure path per resource; drop duplicates.
+- **Questions**:
+  - Do we need any end-to-end test with actual token validation, or is route-level behavior sufficient for now?
+  - Which exact endpoints benefit most from negative-path tests beyond 401 (e.g., 404/422 bodies)?
+
 ## References
 
-- `backend/docs/TESTING.md` – now includes an integration-first section and snippets for common fixes (blueprint registration, auth bypass, TTS mocking).
+- `backend/docs/TESTING.md` – integration-first section and harness snippets (blueprint registration, auth bypass, TTS mocking).
 
 
