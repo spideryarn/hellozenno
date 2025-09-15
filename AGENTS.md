@@ -61,9 +61,16 @@ Key points:
 - **API**: Type-safe with generated routes
 - See: `frontend/docs/VISUAL_DESIGN_STYLING.md`, `frontend/docs/ENHANCED_TEXT.md`
 
-### Testing & Debugging
-- Frontend type check: `cd frontend && npm run check`
-- Debug logs: Check `/logs/backend.log` and `/logs/frontend.log`
+### Testing
+- Backend: `pytest backend/tests/`
+- See: `docs/reference/TESTING.md`, `backend/docs/BACKEND_TESTING.md`
+
+### Type Checking & Linting
+- Frontend: `cd frontend && npm run check`
+- Backend: `ruff check backend/`, `black backend/`
+
+### Debugging
+- Logs: `/logs/backend.log`, `/logs/frontend.log`
 - See: `backend/docs/DEBUGGING.md`
 
 ### AI Development Modes

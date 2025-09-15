@@ -2,9 +2,11 @@
 
 This guide helps you navigate HelloZenno's documentation structure.
 
+Status: stable • Last updated: 2025-09-15
+
 ## Quick Start
 
-- **New to the project?** Start with [README.md](../README.md) then [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
+- **New to the project?** Start with [README.md](../README.md) then [reference/PROJECT_STRUCTURE.md](reference/PROJECT_STRUCTURE.md)
 - **Setting up development?** See [backend/docs/DEVOPS.md](../backend/docs/DEVOPS.md)
 - **Working with AI assistants?** Begin with [AGENTS.md](../AGENTS.md)
 - **Frontend development?** Start with [frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md](../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)
@@ -14,7 +16,7 @@ This guide helps you navigate HelloZenno's documentation structure.
 ### Project Overview
 - **[README.md](../README.md)** (⭐ START HERE) - Project introduction and quick start
 - **[AGENTS.md](../AGENTS.md)** - AI agent instructions and signposts to key docs
-- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Directory structure and data flow overview
+- **[reference/PROJECT_STRUCTURE.md](reference/PROJECT_STRUCTURE.md)** - Directory structure and data flow overview
 - [docs/instructions/CODING-PRINCIPLES.md](instructions/CODING-PRINCIPLES.md) - Core coding principles
 
 ### Setup & Infrastructure
@@ -23,7 +25,7 @@ This guide helps you navigate HelloZenno's documentation structure.
 - [backend/docs/MIGRATIONS.md](../backend/docs/MIGRATIONS.md) - Database migration procedures
 - [frontend/docs/SETUP.md](../frontend/docs/SETUP.md) - Frontend-specific setup notes
 
--### Architecture & Design
+### Architecture & Design
 - **[reference/ARCHITECTURE.md](reference/ARCHITECTURE.md)** - High-level system architecture
 - **[frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md](../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)** - Frontend architecture overview
 - [backend/docs/MODELS.md](../backend/docs/MODELS.md) - Database schema and models
@@ -48,6 +50,9 @@ This guide helps you navigate HelloZenno's documentation structure.
 - [backend/docs/CONTENT_GENERATION.md](../backend/docs/CONTENT_GENERATION.md) - AI content generation
 - [backend/docs/FLASHCARDS.md](../backend/docs/FLASHCARDS.md) - Flashcard system implementation
 - [backend/docs/REFACTORING_PYTHON.md](../backend/docs/REFACTORING_PYTHON.md) - Python refactoring patterns
+
+### Operations & Monitoring
+- [docs/reference/MONITORING.md](reference/MONITORING.md) - Observability, performance, and limits
 
 ### Testing & Debugging
 - [backend/docs/DEBUGGING.md](../backend/docs/DEBUGGING.md) - Backend debugging tips
@@ -78,7 +83,7 @@ Recent planning documents in [docs/planning/](planning/) track ongoing work and 
 
 ### New Developer
 1. [README.md](../README.md)
-2. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
+2. [reference/PROJECT_STRUCTURE.md](reference/PROJECT_STRUCTURE.md)
 3. [backend/docs/DEVOPS.md](../backend/docs/DEVOPS.md)
 4. [docs/instructions/CODING-PRINCIPLES.md](instructions/CODING-PRINCIPLES.md)
 

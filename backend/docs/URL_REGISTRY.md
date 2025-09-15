@@ -50,11 +50,11 @@ const searchPageUrl = getPageUrl(
   { query: 'hello', filter: 'all' }
 );
 
-// Or use apiFetch for a complete API request with error handling
-const wordformData = await apiFetch(
-  RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API, 
-  { target_language_code: 'el', wordform: 'γεια' }
-);
+// Or use apiFetch (object signature) with error handling
+const wordformData = await apiFetch({
+  routeName: RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
+  params: { target_language_code: 'el', wordform: 'γεια' }
+});
 ```
 
 ### In Svelte Components
@@ -75,10 +75,10 @@ const wordformData = await apiFetch(
   onMount(async () => {
     try {
       // Type-safe API fetch
-      wordformData = await apiFetch(
-        RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
-        { target_language_code, wordform }
-      );
+      wordformData = await apiFetch({
+        routeName: RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
+        params: { target_language_code, wordform }
+      });
     } catch (err) {
       error = err.message;
     } finally {
@@ -105,26 +105,22 @@ For SvelteKit's server-side data loading, use the same approach:
 
 ```typescript
 // In +page.server.ts
-import { getApiUrl } from '$lib/api';
+import { apiFetch } from '$lib/api';
 import { RouteName } from '$lib/generated/routes';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
   const { target_language_code, wordform } = params;
-  
-  const url = getApiUrl(
-    RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
-    { target_language_code: target_language_code, wordform }
-  );
-  
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to load wordform data: ${response.status}`);
-  }
-  
-  return {
-    wordformData: await response.json()
-  };
+  const { supabase } = locals;
+
+  const wordformData = await apiFetch({
+    supabaseClient: supabase,
+    routeName: RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
+    params: { target_language_code, wordform },
+    options: { method: 'GET' }
+  });
+
+  return { wordformData };
 };
 ```
 
@@ -160,7 +156,7 @@ When you add new routes to the Flask application:
 2. In development, TypeScript definitions are generated automatically when Flask starts
 3. After adding or modifying routes:
    - Restart the Flask server to update the registry
-   - Run `FLASK_APP=api.index flask generate-routes-ts` to manually regenerate TypeScript definitions
+   - Run `FLASK_APP=backend/api/index.py flask generate-routes-ts` to manually regenerate TypeScript definitions
 4. For production, TypeScript routes are automatically regenerated during deployment
 
 ### Example: Generate Sourcefile API
@@ -173,6 +169,24 @@ from flask import url_for
 # Build URL for Greek (el)
 url = url_for(endpoint_for(generate_sourcefile_api), target_language_code='el')
 ```
+
+## Auth requirements and decorators
+
+API endpoints declare authentication requirements via decorators in `backend/utils/auth_utils.py`:
+
+- `@api_auth_required`: Requires a valid Supabase JWT. Returns 401 if missing/invalid.
+- `@api_auth_optional`: Verifies JWT if present and populates `g.user`/`g.profile`, but allows anonymous access. Some operations may still require auth when generation is needed (returns 401 with flags like `authentication_required_for_generation`).
+
+On the frontend, always pass the appropriate Supabase client instance to `apiFetch` from server `load` functions (`locals.supabase`) or from client context (`data.supabase`) to attach the token correctly. See `frontend/docs/AUTH.md` for full flow.
+
+### Endpoint categories (examples)
+
+- Wordforms: `GET /api/lang/<code>/word/<wordform>` → optional auth for reads; generation may require auth
+- Lemmas: `GET /api/lang/<code>/lemma/<lemma>` → optional auth; generation may require auth
+- Sentences audio: `POST /api/lang/<code>/sentence/<slug>/audio` → auth required
+- Sourcefiles: create/generate endpoints → auth required
+
+Refer to `frontend/src/lib/generated/routes.ts` for the complete, generated list of endpoints.
 
 ## In Python test code
 

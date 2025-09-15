@@ -92,38 +92,38 @@ Priority issues identified:
   - [x] Use Task tool with subagents to review all docs in `docs/planning/`
   - [x] Identify which planning docs represent completed work
   - [x] Move completed docs to `docs/planning/finished/`
-- [ ] Consolidate authentication documentation
-  - [ ] Merge relevant planning details into AUTH.md
-  - [ ] Remove redundant auth information from other docs
-  - [ ] Ensure single source of truth for auth patterns
+- [x] Consolidate authentication documentation
+  - [x] Merge relevant planning details into AUTH.md
+  - [x] Remove redundant auth information from other docs
+  - [x] Ensure single source of truth for auth patterns
 
 - Acceptance:
   - Completed planning docs are archived; this doc lists what moved.
   - `frontend/docs/AUTH.md` reflects consolidated auth patterns; redundant references removed.
 
-- [ ] Extract deployment architecture into proper reference doc
-  - [ ] Consider creating docs/reference/ARCHITECTURE.md for high-level decisions
-  - [ ] Document Flask + SvelteKit hybrid approach rationale
-  - [ ] Include deployment architecture overview
+- [x] Extract deployment architecture into proper reference doc
+  - [x] Create docs/reference/ARCHITECTURE.md for high-level decisions
+  - [x] Document Flask + SvelteKit hybrid approach rationale
+  - [x] Include deployment architecture overview
 
-- [ ] Move any .md docs in `docs/` into `docs/reference/`
+- [x] Move any .md docs in `docs/` into `docs/reference/`
 
 ### Stage: Documentation organization improvements
 
-- [ ] Update DOCUMENTATION_ORGANISATION.md
-  - [ ] Add status indicators for doc completeness
-  - [ ] Include last-updated dates where helpful
-  - [ ] Reorganize categories based on current structure
-  - [ ] Mark critical starter docs more clearly
+- [x] Update DOCUMENTATION_ORGANISATION.md
+  - [x] Add status indicators for doc completeness
+  - [x] Include last-updated dates where helpful
+  - [x] Reorganize categories based on current structure
+  - [x] Mark critical starter docs more clearly
 
-- [ ] Create missing high-value documentation
-  - [ ] API documentation - improve existing URL_REGISTRY.md documentation
+- [x] Create missing high-value documentation
+  - [x] API documentation - improve existing URL_REGISTRY.md documentation
     - Note: We use a custom URL registry system, not OpenAPI
     - Document the Flask → TypeScript type generation system better
     - Add examples of request/response formats for major endpoint categories
     - Include authentication requirements per endpoint type (@api_auth_required vs @api_auth_optional)
     - Consider adding endpoint documentation tables to URL_REGISTRY.md
-  - [ ] Performance/monitoring documentation (create docs/reference/MONITORING.md)
+  - [x] Performance/monitoring documentation (create docs/reference/MONITORING.md)
     - Document production monitoring tools:
       - Vercel dashboard for backend API (hz_backend project)
       - Vercel dashboard for frontend (hz_frontend project)
