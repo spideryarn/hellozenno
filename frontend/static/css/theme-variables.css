@@ -52,7 +52,7 @@
     --hz-color-badge-audio: var(--hz-color-primary-green);
     --hz-color-badge-duration: #6c757d; /* Bootstrap secondary */
 
-    /* Font Families (Reference from STYLING.md) */
+    /* Font Families (Reference from VISUAL_DESIGN_STYLING.md) */
     --hz-font-main: Georgia, serif;
     --hz-font-foreign: 'Times New Roman', serif;
     /* Keep italic styling separate */

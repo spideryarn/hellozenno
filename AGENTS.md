@@ -5,7 +5,7 @@ AI-powered language learning app with interactive vocabulary and audio generatio
 See also:
 - `README.md` - Project overview and quick start
 - `docs/DOCUMENTATION_ORGANISATION.md` - Complete documentation guide
-- `docs/PROJECT_STRUCTURE.md` - Directory structure and data flow
+- `docs/reference/PROJECT_STRUCTURE.md` - Directory structure and data flow
 
 ## Architecture
 
@@ -59,7 +59,7 @@ Key points:
 - **Styling**: Bootstrap dark theme, `--hz-color-*` variables
 - **Components**: Enhanced text, DataGrid, Cards
 - **API**: Type-safe with generated routes
-- See: `frontend/docs/STYLING.md`, `frontend/docs/ENHANCED_TEXT.md`
+- See: `frontend/docs/VISUAL_DESIGN_STYLING.md`, `frontend/docs/ENHANCED_TEXT.md`
 
 ### Testing & Debugging
 - Frontend type check: `cd frontend && npm run check`

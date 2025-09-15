@@ -1,8 +1,14 @@
-# UI and Styling
+# Visual Design and Styling
 
-The application uses Bootstrap 5.3.2 for styling, with a custom dark theme. The styling system is organized as follows:
+This document covers the visual design system, theming, and core styling patterns for the Hello Zenno application. The application uses Bootstrap 5.3.2 for styling with a custom dark theme.
 
-For user experience guidelines, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md).
+## Related Documentation
+
+- [USER_EXPERIENCE.md](./USER_EXPERIENCE.md) - User experience guidelines
+- [ICONS_SYMBOLS.md](./ICONS_SYMBOLS.md) - Icon system and usage
+- [ANIMATION.md](./ANIMATION.md) - Animation patterns and guidelines
+- [ACCESSIBILITY.md](./ACCESSIBILITY.md) - Accessibility requirements
+- [PAGE_TITLES_SEO.md](./PAGE_TITLES_SEO.md) - Page titles and SEO best practices
 
 ## CSS Structure
 
@@ -99,73 +105,13 @@ We provide reusable Svelte components to maintain consistent styling:
 - `.hz-section-header`: For section headings
 - `.hz-btn-primary`: For primary buttons (uses `var(--hz-color-primary-green)`)
 
-## Page Titles
+## Page Titles and SEO
 
-Page titles should follow a consistent structure for better SEO and user experience:
+For page title structure, meta tags, and SEO best practices, see [PAGE_TITLES_SEO.md](./PAGE_TITLES_SEO.md).
 
-### Title Structure Patterns
+## Icons and Symbols
 
-- **Language-specific pages**: `[Specific Content] | [Page Type] | [Language Name] | [Site Name]`
-  - Example: `καλημέρα | Lemma | Greek | Hello Zenno`
-  - Example: `Sources | Greek | Hello Zenno`
-
-- **General pages**: `[Page Name] | [Site Name]`
-  - Example: `Languages | Hello Zenno`
-  - Example: `FAQ | Hello Zenno`
-
-- **Home page**: `[Site Name] - [Tagline]`
-  - Example: `Hello Zenno - AI-powered dictionary & listening practice`
-
-### Implementation Guidelines
-
-- Use the constants `SITE_NAME` and `TAGLINE` from `frontend/src/lib/config.ts` for consistency
-- Long content titles (like sentences) should be truncated using the `truncate()` utility function
-- Set titles within a `<svelte:head>` tag in your component
-- Title information should be passed from server to client components as needed
-- URL trailing slashes are set to `never` so canonical URLs don't have trailing slashes
-
-## Icons
-
-The application uses Phosphor icons for a consistent iconography system. 
-
-### Using Phosphor Icons
-
-We use the `phosphor-svelte` package (version 3.0.1) for icons. The "fill" weight is preferred for homepage and marketing materials to create a more substantial, friendly look.
-
-**Important Note for Svelte 5**: For best compatibility with Svelte 5, import icons using the path import syntax rather than named imports:
-
-```svelte
-<!-- RECOMMENDED: Use direct path imports like this -->
-import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
-
-<!-- AVOID: Named imports can cause issues with Svelte 5 -->
-import { PencilSimple } from 'phosphor-svelte';
-```
-
-Common icons used throughout the application:
-- `PencilSimple`: For edit operations
-- `Trash`: For delete operations
-- `Download`: For download actions
-- `FolderOpen`: For folder/directory operations
-- `ChevronUp`/`ChevronDown`: For expand/collapse UI elements
-- `BookOpen`: For dictionary/reading features
-- `MagnifyingGlass`: For search functions
-- `Translate`: For translation features
-- `Globe`: For language selection
-- `SpeakerHigh`: For audio playback
-- `BrainCircuit`: For AI-powered features
-- `Lightbulb`: For tips and insights
-
-### Icon Properties
-
-```svelte
-<PencilSimple size={16} weight="bold" />
-```
-
-- `size`: Controls the icon size (typically 16px for small icons, 24px for navigation icons)
-- `weight`: Icon style variants: "regular" (default), "bold", "fill", "duotone", "thin", "light"
-
-For icon usage in buttons with tooltips and accessibility best practices, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md#icons-and-buttons).
+For the Phosphor icon system, usage guidelines, and symbol standards, see [ICONS_SYMBOLS.md](./ICONS_SYMBOLS.md).
 
 ## Button Styling
 
@@ -231,41 +177,13 @@ For new images, follow these guidelines:
 - Use external logos etc in `/static/img/extern/`
 - see also `phosphor-svelte`
 
-## Animation Guidelines
+## Animations
 
-Use subtle animations to enhance user experience without being distracting:
+For animation patterns, transitions, and performance guidelines, see [ANIMATION.md](./ANIMATION.md).
 
-- `.animate-float`: 3-second gentle floating animation (for logo and key elements)
-- Card hover effects: Small scale and shadow changes on hover
-- Button hover effects: Color change, slight translation, and shadow enlargement
-- Transition durations: 0.2s-0.3s for most UI elements
+## Accessibility
 
-## Accessibility Guidelines
-
-1. Elements with event handlers:
-   - Add appropriate ARIA roles to non-interactive elements that have event handlers
-   - Example: `<div role="dialog" on:keydown={handler}>`
-
-2. Close buttons and icon-only buttons:
-   - Always add an aria-label to buttons without visible text
-   - Example: `<button class="btn-close" aria-label="Close"></button>`
-
-3. Modal dialogs:
-   - Use `role="dialog"` on the modal container
-   - Associate the modal with its title using `aria-labelledby`
-   - Example: 
-     ```svelte
-     <div role="dialog" aria-labelledby="modal-title">
-       <h5 id="modal-title">Modal Title</h5>
-     </div>
-     ```
-   - For modal keyboard shortcuts and user interaction patterns, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md#modal-dialogs).
-
-4. Form elements and focus management:
-   - When using autofocus, add a svelte-ignore comment to avoid accessibility warnings
-   - Prefer making autofocus configurable via props rather than hardcoded
-   - Ensure autofocus is only used on the main content area of a page, not in modals or popups
-   - For implementation patterns and best practices for autofocus, see [USER_EXPERIENCE.md](./USER_EXPERIENCE.md#input-focus)
+For accessibility requirements, ARIA attributes, and screen reader support, see [ACCESSIBILITY.md](./ACCESSIBILITY.md).
 
 ## How to Use
 

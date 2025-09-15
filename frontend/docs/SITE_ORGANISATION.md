@@ -131,7 +131,7 @@ For technical details on how the API integration works, including type generatio
 - [Flask API Integration](./BACKEND_FLASK_API_INTEGRATION.md) - Details on the Flask API contract.
 - [Authentication](./AUTH.md) - Detailed authentication implementation.
 - [Setup and Development](./SETUP.md) - Instructions for setting up the development environment.
-- [UI and Styling](./STYLING.md) - Component styling conventions and theme information.
+- [Visual Design and Styling](./VISUAL_DESIGN_STYLING.md) - Component styling conventions and theme information.
 - [Sourcefile Pages](./SOURCEFILE_PAGES.md) - Detailed structure of sourcefile pages and tabs.
 - [Database Models](../../backend/docs/MODELS.md) - Overview of the backend database schema.
 
