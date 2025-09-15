@@ -51,6 +51,15 @@
   let showWordsPanel = true;
   let practiceSectionEl: HTMLElement | null = null;
   let autoScrollPending = false;
+  
+  function shuffleArray<T>(input: T[]): T[] {
+    const arr = input.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
   async function ensureWarmingQueue() {
     if (warmingQueue) return warmingQueue;
     try {
@@ -173,7 +182,7 @@
         throw new Error(err?.message || `Generation failed (${res.status})`);
       }
       const js = await res.json();
-      cards = js?.sentences || [];
+      cards = shuffleArray(js?.sentences || []);
       currentIndex = 0;
       currentStage = 1;
     } catch (e: any) {
@@ -258,7 +267,7 @@
 
   function startOrShowPractice() {
     if (preparedCards.length > 0 && !preparing) {
-      cards = preparedCards;
+      cards = shuffleArray(preparedCards);
       currentIndex = 0;
       currentStage = 1;
       return;
