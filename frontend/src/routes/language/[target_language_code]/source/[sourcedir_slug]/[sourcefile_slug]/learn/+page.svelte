@@ -376,8 +376,11 @@
     </div>
   </div>
 
+  <!-- Anchor for smooth scroll when starting practice -->
+  <div id="learn-practice-section" bind:this={practiceSectionEl}></div>
+
   <div class="row g-4">
-    <div class="col-12 col-xl-5">
+    <div class="col-12" class:col-xl-5={cards.length > 0}>
       {#if showWordsPanel}
       <Card title="Priority words">
         {#if loadingSummary}
@@ -446,8 +449,8 @@
       {/if}
     </div>
 
+    {#if cards.length > 0}
     <div class="col-12 col-xl-7">
-      <div id="learn-practice-section" bind:this={practiceSectionEl}></div>
       {#if cards.length > 0}
       <Card title="Practice">
           <div class="mb-3">
@@ -494,6 +497,7 @@
       </Card>
       {/if}
     </div>
+    {/if}
   </div>
 </div>
 
