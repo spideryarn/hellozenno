@@ -49,7 +49,8 @@ This guide helps you navigate HelloZenno's documentation structure.
 
 ### Testing & Debugging
 - [backend/docs/DEBUGGING.md](../backend/docs/DEBUGGING.md) - Backend debugging tips
-- [backend/docs/TESTING.md](../backend/docs/TESTING.md) - Testing patterns (needs update)
+- [docs/reference/TESTING.md](reference/TESTING.md) - Testing entry point (frontend + backend)
+- [backend/docs/BACKEND_TESTING.md](../backend/docs/BACKEND_TESTING.md) - Backend testing patterns
 - [frontend/docs/FRONTEND_DEBUGGING.md](../frontend/docs/FRONTEND_DEBUGGING.md) - Frontend debugging guide
 
 ### User Experience

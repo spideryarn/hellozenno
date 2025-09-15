@@ -61,7 +61,7 @@ The buttons should be really big and arranged so that it's really easy to press 
 - `sentence_flashcards.jinja`
 - `tests/e2e/test_flashcard_frontend.py`
 - `sentence_views.py`
-- `planning_docs/FRONTEND_TESTING.md`
+- Frontend testing: `../../frontend/docs/FRONTEND_TESTING.md`
 
 ## Sourcedir Practice Notes
 
