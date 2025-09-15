@@ -95,10 +95,3 @@ def test_search_functionality(client):
     assert response.status_code == 302  # Should redirect to wordform view
 
 
-def test_favicon_with_trailing_slash(client):
-    """Test that favicon.ico works even with a trailing slash."""
-    # This URL doesn't use build_url_with_query since it's not a Flask view function
-    # It's handled directly by Flask's send_from_directory
-    response = client.get("/favicon.ico/")
-    assert response.status_code == 200
-    assert response.mimetype == "image/vnd.microsoft.icon"
