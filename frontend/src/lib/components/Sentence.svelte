@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Sentence, SentenceMetadata } from '$lib/types';
   import { MetadataCard, AudioPlayer } from '$lib';
+  import SentenceAudioButton from './SentenceAudioButton.svelte';
   import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { goto } from '$app/navigation';
@@ -93,9 +94,21 @@
       </div>
 
       <div class="mb-4">
-        <div class="hz-foreign-text fs-4 mb-3">
-          <!-- Render the enhanced text with fallback -->
-          {@html enhanced_sentence_text || `<p>${sentence.text}</p>`}
+        <div class="d-flex align-items-start gap-2 mb-3">
+          <div class="hz-foreign-text fs-4 flex-grow-1">
+            <!-- Render the enhanced text with fallback -->
+            {@html enhanced_sentence_text || `<p>${sentence.text}</p>`}
+          </div>
+          <!-- Quick audio icon: always visible; generates on demand if needed -->
+          <SentenceAudioButton
+            target_language_code={sentence.target_language_code}
+            sentenceId={sentence.id}
+            sentenceSlug={sentence.slug}
+            hasAudio={sentence.has_audio}
+            supabaseClient={supabase}
+            className="ms-2"
+            iconSize={18}
+          />
         </div>
         
         {#if sentence.translation}

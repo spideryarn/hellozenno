@@ -131,6 +131,7 @@
             translation={example.translation} 
             slug={example.slug || ''} 
             target_language_code={target_language_code}
+            supabaseClient={supabaseClient}
           />
         {/each}
       </div>
@@ -254,6 +255,7 @@
                   translation={confused.example_usage_this_source}
                   slug={confused.example_usage_this_slug || ''}
                   target_language_code={target_language_code}
+                  supabaseClient={supabaseClient}
                 />
               </div>
               {/if}
@@ -266,6 +268,7 @@
                   translation={confused.example_usage_other_source}
                   slug={confused.example_usage_other_slug || ''}
                   target_language_code={target_language_code}
+                  supabaseClient={supabaseClient}
                 />
               </div>
               {/if}
