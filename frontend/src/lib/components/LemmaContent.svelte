@@ -7,6 +7,7 @@
   export let target_language_code: string;
   export let showFullLink: boolean = false; // Whether to show the "View Full Lemma Page" link
   export let isAuthError: boolean = false; // To hide sections if auth error exists
+  export let context_sentence: string | undefined = undefined; // Optional context from sourcefile
 </script>
 
 {#if showFullLink && lemma_metadata?.lemma}
@@ -20,7 +21,10 @@
 {/if}
 
 <!-- Basic Lemma Details -->
-<Card title="Lemma Details" className="lemma-details-card">
+<Card title={lemma_metadata?.lemma ? `Lemma: ${lemma_metadata.lemma}` : 'Lemma'} className="lemma-details-card">
+  {#if context_sentence}
+    <blockquote class="context-sentence hz-foreign-text">{context_sentence}</blockquote>
+  {/if}
   <div class="translations mb-3">
     <p><strong>Translation:</strong> 
       {#if lemma_metadata?.translations && lemma_metadata.translations.length > 0}
@@ -35,18 +39,6 @@
   
   <div class="etymology mb-3">
     <p><strong>Etymology:</strong> {lemma_metadata?.etymology || '-'}</p>
-  </div>
-  
-  <div class="commonality mb-3">
-    <p><strong>Commonality:</strong> {lemma_metadata?.commonality ? Math.round((lemma_metadata.commonality) * 100) + '%' : '-'}</p>
-  </div>
-  
-  <div class="guessability mb-3">
-    <p><strong>Guessability:</strong> {lemma_metadata?.guessability ? Math.round((lemma_metadata.guessability) * 100) + '%' : '-'}</p>
-  </div>
-  
-  <div class="register mb-3">
-    <p><strong>Register:</strong> {lemma_metadata?.register || '-'}</p>
   </div>
   
   <slot name="auth-prompt"></slot>
@@ -221,4 +213,11 @@
 <style>
   /* Remove local definition, rely on global hz-foreign-text */
   /* .hz-foreign-text { ... } */
+
+  .context-sentence {
+    margin: 0 0 0.75rem 0;
+    padding-left: 0.75rem;
+    border-left: 3px solid var(--hz-color-primary-green);
+    font-size: 1.05rem;
+  }
 </style>

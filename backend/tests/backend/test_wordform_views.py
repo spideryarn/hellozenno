@@ -92,12 +92,8 @@ def test_get_new_wordform(mock_search, client):
         wordform="newword",
     )
     response = client.get(url)
-    assert response.status_code == 302  # Redirect status code
-    assert "newword" in response.headers["Location"]
-
-    # Follow the redirect and make sure we don't get into a loop
-    response = client.get(response.headers["Location"])
-    assert response.status_code == 200  # Should render the page now, not redirect again
+    # With new synchronous create-and-render flow, expect 200 and rendered page
+    assert response.status_code == 200
 
     # Verify the wordform was created in the database
     wordform = Wordform.get(

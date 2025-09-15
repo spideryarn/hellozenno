@@ -12,6 +12,7 @@
   let loadingSummary = true;
   let summaryError: string | null = null;
   let lemmas: Array<any> = [];
+  let sourceText: string = '';
 
   let generating = false;
   let generateError: string | null = null;
@@ -43,6 +44,13 @@
       }
       const js = await res.json();
       lemmas = js?.lemmas || [];
+
+      // Also fetch the original source text for context sentence extraction
+      const textRes = await fetch(`${API_BASE_URL}/api/lang/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/text`);
+      if (textRes.ok) {
+        const td = await textRes.json();
+        sourceText = td?.sourcefile?.text_target || td?.text_data?.text_target || '';
+      }
     } catch (e: any) {
       summaryError = e?.message || 'Failed to load summary';
     } finally {
@@ -117,6 +125,14 @@
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
+
+  function getContextSentence(text: string, lemma: string | undefined): string | undefined {
+    if (!text || !lemma) return undefined;
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    const idx = sentences.findIndex(s => s.includes(lemma));
+    if (idx >= 0) return sentences[idx];
+    return undefined;
+  }
 </script>
 
 <svelte:head>
@@ -138,7 +154,7 @@
         {:else}
           <div class="d-flex flex-column gap-3">
             {#each lemmas as l}
-              <LemmaContent lemma_metadata={l} target_language_code={target_language_code} showFullLink={false} isAuthError={false} />
+              <LemmaContent lemma_metadata={l} target_language_code={target_language_code} showFullLink={false} isAuthError={false} context_sentence={getContextSentence(sourceText, l?.lemma)} />
             {/each}
           </div>
         {/if}

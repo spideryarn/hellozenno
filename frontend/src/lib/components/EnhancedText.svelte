@@ -418,8 +418,9 @@
     
     // Process each paragraph: replace single newlines with <br> tags
     const processedParagraphs = paragraphs.map(para => {
-      // Replace single newlines with <br> tags
-      return para.trim().replace(/\n/g, '<br>');
+      // IMPORTANT: Do not trim() – we must preserve leading/trailing spaces
+      // Replace single newlines with <br> tags while keeping spaces intact
+      return para.replace(/\n/g, '<br>');
     });
     
     // Join paragraphs with paragraph tags
