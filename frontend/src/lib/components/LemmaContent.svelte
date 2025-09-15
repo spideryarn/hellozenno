@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { Card } from '$lib';
+  import { Card, LemmaAudioButton } from '$lib';
   import SentenceCard from '$lib/components/SentenceCard.svelte';
   import LemmaCard from '$lib/components/LemmaCard.svelte';
   import { createEventDispatcher } from 'svelte';
+  import { page } from '$app/stores';
   
   export let lemma_metadata: any;
   export let target_language_code: string;
@@ -11,10 +12,14 @@
   export let context_sentence: string | undefined = undefined; // Optional context from sourcefile
   export let source_wordforms: string[] = []; // Wordforms for this lemma present in the current sourcefile
   export let showIgnore: boolean = false; // Show an ignore button (dispatches 'ignore')
+  
+  // Supabase client is provided via root layout data
+  $: supabaseClient = ($page?.data as any)?.supabase ?? null;
 
   const dispatch = createEventDispatcher();
-  const lemmaHref = (lemma_metadata?.lemma && target_language_code)
-    ? `/language/${target_language_code}/lemma/${lemma_metadata.lemma}`
+  let lemmaHref: string | undefined = undefined;
+  $: lemmaHref = (lemma_metadata?.lemma && target_language_code)
+    ? `/language/${target_language_code}/lemma/${encodeURIComponent(lemma_metadata.lemma)}`
     : undefined;
 
   function handleIgnore() {
@@ -27,7 +32,7 @@
 {#if showFullLink && lemma_metadata?.lemma}
   <!-- Link to full lemma page -->
   <div class="text-center mb-4">
-    <a href="/language/{target_language_code}/lemma/{lemma_metadata.lemma}" 
+    <a href={lemmaHref} 
       class="btn btn-primary hz-foreign-text fw-bold">
       View Full Lemma Page: {lemma_metadata.lemma}
     </a>
@@ -38,7 +43,7 @@
 <Card className="lemma-details-card">
   <svelte:fragment slot="title">
     <div class="d-flex align-items-center justify-content-between gap-2">
-      <h2 class="card-title mb-0">
+      <h2 class="card-title mb-0 d-flex align-items-center gap-2">
         Lemma:
         {#if lemma_metadata?.lemma}
           <a
@@ -47,6 +52,12 @@
             rel="noopener noreferrer"
             class="hz-foreign-text hz-lemma-link ms-1"
           >{lemma_metadata.lemma}</a>
+          <!-- Lemma audio icon next to lemma -->
+          <LemmaAudioButton
+            target_language_code={target_language_code}
+            lemma={lemma_metadata.lemma}
+            supabaseClient={supabaseClient}
+          />
         {:else}
           <span>Lemma</span>
         {/if}
