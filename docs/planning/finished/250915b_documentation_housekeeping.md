@@ -71,11 +71,19 @@ Priority issues identified:
 
 ### Stage: Planning document consolidation
 
-- [ ] Review and organize planning documents
-  - [ ] Use Task tool with subagents to review all docs in `docs/planning/`
-  - [ ] Identify which planning docs represent completed work
-  - [ ] Move completed docs to `docs/planning/finished/`
-  - [ ] Update this planning doc with list of moved files
+- [x] Review and organize planning documents
+  - [x] Use Task tool with subagents to review all docs in `docs/planning/`
+  - [x] Identify which planning docs represent completed work
+  - [x] Move completed docs to `docs/planning/finished/`
+  - [x] Update this planning doc with list of moved files
+    - Moved 7 completed planning docs to finished/:
+      - 250111_pasting_in_Sourcefile_text.md (Phase 3 complete, moving to documentation)
+      - 250111_uploading_audio_Sourcefile.md (Implementation with many completed items)
+      - 250315_Phrase_literal_translation.md (Complete feature implementation)
+      - 250412_frontend_orchestrated_Sourcefile_processing.md (Marked as "implementation completed")
+      - 250420_Sourcefile_debugging.md (Debugging session completed)
+      - 250420_site_logo_link_profile.md (Completed attempt, marked as failed)
+      - 250914a_content_generation_web_ui.md (Most stages marked as completed)
 - [ ] Consolidate authentication documentation
   - [ ] Merge relevant planning details into AUTH.md
   - [ ] Remove redundant auth information from other docs
