@@ -4,6 +4,12 @@ This page has moved to [AudioPlayer.md](./AudioPlayer.md).
 
 For system-wide audio architecture, see [../../docs/reference/AUDIO.md](../../docs/reference/AUDIO.md).
 
+Audio-related database models (see backend model docs):
+
+- [LemmaAudio](../../backend/docs/MODELS.md#lemmaaudio) — pronunciation audio for lemmas
+- [Sentence](../../backend/docs/MODELS.md#sentence) — optional `audio_data` for example sentences
+- [Sourcefile](../../backend/docs/MODELS.md#sourcefile) — optional `audio_data` and `audio_filename` for source materials
+
 ---
 
 The application has several places where audio playback is needed - sentence display, source file audio, and flashcards. This document outlines our shared `AudioPlayer` component that provides consistent audio functionality across the application.
