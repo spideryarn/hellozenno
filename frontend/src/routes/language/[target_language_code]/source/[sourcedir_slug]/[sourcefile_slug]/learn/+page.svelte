@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { page } from '$app/stores';
   import Card from '$lib/components/Card.svelte';
   import Alert from '$lib/components/Alert.svelte';
@@ -50,7 +50,7 @@
   let warmingQueue: any = null;
   let showWordsPanel = true;
   let practiceSectionEl: HTMLElement | null = null;
-  let autoScrollPending = false;
+  
   
   function shuffleArray<T>(input: T[]): T[] {
     const arr = input.slice();
@@ -163,7 +163,6 @@
     currentStage = 1;
     cards = [];
     try {
-      const url = `${API_BASE_URL}/api/lang/learn/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/generate`;
       const body = {
         lemmas: lemmas
           .map((l) => l.lemma)
@@ -172,16 +171,17 @@
         num_sentences: 10,
         language_level: null,
       };
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+      const js = await apiFetch({
+        supabaseClient: ($page.data as any).supabase ?? null,
+        routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
+        params: { target_language_code, sourcedir_slug, sourcefile_slug },
+        options: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+        timeoutMs: 120000,
       });
-      if (!res.ok) {
-        const err = await safeJson(res);
-        throw new Error(err?.message || `Generation failed (${res.status})`);
-      }
-      const js = await res.json();
       cards = shuffleArray(js?.sentences || []);
       currentIndex = 0;
       currentStage = 1;
@@ -239,22 +239,22 @@
     preparedError = null;
     preparedCards = [];
     try {
-      const url = `${API_BASE_URL}/api/lang/learn/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/generate`;
       const body = {
         lemmas: visibleLemmas.map((l) => l.lemma).slice(0, 20),
         num_sentences: 10,
         language_level: null,
       };
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+      const js = await apiFetch({
+        supabaseClient: ($page.data as any).supabase ?? null,
+        routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
+        params: { target_language_code, sourcedir_slug, sourcefile_slug },
+        options: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+        timeoutMs: 120000,
       });
-      if (!res.ok) {
-        const err = await safeJson(res);
-        throw new Error(err?.message || `Preparation failed (${res.status})`);
-      }
-      const js = await res.json();
       preparedCards = js?.sentences || [];
       // Preload audio data URLs
       preloadAudioDataUrls(preparedCards.map((c: any) => c.audio_data_url).filter(Boolean));
@@ -275,15 +275,14 @@
     startPractice();
   }
 
-  function startPracticeAndNavigate() {
+  async function startPracticeAndNavigate() {
     showWordsPanel = false;
-    autoScrollPending = true;
+    await tick();
     startOrShowPractice();
-    // Defer scroll slightly to let DOM update
-    setTimeout(() => {
-      const el = document.getElementById('learn-practice-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
+    await tick();
+    if (practiceSectionEl) {
+      practiceSectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function warmTopLemmasInBackground(lemmasToWarm: string[]) {
@@ -293,6 +292,7 @@
       if (!lemma) continue;
       if (loadingLemmaMap[lemma]) continue;
       loadingLemmaMap[lemma] = true;
+      loadingLemmaMap = { ...loadingLemmaMap };
       // Queue each warming task with low priority
       ensureWarmingQueue().then(() => warmingQueue.add(async () => {
         try {
@@ -307,23 +307,53 @@
           // ignore
         } finally {
           loadingLemmaMap[lemma] = false;
+          loadingLemmaMap = { ...loadingLemmaMap };
         }
       }, { priority: 0 }));
     }
+  }
+
+  // Warm the current lemma and a small lookahead whenever the selection changes
+  $: if (visibleLemmas.length) {
+    const lookahead = 3;
+    const toWarm: string[] = [];
+    for (let i = 0; i < lookahead && currentLemmaIndex + i < visibleLemmas.length; i++) {
+      const lm = visibleLemmas[currentLemmaIndex + i]?.lemma;
+      if (lm) toWarm.push(lm);
+    }
+    warmTopLemmasInBackground(toWarm);
   }
 
   // For complete keyboard shortcuts reference, see frontend/docs/KEYBOARD_SHORTCUTS.md
   function handleKeyDown(event: KeyboardEvent) {
     // If practice hasn't started yet, use arrows to browse priority words
     if (cards.length === 0) {
-      if (event.key === 'ArrowRight') nextLemma();
-      else if (event.key === 'ArrowLeft') prevLemma();
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.key === 'ArrowRight') nextLemma();
+        else prevLemma();
+      }
       return;
     }
     // During practice, keep flashcard shortcuts
-    if (event.key === 'ArrowRight') nextStage();
-    else if (event.key === 'ArrowLeft') prevStage();
-    else if (event.key === 'Enter') nextCard();
+    const active = (document.activeElement as HTMLElement | null);
+    const tag = active?.tagName?.toLowerCase();
+    const isEditable = active?.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select';
+    if (isEditable) return;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.key === 'ArrowRight') nextStage();
+      else prevStage();
+    } else if (event.key === 'Enter') {
+      // Avoid double advance if Next button is focused (let click handler fire)
+      if (active && active.id === 'next-card-btn') return;
+      event.preventDefault();
+      event.stopPropagation();
+      nextCard();
+    }
   }
 
   onMount(() => {
@@ -340,6 +370,22 @@
     return undefined;
   }
 
+  function getAllContextSentences(text: string, lemma: string | undefined, forms: string[]): string[] {
+    if (!text) return [];
+    const searchTerms = new Set<string>();
+    if (lemma) searchTerms.add(lemma);
+    for (const f of forms || []) if (f) searchTerms.add(f);
+    const sentences = text.split(/(?<=[.!?;··])\s+/);
+    const result: string[] = [];
+    for (const s of sentences) {
+      for (const term of searchTerms) {
+        if (s.includes(term)) { result.push(s); break; }
+      }
+    }
+    // Deduplicate while preserving order
+    return Array.from(new Set(result));
+  }
+
   async function ignoreLemma(lemma: string) {
     try {
       await apiFetch({
@@ -351,6 +397,12 @@
       ignoredLemmas.add(lemma);
       // Remove from current list without refetch
       lemmas = lemmas.filter((x) => x?.lemma !== lemma);
+      // Invalidate any prepared deck and re-prepare with the updated lemma set
+      preparedCards = [];
+      preparedError = null;
+      if (!generating) {
+        preparePracticeInBackground();
+      }
     } catch (e: any) {
       alert(e?.message || 'Failed to ignore lemma');
     }
@@ -438,17 +490,18 @@
                   isAuthError={false}
                   context_sentence={getContextSentence(sourceText, visibleLemmas[currentLemmaIndex]?.lemma)}
                   source_wordforms={sourcefileWordforms[visibleLemmas[currentLemmaIndex]?.lemma] || []}
+                  source_sentences={getAllContextSentences(
+                    sourceText,
+                    visibleLemmas[currentLemmaIndex]?.lemma,
+                    sourcefileWordforms[visibleLemmas[currentLemmaIndex]?.lemma] || []
+                  )}
                   showIgnore={true}
                   on:ignore={(e) => ignoreLemma(e.detail.lemma)}
                 />
               {/if}
             </div>
           {/if}
-          <div class="mt-3">
-            <button class="btn btn-primary w-100 py-3" on:click={startPracticeAndNavigate} disabled={generating || preparing || !lemmas.length}>
-              {preparing ? 'Preparing…' : 'Start practice'}
-            </button>
-          </div>
+          
         {/if}
       </Card>
       {/if}

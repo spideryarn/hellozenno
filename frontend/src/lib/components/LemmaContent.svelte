@@ -12,6 +12,7 @@
   export let context_sentence: string | undefined = undefined; // Optional context from sourcefile
   export let source_wordforms: string[] = []; // Wordforms for this lemma present in the current sourcefile
   export let showIgnore: boolean = false; // Show an ignore button (dispatches 'ignore')
+  export let source_sentences: string[] = []; // Full sentences from source containing lemma or wordforms
   
   // Supabase client is provided via root layout data
   $: supabaseClient = ($page?.data as any)?.supabase ?? null;
@@ -85,6 +86,16 @@
       {/if}
     </p>
   </div>
+  {#if source_sentences && source_sentences.length > 0}
+    <div class="mb-3">
+      <strong>In this text (sentences):</strong>
+      <ul class="mt-2 mb-0">
+        {#each source_sentences as s}
+          <li class="hz-foreign-text">{s}</li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
   
   {#if source_wordforms && source_wordforms.length > 0}
     <div class="mb-2">
@@ -92,7 +103,7 @@
       <span class="ms-1">
         {#each source_wordforms as form, i}
           <a
-            href="/language/{target_language_code}/wordform/{form}"
+            href={`/language/${target_language_code}/wordform/${encodeURIComponent(form)}`}
             target="_blank"
             rel="noopener noreferrer"
             class="hz-foreign-text text-decoration-underline"
@@ -193,7 +204,7 @@
     <Card title="Example Wordforms" className="mt-4">
       <div class="list-group">
         {#each lemma_metadata.example_wordforms as form}
-          <a href="/language/{target_language_code}/wordform/{form}" 
+          <a href={`/language/${target_language_code}/wordform/${encodeURIComponent(form)}`} 
              class="list-group-item list-group-item-action hz-foreign-text">
             {form}
           </a>
