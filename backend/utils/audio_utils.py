@@ -1,4 +1,4 @@
-from typing import Optional, BinaryIO, Union
+from typing import Optional, BinaryIO, Union, Any
 from pathlib import Path
 import os
 import tempfile
@@ -142,6 +142,7 @@ def ensure_audio_data(
     should_play: bool = False,
     verbose: int = 0,
     voice_name: Optional[str] = None,
+    voice_settings: Optional[dict[str, Any]] = None,
 ) -> bytes:
     """Core function to generate audio data from text.
 
@@ -173,6 +174,7 @@ def ensure_audio_data(
             api_key=ELEVENLABS_API_KEY.get_secret_value().strip(),
             mp3_filen=temp_file.name,
             bot_name=selected_voice,
+            voice_settings=voice_settings,
         )
 
         # Read the generated audio

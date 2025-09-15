@@ -122,9 +122,11 @@ def ensure_lemma_audio_api(target_language_code: str, lemma: str):
     """
     try:
         from config import LEMMA_AUDIO_SAMPLES
+
         n = int(request.args.get("n", str(LEMMA_AUDIO_SAMPLES)))
     except Exception:
         from config import LEMMA_AUDIO_SAMPLES
+
         n = LEMMA_AUDIO_SAMPLES
 
     try:
@@ -159,6 +161,9 @@ def ensure_lemma_audio_api(target_language_code: str, lemma: str):
             should_play=False,
             verbose=0,
             voice_name=voice_name,
+            voice_settings={
+                "stability": 0.92,
+            },
         )
         LemmaAudio.create(
             lemma=lemma_model,
