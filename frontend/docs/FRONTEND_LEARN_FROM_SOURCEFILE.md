@@ -12,6 +12,7 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
 - `../../backend/prompt_templates/generate_sentence_flashcards.jinja` — Prompt used to generate sentences
 - `../../backend/prompt_templates/metadata_for_lemma.jinja` — Prompt used to fill lemma metadata
 - `ENHANCED_TEXT.md` — How interactive text/word links work elsewhere
+- `KEYBOARD_SHORTCUTS.md` — Keyboard shortcuts reference for Learn and flashcards
 - `../../docs/planning/250915a_sourcefile_learn_flow_mvp.md` — Planning notes and future stages
  - `../../docs/reference/libraries/p-queue.md` — Queue-based concurrency used for background warming
 

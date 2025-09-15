@@ -7,6 +7,7 @@ Complete keyboard shortcut reference for HelloZenno's interactive features.
 - `backend/docs/FLASHCARDS.md` - Flashcard system implementation and flow details
 - `frontend/src/routes/language/[target_language_code]/flashcards/sentence/[slug]/+page.svelte` - Flashcard keyboard handler implementation
 - `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/learn/+page.svelte` - Learn flow keyboard implementation
+- `frontend/docs/FRONTEND_LEARN_FROM_SOURCEFILE.md` - Learn page overview and flow
 - `frontend/src/lib/components/DataGrid.svelte` - Data grid keyboard navigation
 - `frontend/docs/FRONTEND_TESTING.md` - Testing keyboard interactions
 
