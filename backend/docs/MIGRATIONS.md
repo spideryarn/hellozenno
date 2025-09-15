@@ -149,6 +149,7 @@ Note: No need to bind models to database - they're just used for schema definiti
    - Document complex migrations
    - Note any manual steps required
    - Update this guide with new learnings
+   - After any schema change, update `backend/docs/MODELS.md` to reflect new fields/relations. Optionally verify against the live DB (see DATABASE.md "Schema verification").
 
 5. **Common Mistakes to Avoid**
    - Use `add_columns` not `add_column`

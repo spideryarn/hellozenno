@@ -79,6 +79,25 @@ Main database models (`db_models.py`):
 
 See [MODELS.md](./MODELS.md) for a comprehensive overview of all models, their fields, and relationships.
 
+### Schema verification
+
+For documentation accuracy, periodically verify the public schema and align `MODELS.md` with reality. Preferred options:
+
+- Using the Supabase_local MCP: run read-only queries against `information_schema` and `pg_constraint` to list tables, columns, PKs, FKs, uniques, and enums.
+- Alternatively via psql:
+  ```bash
+  psql -d postgres -U postgres -h 127.0.0.1 -p 54322 -P pager=off -A -t -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY 1;"
+  ```
+
+Include notable differences in a docs update.
+
+### Note on `profile` vs `profiles` tables
+
+- Background: Supabase local setup sometimes includes a starter table `public.profiles` (UUID pk, FK to `auth.users`). Our application, however, intentionally manages its own `public.profile` table via Peewee migrations for app‑specific fields like `target_language_code` and `admin_granted_at`.
+- Impact: Having both tables led to confusion when inspecting the schema and generated types. The app only reads/writes `public.profile`; `public.profiles` is unused.
+- Resolution: We dropped `public.profiles` in migration `042_drop_supabase_profiles_table.py`. The canonical table is `public.profile` as defined in `backend/db_models.py` and created/evolved via our migrations (`029_add_profile_table.py`, `041_add_profile_admin_granted_at.py`).
+- Guidance: If Supabase tooling re‑introduces `public.profiles` locally, re‑run migrations (`./scripts/local/migrate.sh`). Do not add code that references `public.profiles`.
+
 ### Linter Considerations
 
 Static analysis tools (like Pyright, used by Pylance in VS Code) may sometimes report false positive errors when working with Peewee models, particularly concerning dynamically generated attributes like `id` or field access within join conditions (e.g., `Model.id`).
@@ -205,6 +224,26 @@ psql -d postgres -U postgres -h 127.0.0.1 -p 54322 -P pager=off -x auto
 # Or for one-off queries, use these flags:
 psql -d postgres -U postgres -h 127.0.0.1 -p 54322 -P pager=off -A -t -c "SELECT * FROM table;"
 ```
+
+### Local auth users for E2E / admin testing
+
+We intentionally use `public.profile` (singular) for app data. Supabase’s default `public.profiles` is not used and was removed. The `backend/oneoff/create_local_test_auth_users.sql` script will:
+
+- Create two local auth users in `auth.users` with bcrypt passwords
+- Create matching `auth.identities`
+- Ensure `public.profile` rows exist and grant admin to `admin@hellozenno.com`
+- Drop the default `auth.users` trigger (`on_auth_user_created`) that inserts into `public.profiles` to avoid conflicts
+
+Run it locally:
+
+```bash
+PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -P pager=off -f backend/oneoff/create_local_test_auth_users.sql | cat
+```
+
+Resulting users (local only):
+
+- testing@hellozenno.com / hello123
+- admin@hellozenno.com / hello123 (admin)
 
 ## Useful tips
 
