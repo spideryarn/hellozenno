@@ -54,6 +54,8 @@
 
   async function generateAudio(slug: string): Promise<boolean> {
     if (!supabaseClient) {
+      // Not logged in; do not attempt generation
+      alert('Login required to generate audio.');
       return false;
     }
     try {
@@ -95,10 +97,9 @@
       let { id, has_audio } = info;
 
       if (!has_audio) {
-        // Attempt to generate if we have auth
+        // Attempt to generate (auth-gated)
         const generated = await generateAudio(sentenceSlug);
         if (!generated) {
-          // No auth; nothing more we can do here
           return;
         }
         // Assume audio now exists
