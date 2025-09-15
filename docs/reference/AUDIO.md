@@ -9,6 +9,9 @@ This document explains how audio works across the app today (sentences) and the 
 - `../instructions/WRITE_EVERGREEN_DOC.md` – Guidelines for evergreen documentation
 - `../../backend/docs/MIGRATIONS.md` – How to write and apply Peewee migrations
 - `../../frontend/docs/AudioPlayer.md` – `AudioPlayer` component usage and events
+ - `../../backend/docs/MODELS.md#lemmaaudio` – pronunciation audio for lemmas
+ - `../../backend/docs/MODELS.md#sentence` – sentence audio_data on the Sentence model
+ - `../../backend/docs/MODELS.md#sourcefile` – sourcefile audio_data and audio_filename fields
 
 ### Principles and policies
 - **Auth**: Generation requires login; playback can be public once audio exists (same policy for sentences and lemmas).
