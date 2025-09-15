@@ -330,28 +330,30 @@ def metadata_for_lemma_full(
 def quick_search_for_wordform(
     wordform: str, target_language_code: str, verbose: int = 1
 ) -> tuple[dict, dict]:
-    """Look up a wordform and return its dictionary entry.
+    """Look up a wordform and return enhanced results structure.
 
-    Args:
-        wordform: The word form to look up
-        target_language_code: ISO language code (e.g. 'el' for Greek)
-        verbose: Verbosity level for logging
+    Returns structure:
+    {
+      "target_language_results": {
+        "matches": [
+          {
+            "target_language_wordform": str,
+            "target_language_lemma": str | None,
+            "part_of_speech": str | None,
+            "english": list[str],
+            "inflection_type": str | None,
+          }, ...
+        ],
+        "possible_misspellings": list[str] | None
+      },
+      "english_results": {
+        "matches": [ same item shape but with translations driving TL ],
+        "possible_misspellings": list[str] | None
+      }
+    }
 
-    Returns:
-        Tuple of (word_metadata, extra_info) where word_metadata follows this schema:
-        {
-            "wordform": Optional[str],  # the sanitized form if valid, None if invalid
-            "lemma": Optional[str],  # the dictionary form this belongs to, None if invalid
-            "part_of_speech": Optional[str],  # e.g. "verb", "adjective", "noun", etc.
-            "translations": Optional[list[str]],  # English translations
-            "inflection_type": Optional[str],  # e.g. "first-person singular present"
-            "possible_misspellings": Optional[list[str]]  # ordered list of corrections, or None if valid
-        }
-
-    Raises:
-        ValueError: If the input parameters are invalid (empty, wrong type)
-        LookupError: If the language code is not found
-        json.JSONDecodeError: If the response cannot be parsed as JSON
+    Back-compat: If an older flat dict is returned by the LLM, we normalize it
+    into the enhanced structure.
     """
     # Input validation
     if not isinstance(wordform, str) or not isinstance(target_language_code, str):
@@ -384,21 +386,55 @@ def quick_search_for_wordform(
             f"Invalid response format from API: expected dict, got {type(out)}"
         )
 
-    # Ensure all required fields are present
-    required_fields = {
-        "wordform": None,
-        "lemma": None,
-        "part_of_speech": None,
-        "translations": None,
-        "inflection_type": None,
-        "possible_misspellings": None,
+    # If already enhanced structure, validate keys and return
+    if "target_language_results" in out and "english_results" in out:
+        # Ensure sub-keys exist
+        for key in ("target_language_results", "english_results"):
+            section = out.get(key) or {}
+            if "matches" not in section:
+                section["matches"] = []
+            if "possible_misspellings" not in section:
+                section["possible_misspellings"] = None
+            out[key] = section
+        return out, extra
+
+    # Otherwise, normalize from legacy flat schema to enhanced structure
+    legacy = {
+        "wordform": out.get("wordform"),
+        "lemma": out.get("lemma"),
+        "part_of_speech": out.get("part_of_speech"),
+        "translations": out.get("translations") or [],
+        "inflection_type": out.get("inflection_type"),
+        "possible_misspellings": out.get("possible_misspellings"),
     }
 
-    for field, default in required_fields.items():
-        if field not in out:
-            out[field] = default
+    # If legacy result is entirely invalid, return enhanced-structure invalid
+    if legacy["wordform"] is None and legacy["lemma"] is None:
+        normalized = {
+            "target_language_results": {
+                "matches": [],
+                "possible_misspellings": legacy["possible_misspellings"],
+            },
+            "english_results": {"matches": [], "possible_misspellings": None},
+        }
+        return normalized, extra
 
-    return out, extra
+    # Build single match from legacy fields
+    match = {
+        "target_language_wordform": legacy["wordform"] or wordform,
+        "target_language_lemma": legacy["lemma"],
+        "part_of_speech": legacy["part_of_speech"],
+        "english": legacy["translations"],
+        "inflection_type": legacy["inflection_type"],
+    }
+    normalized = {
+        "target_language_results": {
+            "matches": [match] if match["target_language_wordform"] else [],
+            "possible_misspellings": legacy["possible_misspellings"],
+        },
+        "english_results": {"matches": [], "possible_misspellings": None},
+    }
+    return normalized, extra
 
 
 def extract_phrases_from_text(
@@ -532,7 +568,9 @@ def create_interactive_word_data(
             engine_name = get_engine_name_for(target_language_code)
             sample_tokens = [tok for _s, _e, tok, is_w in wordlike_spans[:100]]
             # Compute intersection diagnostics
-            token_norms = [normalize_for_lang(ensure_nfc(tok)) for _s, _e, tok, _ in wordlike_spans]
+            token_norms = [
+                normalize_for_lang(ensure_nfc(tok)) for _s, _e, tok, _ in wordlike_spans
+            ]
             token_norm_set = set(token_norms)
             db_norm_keys = set(normalized_form_to_metadata.keys())
             intersect = token_norm_set & db_norm_keys
@@ -587,9 +625,7 @@ def create_interactive_word_data(
             return recognized_words, found_wordforms
 
         # If nothing found, try known-word fast path before legacy regex
-        enable_known_word_search = (
-            os.getenv("RECOGNITION_KNOWN_WORD_SEARCH", None)
-        )
+        enable_known_word_search = os.getenv("RECOGNITION_KNOWN_WORD_SEARCH", None)
         if enable_known_word_search is None:
             # Use code default when env not provided
             enable_known_word_search_bool = CFG_KNOWN_WORD_DEFAULT
@@ -963,7 +999,8 @@ def get_or_create_wordform_metadata(
         lemma_metadata, _ = metadata_for_lemma_full(
             lemma=lemma, target_language_name=target_language_name
         )
-        save_lemma_metadata(lemma, lemma_metadata, target_language_name)
+        # Use language code for saving to DB, not language name
+        save_lemma_metadata(lemma, lemma_metadata, target_language_code)
 
     # Update wordform metadata with additional info from lemma if needed
     field_fallbacks = {
@@ -982,7 +1019,8 @@ def get_or_create_wordform_metadata(
 
     # Only save metadata if the word is valid (has a lemma)
     if wordform_metadata["lemma"] is not None:
-        save_wordform_metadata(wordform, wordform_metadata, target_language_name)
+        # Save using target language code
+        save_wordform_metadata(wordform, wordform_metadata, target_language_code)
 
     return wordform_metadata, lemma_metadata
 

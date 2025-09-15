@@ -23,13 +23,20 @@ def save_lemma_metadata(
         peewee.DatabaseError: If there's an error saving to the database
     """
     try:
+        # Filter out lookup keys from updates to avoid duplicate kwargs on create
+        updates_filtered = {
+            k: v
+            for k, v in metadata.items()
+            if k not in {"lemma", "target_language_code"}
+        }
+
         # Explicitly get the instance after update_or_create
         Lemma.update_or_create(
             lookup={
                 "lemma": lemma,
                 "target_language_code": target_language_code,
             },
-            updates=metadata,
+            updates=updates_filtered,
         )
         # Fetch the instance to ensure correct type for return
         lemma_instance: Lemma = Lemma.get(
