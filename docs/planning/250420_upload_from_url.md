@@ -27,7 +27,7 @@ This feature leverages the existing SvelteKit frontend and Flask backend archite
     - `backend/utils/vocab_llm_utils.py` - Contains the LLM utility `extract_text_from_html`. (HIGH priority)
 - **LLM Prompt:** `backend/prompt_templates/extract_text_from_html.jinja` - Instructs LLM on title/text extraction and format. (MEDIUM priority)
 - **Frontend API Helper:** `frontend/src/lib/api.ts` - Contains the `apiFetch` function used for calling the backend. (HIGH priority)
-- **Authentication Documentation:** `frontend/docs/AUTH.md` - Explains the SvelteKit/Supabase auth flow and how `session` data is accessed. (HIGH priority)
+- **Authentication Documentation:** `frontend/docs/AUTHENTICATION_AUTHORISATION.md` - Explains the SvelteKit/Supabase auth flow and how `session` data is accessed. (HIGH priority)
 - **Backend Auth Utilities:** `backend/utils/auth_utils.py` - Contains the `@api_auth_required` decorator. (MEDIUM priority)
 - **Planning Doc Guidelines:** `rules/WRITING-PLANNING-DOCS-PRINCIPLES.md` - Structure guide for this document. (LOW priority)
 - **Dependency:** `beautifulsoup4` added to `backend/requirements.txt`.

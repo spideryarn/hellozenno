@@ -16,7 +16,7 @@
 
 ## Useful References
 
-- `frontend/docs/AUTH.md`: Explains the intended authentication flow using `@supabase/ssr` and validation patterns. (HIGH)
+- `frontend/docs/AUTHENTICATION_AUTHORISATION.md`: Explains the intended authentication flow using `@supabase/ssr` and validation patterns. (HIGH)
 - `frontend/src/hooks.server.ts`: Implements the core server-side session validation using `getUser()` within `safeGetSession`. (MEDIUM)
 - `frontend/src/lib/api.ts`: Contains the `apiFetch` helper and the `unifiedSearch` function, which calls `getSession`. (MEDIUM)
 - `frontend/src/lib/processing-queue.ts`: Contains client-side `getSession` calls. (MEDIUM)

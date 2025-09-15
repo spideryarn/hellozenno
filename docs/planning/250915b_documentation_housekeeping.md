@@ -93,13 +93,13 @@ Priority issues identified:
   - [x] Identify which planning docs represent completed work
   - [x] Move completed docs to `docs/planning/finished/`
 - [x] Consolidate authentication documentation
-  - [x] Merge relevant planning details into AUTH.md
+  - [x] Merge relevant planning details into AUTHENTICATION_AUTHORISATION.md
   - [x] Remove redundant auth information from other docs
   - [x] Ensure single source of truth for auth patterns
 
 - Acceptance:
   - Completed planning docs are archived; this doc lists what moved.
-  - `frontend/docs/AUTH.md` reflects consolidated auth patterns; redundant references removed.
+  - `frontend/docs/AUTHENTICATION_AUTHORISATION.md` reflects consolidated auth patterns; redundant references removed.
 
 - [x] Extract deployment architecture into proper reference doc
   - [x] Create docs/reference/ARCHITECTURE.md for high-level decisions

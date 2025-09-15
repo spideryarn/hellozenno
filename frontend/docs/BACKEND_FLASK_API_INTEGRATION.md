@@ -15,7 +15,7 @@ The frontend uses the `apiFetch` utility function from `$lib/api.ts` to make API
 3. Adds the `Authorization: Bearer <token>` header to requests if authenticated
 4. Handles API-specific error responses, including authentication errors
 
-For detailed information about authentication and passing tokens via `apiFetch`, see [Authentication](./AUTH.md).
+For detailed information about authentication and passing tokens via `apiFetch`, see [Authentication](./AUTHENTICATION_AUTHORISATION.md).
 
 ```typescript
 // Example of authenticated API call in a server load function
@@ -63,7 +63,7 @@ async function fetchSourceDir(supabaseClient: SupabaseClient | null, target_lang
 
 ## Protected API Endpoints
 
-See [Authentication](./AUTH.md) for endpoint decorator semantics (`@api_auth_required`, `@api_auth_optional`) and UI behavior on auth errors.
+See [Authentication](./AUTHENTICATION_AUTHORISATION.md) for endpoint decorator semantics (`@api_auth_required`, `@api_auth_optional`) and UI behavior on auth errors.
 ## Common Endpoints
 
 All API endpoints are available as enum values in `RouteName` from the generated routes file.

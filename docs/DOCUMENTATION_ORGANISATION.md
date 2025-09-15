@@ -33,7 +33,7 @@ Status: stable • Last updated: 2025-09-15
 - [frontend/docs/BACKEND_FLASK_API_INTEGRATION.md](../frontend/docs/BACKEND_FLASK_API_INTEGRATION.md) - Type-safe API integration
 
 ### Authentication & Security
-- **[frontend/docs/AUTH.md](../frontend/docs/AUTH.md)** - Comprehensive auth implementation guide
+- **[frontend/docs/AUTHENTICATION_AUTHORISATION.md](../frontend/docs/AUTHENTICATION_AUTHORISATION.md)** - Comprehensive auth implementation guide
 - Authentication decorators in `backend/utils/auth_utils.py`
 
 ### Frontend Development

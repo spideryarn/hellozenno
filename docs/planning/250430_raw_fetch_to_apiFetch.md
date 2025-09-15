@@ -2,7 +2,7 @@
 
 ## Goal, Context
 
-Replace raw `fetch()` calls with the `apiFetch()` wrapper throughout the frontend codebase to standardize API calls, improve authentication handling, and ensure consistent error management. This addresses several issues found in the AUTH.md documentation:
+Replace raw `fetch()` calls with the `apiFetch()` wrapper throughout the frontend codebase to standardize API calls, improve authentication handling, and ensure consistent error management. This addresses several issues found in the AUTHENTICATION_AUTHORISATION.md documentation:
 
 > "Using raw fetch without explicit headers can cause SvelteKit to automatically forward headers from the incoming request, potentially including sensitive tokens or malformed values that cause 'Illegal header value' errors in production."
 
@@ -23,7 +23,7 @@ We'll extend `apiFetch` to support the following features identified in raw fetc
 
 ## Useful References
 
-- **`frontend/docs/AUTH.md`**: Details authentication flow and explicitly recommends using `apiFetch` over raw fetch. HIGH
+- **`frontend/docs/AUTHENTICATION_AUTHORISATION.md`**: Details authentication flow and explicitly recommends using `apiFetch` over raw fetch. HIGH
 - **`frontend/src/lib/api.ts`**: Contains the `apiFetch` implementation. HIGH
 - **`auth_utils.py`**: Backend authentication decorator implementation. MEDIUM
 - **`frontend/src/routes/+layout.server.ts`**: Shows correct server-side auth handling. MEDIUM

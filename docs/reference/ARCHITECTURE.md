@@ -27,7 +27,7 @@ Hello Zenno uses a hybrid architecture: SvelteKit frontend and Flask backend API
 
 - Frontend architecture: `../../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`
 - API integration: `../../frontend/docs/BACKEND_FLASK_API_INTEGRATION.md`
-- Authentication: `../../frontend/docs/AUTH.md`
+- Authentication: `../../frontend/docs/AUTHENTICATION_AUTHORISATION.md`
 - Database: `../../backend/docs/DATABASE.md`, `../../backend/docs/MODELS.md`
 - URL registry and type generation: `../../backend/docs/URL_REGISTRY.md`
 

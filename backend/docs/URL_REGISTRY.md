@@ -177,7 +177,7 @@ API endpoints declare authentication requirements via decorators in `backend/uti
 - `@api_auth_required`: Requires a valid Supabase JWT. Returns 401 if missing/invalid.
 - `@api_auth_optional`: Verifies JWT if present and populates `g.user`/`g.profile`, but allows anonymous access. Some operations may still require auth when generation is needed (returns 401 with flags like `authentication_required_for_generation`).
 
-On the frontend, always pass the appropriate Supabase client instance to `apiFetch` from server `load` functions (`locals.supabase`) or from client context (`data.supabase`) to attach the token correctly. See `frontend/docs/AUTH.md` for full flow.
+On the frontend, always pass the appropriate Supabase client instance to `apiFetch` from server `load` functions (`locals.supabase`) or from client context (`data.supabase`) to attach the token correctly. See `frontend/docs/AUTHENTICATION_AUTHORISATION.md` for full flow.
 
 ### Endpoint categories (examples)
 

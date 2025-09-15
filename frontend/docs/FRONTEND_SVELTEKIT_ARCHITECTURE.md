@@ -70,7 +70,7 @@ See [Flask API Integration](./BACKEND_FLASK_API_INTEGRATION.md) for more details
 
 The application uses Supabase Authentication with the `@supabase/ssr` library for server-side rendering compatibility. Authentication state is initialized on the server and passed to the client, with a single client instance maintained per context.
 
-For detailed information about the authentication implementation, see [Authentication](./AUTH.md).
+For detailed information about the authentication implementation, see [Authentication](./AUTHENTICATION_AUTHORISATION.md).
 
 ## SvelteKit State Management
 

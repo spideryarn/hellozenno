@@ -129,7 +129,7 @@ For technical details on how the API integration works, including type generatio
 
 - [Frontend Architecture](./FRONTEND_SVELTEKIT_ARCHITECTURE.md) - Technical architecture, frameworks, build process.
 - [Flask API Integration](./BACKEND_FLASK_API_INTEGRATION.md) - Details on the Flask API contract.
-- [Authentication](./AUTH.md) - Detailed authentication implementation.
+- [Authentication](./AUTHENTICATION_AUTHORISATION.md) - Detailed authentication implementation.
 - [Setup and Development](./SETUP.md) - Instructions for setting up the development environment.
 - [Visual Design and Styling](./VISUAL_DESIGN_STYLING.md) - Component styling conventions and theme information.
 - [Sourcefile Pages](./SOURCEFILE_PAGES.md) - Detailed structure of sourcefile pages and tabs.

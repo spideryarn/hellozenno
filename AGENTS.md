@@ -29,7 +29,7 @@ See also:
 **Essential docs**:
 - Architecture: `docs/reference/ARCHITECTURE.md`, `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`
 - Database: `backend/docs/DATABASE.md`, `backend/docs/MODELS.md`
-- Auth: `frontend/docs/AUTH.md`
+- Auth: `frontend/docs/AUTHENTICATION_AUTHORISATION.md`
 - API: `frontend/docs/BACKEND_FLASK_API_INTEGRATION.md`
 
 ## Coding Principles
@@ -49,7 +49,7 @@ Key points:
 ### Authentication
 - Supabase JWT tokens
 - Backend decorators: `@api_auth_required`, `@api_auth_optional`
-- See: `frontend/docs/AUTH.md`
+- See: `frontend/docs/AUTHENTICATION_AUTHORISATION.md`
 
 ### Environment
 - `.env.local` (development)

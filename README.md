@@ -90,7 +90,7 @@ For more detailed setup and development information:
 - `backend/docs/DEVOPS.md` - Full development setup and infrastructure details
 - `backend/docs/DATABASE.md` - Database configuration and management
 - `backend/docs/MIGRATIONS.md` - Database migration procedures
-- `frontend/docs/AUTH.md` - Authentication setup with Supabase
+- `frontend/docs/AUTHENTICATION_AUTHORISATION.md` - Authentication setup with Supabase
 - `frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md` - Frontend architecture overview
 - `.env.example` - Required environment variables reference
 - [Changelog](/changelog) - Recent updates and changes 

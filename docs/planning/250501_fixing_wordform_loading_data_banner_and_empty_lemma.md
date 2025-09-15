@@ -28,7 +28,7 @@ The lemma page uses a similar pattern (`getLemmaMetadata()`) so it still shows t
 | `frontend/src/lib/api.ts#getWordformWithSearch` | Where the bug & fix live | HIGH |
 | `frontend/src/routes/…/wordform/[wordform]/+page.server.ts` | Handles 404 redirect when error is thrown | HIGH |
 | `frontend/docs/SEARCH.md` | Describes intended redirect flow | MEDIUM |
-| `frontend/docs/AUTH.md` | Confirms 401 handling rules | MEDIUM |
+| `frontend/docs/AUTHENTICATION_AUTHORISATION.md` | Confirms 401 handling rules | MEDIUM |
 | `utils/word_utils.py#find_or_create_wordform` | Explains backend statuses | LOW |
 
 ## Actions

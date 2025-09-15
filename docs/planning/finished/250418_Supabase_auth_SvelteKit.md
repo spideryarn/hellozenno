@@ -25,7 +25,7 @@ Integrate Supabase Authentication into the Hello Zenno application, enabling use
 
 - **Previous Flask/Jinja Implementation:** `planning/250316_Supabase_Authentication_Integration.md` - Provides context on how Supabase Auth was used before. (MEDIUM priority)
 - **Previous Auth Views (Flask/Jinja):** `backend/views/auth_views.py` - Shows old routes for auth pages, profile, and protection decorator usage. (MEDIUM priority)
-- **SvelteKit Frontend Docs:** `frontend/README.md` and linked docs (`docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`, `docs/BACKEND_FLASK_API_INTEGRATION.md`, `docs/AUTH.md`) - Essential for understanding the frontend structure and API interaction. (HIGH priority)
+- **SvelteKit Frontend Docs:** `frontend/README.md` and linked docs (`docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md`, `docs/BACKEND_FLASK_API_INTEGRATION.md`, `docs/AUTHENTICATION_AUTHORISATION.md`) - Essential for understanding the frontend structure and API interaction. (HIGH priority)
 - **Flask API Structure:** `backend/docs/DEVOPS.md` - Overview of backend setup. (LOW priority)
 - **Database Models:** `backend/docs/MODELS.md` - Details the `Profile` table structure. (MEDIUM priority)
 - **Supabase Auth Docs:** [https://supabase.com/docs/guides/auth](https://supabase.com/docs/guides/auth) - Official documentation for Supabase Auth features. (HIGH priority)
