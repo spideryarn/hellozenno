@@ -43,45 +43,46 @@ This plan intentionally avoids env-based allowlists and Supabase `app_metadata` 
 ## Stages & actions
 
 ### Add schema and model
-- [ ] Create migration adding `admin_granted_at TIMESTAMPTZ NULL` to `public.profile`
-  - [ ] Follow `backend/docs/MIGRATIONS.md` conventions and transaction handling
-  - [ ] Rollback sets the column to be dropped
-- [ ] Update `Profile` in `backend/db_models.py` to include `admin_granted_at = DateTimeField(null=True)`
+- [x] Create migration adding `admin_granted_at TIMESTAMPTZ NULL` to `public.profile` (see `backend/migrations/041_add_profile_admin_granted_at.py`)
+  - [x] Followed `backend/docs/MIGRATIONS.md` conventions and transaction handling
+  - [x] Rollback drops the column
+- [x] Update `Profile` in `backend/db_models.py` to include `admin_granted_at = DateTimeField(null=True)`
 
 ### Backend auth context and decorator
-- [ ] In `backend/utils/auth_utils.py`, after `_attempt_authentication_and_set_g()` sets `g.profile`, compute `g.is_admin = bool(g.profile and g.profile.admin_granted_at)`
-- [ ] Add `api_admin_required` decorator wrapping `@api_auth_required` and returning 403 with `{ "error": "Forbidden", "reason": "not_admin" }`
-- [ ] Add `GET /api/admin/whoami` endpoint returning `{ is_admin: boolean }` for frontend gating
+- [x] In `backend/utils/auth_utils.py`, after `_attempt_authentication_and_set_g()` sets `g.profile`, compute `g.is_admin = bool(g.profile and g.profile.admin_granted_at)`
+- [x] Added `api_admin_required` decorator wrapping `@api_auth_required` and returning 403 with `{ "error": "Forbidden", "reason": "not_admin" }`
+- [x] Added `GET /api/admin/whoami` endpoint returning `{ is_admin: boolean }` for frontend gating (`backend/views/admin_api.py`)
 
 ### Users data model and query
-- [ ] Extend `AuthUser` in `backend/db_models.py` with read‑only fields:
-  - [ ] `email = CharField(null=True)`
-  - [ ] `created_at = DateTimeField(null=True)`
-  - [ ] `last_sign_in_at = DateTimeField(null=True)`
+- [x] Extend `AuthUser` in `backend/db_models.py` with read‑only fields:
+  - [x] `email = CharField(null=True)`
+  - [x] `created_at = DateTimeField(null=True)`
+  - [x] `last_sign_in_at = DateTimeField(null=True)`
   - Keep `Meta: table_name = "users"`, `schema = "auth"`
-- [ ] Implement a query that returns a combined view of users with profile info
-  - [ ] Select only required columns from `auth.users`
-  - [ ] LEFT JOIN `public.profile` on `profile.user_id = auth.users.id::text` (type cast)
-  - [ ] Return shape: `{ id, email, created_at, last_sign_in_at, admin_granted_at, target_language_code, profile_created_at, profile_updated_at }`
+- [x] Implement a query that returns a combined view of users with profile info
+  - [x] Select only required columns from `auth.users`
+  - [x] LEFT JOIN `public.profile` on `profile.user_id = auth.users.id::text` (type cast)
+  - [x] Return shape: `{ id, email, created_at, last_sign_in_at, admin_granted_at, target_language_code, profile_created_at, profile_updated_at }`
 
 ### Admin API blueprint
-- [ ] Create `backend/views/admin_api.py` with blueprint `Blueprint("admin_api", __name__, url_prefix="/api/admin")`
-- [ ] `GET /api/admin/users` (protected by `@api_admin_required`)
-  - [ ] Accept `page`, `page_size` (default 1, 50), `sortField` (e.g. `email`, `created_at`, `last_sign_in_at`, `admin_granted_at`), `sortDir` (`asc|desc`)
-  - [ ] Return `{ rows: [...], total: N }`
-- [ ] Register blueprint in `backend/api/index.py`
+- [x] Create `backend/views/admin_api.py` with blueprint `Blueprint("admin_api", __name__, url_prefix="/api/admin")`
+- [x] `GET /api/admin/users` (protected by `@api_admin_required`)
+  - [x] Accepts `page`, `page_size` (default 1, 50), `sortField` (`email|created_at|last_sign_in_at|admin_granted_at`), `sortDir` (`asc|desc`)
+  - [x] Returns `{ rows: [...], total: N }`
+- [x] Register blueprint in `backend/api/index.py`
 
 ### Frontend routes and gating
-- [ ] `/admin/+layout.server.ts` calls `GET /api/admin/whoami`; if 403, redirect away (e.g. to `/auth?next=/admin` or `/`)
-- [ ] `/admin/+page.svelte` lists links (start with “Users” -> `/admin/users`)
-- [ ] `/admin/users/+page.svelte` renders DataGrid with server‑driven `loadData` that calls `GET /api/admin/users`
-  - [ ] Columns: `email`, `created_at`, `last_sign_in_at`, `admin_granted_at`, `target_language_code`
-  - [ ] Row links: link to `/admin/users/{id}` (detail stub for future)
-- [ ] Optionally SSR first page via `+page.server.ts` using `initialRows`/`initialTotal`
-- [ ] Add Admin link in global header only if admin (based on server data or whoami) – backend remains the authority
+- [x] `/admin/+layout.server.ts` calls `GET /api/admin/whoami`; if 403, redirects to `/auth?next=/admin`
+- [x] `/admin/+page.svelte` lists links (Users)
+- [x] `/admin/users/+page.svelte` renders DataGrid with server‑driven `loadData` that calls `GET /api/admin/users`
+  - [x] Columns: `email`, `created_at`, `last_sign_in_at`, `admin_granted_at`, `target_language_code`
+  - [x] Row links: link to `/admin/users/{id}` (detail stub for future)
+- [x] Root `+layout.server.ts` also fetches `whoami` and exposes `is_admin`
+- [x] Root `+layout.ts` forwards `is_admin` to the client; `+layout.svelte` shows Admin link and badge accordingly
 
 ### Local admin seeding (one‑off)
-- [ ] Run SQL locally to grant admin to two emails:
+- [x] One‑off script `backend/oneoff/create_local_test_auth_users.sql` creates two users and grants admin to `admin@hellozenno.com`.
+- [ ] Run SQL locally to grant admin to two emails (production/dev convenience):
 ```sql
 UPDATE public.profile p
 SET admin_granted_at = NOW()
@@ -101,9 +102,9 @@ WHERE u.email IN ('system@spideryarn.internal','greg@gregdetre.com')
 ```
 
 ### Validation & docs
-- [ ] Verify migration locally via `./scripts/local/migrate.sh`
-- [ ] Smoke test admin endpoints and gating locally
-- [ ] Update evergreen docs (AUTH, DATABASE, URL_REGISTRY) where relevant
+- [x] Verified migration locally via `./scripts/local/migrate.sh`
+- [x] Smoke tested admin endpoints and gating locally
+- [ ] Update evergreen docs (AUTHENTICATION_AUTHORISATION, DATABASE, URL_REGISTRY) where relevant
 
 
 ## Acceptance criteria
@@ -114,6 +115,10 @@ WHERE u.email IN ('system@spideryarn.internal','greg@gregdetre.com')
 - `/api/admin/users` returns combined `auth.users` + `profile` data with pagination and sort
 - `/admin/` and `/admin/users` render; DataGrid shows the defined columns; row links are present
 - Local database has admin_granted_at set for `system@spideryarn.internal` and `greg@gregdetre.com`
+
+## Notes
+
+- The original issue where the admin badge/link did not show was caused by not forwarding `is_admin` from the server to the browser in `frontend/src/routes/+layout.ts`. Fixed by returning `{ is_admin }` alongside `session`, `user`, and `profile`.
 
 
 ## Risks and mitigations

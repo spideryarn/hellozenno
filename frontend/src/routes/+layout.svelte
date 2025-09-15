@@ -11,6 +11,7 @@
   import DropdownButton from '$lib/components/DropdownButton.svelte';
   import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
   import User from 'phosphor-svelte/lib/User';
+  import ShieldCheck from 'phosphor-svelte/lib/ShieldCheck';
 
   // Get data passed from +layout.ts
   export let data: LayoutData;
@@ -170,10 +171,10 @@
               <!-- Reusable Dropdown Component for logged-in user -->
               <div class="ms-4">
                 <DropdownButton 
-                  buttonText="Profile" 
-                  buttonSvelteContent={User}
+                  buttonText={'Profile'} 
+                  buttonSvelteContent={isAdmin ? ShieldCheck : User}
                   buttonClass="btn btn-sm btn-secondary text-on-light"
-                  tooltipText="Logged in as {session.user.email}"
+                  tooltipText={`Logged in as ${session.user.email}`}
                   bind:isOpen={isMenuOpen}
                   items={dropdownItems}
                 />

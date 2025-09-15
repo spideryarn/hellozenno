@@ -21,18 +21,18 @@ This document outlines the authentication flow implemented in the SvelteKit fron
 2.  **Root Layout Data Flow (`src/routes/+layout.server.ts` & `src/routes/+layout.ts`):**
     - `+layout.server.ts`: Takes `session` and `user` from `event.locals` and returns them in its `load` function's result.
     - `+layout.server.ts` also fetches the user's profile if they're logged in, making it available to all routes.
-    - `+layout.ts`: 
-        - Receives `session` and `user` from the server load via the `data` prop.
+    - `+layout.ts`:
+        - Receives `session`, `user`, `profile`, and `is_admin` from the server load via the `data` prop.
         - Creates the *browser-side* Supabase client instance using `createBrowserClient` (only when running in the browser).
         - Uses `depends('supabase:auth')` to mark this load function as dependent on authentication state changes.
-        - Returns the `supabase` browser client instance, `session`, and `user` in its result, making them available to all child layouts and pages via the `data` prop.
+        - Returns the `supabase` browser client instance, `session`, `user`, `profile`, and `is_admin` in its result, making them available to all child layouts and pages via the `data` prop.
 
 3.  **Client-Side Synchronization (`src/routes/+layout.svelte`):**
     - Accesses the `supabase` client instance and the initial `session` from the `data` prop.
     - Uses `onMount` to subscribe to `supabase.auth.onAuthStateChange`.
     - When the auth state changes client-side (e.g., login, logout, token refresh) and the new session is different from the one received via `data`, it calls `invalidateAll()`.
     - `invalidateAll()` triggers a re-run of all `load` functions that depend on `'supabase:auth'` (including the root `+layout.ts`), ensuring the application state is updated consistently.
-    - UI elements (like header profile dropdown/login link) reactively use the `session` prop from `data`. The header includes either a profile dropdown (if logged in) or a login link (if not).
+    - UI elements (like header profile dropdown/login link) reactively use the `session` and `is_admin` props from `data`. The header shows an Admin link and an Admin shield on the profile button when `is_admin` is true.
     - The login link includes a `next` query parameter to return the user to their previous page after login.
 
 4.  **Authenticated API Calls (`src/lib/api.ts`):**
@@ -88,7 +88,7 @@ This document outlines the authentication flow implemented in the SvelteKit fron
         - Check `locals.session` / `locals.user` to verify authentication.
         - Perform redirects (`throw redirect(...)`) if the user is not authenticated but tries to access a protected page.
         - Pass the `locals.supabase` client to API helper functions from `src/lib/api.ts`.
-    - Regular content pages (like sourcefile pages) typically don't require authentication and still work for anonymous users. API calls from these pages will conditionally include auth tokens if available.
+    - Admin area: `/admin/+layout.server.ts` always calls `GET /api/admin/whoami` on the backend using the server Supabase client. Non-admins or unauthenticated users are redirected to `/auth?next=/admin`. The root `+layout.server.ts` also calls `whoami` for convenience and sets `data.is_admin`.
 
 6.  **Client-Side Auth Operations (`src/routes/auth/+page.svelte`):**
     - The main auth page handles both login and signup.
@@ -147,6 +147,10 @@ The following features require authentication:
   - Managing user profile
 
 Anonymous users can still browse and read all content, but cannot trigger resource-intensive operations or modify data.
+
+### Local test users
+
+For local development, see `../../docs/reference/LOCAL_TEST_USERS.md` for ready-made credentials and a seed script to create them in Supabase Auth locally.
 
 ## Authentication Flow - Summary
 
