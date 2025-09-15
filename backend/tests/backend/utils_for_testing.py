@@ -121,7 +121,7 @@ def with_wordform_search_mock(func: Callable) -> Callable:
         The decorated function
     """
     return patch(
-        "views.wordform_views.quick_search_for_wordform",
+        "utils.vocab_llm_utils.quick_search_for_wordform",
         side_effect=mock_quick_search_for_wordform,
     )(func)
 

@@ -285,3 +285,74 @@ def mock_tts_autouse(monkeypatch):
     monkeypatch.setattr(
         "gjdutils.outloud_text_to_speech.outloud_elevenlabs", _fake_outloud
     )
+
+    # Also patch the local import in utils.audio_utils
+    try:
+        from utils import audio_utils as _au  # noqa: F401
+        monkeypatch.setattr("utils.audio_utils.outloud_elevenlabs", _fake_outloud)
+    except Exception:
+        # If import fails during collection, skip secondary patch
+        pass
+
+
+@pytest.fixture(autouse=True)
+def mock_llm_autouse(monkeypatch):
+    """Mock LLM template calls globally to avoid external API usage in tests.
+
+    Returns minimal, well-formed shapes per template to satisfy code paths.
+    """
+    from pathlib import Path
+
+    def _fake_generate(*args, **kwargs):
+        template_name = None
+        tmpl = kwargs.get("prompt_template")
+        if isinstance(tmpl, Path):
+            template_name = tmpl.stem
+        # Default to context hint when template path isn't provided
+        if template_name is None:
+            context = kwargs.get("context_d", {}) or {}
+            if {"wordform", "target_language_name"}.issubset(set(context.keys())):
+                template_name = "quick_search_for_wordform"
+
+        # Route based on template
+        if template_name == "quick_search_for_wordform":
+            return {
+                "wordform": None,
+                "lemma": None,
+                "part_of_speech": None,
+                "translations": [],
+                "inflection_type": None,
+                "possible_misspellings": ["test"],
+            }, {}
+        if template_name == "metadata_for_lemma":
+            return {
+                "lemma": "test",
+                "translations": ["test"],
+                "part_of_speech": "noun",
+                "etymology": "",
+                "commonality": 0.5,
+                "guessability": 0.5,
+                "register": "neutral",
+                "example_usage": [],
+                "example_wordforms": ["test"],
+            }, {}
+        if template_name == "extract_phrases_from_text":
+            return {"phrases": [], "source": {"txt_tgt": ""}}, {}
+        if template_name == "extract_tricky_wordforms":
+            return {"wordforms": []}, {}
+        if template_name in {"extract_text_from_image", "extract_text_from_html"}:
+            return "", {}
+        if template_name in {"translate_to_english", "translate_from_english"}:
+            return "", {}
+        # Fallback generic
+        response_json = kwargs.get("response_json", False)
+        return ({}, {}) if response_json else ("", {})
+
+    # Patch both local utils and gjdutils import site
+    monkeypatch.setattr(
+        "utils.vocab_llm_utils.generate_gpt_from_template", _fake_generate
+    )
+    try:
+        monkeypatch.setattr("gjdutils.llm_utils.generate_gpt_from_template", _fake_generate)
+    except Exception:
+        pass

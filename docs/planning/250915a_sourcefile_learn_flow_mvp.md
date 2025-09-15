@@ -44,19 +44,19 @@ Constraints and preferences for v1:
 ## Stages & actions
 
 ### Stage: MVP separate page, no persistence
-- [ ] Backend: Add ephemeral summary endpoint to rank lemmas for a sourcefile
+- [x] Backend: Add ephemeral summary endpoint to rank lemmas for a sourcefile
   - Path: `GET /api/lang/learn/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/summary?top=K`
   - Behavior:
     - Collect candidate lemmas via `get_sourcefile_lemmas(target_language_code, sourcedir_slug, sourcefile_slug)`
     - For each lemma, fetch metadata with `load_or_generate_lemma_metadata(lemma, target_language_code, generate_if_incomplete=True)`; missing fields are generated on-demand
-    - Ranking in v1: ask the LLM (brief prompt) to order lemmas by “most useful to learn now,” balancing tricky and important-for-understanding; fall back to a numeric heuristic for ties
-    - Response (ephemeral): a JSON summary only; no sentences or audio are created here. Fields per lemma: `lemma`, `translations[]`, `etymology?`, `commonality?`, `guessability?`, `part_of_speech?`, plus an `llm_rank` index
-    - Defaults: If the sourcefile has a `language_level`, include it in the response as `default_language_level` for downstream calls
+    - Ranking in v1: use a numeric heuristic: `difficulty_score = (1 - guessability) + (1 - commonality)` (LLM ranking deferred)
+    - Response (ephemeral): a JSON summary only; no sentences or audio are created here. Fields per lemma: `lemma`, `translations[]`, `etymology?`, `commonality?`, `guessability?`, `part_of_speech?`. Also returns meta durations.
+    - Defaults: Not included in v1 response; the client can pass `language_level` explicitly if needed
   - Acceptance:
     - Returns within a reasonable time (upfront wait is acceptable); handles missing metadata by generating it
     - 200 response includes at least `lemmas[]`, each with `lemma`, `translations`, `etymology` (possibly empty), `commonality`, `guessability`
 
-- [ ] Backend: Add ephemeral batch generation endpoint for sentences + audio
+- [x] Backend: Add ephemeral batch generation endpoint for sentences + audio
   - Path: `POST /api/lang/learn/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/generate`
   - Request body: `{ "lemmas": string[], "num_sentences": 10, "language_level": null | "A1"|… }`
   - Behavior:
@@ -71,7 +71,7 @@ Constraints and preferences for v1:
     - 200 response with N sentences (default 10), each playable via returned data URL
     - End-to-end time for 10 sentences is acceptable for v1 (logged; we can optimize later)
 
-- [ ] Frontend: New single page route adjacent to sourcefile, leaves existing routes untouched
+- [x] Frontend: New single page route adjacent to sourcefile, leaves existing routes untouched
   - Path: `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/learn/+page.svelte`
   - Sections:
     - “Priority words” — shows ranked list with etymology (reuse `LemmaContent`/`LemmaDetails`/`LemmaCard`)
@@ -85,11 +85,11 @@ Constraints and preferences for v1:
     - Page loads, displays top K words with etymologies if present
     - Clicking “Start practice” shows the first generated card and is responsive between cards
 
-- [ ] Minimal logging and error handling
+- [x] Minimal logging and error handling
   - Log durations for lemma warmup, LLM call, audio generation
   - Graceful UI errors when zero lemmas or zero sentences are produced
 
-- [ ] Light checks
+- [x] Light checks
   - Backend type/lint as per project norms
   - Frontend `npm run check`
 

@@ -38,7 +38,7 @@ def test_wordform_details(client, fixture_for_testing_db):
 
 
 @patch(
-    "views.wordform_views.quick_search_for_wordform",
+    "utils.vocab_llm_utils.quick_search_for_wordform",
     side_effect=mock_quick_search_for_wordform,
 )
 def test_nonexistent_wordform(mock_search, client):

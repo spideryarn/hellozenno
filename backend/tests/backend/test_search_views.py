@@ -168,7 +168,7 @@ def mock_enhanced_search_for_wordform(wordform, target_language_code, verbose=1)
 
 
 @patch(
-    "views.wordform_views.quick_search_for_wordform",
+    "utils.vocab_llm_utils.quick_search_for_wordform",
     side_effect=mock_enhanced_search_for_wordform,
 )
 def test_enhanced_search_english_word(mock_search, client):
@@ -182,15 +182,14 @@ def test_enhanced_search_english_word(mock_search, client):
         wordform="example",
     )
     response = client.get(url)
-    assert response.status_code == 302
-    location = response.headers.get("Location")
-    # The URL will be URL-encoded for Greek characters
-    assert "/wordform/" in location
-    assert "παράδειγμα" in urllib.parse.unquote(location)
+    # With new synchronous create-and-render flow, expect 200 and rendered page
+    assert response.status_code == 200
+    page = response.data.decode()
+    assert "παράδειγμα" in page
 
 
 @patch(
-    "views.wordform_views.quick_search_for_wordform",
+    "utils.vocab_llm_utils.quick_search_for_wordform",
     side_effect=mock_enhanced_search_for_wordform,
 )
 def test_enhanced_search_single_match(mock_search, client):
@@ -204,15 +203,13 @@ def test_enhanced_search_single_match(mock_search, client):
         wordform="single_match",
     )
     response = client.get(url)
-    assert response.status_code == 302
-    location = response.headers.get("Location")
-    # The URL will be URL-encoded for Greek characters
-    assert "/wordform/" in location
-    assert "μοναδικό" in urllib.parse.unquote(location)
+    assert response.status_code == 200
+    page = response.data.decode()
+    assert "μοναδικό" in page
 
 
 @patch(
-    "views.wordform_views.quick_search_for_wordform",
+    "utils.vocab_llm_utils.quick_search_for_wordform",
     side_effect=mock_enhanced_search_for_wordform,
 )
 def test_enhanced_search_both_languages(mock_search, client):
@@ -236,7 +233,7 @@ def test_enhanced_search_both_languages(mock_search, client):
 
 
 @patch(
-    "views.wordform_views.quick_search_for_wordform",
+    "utils.vocab_llm_utils.quick_search_for_wordform",
     side_effect=mock_enhanced_search_for_wordform,
 )
 def test_enhanced_search_no_matches(mock_search, client):
@@ -259,7 +256,7 @@ def test_enhanced_search_no_matches(mock_search, client):
 
 
 @patch(
-    "views.wordform_views.quick_search_for_wordform",
+    "utils.vocab_llm_utils.quick_search_for_wordform",
     side_effect=mock_enhanced_search_for_wordform,
 )
 def test_enhanced_search_misspelled(mock_search, client):

@@ -25,7 +25,7 @@ def test_endpoint_for():
 
     # Test with create_sourcedir_api (from sourcedir_api blueprint)
     endpoint = endpoint_for(create_sourcedir_api)
-    assert endpoint == "sourcedir_create_sourcedir_api"
+    assert endpoint == "sourcedir_api.create_sourcedir_api"
 
     # Test with languages_list_vw (from core_views blueprint)
     endpoint = endpoint_for(languages_list_vw)

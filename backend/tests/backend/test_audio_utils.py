@@ -144,8 +144,14 @@ def test_ensure_model_audio_data(
         sentence="Test sentence",
         translation="Test translation",
     )
-    ensure_model_audio_data(sentence)
-    assert sentence.audio_data == b"fake mp3 data"
+    # Ensure we run within request context so g is available
+    with client.application.test_request_context():
+        from flask import g
+        g.user = {"id": "00000000-0000-0000-0000-000000000000"}
+        ensure_model_audio_data(sentence)
+    # Reload from DB to observe changes
+    sentence_db = Sentence.get_by_id(sentence.id)
+    assert sentence_db.audio_data == b"fake mp3 data"
 
     # Test with Sourcefile model
     sourcefile = Sourcefile.create(
