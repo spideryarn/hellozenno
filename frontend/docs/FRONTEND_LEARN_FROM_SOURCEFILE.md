@@ -13,6 +13,7 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
 - `../../backend/prompt_templates/metadata_for_lemma.jinja` — Prompt used to fill lemma metadata
 - `ENHANCED_TEXT.md` — How interactive text/word links work elsewhere
 - `../../docs/planning/250915a_sourcefile_learn_flow_mvp.md` — Planning notes and future stages
+ - `../../docs/reference/libraries/p-queue.md` — Queue-based concurrency used for background warming
 
 ## Principles and key decisions
 
@@ -21,7 +22,7 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
 - Warm missing lemma metadata as needed to keep the flow snappy
 - Batch-generate all sentences up-front; then practice with low latency between cards
 - Serve audio as base64 data URLs in MVP (simple, acceptable at small scale)
-- Shuffle the practice deck at session start for varied repetition
+- Shuffle the practice deck at session start for varied repetition (generation orders easy→hard; shuffle trades sequence for variety)
 
 ## Current state, target state, migration status
 
@@ -70,6 +71,7 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
 - Lemma metadata warming: client fires low-priority, concurrent requests to fill missing metadata
 - Background deck preparation: the page may pre-generate a deck while the user reviews words
 - Audio preloading: data URLs are preloaded to minimize delays during practice
+ - Concurrency is managed with p-queue; see `../../docs/reference/libraries/p-queue.md`
 
 ## Error handling
 
