@@ -100,11 +100,11 @@ Constraints and preferences for v1:
   - Minimal status tracking (log-only) for v1 to stay simple
   - Acceptance: Subsequent visits to the same sourcefile have noticeably less metadata delay
 
-
-### Stage: Caching and performance polish
-- [ ] In-memory LRU cache of audio by exact sentence text (process-local, TTL)
-- [ ] Cache `summary` results for a short TTL keyed by sourcefile
-  - Acceptance: Repeat sessions avoid recompute and shorten latency without persistence
+  Notes/Suggestion (frontend-initiated warming):
+  - Instead of spawning from the backend, trigger warming from the client after the `summary` load completes when the user is authenticated.
+  - Mechanism: fire-and-forget requests to `POST /api/lang/lemma/{target_language_code}/{lemma}/complete_metadata` (or `GET /metadata` which auto-generates) with Supabase auth token.
+  - Concurrency: limit to 2–3 concurrent requests and simple backoff; do not block UI.
+  - Safety: silently skip on 401; log durations only. This reduces server-side thread complexity and keeps the page responsive.
 
 
 ### Stage: Optional persistence & integration with existing flashcards
@@ -113,11 +113,30 @@ Constraints and preferences for v1:
 - [ ] Integrate with existing `/languages/{code}/flashcards` flow so generated sentences appear in normal practice too
   - Acceptance: User can revisit generated material via existing flashcards; no duplication issues
 
+Investigation notes (models + persistence proposal):
+- Current models are mostly fit: `Sentence`, `SentenceLemma`, `Lemma` already cover core needs; audio can use `Sentence.audio_data` initially.
+- Recommended additions (see Very late stages below):
+  - `Sentence.provenance` enum (`manual`, `imported`, `learn`, `llm_generated`) with default `manual`
+  - `Sentence.generation_batch_id` nullable FK to new `GenerationBatch`
+  - `Sentence.generation_metadata` JSON to store `{ used_lemmas, order_index, difficulty_score, prompt_version }`
+  - `GenerationBatch` model capturing request context (language, source context, requested lemmas, prompt/template version, counts, created_by)
+- Write migrations to add these fields and backfill `provenance = 'manual'` for existing data. Keep endpoints backward compatible; feature-flag writes initially.
+
 
 ### Stage: Observability and UX refinements
 - [ ] Progress indicators for warmup and generation steps
 - [ ] Stats: coverage of lemmas across session, CEFR ramp
 - [ ] Allow user-adjustable K (top words), number of sentences, and difficulty range
+
+- [x] Priority Words UI improvements
+  - Each lemma title links to its main page in a new tab
+  - Show a short context quote from the source text
+  - List the wordform(s) present in this sourcefile for the lemma (as links)
+  - Display part of speech inline after translations for compactness
+  - Preview up to 2 example sentences and up to 2 mnemonics when available
+  - Add an "Ignore" button (auth required) that marks the lemma ignored via API and removes it from the list
+  - Filter ignored lemmas out of the set passed to the sentence generation endpoint
+  - Remove hover/gradient effect that thickened dividers within Priority Words
 
 
 ### Stage: Replay-tracking and simple repeat prioritization
