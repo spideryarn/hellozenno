@@ -5,15 +5,17 @@ These endpoints follow the standard pattern:
 /api/lang/lemma/...
 """
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
+import io
 from peewee import DoesNotExist
 import logging
 import urllib.parse
 
 from utils.lang_utils import get_language_name
-from db_models import Lemma, UserLemma
+from db_models import Lemma, UserLemma, LemmaAudio
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.sourcefile_utils import complete_lemma_metadata
+from utils.audio_utils import ensure_audio_data
 
 # Import the auth decorators and the new exception
 from utils.auth_utils import api_auth_required, api_auth_optional
@@ -41,6 +43,131 @@ def get_lemma_data_api(target_language_code: str, lemma: str):
         )
         response.status_code = 404
         return response
+
+
+# -------------------------
+# Lemma audio endpoints
+# -------------------------
+
+
+@lemma_api_bp.route("/<target_language_code>/<lemma>/audio/variants", methods=["GET"])
+def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
+    """List available audio variants for a lemma by provider/voice.
+
+    Public endpoint: returns empty list if none exist.
+    """
+    try:
+        lemma_model = Lemma.get(
+            (Lemma.lemma == lemma)
+            & (Lemma.target_language_code == target_language_code)
+        )
+    except DoesNotExist:
+        return jsonify({"error": "Lemma not found"}), 404
+
+    variants = (
+        LemmaAudio.select()
+        .where(LemmaAudio.lemma == lemma_model)
+        .order_by(LemmaAudio.created_at)
+    )
+    out = []
+    for v in variants:
+        out.append(
+            {
+                "provider": v.provider,
+                "voice_name": v.voice_name,
+                "url": f"/api/lang/lemma/{target_language_code}/{lemma}/audio/{v.provider}/{v.voice_name}",
+            }
+        )
+    return jsonify(out)
+
+
+@lemma_api_bp.route(
+    "/<target_language_code>/<lemma>/audio/<provider>/<voice_name>", methods=["GET"]
+)
+def get_lemma_audio_stream_api(
+    target_language_code: str, lemma: str, provider: str, voice_name: str
+):
+    """Stream a specific lemma audio variant by provider/voice.
+
+    Public endpoint; 404 if not found.
+    """
+    try:
+        lemma_model = Lemma.get(
+            (Lemma.lemma == lemma)
+            & (Lemma.target_language_code == target_language_code)
+        )
+    except DoesNotExist:
+        return jsonify({"error": "Lemma not found"}), 404
+
+    try:
+        row = LemmaAudio.get(
+            (LemmaAudio.lemma == lemma_model)
+            & (LemmaAudio.provider == provider)
+            & (LemmaAudio.voice_name == voice_name)
+        )
+    except DoesNotExist:
+        return jsonify({"error": "Audio not found"}), 404
+
+    return send_file(
+        io.BytesIO(row.audio_data), mimetype="audio/mpeg", as_attachment=False
+    )
+
+
+@lemma_api_bp.route("/<target_language_code>/<lemma>/audio/ensure", methods=["POST"])
+@api_auth_required
+def ensure_lemma_audio_api(target_language_code: str, lemma: str):
+    """Ensure N distinct audio variants exist for a lemma.
+
+    Query param: n (default 3). Uses global ELEVENLABS voice pool; disables delays.
+    """
+    try:
+        from config import LEMMA_AUDIO_SAMPLES
+        n = int(request.args.get("n", str(LEMMA_AUDIO_SAMPLES)))
+    except Exception:
+        from config import LEMMA_AUDIO_SAMPLES
+        n = LEMMA_AUDIO_SAMPLES
+
+    try:
+        lemma_model = Lemma.get(
+            (Lemma.lemma == lemma)
+            & (Lemma.target_language_code == target_language_code)
+        )
+    except DoesNotExist:
+        return jsonify({"error": "Lemma not found"}), 404
+
+    # Build existing set
+    existing = set(
+        (la.provider, la.voice_name)
+        for la in LemmaAudio.select().where(LemmaAudio.lemma == lemma_model)
+    )
+
+    from config import ELEVENLABS_VOICE_POOL
+
+    # Select missing voices until we reach n
+    to_create = []
+    for v in ELEVENLABS_VOICE_POOL:
+        if ("elevenlabs", v) not in existing:
+            to_create.append(("elevenlabs", v))
+        if len(existing) + len(to_create) >= n:
+            break
+
+    # Generate and store
+    for provider, voice_name in to_create:
+        audio_bytes = ensure_audio_data(
+            text=lemma_model.lemma,
+            should_add_delays=False,
+            should_play=False,
+            verbose=0,
+            voice_name=voice_name,
+        )
+        LemmaAudio.create(
+            lemma=lemma_model,
+            provider=provider,
+            voice_name=voice_name,
+            audio_data=audio_bytes,
+        )
+
+    return "", 204
 
 
 @lemma_api_bp.route("/<target_language_code>/lemmas")

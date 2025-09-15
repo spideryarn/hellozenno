@@ -788,6 +788,21 @@ class Phrase(BaseModel):
         return query
 
 
+class LemmaAudio(BaseModel):
+    """Stored audio variants (by provider/voice) for a lemma."""
+
+    lemma = ForeignKeyField(Lemma, backref="audio_variants", on_delete="CASCADE")
+    provider = CharField(default="elevenlabs")
+    voice_name = CharField()
+    audio_data = BlobField()
+    created_by = ForeignKeyField(
+        AuthUser, backref="lemma_audio", null=True, on_delete="CASCADE"
+    )
+
+    class Meta:
+        indexes = ((("lemma", "provider", "voice_name"), True),)
+
+
 class LemmaExampleSentence(BaseModel):
     lemma = ForeignKeyField(Lemma, backref="example_sentences", on_delete="CASCADE")
     sentence = ForeignKeyField(Sentence, backref="lemma_examples", on_delete="CASCADE")
@@ -1058,6 +1073,7 @@ def get_models():
         Sentence,
         SentenceLemma,
         Phrase,
+        LemmaAudio,
         LemmaExampleSentence,
         PhraseExampleSentence,
         RelatedPhrase,

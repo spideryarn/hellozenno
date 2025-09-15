@@ -131,3 +131,31 @@ RECOGNITION_KNOWN_WORD_SEARCH_DEFAULT: bool = True
 
 # Thai tokenizer engine default for PyThaiNLP when no env PYTHAINLP_ENGINE is provided
 PYTHAINLP_ENGINE_DEFAULT: str = "newmm"
+
+# Text-to-speech voices
+# Centralized pool used for both sentences and lemma pronunciations
+ELEVENLABS_VOICE_POOL: list[str] = [
+    "Alice",
+    "Bill",
+    "Brian",
+    "Callum",
+    "Charlie",
+    "Chris",
+    "Clyde",
+    "Daniel",
+    "Eric",
+    "George",
+    "Harry",
+    "Jessica",
+    "Laura",
+    "Liam",
+    "Lily",
+    "Matilda",
+    "Rachel",
+    "River",
+    "Roger",
+    "Sarah",
+]
+
+# Number of distinct audio samples to store per lemma (server default)
+LEMMA_AUDIO_SAMPLES: int = 3

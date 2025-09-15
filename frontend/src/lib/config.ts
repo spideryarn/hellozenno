@@ -27,3 +27,6 @@ export const SITE_NAME = "Hello Zenno";
 export const TAGLINE = "AI-powered dictionary & listening practice";
 export const CONTACT_EMAIL = "hello@hellozenno.com";
 export const GITHUB_ISSUES_URL = "https://github.com/spideryarn/hellozenno/issues";
+
+// Number of pronunciation samples to generate/play per lemma
+export const LEMMA_AUDIO_SAMPLES = 3;

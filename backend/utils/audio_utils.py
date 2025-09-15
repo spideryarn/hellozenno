@@ -4,7 +4,11 @@ import os
 import tempfile
 import random
 from utils.env_config import ELEVENLABS_API_KEY, OPENAI_API_KEY
-from config import MAX_AUDIO_SIZE_FOR_STORAGE, SUPPORTED_LANGUAGES
+from config import (
+    MAX_AUDIO_SIZE_FOR_STORAGE,
+    SUPPORTED_LANGUAGES,
+    ELEVENLABS_VOICE_POOL,
+)
 from gjdutils.audios import play_mp3
 from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from openai import OpenAI
@@ -137,6 +141,7 @@ def ensure_audio_data(
     should_add_delays: bool = True,
     should_play: bool = False,
     verbose: int = 0,
+    voice_name: Optional[str] = None,
 ) -> bytes:
     """Core function to generate audio data from text.
 
@@ -155,30 +160,8 @@ def ensure_audio_data(
     # Add delays if requested
     text_with_delays = add_delays(text) if should_add_delays else text
 
-    # Randomly select a voice for ElevenLabs from known-available names
-    voices = [
-        "Alice",
-        "Bill",
-        "Brian",
-        "Callum",
-        "Charlie",
-        "Chris",
-        "Clyde",
-        "Daniel",
-        "Eric",
-        "George",
-        "Harry",
-        "Jessica",
-        "Laura",
-        "Liam",
-        "Lily",
-        "Matilda",
-        "Rachel",
-        "River",
-        "Roger",
-        "Sarah",
-    ]
-    selected_voice = random.choice(voices)
+    # Select a voice: use provided voice_name or random from pool
+    selected_voice = voice_name if voice_name else random.choice(ELEVENLABS_VOICE_POOL)
 
     if verbose >= 1:
         print(f"Selected voice: {selected_voice}")

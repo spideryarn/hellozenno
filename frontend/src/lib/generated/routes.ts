@@ -47,6 +47,9 @@ export enum RouteName {
   WORDFORM_API_GET_WORDFORM_METADATA_API = "WORDFORM_API_GET_WORDFORM_METADATA_API",
   WORDFORM_API_DELETE_WORDFORM_API = "WORDFORM_API_DELETE_WORDFORM_API",
   LEMMA_API_GET_LEMMA_DATA_API = "LEMMA_API_GET_LEMMA_DATA_API",
+  LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API = "LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API",
+  LEMMA_API_GET_LEMMA_AUDIO_STREAM_API = "LEMMA_API_GET_LEMMA_AUDIO_STREAM_API",
+  LEMMA_API_ENSURE_LEMMA_AUDIO_API = "LEMMA_API_ENSURE_LEMMA_AUDIO_API",
   LEMMA_API_LEMMAS_LIST_API = "LEMMA_API_LEMMAS_LIST_API",
   LEMMA_API_GET_LEMMA_METADATA_API = "LEMMA_API_GET_LEMMA_METADATA_API",
   LEMMA_API_COMPLETE_LEMMA_METADATA_API = "LEMMA_API_COMPLETE_LEMMA_METADATA_API",
@@ -102,6 +105,8 @@ export enum RouteName {
   PROFILE_API_GET_CURRENT_PROFILE_API = "PROFILE_API_GET_CURRENT_PROFILE_API",
   PROFILE_API_UPDATE_PROFILE_API = "PROFILE_API_UPDATE_PROFILE_API",
   PROFILE_API_GET_USER_EMAIL_API = "PROFILE_API_GET_USER_EMAIL_API",
+  ADMIN_API_WHOAMI = "ADMIN_API_WHOAMI",
+  ADMIN_API_LIST_USERS = "ADMIN_API_LIST_USERS",
 }
 
 
@@ -153,6 +158,9 @@ export const ROUTES = {
   WORDFORM_API_GET_WORDFORM_METADATA_API: "/api/lang/word/{target_language_code}/wordform/{wordform}",
   WORDFORM_API_DELETE_WORDFORM_API: "/api/lang/word/{target_language_code}/wordform/{wordform}/delete",
   LEMMA_API_GET_LEMMA_DATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/data",
+  LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API: "/api/lang/lemma/{target_language_code}/{lemma}/audio/variants",
+  LEMMA_API_GET_LEMMA_AUDIO_STREAM_API: "/api/lang/lemma/{target_language_code}/{lemma}/audio/{provider}/{voice_name}",
+  LEMMA_API_ENSURE_LEMMA_AUDIO_API: "/api/lang/lemma/{target_language_code}/{lemma}/audio/ensure",
   LEMMA_API_LEMMAS_LIST_API: "/api/lang/lemma/{target_language_code}/lemmas",
   LEMMA_API_GET_LEMMA_METADATA_API: "/api/lang/lemma/{target_language_code}/lemma/{lemma}/metadata",
   LEMMA_API_COMPLETE_LEMMA_METADATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/complete_metadata",
@@ -208,6 +216,8 @@ export const ROUTES = {
   PROFILE_API_GET_CURRENT_PROFILE_API: "/api/profile/current",
   PROFILE_API_UPDATE_PROFILE_API: "/api/profile/update",
   PROFILE_API_GET_USER_EMAIL_API: "/api/profile/user/{user_id}",
+  ADMIN_API_WHOAMI: "/api/admin/whoami",
+  ADMIN_API_LIST_USERS: "/api/admin/users",
 } as const;
 
 
@@ -259,6 +269,9 @@ export type RouteParams = {
   [RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API]: { target_language_code: string; wordform: string };
   [RouteName.WORDFORM_API_DELETE_WORDFORM_API]: { target_language_code: string; wordform: string };
   [RouteName.LEMMA_API_GET_LEMMA_DATA_API]: { target_language_code: string; lemma: string };
+  [RouteName.LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API]: { target_language_code: string; lemma: string };
+  [RouteName.LEMMA_API_GET_LEMMA_AUDIO_STREAM_API]: { target_language_code: string; lemma: string; provider: string; voice_name: string };
+  [RouteName.LEMMA_API_ENSURE_LEMMA_AUDIO_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_LEMMAS_LIST_API]: { target_language_code: string };
   [RouteName.LEMMA_API_GET_LEMMA_METADATA_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API]: { target_language_code: string; lemma: string };
@@ -314,6 +327,8 @@ export type RouteParams = {
   [RouteName.PROFILE_API_GET_CURRENT_PROFILE_API]: {};
   [RouteName.PROFILE_API_UPDATE_PROFILE_API]: {};
   [RouteName.PROFILE_API_GET_USER_EMAIL_API]: { user_id: string };
+  [RouteName.ADMIN_API_WHOAMI]: {};
+  [RouteName.ADMIN_API_LIST_USERS]: {};
 };
 
 
