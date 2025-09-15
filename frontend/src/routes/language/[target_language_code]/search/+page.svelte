@@ -386,12 +386,5 @@
     font-family: var(--bs-font-sans-serif);
   }
 
-  .input-action-button:hover {
-    color: var(--bs-gray-700);
-  }
-
-  .input-actions {
-    display: flex;
-    align-items: center;
-  }
+  /* Removed unused input-action-button:hover and input-actions selectors */
 </style>

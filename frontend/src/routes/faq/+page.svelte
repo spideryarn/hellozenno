@@ -358,11 +358,6 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   }
   
-  .subtitle {
-    position: relative;
-    z-index: 2;
-    color: #d7dadd;
-  }
   
   .text-primary-green {
     color: var(--hz-color-primary-green);
@@ -512,10 +507,4 @@
     white-space: nowrap;
   }
   
-  .language-tag:hover {
-    background-color: var(--hz-color-primary-green);
-    color: white;
-    text-decoration: none;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-  }
 </style>

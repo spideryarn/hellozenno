@@ -266,9 +266,7 @@
 </div>
 
 <style>
-  .metadata-timestamp {
-    font-family: var(--bs-font-monospace, monospace);
-  }
+  /* Removed unused .metadata-timestamp; timestamp styling now in cell HTML */
   
   :global(.delete-lemma-btn) {
     padding: 0.25rem 0.5rem;

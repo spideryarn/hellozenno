@@ -201,9 +201,7 @@
 </div>
 
 <style>
-    .metadata-timestamp {
-        font-family: var(--bs-font-monospace, monospace);
-    }
+    /* Removed unused .metadata-timestamp; timestamp styling now in cell HTML */
 
     /* Copied from lemmas page for consistency */
     :global(.delete-wordform-btn) {

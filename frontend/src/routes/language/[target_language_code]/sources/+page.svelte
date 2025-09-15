@@ -155,10 +155,7 @@
 </div>
 
 <style>
-  .metadata-timestamp {
-    font-family: var(--bs-font-monospace, monospace);
-    font-size: 0.9em;
-  }
+  /* Removed unused .metadata-timestamp; timestamp styling now in cell HTML */
   
   /* UserLookup.svelte styling is now in global theme.css */
 </style>
