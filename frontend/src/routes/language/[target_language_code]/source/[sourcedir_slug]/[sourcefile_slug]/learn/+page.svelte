@@ -5,6 +5,8 @@
   import Alert from '$lib/components/Alert.svelte';
   import { AudioPlayer } from '$lib';
   import { API_BASE_URL } from '$lib/config';
+  import { apiFetch } from '$lib/api';
+  import { RouteName } from '$lib/generated/routes';
   import LemmaContent from '$lib/components/LemmaContent.svelte';
 
   // No exported props required for this page in MVP
@@ -12,6 +14,8 @@
   let loadingSummary = true;
   let summaryError: string | null = null;
   let lemmas: Array<any> = [];
+  let ignoredLemmas: Set<string> = new Set();
+  let sourcefileWordforms: Record<string, string[]> = {};
   let sourceText: string = '';
 
   let generating = false;
@@ -50,6 +54,32 @@
       if (textRes.ok) {
         const td = await textRes.json();
         sourceText = td?.sourcefile?.text_target || td?.text_data?.text_target || '';
+        const wordforms = td?.wordforms || [];
+        // Build map of lemma -> forms present in this sourcefile
+        sourcefileWordforms = {};
+        for (const wf of wordforms) {
+          const lemma = wf?.lemma;
+          const form = wf?.wordform;
+          if (lemma && form) {
+            if (!sourcefileWordforms[lemma]) sourcefileWordforms[lemma] = [];
+            if (!sourcefileWordforms[lemma].includes(form)) sourcefileWordforms[lemma].push(form);
+          }
+        }
+      }
+
+      // Fetch ignored lemmas for the current user; ignore errors silently
+      try {
+        const ignored = await apiFetch({
+          supabaseClient: ($page.data as any).supabase ?? null,
+          routeName: RouteName.LEMMA_API_GET_IGNORED_LEMMAS_API,
+          params: { target_language_code },
+          options: { method: 'GET' },
+        });
+        if (Array.isArray(ignored)) {
+          ignoredLemmas = new Set(ignored.map((x: any) => x.lemma));
+        }
+      } catch (e) {
+        // not logged in or API error; proceed without filtering
       }
     } catch (e: any) {
       summaryError = e?.message || 'Failed to load summary';
@@ -71,7 +101,10 @@
     try {
       const url = `${API_BASE_URL}/api/lang/learn/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/generate`;
       const body = {
-        lemmas: lemmas.map((l) => l.lemma).slice(0, 20),
+        lemmas: lemmas
+          .map((l) => l.lemma)
+          .filter((lm) => !ignoredLemmas.has(lm))
+          .slice(0, 20),
         num_sentences: 10,
         language_level: null,
       };
@@ -133,6 +166,22 @@
     if (idx >= 0) return sentences[idx];
     return undefined;
   }
+
+  async function ignoreLemma(lemma: string) {
+    try {
+      await apiFetch({
+        supabaseClient: ($page.data as any).supabase ?? null,
+        routeName: RouteName.LEMMA_API_IGNORE_LEMMA_API,
+        params: { target_language_code, lemma },
+        options: { method: 'POST' },
+      });
+      ignoredLemmas.add(lemma);
+      // Remove from current list without refetch
+      lemmas = lemmas.filter((x) => x?.lemma !== lemma);
+    } catch (e: any) {
+      alert(e?.message || 'Failed to ignore lemma');
+    }
+  }
 </script>
 
 <svelte:head>
@@ -152,9 +201,18 @@
         {:else if !lemmas.length}
           <Alert type="warning">No lemmas found for this sourcefile.</Alert>
         {:else}
-          <div class="d-flex flex-column gap-3">
-            {#each lemmas as l}
-              <LemmaContent lemma_metadata={l} target_language_code={target_language_code} showFullLink={false} isAuthError={false} context_sentence={getContextSentence(sourceText, l?.lemma)} />
+          <div class="d-flex flex-column gap-3 priority-words">
+            {#each lemmas.filter((x) => !ignoredLemmas.has(x.lemma)) as l}
+              <LemmaContent
+                lemma_metadata={l}
+                target_language_code={target_language_code}
+                showFullLink={false}
+                isAuthError={false}
+                context_sentence={getContextSentence(sourceText, l?.lemma)}
+                source_wordforms={sourcefileWordforms[l?.lemma] || []}
+                showIgnore={true}
+                on:ignore={(e) => ignoreLemma(e.detail.lemma)}
+              />
             {/each}
           </div>
         {/if}
@@ -230,6 +288,10 @@
   .sentence-box {
     margin-bottom: 0.75rem;
   }
+
+  /* Remove hover accent from Card headers inside priority words list to avoid thicker dividers */
+  .priority-words :global(.lemma-details-card.card::before) { display: none; }
+  .priority-words :global(.lemma-details-card.card:hover) { transform: none; box-shadow: none; }
 </style>
 
 

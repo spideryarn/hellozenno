@@ -2,12 +2,26 @@
   import { Card } from '$lib';
   import SentenceCard from '$lib/components/SentenceCard.svelte';
   import LemmaCard from '$lib/components/LemmaCard.svelte';
+  import { createEventDispatcher } from 'svelte';
   
   export let lemma_metadata: any;
   export let target_language_code: string;
   export let showFullLink: boolean = false; // Whether to show the "View Full Lemma Page" link
   export let isAuthError: boolean = false; // To hide sections if auth error exists
   export let context_sentence: string | undefined = undefined; // Optional context from sourcefile
+  export let source_wordforms: string[] = []; // Wordforms for this lemma present in the current sourcefile
+  export let showIgnore: boolean = false; // Show an ignore button (dispatches 'ignore')
+
+  const dispatch = createEventDispatcher();
+  const lemmaHref = (lemma_metadata?.lemma && target_language_code)
+    ? `/language/${target_language_code}/lemma/${lemma_metadata.lemma}`
+    : undefined;
+
+  function handleIgnore() {
+    if (lemma_metadata?.lemma) {
+      dispatch('ignore', { lemma: lemma_metadata.lemma });
+    }
+  }
 </script>
 
 {#if showFullLink && lemma_metadata?.lemma}
@@ -21,21 +35,61 @@
 {/if}
 
 <!-- Basic Lemma Details -->
-<Card title={lemma_metadata?.lemma ? `Lemma: ${lemma_metadata.lemma}` : 'Lemma'} className="lemma-details-card">
+<Card className="lemma-details-card">
+  <svelte:fragment slot="title">
+    <div class="d-flex align-items-center justify-content-between gap-2">
+      <h2 class="card-title mb-0">
+        Lemma:
+        {#if lemma_metadata?.lemma}
+          <a
+            href={lemmaHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hz-foreign-text hz-lemma-link ms-1"
+          >{lemma_metadata.lemma}</a>
+        {:else}
+          <span>Lemma</span>
+        {/if}
+      </h2>
+      {#if showIgnore && lemma_metadata?.lemma}
+        <button class="btn btn-sm btn-outline-secondary" on:click={handleIgnore} title="Ignore this lemma">
+          Ignore
+        </button>
+      {/if}
+    </div>
+  </svelte:fragment>
   {#if context_sentence}
     <blockquote class="context-sentence hz-foreign-text">{context_sentence}</blockquote>
   {/if}
   <div class="translations mb-3">
-    <p><strong>Translation:</strong> 
+    <p>
+      <strong>Translation:</strong>
       {#if lemma_metadata?.translations && lemma_metadata.translations.length > 0}
         {lemma_metadata.translations.join('; ')}
       {:else}
         <span class="text-muted">No translation available</span>
       {/if}
+      {#if lemma_metadata?.part_of_speech}
+        <span class="text-muted small ms-2">({lemma_metadata.part_of_speech})</span>
+      {/if}
     </p>
   </div>
   
-  <p><strong>Part of Speech:</strong> {lemma_metadata?.part_of_speech || '-'}</p>
+  {#if source_wordforms && source_wordforms.length > 0}
+    <div class="mb-2">
+      <strong>In this text:</strong>
+      <span class="ms-1">
+        {#each source_wordforms as form, i}
+          <a
+            href="/language/{target_language_code}/wordform/{form}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hz-foreign-text text-decoration-underline"
+          >{form}</a>{i < source_wordforms.length - 1 ? ', ' : ''}
+        {/each}
+      </span>
+    </div>
+  {/if}
   
   <div class="etymology mb-3">
     <p><strong>Etymology:</strong> {lemma_metadata?.etymology || '-'}</p>
@@ -219,5 +273,18 @@
     padding-left: 0.75rem;
     border-left: 3px solid var(--hz-color-primary-green);
     font-size: 1.05rem;
+  }
+
+  /* Remove hover accent/animation from Card within Priority Words */
+  :global(.lemma-details-card.card::before) {
+    display: none;
+  }
+  :global(.lemma-details-card.card:hover) {
+    transform: none;
+    box-shadow: none;
+  }
+  :global(.lemma-details-card .card-title) {
+    max-width: 100%;
+    min-height: unset;
   }
 </style>

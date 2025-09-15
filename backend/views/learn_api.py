@@ -114,6 +114,14 @@ def learn_sourcefile_summary_api(
                     "is_complete": False,
                 }
 
+            # Build summary item; include a couple of examples/mnemonics for UX
+            example_usage = md.get("example_usage") or []
+            if isinstance(example_usage, list):
+                example_usage = example_usage[:2]
+            mnemonics = md.get("mnemonics") or []
+            if isinstance(mnemonics, list):
+                mnemonics = mnemonics[:2]
+
             item = {
                 "lemma": md.get("lemma", lemma),
                 "translations": md.get("translations", []) or [],
@@ -121,6 +129,9 @@ def learn_sourcefile_summary_api(
                 "commonality": md.get("commonality"),
                 "guessability": md.get("guessability"),
                 "part_of_speech": md.get("part_of_speech", "unknown") or "unknown",
+                "example_usage": example_usage,
+                "mnemonics": mnemonics,
+                "is_complete": md.get("is_complete", False),
             }
             item["difficulty_score"] = _difficulty_score(item)
             ranked.append(item)
@@ -135,22 +146,7 @@ def learn_sourcefile_summary_api(
         return (
             jsonify(
                 {
-                    "lemmas": [
-                        {
-                            k: v
-                            for k, v in item.items()
-                            if k
-                            in (
-                                "lemma",
-                                "translations",
-                                "etymology",
-                                "commonality",
-                                "guessability",
-                                "part_of_speech",
-                            )
-                        }
-                        for item in top_items
-                    ],
+                    "lemmas": top_items,
                     "meta": {
                         "total_candidates": len(ranked),
                         "returned": len(top_items),
