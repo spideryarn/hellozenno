@@ -107,10 +107,26 @@ def test_ensure_audio_data(mock_elevenlabs):
 
     # Verify voice selection (display name passed into resolver)
     assert mock_elevenlabs.call_args[1]["bot_name"] in [
-        "Charlotte",
-        "Serena",
-        "Josh",
-        "Michael",
+        "Alice",
+        "Bill",
+        "Brian",
+        "Callum",
+        "Charlie",
+        "Chris",
+        "Clyde",
+        "Daniel",
+        "Eric",
+        "George",
+        "Harry",
+        "Jessica",
+        "Laura",
+        "Liam",
+        "Lily",
+        "Matilda",
+        "Rachel",
+        "River",
+        "Roger",
+        "Sarah",
     ]
 
     # Test with delays - use text that will trigger delays
@@ -127,10 +143,26 @@ def test_ensure_audio_data(mock_elevenlabs):
 
     # Verify voice selection again
     assert mock_elevenlabs.call_args[1]["bot_name"] in [
-        "Charlotte",
-        "Serena",
-        "Josh",
-        "Michael",
+        "Alice",
+        "Bill",
+        "Brian",
+        "Callum",
+        "Charlie",
+        "Chris",
+        "Clyde",
+        "Daniel",
+        "Eric",
+        "George",
+        "Harry",
+        "Jessica",
+        "Laura",
+        "Liam",
+        "Lily",
+        "Matilda",
+        "Rachel",
+        "River",
+        "Roger",
+        "Sarah",
     ]
 
 

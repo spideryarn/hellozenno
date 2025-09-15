@@ -155,8 +155,29 @@ def ensure_audio_data(
     # Add delays if requested
     text_with_delays = add_delays(text) if should_add_delays else text
 
-    # Randomly select a voice for ElevenLabs
-    voices = ["Charlotte", "Serena", "Josh", "Michael"]
+    # Randomly select a voice for ElevenLabs from known-available names
+    voices = [
+        "Alice",
+        "Bill",
+        "Brian",
+        "Callum",
+        "Charlie",
+        "Chris",
+        "Clyde",
+        "Daniel",
+        "Eric",
+        "George",
+        "Harry",
+        "Jessica",
+        "Laura",
+        "Liam",
+        "Lily",
+        "Matilda",
+        "Rachel",
+        "River",
+        "Roger",
+        "Sarah",
+    ]
     selected_voice = random.choice(voices)
 
     if verbose >= 1:
