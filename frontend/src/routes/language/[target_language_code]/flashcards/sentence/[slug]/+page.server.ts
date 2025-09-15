@@ -1,10 +1,10 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getApiUrl } from "$lib/api";
+import { apiFetch } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
 import { API_BASE_URL } from "$lib/config";
 
-export const load: PageServerLoad = async ({ params, fetch, url }) => {
+export const load: PageServerLoad = async ({ params, url, locals }) => {
     const { target_language_code, slug } = params;
     console.log(`Loading flashcard sentence: ${target_language_code}/${slug}`);
 
@@ -22,45 +22,20 @@ export const load: PageServerLoad = async ({ params, fetch, url }) => {
     }
 
     try {
-        // Generate type-safe API URL
-        const apiUrl = getApiUrl(
-            RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API,
-            {
+        // Call API via shared helper to automatically attach Supabase auth header
+        const data = await apiFetch({
+            supabaseClient: locals.supabase,
+            routeName: RouteName.FLASHCARD_API_FLASHCARD_SENTENCE_API,
+            params: {
                 target_language_code: target_language_code,
                 slug: slug,
             },
-        );
-
-        // Add query parameters if any
-        const fullUrl = queryParams.toString()
-            ? `${apiUrl}?${queryParams.toString()}`
-            : apiUrl;
-
-        console.log(`Fetching flashcard sentence from API: ${fullUrl}`);
-
-        const response = await fetch(fullUrl);
-
-        if (!response.ok) {
-            // If API returns an error, handle it
-            const errorText = await response.text();
-            console.error(`API error (${response.status}): ${errorText}`);
-
-            try {
-                const errorData = JSON.parse(errorText);
-                throw error(
-                    response.status,
-                    errorData.error || "Failed to load sentence",
-                );
-            } catch (parseError) {
-                throw error(
-                    500,
-                    `Failed to parse API error response: ${errorText}`,
-                );
-            }
-        }
-
-        // Return the sentence data
-        const data = await response.json();
+            options: { method: "GET" },
+            searchParams: {
+                ...(sourcefile ? { sourcefile } : {}),
+                ...(sourcedir ? { sourcedir } : {}),
+            },
+        });
         console.log(`Received data from API:`, data);
 
         // Fix audio URL to include the full host if it's a relative path
