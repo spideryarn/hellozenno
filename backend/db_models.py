@@ -30,6 +30,9 @@ class AuthUser(Model):
     """Model to reference Supabase auth.users table."""
 
     id = UUIDField(primary_key=True)
+    email = CharField(null=True)
+    created_at = DateTimeField(null=True)
+    last_sign_in_at = DateTimeField(null=True)
 
     class Meta:
         database = database
@@ -918,6 +921,7 @@ class Profile(BaseModel):
 
     user_id = CharField(unique=True)  # References auth.users.id in Supabase
     target_language_code = CharField(null=True)  # User's preferred language
+    admin_granted_at = DateTimeField(null=True)
     # Removed email field as it should come directly from AuthUser (auth.users)
 
     class Meta:
@@ -929,6 +933,11 @@ class Profile(BaseModel):
             "id": self.get_id(),
             "user_id": self.user_id,
             "target_language_code": self.target_language_code,
+            "admin_granted_at": (
+                self.admin_granted_at.isoformat()
+                if isinstance(self.admin_granted_at, datetime)
+                else None
+            ),
             "created_at": (
                 self.created_at.isoformat()
                 if isinstance(self.created_at, datetime)

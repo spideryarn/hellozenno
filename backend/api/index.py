@@ -140,6 +140,7 @@ def create_app():
     from views.search_api import search_api_bp
     from views.learn_api import learn_api_bp
     from views.profile_api import profile_api_bp
+    from views.admin_api import admin_api_bp
 
     app.register_blueprint(sourcedir_api_bp)
     app.register_blueprint(wordform_api_bp)
@@ -153,6 +154,7 @@ def create_app():
     app.register_blueprint(search_api_bp)
     app.register_blueprint(learn_api_bp)
     app.register_blueprint(profile_api_bp)
+    app.register_blueprint(admin_api_bp)
 
     # Add middleware to handle URL decoding for all routes - see docs/planning/250316_vercel_url_encoding_fix.md
     app.before_request(decode_url_params)

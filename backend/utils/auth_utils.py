@@ -134,21 +134,29 @@ def _attempt_authentication_and_set_g() -> bool:
         g.user = user
         g.user_id = user["id"]  # Set user_id directly for UserLemma operations
         try:
-            profile_obj, created = Profile.get_or_create_for_user(
-                user_id=user["id"]
-            )
+            profile_obj, created = Profile.get_or_create_for_user(user_id=user["id"])
             if created:
                 logger.info(f"Created new profile for user_id: {user['id']}")
             g.profile = profile_obj
+            # Compute admin flag from profile
+            try:
+                g.is_admin = bool(
+                    getattr(g, "profile", None)
+                    and getattr(g.profile, "admin_granted_at", None)
+                )
+            except Exception:
+                g.is_admin = False
         except Exception as e:
             # Log profile fetch error, but proceed since user is authenticated
             logger.error(
                 f"Failed to get or create profile for authenticated user {user.get('id')}: {e}"
             )
             # g.profile remains None
+            g.is_admin = False
         return True  # Authentication successful
     else:
         # Authentication failed or no token provided
+        g.is_admin = False
         return False  # Authentication failed
 
 
@@ -206,6 +214,23 @@ def api_auth_required(f: Callable) -> Callable:
     return decorated
 
 
+def api_admin_required(f: Callable) -> Callable:
+    """Decorator for API endpoints that require admin privileges.
+
+    Requires authentication first (401 if no user), then checks admin flag
+    on g.profile (403 if not admin).
+    """
+
+    @wraps(f)
+    @api_auth_required
+    def decorated(*args, **kwargs):
+        if not bool(getattr(g, "is_admin", False)):
+            return jsonify({"error": "Forbidden", "reason": "not_admin"}), 403
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 # Remove the old complex implementation of api_auth_required that handled required=False
 
 
@@ -229,10 +254,10 @@ def page_auth_required(f: Callable) -> Callable:
 
 def get_user_by_id(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Profile]]:
     """Get a user's information by their user ID.
-    
+
     Args:
         user_id: Supabase auth user ID
-        
+
     Returns:
         Tuple of (user_data, profile_obj) where:
             - user_data: Contains email and other user information if found, or None
@@ -241,11 +266,11 @@ def get_user_by_id(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Pro
     try:
         # First, try to get the user's profile
         profile_obj = Profile.get_or_none(Profile.user_id == user_id)
-        
+
         # Next, get the user's auth info from AuthUser (maps to auth.users)
         # Import here to avoid circular imports
         from db_models import AuthUser
-        
+
         user_data = None
         try:
             auth_user = AuthUser.get_by_id(user_id)
@@ -254,20 +279,20 @@ def get_user_by_id(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Pro
                 "id": user_id,
                 # Add other fields from auth_user that are accessible
             }
-            
+
             # Add email if it's available in AuthUser
-            if hasattr(auth_user, 'email'):
+            if hasattr(auth_user, "email"):
                 user_data["email"] = auth_user.email
-                
+
         except DoesNotExist:
             logger.warning(f"AuthUser not found for user_id: {user_id}")
             # Still create minimal user data if we at least have the ID
             user_data = {"id": user_id} if user_id else None
-        
+
         if not profile_obj:
             logger.warning(f"Profile not found for user_id: {user_id}")
             # We might want to auto-create a profile here if needed
-            
+
         return user_data, profile_obj
     except Exception as e:
         logger.error(f"Error retrieving user by ID {user_id}: {e}")

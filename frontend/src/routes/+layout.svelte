@@ -15,6 +15,7 @@
   // Get data passed from +layout.ts
   export let data: LayoutData;
   $: ({ supabase, session } = data); // Destructure supabase and session reactively
+  $: isAdmin = (data as any)?.is_admin === true;
   
   // Extract target language from profile (handle both envelope and direct shapes)
   $: targetLanguageCode = (data as any)?.profile?.profile?.target_language_code 
@@ -160,6 +161,9 @@
           <div class="d-flex align-items-center">
             <a href="/languages" class="text-decoration-none text-white ms-4">Languages</a>
             <a href="/about" class="text-decoration-none text-white ms-4">About</a>
+            {#if isAdmin}
+              <a href="/admin" class="text-decoration-none text-white ms-4">Admin</a>
+            {/if}
             
             <!-- Auth Status: Use reactive `session` from data -->
             {#if session}
