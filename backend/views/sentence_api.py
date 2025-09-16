@@ -10,13 +10,14 @@ import io
 from peewee import DoesNotExist
 from slugify import slugify
 
-from db_models import Sentence
+from db_models import Sentence, SentenceAudio
 from utils.sentence_utils import (
     get_random_sentence,
     get_detailed_sentence_data,
     get_all_sentences,
 )
-from utils.audio_utils import ensure_model_audio_data
+from utils.audio_utils import ensure_sentence_audio_variants, stream_random_sentence_audio
+from utils.exceptions import AuthenticationRequiredForGenerationError
 from utils.auth_utils import api_auth_required
 
 # Create a blueprint with standardized prefix
@@ -80,16 +81,76 @@ def get_sentence_audio_api(target_language_code: str, sentence_id: int):
         sentence = Sentence.get(
             (Sentence.id == sentence_id) & (Sentence.target_language_code == target_language_code)  # type: ignore
         )
-        if not sentence.audio_data:
-            return jsonify({"error": "Audio not found"}), 404
+    except DoesNotExist:
+        return jsonify({"error": "Sentence not found"}), 404
 
-        return send_file(
-            io.BytesIO(sentence.audio_data),
-            mimetype="audio/mpeg",
-            as_attachment=False,
+    variant_id_param = request.args.get("variant_id")
+    variant = None
+
+    if variant_id_param:
+        try:
+            variant = SentenceAudio.get(
+                (SentenceAudio.id == int(variant_id_param))
+                & (SentenceAudio.sentence == sentence)
+            )
+        except (DoesNotExist, ValueError):
+            return jsonify({"error": "Audio not found"}), 404
+    else:
+        variant = stream_random_sentence_audio(sentence.id)
+    if variant is None:
+        return jsonify({"error": "Audio not found"}), 404
+
+    response = send_file(
+        io.BytesIO(variant.audio_data),
+        mimetype="audio/mpeg",
+        as_attachment=False,
+    )
+    metadata = variant.metadata or {}
+    voice_name = metadata.get("voice_name")
+    if voice_name:
+        response.headers["X-Voice-Name"] = voice_name
+    response.headers["X-Voice-Variant-Id"] = str(variant.id)
+    response.headers["X-Audio-Provider"] = variant.provider
+    return response
+
+
+@sentence_api_bp.route(
+    "/<target_language_code>/<int:sentence_id>/audio/variants", methods=["GET"]
+)
+def get_sentence_audio_variants_api(target_language_code: str, sentence_id: int):
+    """List audio variants for a sentence."""
+
+    try:
+        sentence = Sentence.get(
+            (Sentence.id == sentence_id)
+            & (Sentence.target_language_code == target_language_code)
         )
     except DoesNotExist:
         return jsonify({"error": "Sentence not found"}), 404
+
+    variants = (
+        SentenceAudio.select()
+        .where(SentenceAudio.sentence == sentence)
+        .order_by(SentenceAudio.created_at)
+    )
+    payload = []
+    for variant in variants:
+        metadata = variant.metadata or {}
+        payload.append(
+            {
+                "id": variant.id,
+                "provider": variant.provider,
+                "metadata": metadata,
+                "created_at": (
+                    variant.created_at.isoformat()
+                    if getattr(variant, "created_at", None)
+                    else None
+                ),
+                "url": f"/api/lang/sentence/{target_language_code}/{sentence_id}/audio?variant_id={variant.id}",
+            }
+        )
+
+    return jsonify(payload)
 
 
 # For compatibility with SvelteKit, add a route with 'language' in the path for audio too
@@ -147,32 +208,42 @@ def rename_sentence_api(target_language_code: str, slug: str):
 
 
 @sentence_api_bp.route(
-    "/<target_language_code>/<slug>/generate_audio", methods=["POST"]
+    "/<target_language_code>/<slug>/audio/ensure", methods=["POST"]
 )
 @api_auth_required
-def generate_sentence_audio_api(target_language_code: str, slug: str):
-    """Generate audio for a sentence."""
+def ensure_sentence_audio_api(target_language_code: str, slug: str):
+    """Ensure sentence audio variants exist."""
+
+    try:
+        from config import SENTENCE_AUDIO_SAMPLES
+
+        n = int(request.args.get("n", str(SENTENCE_AUDIO_SAMPLES)))
+    except Exception:
+        from config import SENTENCE_AUDIO_SAMPLES
+
+        n = SENTENCE_AUDIO_SAMPLES
+
     try:
         sentence = Sentence.get(
             (Sentence.target_language_code == target_language_code)
             & (Sentence.slug == slug)
         )
-
-        if not sentence.sentence:
-            return (
-                jsonify({"error": "No text content available for audio generation"}),
-                400,
-            )
-
-        # Generate audio data
-        ensure_model_audio_data(sentence, should_add_delays=True, verbose=1)
-
-        return "", 204
-
     except DoesNotExist:
         return jsonify({"error": "Sentence not found"}), 404
-    except Exception as e:
-        return jsonify({"error": f"Failed to generate audio: {str(e)}"}), 500
+
+    try:
+        variants, created = ensure_sentence_audio_variants(sentence, n=n)
+    except AuthenticationRequiredForGenerationError:
+        return (
+            jsonify({"error": "Authentication required to generate audio"}),
+            401,
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": f"Failed to ensure audio variants: {exc}"}), 500
+
+    return jsonify({"created": created, "total": len(variants)})
 
 
 @sentence_api_bp.route("/<target_language_code>/sentences", methods=["GET"])

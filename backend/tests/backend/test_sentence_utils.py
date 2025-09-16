@@ -13,7 +13,7 @@ def test_generate_and_retrieve_sentence(fixture_for_testing_db):
     translation = "The house is big"
     lemma_words = ["σπίτι", "μεγάλος"]
 
-    _, metadata = generate_sentence(
+    sentence_obj, metadata = generate_sentence(
         target_language_code="el",
         sentence=sentence,
         translation=translation,
@@ -26,6 +26,7 @@ def test_generate_and_retrieve_sentence(fixture_for_testing_db):
     assert metadata["lemma_words"] == lemma_words
     assert metadata["target_language_code"] == "el"
     assert isinstance(metadata["id"], int)
+    assert sentence_obj.id == metadata["id"]
 
     # Get all sentences and verify
     sentences = get_all_sentences("el")

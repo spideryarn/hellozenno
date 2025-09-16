@@ -1,8 +1,15 @@
 from typing import Optional, Any
 import random
 
-from utils.audio_utils import ensure_audio_data
-from db_models import Sentence, Lemma, SentenceLemma, Wordform, Profile, UserLemma
+from db_models import (
+    Sentence,
+    Lemma,
+    SentenceLemma,
+    Wordform,
+    Profile,
+    UserLemma,
+    SentenceAudio,
+)
 from utils.lang_utils import get_language_name
 from utils.vocab_llm_utils import (
     anthropic_client,
@@ -20,61 +27,30 @@ def generate_sentence(
     sentence: str,
     translation: str,
     lemma_words: Optional[list] = None,
-    should_play: bool = False,
     language_level: Optional[str] = None,
     *,
     provenance: Optional[str] = None,
     generation_metadata: Optional[dict[str, Any]] = None,
-    voice_name: Optional[str] = None,
-) -> tuple[None, dict]:
-    """Generate audio and metadata for a sentence.
+) -> tuple[Sentence, dict]:
+    """Create or update a sentence record without generating audio."""
 
-    Args:
-        target_language_code: ISO language code
-        sentence: The sentence in target language
-        translation: English translation
-        lemma_words: List of lemmas/vocabulary words used in the sentence
-        should_play: Whether to play the audio after generating
-        language_level: Optional CEFR language level (e.g., "A1", "B2", "C1")
+    sentence_text = sentence[:-1] if sentence.endswith(".") else sentence
 
-    Returns:
-        Tuple of (None, metadata_dict)
-    """
-    # Remove trailing period if present
-    if sentence.endswith("."):
-        sentence = sentence[:-1]
-
-    # Generate audio data
-    audio_data = ensure_audio_data(
-        text=sentence,
-        should_add_delays=True,
-        should_play=should_play,
-        verbose=1,
-        voice_name=voice_name,
-        target_language_code=target_language_code,
-    )
-
-    # Create or update sentence in database
     db_sentence, created = Sentence.get_or_create(
         target_language_code=target_language_code,
-        sentence=sentence,
+        sentence=sentence_text,
         defaults={
             "translation": translation,
-            "audio_data": audio_data,
             "language_level": language_level,
             "provenance": provenance or "manual",
             "generation_metadata": generation_metadata,
         },
     )
 
-    # Update if it already existed and fields are different
     if not created:
         updated = False
         if db_sentence.translation != translation:
             db_sentence.translation = translation
-            updated = True
-        if db_sentence.audio_data != audio_data:
-            db_sentence.audio_data = audio_data
             updated = True
         if db_sentence.language_level != language_level:
             db_sentence.language_level = language_level
@@ -109,14 +85,14 @@ def generate_sentence(
     # Return metadata in same format as before for compatibility
     metadata = {
         "id": db_sentence.id,
-        "sentence": sentence,
+        "sentence": sentence_text,
         "translation": translation,
         "lemma_words": db_sentence.lemma_words,
         "target_language_code": target_language_code,
         "slug": db_sentence.slug,
     }
 
-    return None, metadata
+    return db_sentence, metadata
 
 
 def get_all_sentences(target_language_code: str) -> list[dict]:
@@ -138,7 +114,6 @@ def get_all_sentences(target_language_code: str) -> list[dict]:
 def get_random_sentence(
     target_language_code: str,
     required_lemmas: Optional[list[str]] = None,
-    generate_missing_audio: bool = True,
     profile: Optional[Profile] = None,
 ) -> Optional[dict]:
     """Get a random sentence with its metadata.
@@ -147,7 +122,6 @@ def get_random_sentence(
         target_language_code: ISO language code
         required_lemmas: Optional list of lemmas that must be used in the sentence.
                         Will match sentences containing at least one of these lemmas.
-        generate_missing_audio: Whether to generate audio if missing. Defaults to True.
         profile: Optional Profile model to filter out ignored lemmas.
 
     Returns:
@@ -198,16 +172,6 @@ def get_random_sentence(
     if not results:
         return None
     chosen = results[0]
-
-    # Generate audio if missing and requested
-    if generate_missing_audio and not chosen.audio_data:
-        chosen.audio_data = ensure_audio_data(
-            text=chosen.sentence,
-            should_add_delays=True,
-            should_play=False,
-            verbose=1,
-        )
-        chosen.save()
 
     # Return metadata in same format as before for compatibility
     return {
@@ -344,7 +308,11 @@ def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
         "translation": str(sentence.translation) if sentence.translation else None,
         "slug": sentence.slug,
         "target_language_code": sentence.target_language_code,
-        "has_audio": bool(sentence.audio_data),
+        "has_audio": (
+            SentenceAudio.select()
+            .where(SentenceAudio.sentence == sentence)
+            .exists()
+        ),
         "language_level": sentence.language_level,
         "lemma_words": all_lemmas if all_lemmas else None,
     }

@@ -1,23 +1,28 @@
-from typing import Optional, BinaryIO, Union, Any
+from typing import Optional, BinaryIO, Any
 from pathlib import Path
 import os
 import tempfile
 import random
+from peewee import fn
 from utils.env_config import ELEVENLABS_API_KEY, OPENAI_API_KEY
 from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
     SUPPORTED_LANGUAGES,
     ELEVENLABS_VOICE_POOL,
-    ELEVENLABS_DEFAULT_VOICE,
-    ELEVENLABS_DEFAULT_VOICE_PER_LANG,
+    LEMMA_AUDIO_SAMPLES,
+    SENTENCE_AUDIO_SAMPLES,
 )
 from gjdutils.audios import play_mp3
 from gjdutils.outloud_text_to_speech import outloud_elevenlabs
 from openai import OpenAI
 
+# Exceptions for auth gating
+from .exceptions import AuthenticationRequiredForGenerationError
+
+from db_models import Lemma, Sentence, LemmaAudio, SentenceAudio
+
 # Import the exception and g for global context
 from flask import g
-from .exceptions import AuthenticationRequiredForGenerationError
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY.get_secret_value())
@@ -164,14 +169,10 @@ def ensure_audio_data(
     # Add delays if requested
     text_with_delays = add_delays(text) if should_add_delays else text
 
-    # Select a voice: prefer explicit voice_name, else per-language default, else global default, else first in pool
-    selected_voice = voice_name
-    if not selected_voice and target_language_code:
-        selected_voice = ELEVENLABS_DEFAULT_VOICE_PER_LANG.get(target_language_code)
-    if not selected_voice:
-        selected_voice = ELEVENLABS_DEFAULT_VOICE or (
-            ELEVENLABS_VOICE_POOL[0] if ELEVENLABS_VOICE_POOL else ""
-        )
+    # Select a voice: prefer explicit voice_name, else fall back to the first configured voice
+    selected_voice = voice_name or (
+        ELEVENLABS_VOICE_POOL[0] if ELEVENLABS_VOICE_POOL else ""
+    )
 
     if verbose >= 1:
         print(f"Selected voice: {selected_voice}")
@@ -206,128 +207,204 @@ def ensure_audio_data(
         return audio_data
 
 
-def get_or_create_sentence_audio(
-    sentence_model,
-    should_add_delays: bool = True,
-    should_play: bool = False,
-    verbose: int = 0,
-) -> tuple[Optional[bytes], bool]:
-    """Get or create audio for a Sentence, checking auth for creation.
+DEFAULT_AUDIO_PROVIDER = "elevenlabs"
+DEFAULT_AUDIO_MODEL = "elevenlabs-tts-v1"
 
-    Args:
-        sentence_model: Sentence instance
-        should_add_delays: Whether to add delays between sentences
-        should_play: Whether to play the audio
-        verbose: Verbosity level
 
-    Returns:
-        tuple: (audio_data, requires_login)
-               audio_data is None and requires_login is True if generation is needed but user is not logged in.
-    """
-    if sentence_model.audio_data:
-        return sentence_model.audio_data, False  # Audio exists, no login required
+def select_random_voices(n: int, exclude: set[str] | None = None) -> list[str]:
+    """Select up to n distinct voices from the configured pool."""
 
-    # Generation is needed
-    if not hasattr(g, "user") or g.user is None:
-        # No user logged in, cannot generate
-        if verbose >= 1:
-            print(
-                f"Skipping audio generation for Sentence {sentence_model.id}: User not logged in."
-            )
-        return None, True  # Indicate login is required
+    exclude = exclude or set()
+    available = [voice for voice in ELEVENLABS_VOICE_POOL if voice not in exclude]
+    if not available or n <= 0:
+        return []
 
-    # User is logged in, proceed with generation
-    if verbose >= 1:
-        print(f"Generating audio for Sentence: {sentence_model.id}")
+    if n >= len(available):
+        random.shuffle(available)
+        return available
 
-    if not sentence_model.sentence:
-        raise ValueError("No text available for audio generation")
+    return random.sample(available, n)
 
-    # Generate audio
-    audio_data = ensure_audio_data(
-        text=sentence_model.sentence,
-        should_add_delays=should_add_delays,
-        should_play=should_play,
-        verbose=verbose,
+
+def _build_metadata(voice_name: str, settings: Optional[dict[str, Any]] = None) -> dict:
+    metadata = {
+        "provider": DEFAULT_AUDIO_PROVIDER,
+        "voice_name": voice_name,
+        "model": DEFAULT_AUDIO_MODEL,
+        "settings": settings or {},
+    }
+    return metadata
+
+
+def ensure_sentence_audio_variants(
+    sentence: Sentence,
+    n: int = SENTENCE_AUDIO_SAMPLES,
+    *,
+    enforce_auth: bool = True,
+) -> tuple[list[SentenceAudio], int]:
+    """Ensure up to n distinct voice variants exist for a sentence."""
+
+    text = (sentence.sentence or "").strip()
+    if not text:
+        raise ValueError("Sentence text is required for audio generation")
+
+    existing_variants = list(
+        SentenceAudio.select()
+        .where(SentenceAudio.sentence == sentence)
+        .order_by(SentenceAudio.created_at)
     )
+    existing_voice_names = {
+        (variant.metadata or {}).get("voice_name")
+        for variant in existing_variants
+        if (variant.metadata or {}).get("voice_name")
+    }
 
-    # Save audio data to the model
-    sentence_model.audio_data = audio_data
-    sentence_model.save()
+    target_total = min(n, len(ELEVENLABS_VOICE_POOL))
+    missing = max(0, target_total - len(existing_voice_names))
+    new_voice_names = select_random_voices(missing, existing_voice_names)
 
-    return audio_data, False  # Audio generated, no login required now
+    if enforce_auth and new_voice_names and (not hasattr(g, "user") or g.user is None):
+        raise AuthenticationRequiredForGenerationError(
+            "Authentication required to generate sentence audio"
+        )
+
+    created_variants: list[SentenceAudio] = []
+    # Pass user UUID (not the whole dict) to ForeignKeyField
+    created_by = getattr(g, "user_id", None)
+
+    for voice_name in new_voice_names:
+        audio_bytes = ensure_audio_data(
+            text=text,
+            should_add_delays=True,
+            should_play=False,
+            verbose=0,
+            voice_name=voice_name,
+        )
+        metadata = _build_metadata(voice_name)
+        variant = SentenceAudio.create(
+            sentence=sentence,
+            provider=metadata["provider"],
+            audio_data=audio_bytes,
+            metadata=metadata,
+            created_by=created_by,
+        )
+        created_variants.append(variant)
+
+    if created_variants:
+        existing_variants.extend(created_variants)
+
+    return existing_variants, len(created_variants)
+
+
+def ensure_lemma_audio_variants(
+    lemma: Lemma,
+    n: int = LEMMA_AUDIO_SAMPLES,
+    *,
+    enforce_auth: bool = True,
+) -> tuple[list[LemmaAudio], int]:
+    """Ensure up to n distinct voice variants exist for a lemma."""
+
+    text = (lemma.lemma or "").strip()
+    if not text:
+        raise ValueError("Lemma text is required for audio generation")
+
+    existing_variants = list(
+        LemmaAudio.select()
+        .where(LemmaAudio.lemma == lemma)
+        .order_by(LemmaAudio.created_at)
+    )
+    existing_voice_names = {
+        (variant.metadata or {}).get("voice_name")
+        for variant in existing_variants
+        if (variant.metadata or {}).get("voice_name")
+    }
+
+    target_total = min(n, len(ELEVENLABS_VOICE_POOL))
+    missing = max(0, target_total - len(existing_voice_names))
+    new_voice_names = select_random_voices(missing, existing_voice_names)
+
+    if enforce_auth and new_voice_names and (not hasattr(g, "user") or g.user is None):
+        raise AuthenticationRequiredForGenerationError(
+            "Authentication required to generate lemma audio"
+        )
+
+    created_variants: list[LemmaAudio] = []
+    # Pass user UUID (not the whole dict) to ForeignKeyField
+    created_by = getattr(g, "user_id", None)
+    voice_settings = {"stability": 0.92}
+
+    for voice_name in new_voice_names:
+        audio_bytes = ensure_audio_data(
+            text=text,
+            should_add_delays=False,
+            should_play=False,
+            verbose=0,
+            voice_name=voice_name,
+            voice_settings=voice_settings,
+        )
+        metadata = _build_metadata(voice_name, settings=voice_settings)
+        variant = LemmaAudio.create(
+            lemma=lemma,
+            provider=metadata["provider"],
+            audio_data=audio_bytes,
+            metadata=metadata,
+            created_by=created_by,
+        )
+        created_variants.append(variant)
+
+    if created_variants:
+        existing_variants.extend(created_variants)
+
+    return existing_variants, len(created_variants)
+
+
+def stream_random_sentence_audio(sentence_id: int) -> Optional[SentenceAudio]:
+    """Fetch a random sentence audio variant."""
+
+    return (
+        SentenceAudio.select()
+        .where(SentenceAudio.sentence == sentence_id)
+        .order_by(fn.Random())
+        .first()
+    )
 
 
 def ensure_model_audio_data(
-    model: Union["Sentence", "Sourcefile"],  # type: ignore
+    model,
     should_add_delays: bool = True,
     should_play: bool = False,
     verbose: int = 0,
 ) -> None:
-    """Ensure a model instance has audio data, generating it if missing.
+    """Ensure legacy models with audio_data blobs have generated audio.
 
-    Args:
-        model: Sentence or Sourcefile instance
-        should_add_delays: Whether to add delays between sentences
-        should_play: Whether to play the audio
-        verbose: Verbosity level
-
-    Raises:
-        AuthenticationRequiredForGenerationError: If generation needed for a Sentence and user is not logged in.
-        -> THIS IS NOW HANDLED BY get_or_create_sentence_audio for Sentences
+    This retains compatibility for Sourcefile-style models that still store
+    a single audio blob instead of variants.
     """
-    if not model.audio_data:
-        # Generation is required. Check if it's a Sentence and call the new function.
-        # For Sourcefile, assume auth is handled upstream (e.g., by @api_auth_required)
-        if hasattr(model, "sentence"):  # Check if it's a Sentence model
-            audio_data, requires_login = get_or_create_sentence_audio(
-                sentence_model=model,
-                should_add_delays=should_add_delays,
-                should_play=should_play,
-                verbose=verbose,
-            )
-            if requires_login:
-                # This case should ideally not be hit if calling this function directly,
-                # as it implies auth wasn't checked. Log a warning.
-                print(
-                    f"Warning: ensure_model_audio_data called for Sentence {model.id} without prior auth check."
-                )
-                # We can't raise AuthenticationRequiredForGenerationError here as the function signature is void
-                # The calling context needs to handle the requires_login flag if using get_or_create_sentence_audio
-                return  # Stop processing if login is required
-            # If audio_data is None and requires_login is False, something went wrong in generation
-            if audio_data is None and not requires_login:
-                print(
-                    f"Warning: Audio generation failed for Sentence {model.id} even with auth."
-                )
-                return  # Stop processing
-            # Audio was successfully generated (or existed already indirectly), model is saved inside get_or_create
-            return
 
-        # If it's not a Sentence (e.g., Sourcefile), proceed with original logic
-        # Assume auth is handled by the calling endpoint decorator (@api_auth_required)
-        else:
-            if not hasattr(g, "user") or g.user is None:
-                # This shouldn't happen if the calling endpoint uses @api_auth_required
-                print(
-                    f"Warning: ensure_model_audio_data called for non-Sentence model without user context."
-                )
-                # Raise an error or just return, depending on desired strictness
-                raise Exception(
-                    "Auth context missing for non-Sentence audio generation"
-                )
+    if not hasattr(model, "audio_data"):
+        raise AttributeError("Model does not define audio_data")
 
-            print(f"Generating audio for {model.__class__.__name__}: {model.id}")
-            # Get text based on model type
-            text = model.sentence if hasattr(model, "sentence") else model.text_target
-            if not text:
-                raise ValueError("No text available for audio generation")
+    if getattr(model, "audio_data", None):
+        return
 
-            # Generate audio
-            model.audio_data = ensure_audio_data(
-                text=text,
-                should_add_delays=should_add_delays,
-                should_play=should_play,
-                verbose=verbose,
-            )
-            model.save()
+    if not hasattr(g, "user") or g.user is None:
+        raise AuthenticationRequiredForGenerationError(
+            "Authentication required to generate audio"
+        )
+
+    text = getattr(model, "text_target", None) or getattr(model, "sentence", None)
+    if not text:
+        raise ValueError("No text available for audio generation")
+
+    if verbose >= 1:
+        print(
+            f"Generating audio for {model.__class__.__name__}: {getattr(model, 'id', '?')}"
+        )
+
+    model.audio_data = ensure_audio_data(
+        text=text,
+        should_add_delays=should_add_delays,
+        should_play=should_play,
+        verbose=verbose,
+    )
+    model.save()

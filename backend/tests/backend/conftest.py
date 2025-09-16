@@ -19,6 +19,8 @@ from db_models import (
     Sentence,
     SentenceLemma,
     Phrase,
+    LemmaAudio,
+    SentenceAudio,
     LemmaExampleSentence,
     PhraseExampleSentence,
     RelatedPhrase,
@@ -66,6 +68,8 @@ MODELS = [
     Lemma,
     Wordform,
     Sentence,
+    LemmaAudio,
+    SentenceAudio,
     SentenceLemma,
     Phrase,
     LemmaExampleSentence,
@@ -252,7 +256,11 @@ def bypass_api_auth(monkeypatch, client):
 
     def fake_attempt():
         from flask import g
-        g.user = {"id": "00000000-0000-0000-0000-000000000000", "email": "test@example.com"}
+
+        g.user = {
+            "id": "00000000-0000-0000-0000-000000000000",
+            "email": "test@example.com",
+        }
         g.user_id = g.user["id"]
         # Non-None sentinel to satisfy decorator checks without DB
         g.profile = {"id": 1}
@@ -264,7 +272,11 @@ def bypass_api_auth(monkeypatch, client):
     @client.application.before_request
     def _inject_test_user():
         from flask import g as _g
-        _g.user = {"id": "00000000-0000-0000-0000-000000000000", "email": "test@example.com"}
+
+        _g.user = {
+            "id": "00000000-0000-0000-0000-000000000000",
+            "email": "test@example.com",
+        }
         _g.user_id = _g.user["id"]
         _g.profile = {"id": 1}
 
@@ -289,6 +301,7 @@ def mock_tts_autouse(monkeypatch):
     # Also patch the local import in utils.audio_utils
     try:
         from utils import audio_utils as _au  # noqa: F401
+
         monkeypatch.setattr("utils.audio_utils.outloud_elevenlabs", _fake_outloud)
     except Exception:
         # If import fails during collection, skip secondary patch
@@ -297,6 +310,7 @@ def mock_tts_autouse(monkeypatch):
     # Also patch direct import used in views.sourcefile_api
     try:
         from views import sourcefile_api as _sfa  # noqa: F401
+
         monkeypatch.setattr("views.sourcefile_api.outloud_elevenlabs", _fake_outloud)
     except Exception:
         pass
@@ -360,6 +374,8 @@ def mock_llm_autouse(monkeypatch):
         "utils.vocab_llm_utils.generate_gpt_from_template", _fake_generate
     )
     try:
-        monkeypatch.setattr("gjdutils.llm_utils.generate_gpt_from_template", _fake_generate)
+        monkeypatch.setattr(
+            "gjdutils.llm_utils.generate_gpt_from_template", _fake_generate
+        )
     except Exception:
         pass

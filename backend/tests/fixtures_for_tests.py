@@ -6,6 +6,7 @@ from db_models import (
     Lemma,
     Wordform,
     Sentence,
+    SentenceAudio,
     Phrase,
     LemmaExampleSentence,
     PhraseExampleSentence,
@@ -274,7 +275,6 @@ def create_test_sentence(db, lemma_words=None, **kwargs) -> Sentence:
         "target_language_code": TEST_TARGET_LANGUAGE_CODE,
         "sentence": "Το σπίτι είναι μεγάλο",
         "translation": "The house is big",
-        "audio_data": b"test audio data",  # Dummy audio data for testing
     }
     sentence_data.update(kwargs)
     sentence = Sentence.create(**sentence_data)
@@ -292,6 +292,19 @@ def create_test_sentence(db, lemma_words=None, **kwargs) -> Sentence:
             sentence=sentence,
             lemma=lemma,
         )
+
+    SentenceAudio.create(
+        sentence=sentence,
+        provider="elevenlabs",
+        audio_data=b"test audio data",
+        metadata={
+            "provider": "elevenlabs",
+            "voice_name": "TestVoice",
+            "model": "test-model",
+            "settings": {},
+        },
+        created_by=None,
+    )
 
     return sentence
 

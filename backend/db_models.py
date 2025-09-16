@@ -543,7 +543,6 @@ class Sentence(BaseModel):
     target_language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     sentence = TextField()  # the actual sentence text
     translation = TextField()  # English translation
-    audio_data = BlobField(null=True)  # MP3 audio data for the sentence
     slug = CharField(max_length=255)  # URL-friendly version of the sentence
     language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
     # New fields for Learn persistence
@@ -600,6 +599,7 @@ class Sentence(BaseModel):
 
         # Then fetch all related lemma data in one bulk query
         lemma_data = {}
+        audio_sentence_ids: set[int] = set()
         if sentences:
             sentence_ids = [s.id for s in sentences]
 
@@ -617,6 +617,15 @@ class Sentence(BaseModel):
                     lemma_data[sl.sentence_id] = []
                 lemma_data[sl.sentence_id].append(sl.lemma.lemma)
 
+            audio_sentence_ids = {
+                sid
+                for (sid,) in (
+                    SentenceAudio.select(SentenceAudio.sentence)
+                    .where(SentenceAudio.sentence.in_(sentence_ids))  # type: ignore
+                    .tuples()
+                )
+            }
+
         # Convert to dictionary format with lemmas preloaded
         results = []
         for sentence in sentences:
@@ -628,7 +637,7 @@ class Sentence(BaseModel):
                     "lemma_words": lemma_data.get(sentence.id, []),
                     "target_language_code": sentence.target_language_code,
                     "slug": sentence.slug,
-                    "has_audio": bool(sentence.audio_data),
+                    "has_audio": sentence.id in audio_sentence_ids,
                     "language_level": sentence.language_level,
                 }
             )
@@ -800,14 +809,35 @@ class LemmaAudio(BaseModel):
 
     lemma = ForeignKeyField(Lemma, backref="audio_variants", on_delete="CASCADE")
     provider = CharField(default="elevenlabs")
-    voice_name = CharField()
     audio_data = BlobField()
+    metadata = JSONField()
     created_by = ForeignKeyField(
         AuthUser, backref="lemma_audio", null=True, on_delete="CASCADE"
     )
 
     class Meta:
-        indexes = ((("lemma", "provider", "voice_name"), True),)
+        indexes = (
+            (("lemma",), False),
+            (("lemma", "created_at"), False),
+        )
+
+
+class SentenceAudio(BaseModel):
+    """Stored audio variants (by provider/voice) for a sentence."""
+
+    sentence = ForeignKeyField(Sentence, backref="audio_variants", on_delete="CASCADE")
+    provider = CharField(default="elevenlabs")
+    audio_data = BlobField()
+    metadata = JSONField()
+    created_by = ForeignKeyField(
+        AuthUser, backref="sentence_audio", null=True, on_delete="CASCADE"
+    )
+
+    class Meta:
+        indexes = (
+            (("sentence",), False),
+            (("sentence", "created_at"), False),
+        )
 
 
 class LemmaExampleSentence(BaseModel):

@@ -3,7 +3,7 @@
 import pytest
 from io import BytesIO
 from peewee import DoesNotExist
-from db_models import Sentence, Wordform, Lemma
+from db_models import Sentence, SentenceAudio, Wordform, Lemma
 from tests.fixtures_for_tests import TEST_TARGET_LANGUAGE_CODE, create_test_sentence
 import utils.audio_utils as audio_utils  # Import the module directly for mocking
 import json
@@ -14,7 +14,7 @@ from views.sentence_api import (
     get_random_sentence_api,
     delete_sentence_api,
     rename_sentence_api,
-    generate_sentence_audio_api,
+    ensure_sentence_audio_api,
 )
 
 
@@ -49,9 +49,8 @@ def test_get_sentence_audio(client, test_sentence):
     assert response.status_code == 404
     assert b"Sentence not found" in response.data
 
-    # Test sentence without audio
-    test_sentence.audio_data = None
-    test_sentence.save()
+    # Test sentence without variants
+    SentenceAudio.delete().where(SentenceAudio.sentence == test_sentence).execute()
     url = build_url_with_query(
         client,
         get_sentence_audio_api,
@@ -93,20 +92,6 @@ def test_get_random_sentence(client, test_sentence):
     assert data["lemma_words"] == test_sentence.lemma_words
     assert data["target_language_code"] == TEST_TARGET_LANGUAGE_CODE
     assert data["slug"] == test_sentence.slug
-
-    # Test with missing audio - should generate it
-    test_sentence.audio_data = None
-    test_sentence.save()
-    url = build_url_with_query(
-        client,
-        get_random_sentence_api,
-        target_language_code=TEST_TARGET_LANGUAGE_CODE,
-    )
-    response = client.get(url)
-    assert response.status_code == 200
-    # Verify audio was generated
-    updated_sentence = Sentence.get_by_id(test_sentence.id)
-    assert updated_sentence.audio_data is not None
 
     # Test with lemma filter that matches
     url = build_url_with_query(
@@ -277,21 +262,27 @@ def test_rename_sentence(client, test_sentence):
     assert response.status_code == 404
 
 
-def test_generate_sentence_audio(client, test_sentence):
-    """Test generating audio for a sentence."""
+def test_ensure_sentence_audio(client, test_sentence):
+    """Test ensuring variants for a sentence."""
+
+    SentenceAudio.delete().where(SentenceAudio.sentence == test_sentence).execute()
+
     url = build_url_with_query(
         client,
-        generate_sentence_audio_api,
+        ensure_sentence_audio_api,
         target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug=test_sentence.slug,
     )
     response = client.post(url)
-    assert response.status_code == 204
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["created"] >= 1
+    assert data["total"] >= data["created"]
 
     # Test non-existent sentence
     url = build_url_with_query(
         client,
-        generate_sentence_audio_api,
+        ensure_sentence_audio_api,
         target_language_code=TEST_TARGET_LANGUAGE_CODE,
         slug="nonexistent-slug",
     )
