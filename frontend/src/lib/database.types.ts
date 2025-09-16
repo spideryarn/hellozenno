@@ -1131,6 +1131,47 @@ export type Database = {
         }
         Relationships: []
       }
+      lemmaaudio: {
+        Row: {
+          audio_data: string
+          created_at: string
+          created_by_id: string | null
+          id: number
+          lemma_id: number
+          provider: string
+          updated_at: string
+          voice_name: string
+        }
+        Insert: {
+          audio_data: string
+          created_at: string
+          created_by_id?: string | null
+          id?: number
+          lemma_id: number
+          provider: string
+          updated_at: string
+          voice_name: string
+        }
+        Update: {
+          audio_data?: string
+          created_at?: string
+          created_by_id?: string | null
+          id?: number
+          lemma_id?: number
+          provider?: string
+          updated_at?: string
+          voice_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lemmaaudio_lemma_id_fkey"
+            columns: ["lemma_id"]
+            isOneToOne: false
+            referencedRelation: "lemma"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lemmaexamplesentence: {
         Row: {
           created_at: string
@@ -1304,6 +1345,7 @@ export type Database = {
       }
       profile: {
         Row: {
+          admin_granted_at: string | null
           created_at: string
           id: number
           target_language_code: string | null
@@ -1311,6 +1353,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_granted_at?: string | null
           created_at: string
           id?: number
           target_language_code?: string | null
@@ -1318,34 +1361,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_granted_at?: string | null
           created_at?: string
           id?: number
           target_language_code?: string | null
           updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          id: string
-          preferences: Json | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          preferences?: Json | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          preferences?: Json | null
-          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

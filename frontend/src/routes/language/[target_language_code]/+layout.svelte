@@ -2,9 +2,6 @@
     import { page } from '$app/stores';
     import { SITE_NAME } from '$lib/config';
     import { SearchBarMini } from '$lib';
-    
-    // Use a wider container for the Learn route
-    $: isLearnPage = $page.url.pathname.includes('/learn');
 </script>
 
 <svelte:head>
@@ -30,6 +27,6 @@
     </div>
 </div>
 
-<div class={isLearnPage ? 'container-fluid px-3' : 'container'}>
+<div class="container">
     <slot></slot>
 </div>

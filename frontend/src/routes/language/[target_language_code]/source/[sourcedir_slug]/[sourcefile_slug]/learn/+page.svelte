@@ -50,6 +50,14 @@
   let warmingQueue: any = null;
   let showWordsPanel = true;
   let practiceSectionEl: HTMLElement | null = null;
+  let lemmaSectionEl: HTMLElement | null = null;
+  // Collapsible word chips list (workaround to keep lemma section visible)
+  let showWordChips = false;
+  function scrollToLemmaSection() {
+    if (lemmaSectionEl) {
+      lemmaSectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
   
   
   function shuffleArray<T>(input: T[]): T[] {
@@ -203,13 +211,27 @@
   function prevStage() {
     if (currentStage > 1) currentStage -= 1; else playAudio();
   }
-  function prevLemma() {
+  async function prevLemma() {
     if (visibleLemmas.length === 0) return;
-    if (currentLemmaIndex > 0) currentLemmaIndex -= 1;
+    if (currentLemmaIndex > 0) {
+      currentLemmaIndex -= 1;
+      await tick();
+      scrollToLemmaSection();
+    }
   }
-  function nextLemma() {
+  async function nextLemma() {
     if (visibleLemmas.length === 0) return;
-    if (currentLemmaIndex < visibleLemmas.length - 1) currentLemmaIndex += 1;
+    if (currentLemmaIndex < visibleLemmas.length - 1) {
+      currentLemmaIndex += 1;
+      await tick();
+      scrollToLemmaSection();
+    }
+  }
+  async function goToLemma(index: number) {
+    if (index < 0 || index >= visibleLemmas.length) return;
+    currentLemmaIndex = index;
+    await tick();
+    scrollToLemmaSection();
   }
   function nextCard() {
     if (currentIndex < cards.length - 1) {
@@ -451,34 +473,44 @@
         {:else if !lemmas.length}
           <Alert type="warning">No lemmas found for this sourcefile.</Alert>
         {:else}
-          <!-- Compact list of priority words with translations -->
-          <div class="top-lemma-list mb-3">
-            {#each visibleLemmas as l, i}
-              <button
-                class="btn btn-sm btn-secondary text-on-light me-2 mb-2 {currentLemmaIndex === i ? 'active' : ''}"
-                title={(l.translations && l.translations.length) ? l.translations.join(', ') : ''}
-                on:click={() => currentLemmaIndex = i}
-              >
-                <span class="hz-foreign-text">{l.lemma}</span>
-                {#if l.translations && l.translations.length}
-                  <span class="ms-1">{l.translations[0]}</span>
-                {/if}
-              </button>
-            {/each}
+          <!-- Compact list of priority words with translations (collapsible) -->
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="small text-muted">Word list</div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" on:click={() => showWordChips = !showWordChips}>
+              {showWordChips ? 'Hide list' : 'Show list'}
+            </button>
           </div>
+          {#if showWordChips}
+            <div class="top-lemma-list mb-3">
+              {#each visibleLemmas as l, i}
+                <button
+                  type="button"
+                  class="btn btn-sm btn-secondary text-on-light me-2 mb-2 {currentLemmaIndex === i ? 'active' : ''}"
+                  title={(l.translations && l.translations.length) ? l.translations.join(', ') : ''}
+                  on:click={() => goToLemma(i)}
+                >
+                  <span class="hz-foreign-text">{l.lemma}</span>
+                  {#if l.translations && l.translations.length}
+                    <span class="ms-1">{l.translations[0]}</span>
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          {/if}
 
           <!-- One-at-a-time lemma viewer with nav buttons -->
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <button class="btn btn-outline-secondary" on:click={prevLemma} disabled={currentLemmaIndex <= 0} aria-label="Previous word">
+            <button type="button" class="btn btn-outline-secondary" on:click={prevLemma} disabled={currentLemmaIndex <= 0} aria-label="Previous word">
               <CaretLeft size={18} weight="bold" />
             </button>
             <div class="small text-muted">({visibleLemmas.length ? currentLemmaIndex + 1 : 0}/{visibleLemmas.length})</div>
-            <button class="btn btn-outline-secondary" on:click={nextLemma} disabled={currentLemmaIndex >= visibleLemmas.length - 1} aria-label="Next word">
+            <button type="button" class="btn btn-outline-secondary" on:click={nextLemma} disabled={currentLemmaIndex >= visibleLemmas.length - 1} aria-label="Next word">
               <CaretRight size={18} weight="bold" />
             </button>
           </div>
 
           {#if visibleLemmas.length}
+            <div id="learn-lemma-section" bind:this={lemmaSectionEl}></div>
             <div class="priority-words one-at-a-time">
               {#if loadingLemmaMap[visibleLemmas[currentLemmaIndex]?.lemma]}
                 <div class="d-flex justify-content-center py-4"><LoadingSpinner /></div>

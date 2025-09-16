@@ -93,5 +93,3 @@ def test_search_functionality(client):
     )
     response = client.get(url)  # Using test data from fixture
     assert response.status_code == 302  # Should redirect to wordform view
-
-

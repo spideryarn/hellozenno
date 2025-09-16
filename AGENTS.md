@@ -76,6 +76,7 @@ Key points:
 ### Testing
 - Backend: `pytest backend/tests/`
 - See: `docs/reference/TESTING.md`, `backend/docs/BACKEND_TESTING.md`
+- Local test user credentials: `docs/reference/LOCAL_TEST_USERS.md`
 
 ### Type Checking & Linting
 - Frontend: `cd frontend && npm run check`

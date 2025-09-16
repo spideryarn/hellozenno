@@ -10,6 +10,7 @@
     import Alert from '$lib/components/Alert.svelte';
     import Globe from 'phosphor-svelte/lib/Globe';
     import User from 'phosphor-svelte/lib/User';
+    import ShieldCheck from 'phosphor-svelte/lib/ShieldCheck';
     import FloppyDisk from 'phosphor-svelte/lib/FloppyDisk';
     import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 
@@ -112,6 +113,11 @@
                 <div slot="title" class="d-flex align-items-center">
                     <User size={24} weight="fill" class="me-2 text-primary-green" />
                     <h1 class="h3 mb-0">User Profile</h1>
+                    {#if (data as any)?.is_admin}
+                        <span class="badge rounded-pill ms-3" style="background-color: var(--hz-color-primary-green); color: #111;"> 
+                            <ShieldCheck size={16} weight="fill" class="me-1" /> Admin
+                        </span>
+                    {/if}
                 </div>
                 
                 {#if errorMessage}

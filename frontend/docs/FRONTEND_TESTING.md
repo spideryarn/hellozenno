@@ -41,6 +41,36 @@ npx playwright test --ui
 npx playwright test -g "Sourcefile text renders"
 ```
 
+### Credentials for local E2E (Playwright)
+
+- Email: `testing@hellozenno.com` (regular)
+- Email: `admin@hellozenno.com` (admin)
+- Password for both: `hello123`
+
+Set environment variables before running tests:
+
+```bash
+export PLAYWRIGHT_TEST_EMAIL=testing@hellozenno.com
+export PLAYWRIGHT_TEST_PASSWORD=hello123
+cd frontend && npm run test:e2e
+```
+
+To exercise admin flows (e.g. `/admin/users`), use the admin account:
+
+```bash
+export PLAYWRIGHT_TEST_EMAIL=admin@hellozenno.com
+export PLAYWRIGHT_TEST_PASSWORD=hello123
+cd frontend && npm run test:e2e
+```
+
+If the user doesn’t exist yet, seed local Supabase auth and profiles:
+
+```bash
+PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -P pager=off -f backend/oneoff/create_local_test_auth_users.sql | cat
+```
+
+See also: `../../docs/reference/LOCAL_TEST_USERS.md`.
+
 ## Vitest guidance
 
 - Use Testing Library for Svelte (`@testing-library/svelte`).

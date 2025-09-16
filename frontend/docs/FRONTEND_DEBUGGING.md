@@ -10,6 +10,33 @@ see `DEBUGGING.md` for general debugging information.
 
 For frontend debugging, we primarily use Playwright Model Context Protocol (MCP) for browser automation. Playwright provides robust testing and debugging capabilities for our SvelteKit frontend.
 
+### Test credentials (local only)
+
+For local debugging with Playwright or MCP, you can log in with:
+
+- Email: `testing@hellozenno.com`
+- Password: `hello123`
+
+Admin account (for `/admin/*` flows):
+
+- Email: `admin@hellozenno.com`
+- Password: `hello123`
+
+If missing, create them via:
+
+```bash
+# Run once to seed local Supabase auth and profiles
+PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -P pager=off -f backend/oneoff/create_local_test_auth_users.sql | cat
+```
+
+To run Playwright with these credentials, set env vars:
+
+```bash
+export PLAYWRIGHT_TEST_EMAIL=testing@hellozenno.com
+export PLAYWRIGHT_TEST_PASSWORD=hello123
+cd frontend && npm run test:e2e
+```
+
 
 ### Debugging Workflow
 
