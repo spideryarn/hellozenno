@@ -41,6 +41,62 @@ Constraints and preferences for v1:
 - Take guidance from existing flashcards implementation if appropriate (e.g. re authentication)
 
 
+## Status & handoff notes (2025-09-16)
+
+Short version: DB migrations for sentence/lemma audio variants are applied and the app boots. Most backend tests pass; a focused set of failures remain related to audio mocks, DISTINCT over JSON fields, a view using the wrong helper, and minor API inconsistencies. Below is a concise map so someone else can pick this up quickly.
+
+- Current state
+  - Schema: `SentenceAudio` exists; `LemmaAudio` has `metadata` and no `voice_name`; `Sentence.audio_data` is dropped. Verified via migrations 045–047.
+  - Backend: variant helpers and endpoints are in place: `ensure_sentence_audio_variants`, `ensure_lemma_audio_variants`, random streaming endpoints for both.
+  - Frontend: Learn flow calls ensure endpoints and uses random streaming URLs.
+  - Tests: 159 passed, 10 skipped, 13 failing (details below).
+
+- Problems being fixed now
+  1) Audio mock signature mismatch (TypeError on `voice_settings`)
+     - Where: `backend/tests/mocks/audio_mocks.py` fixture `mock_elevenlabs` vs calls in `backend/utils/audio_utils.py` (e.g., `ensure_lemma_audio_variants` passes `voice_settings`; `ensure_audio_data` forwards it).
+     - Symptom: TypeError: unexpected keyword argument `voice_settings` in tests for ensure functions.
+     - Hypothesis/fix: Update the mock to accept `**kwargs` or a `voice_settings=None` param. No prod code change required.
+
+  2) SELECT DISTINCT over JSON field causes Postgres error
+     - Where: `backend/utils/sentence_utils.py::get_random_sentence()` during `.distinct()` after joining `SentenceLemma`/`Lemma` when filtering by required lemmas.
+     - Symptom: “could not identify an equality operator for type json” because `SELECT DISTINCT` includes `Sentence.generation_metadata` (JSON).
+     - Hypothesis/fix: Restrict selected columns before `.distinct()` (e.g., `.select(Sentence.id)` then refetch) or use `.group_by(Sentence.id)` instead of `.distinct()`.
+
+  3) Flashcard random route calls `get_random_sentence(..., generate_missing_audio=False)` but helper signature changed
+     - Where: `backend/utils/flashcard_utils.py::get_random_flashcard_data()` calls `get_random_sentence` with an extra kwarg.
+     - Symptom: TypeError unexpected keyword argument `generate_missing_audio`.
+     - Hypothesis/fix: Add unused `generate_missing_audio: bool=False` param to `get_random_sentence()` or remove the arg at the call site.
+
+  4) Sourcefile processing view doesn’t use the test hook
+     - Where: `backend/views/sourcefile_views.py::process_sourcefile_vw()` currently calls `utils.sourcefile_utils.process_sourcefile` directly.
+     - Symptom: Test patches `views.sourcefile_views.process_sourcefile_content`, but it’s not invoked; PNG test asserts “Text must have been extracted first”.
+     - Hypothesis/fix: In the view, call the local shim `process_sourcefile_content(...)` (already defined) to keep tests fast and deterministic; the shim wraps `ensure_text_extracted/translation/wordforms/phrases`.
+
+  5) Lemma delete cascade test
+     - Where: `backend/views/lemma_api.py::delete_lemma_api()`.
+     - Symptom: After deleting a `Lemma`, the associated `Wordform` still exists in the test DB (expected CASCADE).
+     - Hypothesis/fixes:
+       - Either rely on DB-level cascade (should work if FK is `ON DELETE CASCADE`) or change to `lemma_model.delete_instance(recursive=True, delete_nullable=True)` to satisfy test deterministically.
+
+  6) Test DB vs `AuthUser` model column mismatch
+     - Where: `backend/views/sourcefile_api.py::create_sourcefile_from_text_api()` (and similar) when writing `created_by`.
+     - Symptom: Error selecting `auth.users.created_at`/`last_sign_in_at` in tests; test schema creates `auth.users(id,email)` only.
+     - Hypotheses:
+       - Use `created_by_id: UUID` fields (per `MIGRATIONS.md` “Approach 1”) instead of `ForeignKeyField(AuthUser)` to avoid cross-schema column expectations; or
+       - Expand the test-auth schema to include the optional columns; or
+       - Avoid touching `created_by` in tests (pass `None`).
+
+- Quick signposts (files to touch)
+  - Audio mocks: `backend/tests/mocks/audio_mocks.py` (accept `**kwargs`).
+  - DISTINCT over JSON: `backend/utils/sentence_utils.py::get_random_sentence()`.
+  - Flashcard random: `backend/utils/flashcard_utils.py::get_random_flashcard_data()` and/or `sentence_utils.get_random_sentence()` signature.
+  - Processing view shim: `backend/views/sourcefile_views.py::process_sourcefile_vw()` should call local `process_sourcefile_content()`.
+  - Lemma delete: `backend/views/lemma_api.py::delete_lemma_api()` use `delete_instance(recursive=True, delete_nullable=True)`.
+  - Auth users mismatch: prefer `created_by_id` UUID fields (see `backend/docs/MIGRATIONS.md` “Cross-Schema Foreign Keys → Approach 1”); otherwise expand test schema in `backend/tests/backend/conftest.py`.
+
+If anything unexpected pops up (e.g., auth/profile interactions in tests), ping me. The next concrete steps I was about to take are: fix the mock signature, change the DISTINCT query, swap the processing view to the shim, and make lemma delete recursive; then re-run tests.
+
+
 ## Stages & actions
 
 ### Stage: MVP separate page, no persistence
@@ -95,16 +151,16 @@ Constraints and preferences for v1:
 
 
 ### Stage: Background warming for lemma metadata (optional enhancement)
-- [ ] Warm lemma metadata in background to reduce initial wait next time
-  - Implementation: spawn an in-process background thread after `summary` request returns that iterates through lemmas calling `load_or_generate_lemma_metadata(..., generate_if_incomplete=True)`
+- [x] Warm lemma metadata in background to reduce initial wait next time
+  - Implementation: frontend-initiated warming queue after `summary` load completes (limited concurrency, fire-and-forget GET to metadata endpoint). Backend thread version deferred.
   - Minimal status tracking (log-only) for v1 to stay simple
   - Acceptance: Subsequent visits to the same sourcefile have noticeably less metadata delay
 
   Notes/Suggestion (frontend-initiated warming):
-  - Instead of spawning from the backend, trigger warming from the client after the `summary` load completes when the user is authenticated.
-  - Mechanism: fire-and-forget requests to `POST /api/lang/lemma/{target_language_code}/{lemma}/complete_metadata` (or `GET /metadata` which auto-generates) with Supabase auth token.
-  - Concurrency: limit to 2–3 concurrent requests and simple backoff; do not block UI.
-  - Safety: silently skip on 401; log durations only. This reduces server-side thread complexity and keeps the page responsive.
+  - Implemented: triggered from the client after the `summary` load completes when the user is authenticated.
+  - Mechanism: fire-and-forget requests to `GET /metadata` (auto-generates missing fields) with Supabase auth token when available.
+  - Concurrency: limited to 2–3 concurrent requests; UI remains responsive.
+  - Safety: silently skip on 401; durations logged only.
 
 
 - ### Stage: Persistence & reuse for Learn (added)
@@ -126,9 +182,14 @@ Investigation notes (models + persistence proposal):
 
 
 ### Stage: Observability and UX refinements
-- [ ] Progress indicators for warmup and generation steps
-- [ ] Stats: coverage of lemmas across session, CEFR ramp
-- [ ] Allow user-adjustable K (top words), number of sentences, and difficulty range
+- [x] Progress indicators for warmup and generation steps
+- [x] Stats: coverage of lemmas across session, CEFR ramp
+- [x] Allow user-adjustable K (top words), number of sentences, and difficulty range
+
+  Additional UX improvements implemented:
+  - Clarifying tooltips for Top K, Sentences, and CEFR.
+  - CEFR "Sourcefile" option: uses the sourcefile's level if known; otherwise behaves like "Any".
+  - "Apply" now interrupts any in-flight preparation and restarts with new settings (K, sentences, CEFR).
 
 - [x] Priority Words UI improvements
   - Each lemma title links to its main page in a new tab
@@ -142,23 +203,22 @@ Investigation notes (models + persistence proposal):
 
 
 ### Stage: Replay-tracking and simple repeat prioritization
-- [ ] Track per-card audio replays (left-button presses)
-  - Frontend: increment a counter per displayed sentence ID/slug on each left press
-  - Storage (v1-late): use `localStorage` under a session key (e.g., `hz_learn_progress:{sourcefile_slug}`)
-  - Data captured: `{ sentence_id|hash, left_replay_count, revealed_sentence_dt, revealed_translation_dt }`
-- [ ] Simple prioritization heuristic for continuing sessions
+- [x] Track per-card audio replays (left-button presses)
+  - Frontend: increment a counter per displayed sentence on each left press
+  - Data captured: `{ left_replay_count, revealed_sentence_dt, revealed_translation_dt }` (local only)
+- [x] Simple prioritization heuristic for continuing sessions
   - If user clicks “Continue practice”, build the next queue by weighting items with higher `left_replay_count` and slower progression to translation
   - Acceptance: User who continues sees more practice for the items they struggled with first
 
 
 ### Stage: Basic analytics (local only)
-- [ ] Surface session stats to the user
-  - Totals: number of flashcards practiced, average replays per card, distribution of replays
-  - Hardest flashcards: top N by `left_replay_count` and longest time-to-translation
-  - Hardest lemmas: aggregate per lemma across shown sentences (approximate via backend `recognized_words` or returned `used_lemmas`)
-- [ ] Implementation
-  - Compute client-side from the session data in `localStorage`
-  - Optional: POST summary to backend for future global analytics (feature-flagged, off by default)
+- [x] Surface session stats to the user
+  - Totals: number of flashcards practiced, average replays per card, CEFR counts, unique lemmas covered
+  - Hardest flashcards: top N by replay count and time-to-translation (derived)
+  - Hardest lemmas: aggregate via returned `used_lemmas`
+- [x] Implementation
+  - Compute client-side; persist recent session summaries in `localStorage`
+  - Optional: POST summary to backend (deferred, off by default)
   - Acceptance: A simple readout card appears at end-of-session with actionable numbers
 
 
@@ -266,5 +326,16 @@ Investigation notes (models + persistence proposal):
 - “Thinking mode” generation: a single prompt request that returns an ordered set (easy → hard), with guidance to cover provided lemmas and reuse some with varied inflections
 - Audio: persisted as `Sentence.audio_data`; served via `/api/lang/sentence/{code}/{id}/audio`
 - Background warming: in-process thread for simplicity; no new infra needed in v1
+
+
+### Stage: Usability polish for Learn (implemented)
+- [x] Rename labels: "Top K" → "Top words", "Sentences" → "Cards"
+- [x] Chip-style summary badges: [Ready], [Summary], [Warm], [Gen]
+- [x] Options collapsible with controls (collapsed by default)
+- [x] Visible spinner and Cancel while preparation is running
+- [x] Friendlier words panel: "What am I seeing?" explainer and "Word X of N"
+- [x] Keyboard help toggle in Practice panel
+- [x] Defaults centralized in `frontend/src/lib/config.ts`
+- [x] Analytics hidden until end-of-session
 
 

@@ -22,7 +22,7 @@ The Learn page provides an end-to-end practice flow for a single sourcefile. It 
 - Always-on persistence: sentences and audio are saved on generation with provenance `learn`, and reused on subsequent visits for the same sourcefile
 - Warm missing lemma metadata as needed to keep the flow snappy
 - Batch-generate all sentences up-front; then practice with low latency between cards
-- Serve persisted audio via `/api/lang/sentence/{code}/{id}/audio` URLs (no base64 in responses)
+- Serve persisted audio via `/api/lang/sentence/{code}/{id}/audio` URLs (no base64 in responses); playback now iterates through stored variants
 - Deck ordering:
   - First time after generation: keep the LLM-provided order (typically easy → hard)
   - Subsequent sessions with fully reused content: shuffle for variety
@@ -54,6 +54,12 @@ The Learn page provides an end-to-end practice flow for a single sourcefile. It 
   - Shows etymology and wordforms present in the sourcefile when available
   - “Ignore” removes a lemma from this session (auth required)
   - Arrow keys browse words before practice starts
+- Options and chips:
+  - Options are collapsed by default to reduce clutter; includes Top words, Cards, CEFR, and Apply (Apply cancels in-flight preparation and restarts with new settings)
+  - Summary uses chip-style badges: [Ready], [Summary], [Warm], [Gen]
+- Help affordances:
+  - “What am I seeing?” explainer in the words pane
+  - Keyboard help toggle in the Practice panel
 - Practice panel:
   - Three-stage card: 1) audio only → 2) show sentence → 3) show translation
   - Controls: large buttons for mobile; keyboard shortcuts: Left = previous stage/play, Right = next stage, Enter = next card
@@ -68,7 +74,7 @@ The Learn page provides an end-to-end practice flow for a single sourcefile. It 
 - Generate sentences + audio (persist + reuse)
   - `POST /api/lang/learn/sourcefile/{code}/{dir}/{file}/generate`
   - Body: `{ lemmas: string[], num_sentences: number, language_level: null | "A1"|… }`
-  - Returns: `{ sentences: [{ sentence, translation, used_lemmas[], language_level?, audio_data_url }], meta: { durations } }` where `audio_data_url` is a streaming URL
+  - Returns: `{ sentences: [{ sentence, translation, used_lemmas[], language_level?, audio_data_url }], meta: { durations } }` where `audio_data_url` is a streaming URL (each request picks a stored variant)
 
 ## Performance and warming
 
@@ -84,8 +90,8 @@ The Learn page provides an end-to-end practice flow for a single sourcefile. It 
 
 ## Defaults and configuration (MVP)
 
-- Summary: `top = 20`
-- Generate: `num_sentences = 10`, `language_level = null` (server may choose defaults)
+- Summary: `top = 20` (config: `LEARN_DEFAULT_TOP_WORDS`)
+- Generate: `num_sentences = 10` (config: `LEARN_DEFAULT_NUM_CARDS`), `language_level = '' | 'sourcefile' | 'A1'...'C2'` (config: `LEARN_DEFAULT_CEFR`)
 - Deck: first session uses LLM order; later sessions shuffle if no new content was generated
 
 ## Limitations

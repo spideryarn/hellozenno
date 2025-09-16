@@ -4,7 +4,7 @@
   import Card from '$lib/components/Card.svelte';
   import Alert from '$lib/components/Alert.svelte';
   import { AudioPlayer } from '$lib';
-  import { API_BASE_URL } from '$lib/config';
+  import { API_BASE_URL, LEARN_DEFAULT_TOP_WORDS, LEARN_DEFAULT_NUM_CARDS, LEARN_DEFAULT_CEFR } from '$lib/config';
   import { apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import LemmaContent from '$lib/components/LemmaContent.svelte';
@@ -21,6 +21,7 @@
   let ignoredLemmas: Set<string> = new Set();
   let sourcefileWordforms: Record<string, string[]> = {};
   let sourceText: string = '';
+  let sourcefileLevel: string | null = null;
 
   // One-at-a-time navigation for priority words
   let currentLemmaIndex = 0;
@@ -49,9 +50,27 @@
   let preloadedAudios: HTMLAudioElement[] = [];
   let loadingLemmaMap: Record<string, boolean> = {};
   let warmingQueue: any = null;
+  let prepareAbortCtrl: AbortController | null = null;
   let showWordsPanel = true;
+  let showOptions = false;
+  let showWordsHelp = false;
+  let showKbHelp = false;
   let practiceSectionEl: HTMLElement | null = null;
   let lemmaSectionEl: HTMLElement | null = null;
+  // Settings
+  let settingTopK: number = LEARN_DEFAULT_TOP_WORDS;
+  let settingNumSentences: number = LEARN_DEFAULT_NUM_CARDS;
+  let settingLanguageLevel: string = LEARN_DEFAULT_CEFR; // '' means Any; 'sourcefile' to use sourcefile level
+  let summaryMeta: any = null;
+
+  type CardMetrics = {
+    replayCount: number;
+    startedAt: number | null;
+    revealSentenceAt: number | null;
+    revealTranslationAt: number | null;
+  };
+  let cardMetrics: CardMetrics[] = [];
+  let sessionSaved = false;
   // Collapsible word chips list (workaround to keep lemma section visible)
   let showWordChips = false;
   function scrollToLemmaSection() {
@@ -110,16 +129,18 @@
         routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_SUMMARY_API,
         params: { target_language_code, sourcedir_slug, sourcefile_slug },
         options: { method: 'GET' },
-        searchParams: { top: 20 },
+        searchParams: { top: settingTopK },
         timeoutMs: 60000,
       });
       lemmas = js?.lemmas || [];
+      summaryMeta = js?.meta || null;
 
       // Also fetch the original source text for context sentence extraction
       const textRes = await fetch(`${API_BASE_URL}/api/lang/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/text`);
       if (textRes.ok) {
         const td = await textRes.json();
         sourceText = td?.sourcefile?.text_target || td?.text_data?.text_target || '';
+        sourcefileLevel = (td?.sourcefile?.language_level || '').toUpperCase() || null;
         const wordforms = td?.wordforms || [];
         // Build map of lemma -> forms present in this sourcefile
         sourcefileWordforms = {};
@@ -172,13 +193,17 @@
     currentStage = 1;
     cards = [];
     try {
+      let langLevel = settingLanguageLevel ? settingLanguageLevel : null;
+      if (settingLanguageLevel === 'sourcefile') {
+        langLevel = sourcefileLevel || null;
+      }
       const body = {
         lemmas: lemmas
           .map((l) => l.lemma)
           .filter((lm) => !ignoredLemmas.has(lm))
           .slice(0, 20),
-        num_sentences: 10,
-        language_level: null,
+        num_sentences: settingNumSentences,
+        language_level: langLevel,
       };
       const js = await apiFetch({
         supabaseClient: ($page.data as any).supabase ?? null,
@@ -197,6 +222,8 @@
       cards = keepOrder ? sentences : shuffleArray(sentences);
       currentIndex = 0;
       currentStage = 1;
+      resetMetricsForNewDeck(cards);
+      markCardStartedIfNeeded();
     } catch (e: any) {
       generateError = e?.message || 'Failed to generate practice set';
     } finally {
@@ -206,11 +233,29 @@
 
   function playAudio() {
     if (audioPlayer && cards.length > 0) {
+      // Count replay only when on stage 1 (audio-only)
+      try {
+        if (currentStage === 1 && cardMetrics[currentIndex]) {
+          cardMetrics[currentIndex].replayCount += 1;
+          cardMetrics = [...cardMetrics];
+        }
+      } catch {}
       audioPlayer.play();
     }
   }
   function nextStage() {
-    if (currentStage < 3) currentStage += 1;
+    if (currentStage < 3) {
+      const prev = currentStage;
+      currentStage += 1;
+      // Record first reveal timestamps
+      try {
+        const m = cardMetrics[currentIndex];
+        const now = Date.now();
+        if (prev === 1 && currentStage === 2 && m && m.revealSentenceAt == null) m.revealSentenceAt = now;
+        if (prev === 2 && currentStage === 3 && m && m.revealTranslationAt == null) m.revealTranslationAt = now;
+        cardMetrics = [...cardMetrics];
+      } catch {}
+    }
   }
   function prevStage() {
     if (currentStage > 1) currentStage -= 1; else playAudio();
@@ -241,6 +286,7 @@
     if (currentIndex < cards.length - 1) {
       currentIndex += 1;
       currentStage = 1;
+      markCardStartedIfNeeded();
     }
   }
 
@@ -266,11 +312,17 @@
     preparedCards = [];
     preparedMeta = null;
     try {
+      let langLevel = settingLanguageLevel ? settingLanguageLevel : null;
+      if (settingLanguageLevel === 'sourcefile') {
+        langLevel = sourcefileLevel || null;
+      }
       const body = {
         lemmas: visibleLemmas.map((l) => l.lemma).slice(0, 20),
-        num_sentences: 10,
-        language_level: null,
+        num_sentences: settingNumSentences,
+        language_level: langLevel,
       };
+      // Create a controller to allow cancellation
+      prepareAbortCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
       const js = await apiFetch({
         supabaseClient: ($page.data as any).supabase ?? null,
         routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
@@ -279,6 +331,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
+          ...(prepareAbortCtrl ? { signal: prepareAbortCtrl.signal as any } : {}),
         },
         timeoutMs: 120000,
       });
@@ -287,9 +340,14 @@
       // Preload audio data URLs
       preloadAudioDataUrls(preparedCards.map((c: any) => c.audio_data_url).filter(Boolean));
     } catch (e: any) {
-      preparedError = e?.message || 'Failed to prepare practice set';
+      if (e?.name === 'AbortError') {
+        preparedError = 'Preparation cancelled';
+      } else {
+        preparedError = e?.message || 'Failed to prepare practice set';
+      }
     } finally {
       preparing = false;
+      prepareAbortCtrl = null;
     }
   }
 
@@ -299,6 +357,8 @@
       cards = keepOrder ? preparedCards : shuffleArray(preparedCards);
       currentIndex = 0;
       currentStage = 1;
+      resetMetricsForNewDeck(cards);
+      markCardStartedIfNeeded();
       return;
     }
     startPractice();
@@ -388,6 +448,7 @@
   onMount(() => {
     fetchSummary();
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('beforeunload', saveSessionAnalyticsToLocalStorage);
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
@@ -437,6 +498,111 @@
       alert(e?.message || 'Failed to ignore lemma');
     }
   }
+
+  function resetMetricsForNewDeck(deck: typeof cards) {
+    cardMetrics = deck.map(() => ({ replayCount: 0, startedAt: null, revealSentenceAt: null, revealTranslationAt: null }));
+    sessionSaved = false;
+  }
+
+  function markCardStartedIfNeeded() {
+    try {
+      if (cards.length && cardMetrics[currentIndex] && cardMetrics[currentIndex].startedAt == null) {
+        cardMetrics[currentIndex].startedAt = Date.now();
+        cardMetrics = [...cardMetrics];
+      }
+    } catch {}
+  }
+
+  // Derived analytics for current session
+  function computeAnalytics() {
+    const seenCount = Math.min(cards.length, currentIndex + 1);
+    let totalReplays = 0;
+    const difficulties: number[] = [];
+    const lemmaFreq: Record<string, number> = {};
+    const cefrCounts: Record<string, number> = {};
+    for (let i = 0; i < cards.length; i++) {
+      const m = cardMetrics[i];
+      if (!m) continue;
+      if (i < seenCount) totalReplays += (m.replayCount || 0);
+      const start = m.startedAt ?? 0;
+      const end = m.revealTranslationAt ?? (i < currentIndex ? Date.now() : 0);
+      const timeToTranslationMs = start && end ? Math.max(0, end - start) : 0;
+      const diffScore = (m.replayCount || 0) + (timeToTranslationMs / 2000);
+      difficulties.push(diffScore);
+      const used = cards[i]?.used_lemmas || [];
+      for (const u of used) { if (!u) continue; lemmaFreq[u] = (lemmaFreq[u] || 0) + 1; }
+      const lvl = (cards[i]?.language_level || '').toUpperCase();
+      if (lvl) cefrCounts[lvl] = (cefrCounts[lvl] || 0) + 1;
+    }
+    const avgReplays = seenCount ? (totalReplays / seenCount) : 0;
+    const uniqueLemmasCovered = Object.keys(lemmaFreq).length;
+    const hardestIndices = [...Array(cards.length).keys()].sort((a, b) => {
+      const ma = cardMetrics[a];
+      const mb = cardMetrics[b];
+      const sa = (ma?.replayCount || 0) + (((ma?.revealTranslationAt ?? 0) - (ma?.startedAt ?? 0)) / 2000);
+      const sb = (mb?.replayCount || 0) + (((mb?.revealTranslationAt ?? 0) - (mb?.startedAt ?? 0)) / 2000);
+      return sb - sa;
+    }).slice(0, 3);
+    return { seenCount, avgReplays, lemmaFreq, uniqueLemmasCovered, cefrCounts, hardestIndices };
+  }
+
+  function continuePracticeFromAnalytics() {
+    const scored = cards.map((c, i) => {
+      const m = cardMetrics[i];
+      const tt = (m?.revealTranslationAt ?? 0) - (m?.startedAt ?? 0);
+      const score = (m?.replayCount || 0) + (Math.max(0, tt) / 2000);
+      return { i, score };
+    }).sort((a, b) => b.score - a.score);
+    const next = scored.slice(0, Math.min(settingNumSentences, scored.length)).map((s) => cards[s.i]);
+    if (next.length) {
+      cards = next;
+      currentIndex = 0;
+      currentStage = 1;
+      resetMetricsForNewDeck(cards);
+      markCardStartedIfNeeded();
+    }
+  }
+
+  function saveSessionAnalyticsToLocalStorage() {
+    if (!cards.length || sessionSaved === true) return;
+    const analytics = computeAnalytics();
+    const entry = {
+      target_language_code,
+      sourcedir_slug,
+      sourcefile_slug,
+      ts: Date.now(),
+      total_cards: cards.length,
+      seen_cards: analytics.seenCount,
+      avg_replays: analytics.avgReplays,
+      cefr_counts: analytics.cefrCounts,
+      unique_lemmas_covered: analytics.uniqueLemmasCovered,
+    };
+    try {
+      const key = 'hz_learn_sessions';
+      const prev = JSON.parse(localStorage.getItem(key) || '[]');
+      prev.unshift(entry);
+      while (prev.length > 50) prev.pop();
+      localStorage.setItem(key, JSON.stringify(prev));
+      sessionSaved = true;
+    } catch {}
+  }
+
+  function applySettings() {
+    // Invalidate prepared deck and refetch summary
+    cancelPreparation();
+    preparedCards = [];
+    preparedMeta = null;
+    preparedError = null;
+    fetchSummary();
+  }
+
+  function cancelPreparation() {
+    try {
+      if (prepareAbortCtrl) {
+        prepareAbortCtrl.abort();
+      }
+    } catch {}
+  }
 </script>
 
 <svelte:head>
@@ -450,22 +616,73 @@
   <div class="d-flex align-items-center justify-content-between flex-wrap mb-3 top-actions">
     <div class="small text-muted">
       {#if preparing}
-        Preparing practice set…
+        <span class="me-2">Preparing deck…</span><LoadingSpinner />
       {:else if preparedCards.length}
         Practice ready ({preparedCards.length} cards)
       {:else if preparedError}
         <span class="text-danger">{preparedError}</span>
       {/if}
+      <!-- Chip-style summary -->
+      {#if preparedCards.length}
+        <span class="badge bg-secondary me-2">Ready: {preparedCards.length}</span>
+      {/if}
+      {#if summaryMeta?.durations}
+        <span class="badge bg-secondary me-2">Summary: {summaryMeta?.durations?.total_s?.toFixed?.(1) || ''}s</span>
+        {#if summaryMeta?.durations?.lemma_warmup_total_s}
+          <span class="badge bg-secondary me-2">Warm: {summaryMeta.durations.lemma_warmup_total_s.toFixed(1)}s</span>
+        {/if}
+      {/if}
+      {#if preparedMeta?.durations}
+        <span class="badge bg-secondary me-2">Gen: {preparedMeta.durations.total_s?.toFixed?.(1) || ''}s</span>
+      {/if}
     </div>
     <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-light py-2" on:click={() => showOptions = !showOptions} aria-expanded={showOptions} aria-controls="learn-options">
+        {showOptions ? 'Hide options' : 'Options'}
+      </button>
       <button class="btn btn-primary py-2" on:click={startPracticeAndNavigate} disabled={generating || preparing || !lemmas.length}>
         {preparing ? 'Preparing…' : 'Start practice'}
       </button>
       <button class="btn btn-outline-secondary py-2" on:click={() => showWordsPanel = !showWordsPanel}>
-        {showWordsPanel ? 'Hide words' : 'Show words'}
+        {showWordsPanel ? 'Hide priority words' : 'Show priority words'}
       </button>
+      {#if preparing}
+        <button class="btn btn-outline-light py-2" on:click={cancelPreparation}>Cancel</button>
+      {/if}
     </div>
   </div>
+
+  {#if showOptions}
+  <div id="learn-options" class="mb-3">
+    <div class="card card-body py-3">
+      <div class="text-muted small mb-2">Tune your session. You can change these anytime.</div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="input-group input-group-sm" style="width: 140px;">
+          <span class="input-group-text" title="How many top-priority words to consider from the sourcefile.">Top words</span>
+          <input class="form-control" type="number" min="5" max="100" bind:value={settingTopK} title="Higher = consider more words when generating practice." />
+        </div>
+        <div class="input-group input-group-sm" style="width: 150px;">
+          <span class="input-group-text" title="How many flashcards to generate for this session.">Cards</span>
+          <input class="form-control" type="number" min="1" max="20" bind:value={settingNumSentences} title="Number of sentence cards to include in the deck." />
+        </div>
+        <div class="input-group input-group-sm" style="width: 220px;">
+          <span class="input-group-text" title="Target difficulty level (Common European Framework). 'Any' does not force a level; 'Sourcefile' uses this file's level if known.">CEFR</span>
+          <select class="form-select" bind:value={settingLanguageLevel} title={`Any = no fixed CEFR. Sourcefile = use ${sourcefileLevel || 'file level if known'}; if unknown, behaves like Any.`}>
+            <option value="">Any (no constraint)</option>
+            <option value="sourcefile">Sourcefile{sourcefileLevel ? ` (${sourcefileLevel})` : ''}</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" on:click={applySettings} disabled={loadingSummary} title="Apply settings now. If preparation is running, it will be cancelled and restarted.">Apply</button>
+      </div>
+    </div>
+  </div>
+  {/if}
 
   <!-- Anchor for smooth scroll when starting practice -->
   <div id="learn-practice-section" bind:this={practiceSectionEl}></div>
@@ -511,7 +728,7 @@
             <button type="button" class="btn btn-outline-secondary" on:click={prevLemma} disabled={currentLemmaIndex <= 0} aria-label="Previous word">
               <CaretLeft size={18} weight="bold" />
             </button>
-            <div class="small text-muted">({visibleLemmas.length ? currentLemmaIndex + 1 : 0}/{visibleLemmas.length})</div>
+            <div class="small text-muted">Word {visibleLemmas.length ? currentLemmaIndex + 1 : 0} of {visibleLemmas.length}</div>
             <button type="button" class="btn btn-outline-secondary" on:click={nextLemma} disabled={currentLemmaIndex >= visibleLemmas.length - 1} aria-label="Next word">
               <CaretRight size={18} weight="bold" />
             </button>
@@ -520,6 +737,12 @@
           {#if visibleLemmas.length}
             <div id="learn-lemma-section" bind:this={lemmaSectionEl}></div>
             <div class="priority-words one-at-a-time">
+              <div class="small text-muted mb-2">
+                <button class="btn btn-sm btn-link p-0" on:click={() => showWordsHelp = !showWordsHelp}>{showWordsHelp ? 'Hide' : 'What am I seeing?'}</button>
+                {#if showWordsHelp}
+                  <div>These are words likely to be tricky in this text. Ignore any you already know.</div>
+                {/if}
+              </div>
               {#if loadingLemmaMap[visibleLemmas[currentLemmaIndex]?.lemma]}
                 <div class="d-flex justify-content-center py-4"><LoadingSpinner /></div>
               {:else}
@@ -571,11 +794,26 @@
                   <div class="invisible w-100 py-3"></div>
                 {/if}
               </div>
+              <div class="col-12 d-flex justify-content-end">
+                <button class="btn btn-sm btn-link text-decoration-none" on:click={() => showKbHelp = !showKbHelp} aria-expanded={showKbHelp}>Keyboard help</button>
+              </div>
+              {#if showKbHelp}
+                <div class="col-12 small text-muted">
+                  Shortcuts: Left = replay/previous stage, Right = next stage, Enter = next card.
+                </div>
+              {/if}
               <div class="col-12 mt-2">
-                <button class="btn btn-primary w-100 py-3" on:click={() => { if (currentIndex < cards.length - 1) { currentIndex += 1; currentStage = 1; } }} disabled={currentIndex >= cards.length - 1}>
+                <button id="next-card-btn" class="btn btn-primary w-100 py-3" on:click={() => { if (currentIndex < cards.length - 1) { currentIndex += 1; currentStage = 1; } }} disabled={currentIndex >= cards.length - 1}>
                   Next card (Enter)
                 </button>
               </div>
+              {#if currentIndex >= cards.length - 1}
+                <div class="col-12 mt-2">
+                  <button class="btn btn-outline-primary w-100 py-3" on:click={() => { saveSessionAnalyticsToLocalStorage(); continuePracticeFromAnalytics(); }} disabled={cards.length === 0}>
+                    Continue practice (prioritize hard items)
+                  </button>
+                </div>
+              {/if}
             </div>
           </div>
 
@@ -601,6 +839,31 @@
     </div>
     {/if}
   </div>
+
+  {#if cards.length > 0 && currentIndex >= cards.length - 1}
+  <div class="row mt-3">
+    <div class="col-12 col-xl-7 offset-xl-5">
+      <Card title="Session stats">
+        {#if cards.length}
+          {#key currentIndex}
+          {#await Promise.resolve(computeAnalytics()) then a}
+            <div class="row g-2 small">
+              <div class="col-6">Seen: {a.seenCount}/{cards.length}</div>
+              <div class="col-6">Avg replays/card: {a.avgReplays.toFixed(2)}</div>
+              <div class="col-6">Unique lemmas covered: {a.uniqueLemmasCovered}</div>
+              <div class="col-6">
+                CEFR: {#each Object.entries(a.cefrCounts) as kv, idx}
+                  <span class="badge bg-secondary me-1">{kv[0]} {kv[1]}</span>
+                {/each}
+              </div>
+            </div>
+          {/await}
+          {/key}
+        {/if}
+      </Card>
+    </div>
+  </div>
+  {/if}
 </div>
 
 <style>
