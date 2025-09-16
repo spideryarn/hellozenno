@@ -9,9 +9,20 @@ from utils.audio_utils import (
     transcribe_audio,
     ensure_audio_data,
     ensure_model_audio_data,
+    ensure_sentence_audio_variants,
+    ensure_lemma_audio_variants,
+    stream_random_sentence_audio,
 )
-from db_models import Sourcefile, Sourcedir, Sentence
+from db_models import (
+    Sourcefile,
+    Sourcedir,
+    Sentence,
+    Lemma,
+    SentenceAudio,
+    LemmaAudio,
+)
 from config import MAX_AUDIO_SIZE_FOR_STORAGE
+from utils.exceptions import AuthenticationRequiredForGenerationError
 
 
 @pytest.fixture
@@ -166,33 +177,11 @@ def test_ensure_audio_data(mock_elevenlabs):
     ]
 
 
-def test_ensure_model_audio_data(
+def test_ensure_model_audio_data_for_sourcefiles(
     mock_elevenlabs, fixture_for_testing_db, test_sourcedir, client
 ):
-    """Test generating audio for model instances."""
-    # Test with Sentence model
-    sentence = Sentence.create(
-        target_language_code="el",
-        sentence="Test sentence",
-        translation="Test translation",
-    )
-    # Ensure we run within request context so g is available
-    with client.application.test_request_context():
-        from flask import g
+    """Ensure legacy sourcefile audio generation behaves as expected."""
 
-        g.user = {"id": "00000000-0000-0000-0000-000000000000"}
-        ensure_model_audio_data(sentence)
-    # Reload from DB to observe changes
-    sentence_db = Sentence.get_by_id(sentence.id)
-    stored = sentence_db.audio_data
-    # Peewee may return memoryview on some backends
-    try:
-        stored_bytes = bytes(stored)
-    except Exception:
-        stored_bytes = stored  # already bytes
-    assert stored_bytes == b"fake mp3 data"
-
-    # Test with Sourcefile model
     sourcefile = Sourcefile.create(
         sourcedir=test_sourcedir,
         filename="test.txt",
@@ -201,7 +190,7 @@ def test_ensure_model_audio_data(
         metadata={},
         sourcefile_type="text",
     )
-    # Ensure we run within request context for non-Sentence branch as it accesses g
+    # Ensure we run within request context as the helper checks g.user
     with client.application.test_request_context():
         from flask import g
 
@@ -209,21 +198,104 @@ def test_ensure_model_audio_data(
         ensure_model_audio_data(sourcefile)
     assert sourcefile.audio_data == b"fake mp3 data"
 
-    # Test with empty text
-    empty_sentence = Sentence.create(
+    with client.application.test_request_context():
+        from flask import g
+
+        if hasattr(g, "user"):
+            del g.user
+        with pytest.raises(AuthenticationRequiredForGenerationError):
+            ensure_model_audio_data(sourcefile)
+
+    with pytest.raises(AttributeError):
+        ensure_model_audio_data(object())
+
+
+def test_ensure_sentence_audio_variants(
+    mock_elevenlabs, fixture_for_testing_db, client
+):
+    sentence = Sentence.create(
         target_language_code="el",
-        sentence="",
-        translation="",
+        sentence="Test sentence",
+        translation="Test translation",
     )
-    # For sentence branch this checks g; run in request context
+
     with client.application.test_request_context():
         from flask import g
 
         g.user = {"id": "00000000-0000-0000-0000-000000000000"}
-        with pytest.raises(ValueError, match="No text available for audio generation"):
-            ensure_model_audio_data(empty_sentence)
+        variants, created = ensure_sentence_audio_variants(sentence, n=2)
 
-    # Test with existing audio
-    mock_elevenlabs.reset_mock()
-    ensure_model_audio_data(sentence)  # Should not regenerate
-    assert not mock_elevenlabs.called
+    assert created == 2
+    assert len(variants) == 2
+    assert SentenceAudio.select().where(SentenceAudio.sentence == sentence).count() == 2
+    variant = stream_random_sentence_audio(sentence.id)
+    assert variant is not None
+    # Blob fields may be returned as memoryview; normalize to bytes for comparison
+    data = (
+        bytes(variant.audio_data)
+        if hasattr(variant.audio_data, "tobytes")
+        or isinstance(variant.audio_data, (memoryview, bytearray))
+        else variant.audio_data
+    )
+    assert data == b"fake mp3 data"
+
+    with client.application.test_request_context():
+        from flask import g
+
+        g.user = {"id": "00000000-0000-0000-0000-000000000000"}
+        additional_variants, created_again = ensure_sentence_audio_variants(
+            sentence, n=3
+        )
+
+    assert created_again == 1
+    assert len(additional_variants) == 3
+
+    unauth_sentence = Sentence.create(
+        target_language_code="el",
+        sentence="Needs auth",
+        translation="",
+    )
+    with client.application.test_request_context():
+        from flask import g
+
+        if hasattr(g, "user"):
+            del g.user
+        with pytest.raises(AuthenticationRequiredForGenerationError):
+            ensure_sentence_audio_variants(unauth_sentence, n=1)
+
+
+def test_ensure_lemma_audio_variants(mock_elevenlabs, fixture_for_testing_db, client):
+    lemma = Lemma.create(
+        lemma="δοκιμή",
+        target_language_code="el",
+    )
+
+    with client.application.test_request_context():
+        from flask import g
+
+        g.user = {"id": "00000000-0000-0000-0000-000000000000"}
+        variants, created = ensure_lemma_audio_variants(lemma, n=2)
+
+    assert created == 2
+    assert len(variants) == 2
+    assert LemmaAudio.select().where(LemmaAudio.lemma == lemma).count() == 2
+
+    with client.application.test_request_context():
+        from flask import g
+
+        g.user = {"id": "00000000-0000-0000-0000-000000000000"}
+        _, created_again = ensure_lemma_audio_variants(lemma, n=3)
+
+    assert created_again == 1
+
+    other_lemma = Lemma.create(
+        lemma="auth",
+        target_language_code="el",
+    )
+    with client.application.test_request_context():
+        from flask import g
+
+        if hasattr(g, "user"):
+            del g.user
+        with pytest.raises(AuthenticationRequiredForGenerationError):
+            ensure_lemma_audio_variants(other_lemma, n=1)

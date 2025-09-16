@@ -28,8 +28,8 @@ from utils.lang_utils import get_language_name
 from utils.prompt_utils import get_prompt_template_path
 from utils.vocab_llm_utils import anthropic_client, generate_gpt_from_template
 from utils.sentence_utils import generate_sentence
-from db_models import Sentence
-from config import ELEVENLABS_DEFAULT_VOICE, ELEVENLABS_DEFAULT_VOICE_PER_LANG
+from utils.audio_utils import ensure_sentence_audio_variants
+from db_models import Sentence, SentenceAudio
 
 
 learn_api_bp = Blueprint("learn_api", __name__, url_prefix="/api/lang/learn")
@@ -228,26 +228,49 @@ def learn_sourcefile_generate_api(
 
             existing_sentences = list(existing_q)
             for s in existing_sentences:
-                # Strict — fail if audio missing
-                if not s.audio_data:
+                try:
+                    variants, _ = ensure_sentence_audio_variants(s)
+                except AuthenticationRequiredForGenerationError:
+                    variants = list(
+                        SentenceAudio.select()
+                        .where(SentenceAudio.sentence == s)
+                        .order_by(SentenceAudio.created_at)
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to ensure audio variants for sentence id={s.id}: {e}"
+                    )
+                    variants = list(
+                        SentenceAudio.select()
+                        .where(SentenceAudio.sentence == s)
+                        .order_by(SentenceAudio.created_at)
+                    )
+
+                if not variants:
                     return (
                         jsonify(
                             {
-                                "error": "Persisted sentence is missing audio",
-                                "message": f"Sentence id={s.id} has no audio_data",
+                                "error": "Persisted sentence is missing audio variants",
+                                "message": f"Sentence id={s.id} has no sentence_audio variants",
                             }
                         ),
                         500,
                     )
                 meta = s.generation_metadata or {}
                 used_lemmas = meta.get("used_lemmas") or []
+                # Pin a specific variant to avoid random selection across range requests
+                selected_variant_id = variants[0].id if variants else None
                 existing_items.append(
                     {
                         "sentence": s.sentence,
                         "translation": s.translation,
                         "used_lemmas": used_lemmas,
                         "language_level": s.language_level,
-                        "audio_data_url": f"/api/lang/sentence/{target_language_code}/{s.id}/audio",
+                        "audio_data_url": (
+                            f"/api/lang/sentence/{target_language_code}/{s.id}/audio?variant_id={selected_variant_id}"
+                            if selected_variant_id is not None
+                            else None
+                        ),
                     }
                 )
         except Exception as e:
@@ -287,12 +310,6 @@ def learn_sourcefile_generate_api(
 
             raw_sentences = raw_sentences[:remaining]
 
-            # Deterministic voice selection
-            selected_voice = (
-                ELEVENLABS_DEFAULT_VOICE_PER_LANG.get(target_language_code)
-                or ELEVENLABS_DEFAULT_VOICE
-            )
-
             audio_t0 = time.time()
             order_start = len(existing_items)
             for idx, s in enumerate(raw_sentences):
@@ -309,7 +326,6 @@ def learn_sourcefile_generate_api(
                     "used_wordforms": [],
                     "order_index": order_start + idx,
                     "prompt_version": "generate_sentence_flashcards@v1",
-                    "tts_voice": selected_voice,
                     "source_context": {
                         "type": "sourcefile",
                         "slug": sourcefile_slug,
@@ -317,31 +333,45 @@ def learn_sourcefile_generate_api(
                 }
 
                 # Persist sentence + audio
-                _, meta = generate_sentence(
+                db_sentence, meta = generate_sentence(
                     target_language_code=target_language_code,
                     sentence=sentence_text,
                     translation=translation_text,
                     lemma_words=used_lemmas,
-                    should_play=False,
                     language_level=cefr,
                     provenance="learn",
                     generation_metadata=generation_metadata,
-                    voice_name=selected_voice,
                 )
 
-                sent_id = meta.get("id")
+                sent_id = meta.get("id") or db_sentence.id
                 if not sent_id:
                     raise ValueError(
                         "Failed to persist generated sentence (missing id)"
                     )
 
+                try:
+                    variants, _ = ensure_sentence_audio_variants(db_sentence)
+                except AuthenticationRequiredForGenerationError:
+                    variants = []
+                except Exception as ensure_err:
+                    logger.warning(
+                        f"Failed to ensure audio variants for generated sentence id={sent_id}: {ensure_err}"
+                    )
+                    variants = []
+
+                # Pin a specific variant to avoid random selection across range requests
+                selected_variant_id = variants[0].id if variants else None
                 new_items.append(
                     {
                         "sentence": sentence_text,
                         "translation": translation_text,
                         "used_lemmas": used_lemmas,
                         "language_level": cefr,
-                        "audio_data_url": f"/api/lang/sentence/{target_language_code}/{sent_id}/audio",
+                        "audio_data_url": (
+                            f"/api/lang/sentence/{target_language_code}/{sent_id}/audio?variant_id={selected_variant_id}"
+                            if selected_variant_id is not None
+                            else None
+                        ),
                     }
                 )
 

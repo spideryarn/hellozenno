@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from config import DB_POOL_CONFIG
 from utils.env_config import DATABASE_URL, is_vercel, is_local_to_prod
+import os
 from urllib.parse import urlparse
 
 # Configure logging
@@ -85,10 +86,23 @@ def get_db_config():
     """
     # Parse the database URL into connection parameters
     db_url = DATABASE_URL.get_secret_value()
-    config = {
-        **parse_database_url(db_url),
-        **DB_POOL_CONFIG,
-    }
+    # Start from base pool config, allow env overrides in dev/test
+    pool_cfg = dict(DB_POOL_CONFIG)
+    try:
+        env_max = os.getenv("DB_POOL_MAX_CONNECTIONS")
+        if env_max:
+            pool_cfg["max_connections"] = int(env_max)
+        env_stale = os.getenv("DB_POOL_STALE_TIMEOUT")
+        if env_stale:
+            pool_cfg["stale_timeout"] = int(env_stale)
+        env_timeout = os.getenv("DB_POOL_TIMEOUT")
+        if env_timeout:
+            pool_cfg["timeout"] = int(env_timeout)
+    except Exception:
+        # Ignore bad overrides to avoid crashing app
+        pass
+
+    config = {**parse_database_url(db_url), **pool_cfg}
 
     logger.info(
         "Configuring Postgres connection to %s@%s:%s/%s",

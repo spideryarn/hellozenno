@@ -134,6 +134,9 @@
       });
       lemmas = js?.lemmas || [];
       summaryMeta = js?.meta || null;
+      if (summaryMeta?.durations) {
+        console.log('Learn summary durations', summaryMeta.durations);
+      }
 
       // Also fetch the original source text for context sentence extraction
       const textRes = await fetch(`${API_BASE_URL}/api/lang/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/text`);
@@ -218,6 +221,9 @@
       });
       const sentences = js?.sentences || [];
       const meta = js?.meta || {};
+      if (meta?.durations) {
+        console.log('Learn generate durations (on-demand)', meta.durations);
+      }
       const keepOrder = typeof meta?.new_count === 'number' ? meta.new_count > 0 : false;
       cards = keepOrder ? sentences : shuffleArray(sentences);
       currentIndex = 0;
@@ -292,10 +298,12 @@
 
   function preloadAudioDataUrls(urls: string[]) {
     try {
-      for (const url of urls) {
+      // Limit concurrent preloads to reduce DB pressure
+      const limited = urls.slice(0, 2);
+      for (const url of limited) {
         const a = new Audio();
+        a.preload = 'metadata';
         a.src = url;
-        a.preload = 'auto';
         a.load();
         preloadedAudios.push(a);
       }
@@ -337,6 +345,9 @@
       });
       preparedCards = js?.sentences || [];
       preparedMeta = js?.meta || null;
+      if (preparedMeta?.durations) {
+        console.log('Learn generate durations (prepared)', preparedMeta.durations);
+      }
       // Preload audio data URLs
       preloadAudioDataUrls(preparedCards.map((c: any) => c.audio_data_url).filter(Boolean));
     } catch (e: any) {
@@ -626,23 +637,16 @@
       {#if preparedCards.length}
         <span class="badge bg-secondary me-2">Ready: {preparedCards.length}</span>
       {/if}
-      {#if summaryMeta?.durations}
-        <span class="badge bg-secondary me-2">Summary: {summaryMeta?.durations?.total_s?.toFixed?.(1) || ''}s</span>
-        {#if summaryMeta?.durations?.lemma_warmup_total_s}
-          <span class="badge bg-secondary me-2">Warm: {summaryMeta.durations.lemma_warmup_total_s.toFixed(1)}s</span>
-        {/if}
-      {/if}
-      {#if preparedMeta?.durations}
-        <span class="badge bg-secondary me-2">Gen: {preparedMeta.durations.total_s?.toFixed?.(1) || ''}s</span>
-      {/if}
     </div>
     <div class="d-flex align-items-center gap-2">
       <button class="btn btn-outline-light py-2" on:click={() => showOptions = !showOptions} aria-expanded={showOptions} aria-controls="learn-options">
         {showOptions ? 'Hide options' : 'Options'}
       </button>
-      <button class="btn btn-primary py-2" on:click={startPracticeAndNavigate} disabled={generating || preparing || !lemmas.length}>
-        {preparing ? 'Preparing…' : 'Start practice'}
-      </button>
+      {#if cards.length === 0}
+        <button class="btn btn-primary py-2" on:click={startPracticeAndNavigate} disabled={generating || preparing || !lemmas.length}>
+          {preparing ? 'Preparing…' : 'Start practice'}
+        </button>
+      {/if}
       <button class="btn btn-outline-secondary py-2" on:click={() => showWordsPanel = !showWordsPanel}>
         {showWordsPanel ? 'Hide priority words' : 'Show priority words'}
       </button>
@@ -680,6 +684,20 @@
         </div>
         <button type="button" class="btn btn-sm btn-outline-secondary" on:click={applySettings} disabled={loadingSummary} title="Apply settings now. If preparation is running, it will be cancelled and restarted.">Apply</button>
       </div>
+      {#if summaryMeta?.durations || preparedMeta?.durations}
+        <div class="small text-muted mt-2">
+          <span class="me-2">Diagnostics:</span>
+          {#if summaryMeta?.durations}
+            <span class="badge bg-secondary me-2">Summary: {summaryMeta?.durations?.total_s?.toFixed?.(1) || ''}s</span>
+            {#if summaryMeta?.durations?.lemma_warmup_total_s}
+              <span class="badge bg-secondary me-2">Warm: {summaryMeta.durations.lemma_warmup_total_s.toFixed(1)}s</span>
+            {/if}
+          {/if}
+          {#if preparedMeta?.durations}
+            <span class="badge bg-secondary me-2">Gen: {preparedMeta.durations.total_s?.toFixed?.(1) || ''}s</span>
+          {/if}
+        </div>
+      {/if}
     </div>
   </div>
   {/if}
