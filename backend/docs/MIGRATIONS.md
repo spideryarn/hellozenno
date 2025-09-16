@@ -279,6 +279,16 @@ See `migrations/033_add_user_reference_fields.py` and `migrations/034_add_userle
 3. Peewee will handle the cross-schema reference, but you may need to add explicit constraints
 
 
+## 2024-09-16 Sentence audio variants refresh
+
+- **045_add_metadata_drop_voice_name_from_lemma_audio**
+  - Adds a JSONB `metadata` column to `lemmaaudio`, backfills existing rows with `{provider, voice_name}`, and removes the dedicated `voice_name` column.
+  - Creates a `(lemma_id, created_at)` index to support ordered variant lookups. Rollback re-introduces `voice_name` (best-effort) while keeping metadata.
+- **046_create_sentence_audio_table**
+  - Introduces `sentenceaudio` for variant storage (FK → `sentence`, optional FK → `auth.users`). Adds indexes on `sentence_id` and `(sentence_id, created_at)` and enforces cascading deletes.
+- **047_drop_sentence_audio_data**
+  - Drops legacy `sentence.audio_data` now that variants are in `sentenceaudio`. Rollback simply re-adds the column (data loss accepted).
+
 ## Questions or Improvements?
 
 - If you see problems or a better way, discuss before proceeding

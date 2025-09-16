@@ -35,10 +35,22 @@ Dictionary form entries for words
 Pronunciation audio for lemmas
 - Key fields:
   - `lemma_id` (fk → `lemma.id`)
-  - `provider` (text), `voice_name` (text)
+  - `provider` (text)
+  - `metadata` (jsonb) – `{ provider, voice_name, model, settings }`
   - `audio_data` (bytea, MP3)
   - Audit: `created_by_id` (uuid → `auth.users.id`)
   - Timestamps: `created_at`, `updated_at`
+
+### SentenceAudio
+Stored variants for sentence playback
+- Key fields:
+  - `sentence_id` (fk → `sentence.id`)
+  - `provider` (text)
+  - `metadata` (jsonb) – mirrors the lemma audio metadata schema
+  - `audio_data` (bytea, MP3)
+  - Audit: `created_by_id` (uuid → `auth.users.id`)
+  - Timestamps: `created_at`, `updated_at`
+ - Indexes: `(sentence_id)`, `(sentence_id, created_at)`
 
 ### Wordform
 Individual word forms and inflections
@@ -60,7 +72,6 @@ Example sentences in the target language
   - `target_language_code` (text)
   - `sentence` (text)
   - `translation` (text)
-  - `audio_data` (bytea, optional)
   - `slug` (text)
   - `lemma_words` (jsonb, optional)
   - `language_level` (text, optional)
@@ -68,6 +79,7 @@ Example sentences in the target language
   - Timestamps: `created_at`, `updated_at`
 - Relationships:
   - `lemmas` (N:M via `sentencelemma`)
+  - `audio_variants` (1:N via `sentenceaudio`)
 
 ### Phrase
 Multi-word expressions and idioms
