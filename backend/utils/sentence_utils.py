@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 import random
 
 from utils.audio_utils import ensure_audio_data
@@ -22,6 +22,10 @@ def generate_sentence(
     lemma_words: Optional[list] = None,
     should_play: bool = False,
     language_level: Optional[str] = None,
+    *,
+    provenance: Optional[str] = None,
+    generation_metadata: Optional[dict[str, Any]] = None,
+    voice_name: Optional[str] = None,
 ) -> tuple[None, dict]:
     """Generate audio and metadata for a sentence.
 
@@ -46,6 +50,8 @@ def generate_sentence(
         should_add_delays=True,
         should_play=should_play,
         verbose=1,
+        voice_name=voice_name,
+        target_language_code=target_language_code,
     )
 
     # Create or update sentence in database
@@ -56,19 +62,30 @@ def generate_sentence(
             "translation": translation,
             "audio_data": audio_data,
             "language_level": language_level,
+            "provenance": provenance or "manual",
+            "generation_metadata": generation_metadata,
         },
     )
 
     # Update if it already existed and fields are different
     if not created:
-        if (
-            db_sentence.translation != translation
-            or db_sentence.audio_data != audio_data
-            or db_sentence.language_level != language_level
-        ):
+        updated = False
+        if db_sentence.translation != translation:
             db_sentence.translation = translation
+            updated = True
+        if db_sentence.audio_data != audio_data:
             db_sentence.audio_data = audio_data
+            updated = True
+        if db_sentence.language_level != language_level:
             db_sentence.language_level = language_level
+            updated = True
+        if provenance and db_sentence.provenance != provenance:
+            db_sentence.provenance = provenance
+            updated = True
+        if generation_metadata is not None:
+            db_sentence.generation_metadata = generation_metadata
+            updated = True
+        if updated:
             db_sentence.save()
 
     # Add lemma relationships if provided
@@ -151,23 +168,21 @@ def get_random_sentence(
         # If profile is provided, exclude ignored lemmas
         if profile:
             # Modified query that excludes ignored lemmas
-            query = (
-                base_query
-                .where(
-                    ~(
-                        (SentenceLemma.lemma << UserLemma.select(UserLemma.lemma)
-                         .where(
-                             (UserLemma.user_id == profile.user_id) & 
-                             (UserLemma.ignored_dt.is_null(False))
-                         ))
+            query = base_query.where(
+                ~(
+                    (
+                        SentenceLemma.lemma
+                        << UserLemma.select(UserLemma.lemma).where(
+                            (UserLemma.user_id == profile.user_id)
+                            & (UserLemma.ignored_dt.is_null(False))
+                        )
                     )
                 )
-                .distinct()
-            )
+            ).distinct()
         else:
             # Use the base query without ignoring lemmas
             query = base_query.distinct()
-    
+
     # Get total count for random selection
     count = query.count()
     if count == 0:
@@ -244,7 +259,9 @@ def generate_practice_sentences(
                 sentence=sentence_data["sentence"],
                 translation=sentence_data["translation"],
                 lemma_words=[lemma],
-                language_level=sentence_data.get("language_level"),  # Store language_level from LLM response
+                language_level=sentence_data.get(
+                    "language_level"
+                ),  # Store language_level from LLM response
             )
 
 

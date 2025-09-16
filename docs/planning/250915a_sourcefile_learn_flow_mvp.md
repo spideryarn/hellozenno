@@ -7,7 +7,7 @@ Build a separate, non-invasive “Learn from Sourcefile” flow that:
 Constraints and preferences for v1:
 - Do not alter existing flashcard routes/behavior; this lives on its own page/route
 - Low latency once the flashcards start (ok to pay an upfront cost to prepare)
-- It’s fine to be wasteful initially: regenerate on each visit, avoid persistence
+- Persistence now enabled: reuse persisted sentences and audio for the same sourcefile
 - Generate lemma metadata if missing (allowed to write to DB for lemma metadata)
 - Reuse existing machinery wherever possible
 
@@ -31,7 +31,7 @@ Constraints and preferences for v1:
 ## Principles, key decisions
 
 - Keep existing flashcards untouched; introduce a new route (single page) under the sourcefile
-- No persistence of generated sentences/audio in v1; all ephemeral, regenerated on each visit
+- Always-on persistence of generated sentences/audio with provenance `learn`
 - Allow generating lemma metadata if missing (writes `Lemma` rows), and prefer warming this upfront/background so the flashcard flow is snappy
 - Batch-generate all sentences before starting the session using a “thinking mode” prompt that:
   - Maximizes coverage of the selected lemmas across the set
@@ -107,10 +107,12 @@ Constraints and preferences for v1:
   - Safety: silently skip on 401; log durations only. This reduces server-side thread complexity and keeps the page responsive.
 
 
-### Stage: Optional persistence & integration with existing flashcards
-- [ ] Persist generated sentences to `Sentence` + `SentenceLemma` with a `provenance = "learn"` tag
-- [ ] Use stored audio in `Sentence.audio_data`; switch from data URLs to `/api/lang/sentence/.../audio`
-- [ ] Integrate with existing `/languages/{code}/flashcards` flow so generated sentences appear in normal practice too
+- ### Stage: Persistence & reuse for Learn (added)
+- [x] Add `Sentence.provenance` (default `manual`) and `Sentence.generation_metadata` (JSON)
+- [x] Persist Learn-generated sentences and audio; provenance set to `learn`
+- [x] Record `generation_metadata` including `{ used_lemmas, used_wordforms, order_index, prompt_version, tts_voice, source_context }`
+- [x] Update Learn generate endpoint to first reuse existing persisted sentences for the same sourcefile, then top up by generating new ones; return streaming audio URLs
+- [ ] (Later) Integrate with existing `/languages/{code}/flashcards` flow so Learn sentences appear in normal practice
   - Acceptance: User can revisit generated material via existing flashcards; no duplication issues
 
 Investigation notes (models + persistence proposal):
@@ -179,9 +181,9 @@ Investigation notes (models + persistence proposal):
   - Link `Sentence.generation_batch_id` to `GenerationBatch`
   - Acceptance: We can review batches, regenerate, and compare prompt versions
 
-- [ ] Store per-sentence coverage and scoring metadata
-  - `Sentence`: add JSON `generation_metadata` (e.g., `{ "used_lemmas": [...], "order_index": 3, "difficulty_score": 0.42 }`)
-  - Acceptance: Enables analytics and adaptive future sessions
+- [x] Store per-sentence coverage and scoring metadata
+  - `Sentence`: `generation_metadata` with `{ used_lemmas, used_wordforms, order_index, prompt_version, tts_voice, source_context }`
+  - Acceptance: Enables reuse and future analytics
 
 - [ ] Normalize audio storage and streaming
   - Option A: Keep `audio_data` BLOB with length-limits and move to streaming-only endpoints
@@ -255,14 +257,14 @@ Investigation notes (models + persistence proposal):
 - A user can visit the new “Learn” page for a sourcefile, see a list of priority words with etymologies, and start a flashcard session
 - The flashcard session has audio, sentence, translation stages with keyboard shortcuts and large buttons; navigating between cards is snappy
 - No changes to existing flashcard routes/behavior
-- No persistence of generated sentences or audio
+- Generated sentences and audio are persisted and reused for the same sourcefile
 - Basic logging of step durations is present
 
 
 ## Notes on implementation details
 - Difficulty ranking heuristic: `difficulty_score = (1 - guessability) + (1 - commonality)` with defaults to `0.5` if missing; can be tuned later
 - “Thinking mode” generation: a single prompt request that returns an ordered set (easy → hard), with guidance to cover provided lemmas and reuse some with varied inflections
-- Audio: `ensure_audio_data(text)` → base64 data URL; in future stages switch to persisted audio endpoint
+- Audio: persisted as `Sentence.audio_data`; served via `/api/lang/sentence/{code}/{id}/audio`
 - Background warming: in-process thread for simplicity; no new infra needed in v1
 
 

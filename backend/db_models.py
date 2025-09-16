@@ -546,6 +546,13 @@ class Sentence(BaseModel):
     audio_data = BlobField(null=True)  # MP3 audio data for the sentence
     slug = CharField(max_length=255)  # URL-friendly version of the sentence
     language_level = CharField(null=True)  # e.g. "A1", "B2", "C1"
+    # New fields for Learn persistence
+    provenance = CharField(
+        default="manual"
+    )  # "manual" | "imported" | "learn" | "llm_generated"
+    generation_metadata = JSONField(
+        null=True
+    )  # JSON with used_lemmas, used_wordforms, order_index, difficulty_score, prompt_version, tts_voice, source_context
     created_by = ForeignKeyField(
         AuthUser, backref="sentences", null=True, on_delete="CASCADE"
     )

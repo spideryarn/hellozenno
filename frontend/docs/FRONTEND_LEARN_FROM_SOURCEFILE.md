@@ -1,8 +1,8 @@
-# Learn from Sourcefile (MVP)
+# Learn from Sourcefile
 
 ## Introduction
 
-The Learn page provides an end-to-end, ephemeral practice flow for a single sourcefile. It surfaces priority words (with etymologies) and then runs an audio sentence flashcard session generated on-demand. The practice deck is generated fresh and is shuffled each time a session starts.
+The Learn page provides an end-to-end practice flow for a single sourcefile. It surfaces priority words (with etymologies) and then runs an audio sentence flashcard session. Generation now persists sentences and audio for reuse on subsequent visits.
 
 ## See also
 
@@ -19,17 +19,17 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
 ## Principles and key decisions
 
 - Separate, non-invasive flow: lives under the sourcefile route; existing flashcards unchanged
-- No persistence in MVP: sentences and audio are generated per visit and not saved
+- Always-on persistence: sentences and audio are saved on generation with provenance `learn`, and reused on subsequent visits for the same sourcefile
 - Warm missing lemma metadata as needed to keep the flow snappy
 - Batch-generate all sentences up-front; then practice with low latency between cards
-- Serve audio as base64 data URLs in MVP (simple, acceptable at small scale)
+- Serve persisted audio via `/api/lang/sentence/{code}/{id}/audio` URLs (no base64 in responses)
 - Shuffle the practice deck at session start for varied repetition (generation orders easy→hard; shuffle trades sequence for variety)
 
 ## Current state, target state, migration status
 
-- Current State: MVP page at `/language/{code}/source/{dir}/{file}/learn` with ephemeral generation
-- Target State: Optional persistence and integration into the main flashcards flow
-- Migration Status: MVP complete; background warming and persistence planned (see planning doc)
+- Current State: Page at `/language/{code}/source/{dir}/{file}/learn` with persistence and reuse
+- Target State: Possible future batch/session tracking; integration into main flashcards flow (deferred)
+- Migration Status: Persistence enabled; batch/session object explicitly deferred
 
 ## Architecture and data flow (high level)
 
@@ -40,7 +40,8 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
   - Optionally warms lemma metadata in the background (limited concurrency)
   - Optionally begins preparing a practice deck in the background (calls `POST /generate` once)
 - On “Start practice”:
-  - Uses the prepared deck if available, otherwise calls `POST /generate`
+  - Uses a pre-prepared deck if available; otherwise calls `POST /generate`
+  - Backend first reuses persisted sentences for this sourcefile, then tops up generation and persists
   - Deck is shuffled client-side for each session start
   - Audio is preloaded; navigation between stages/cards is instant
 
@@ -62,16 +63,16 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
   - `GET /api/lang/learn/sourcefile/{code}/{dir}/{file}/summary?top=K`
   - Returns: `{ lemmas: [{ lemma, translations[], etymology?, commonality?, guessability?, part_of_speech? }], meta: { durations } }`
   - Ranking heuristic (MVP): `difficulty_score = (1 - guessability) + (1 - commonality)`
-- Generate sentences + audio
+- Generate sentences + audio (persist + reuse)
   - `POST /api/lang/learn/sourcefile/{code}/{dir}/{file}/generate`
   - Body: `{ lemmas: string[], num_sentences: number, language_level: null | "A1"|… }`
-  - Returns: `{ sentences: [{ sentence, translation, used_lemmas[], language_level?, audio_data_url }], meta: { durations } }`
+  - Returns: `{ sentences: [{ sentence, translation, used_lemmas[], language_level?, audio_data_url }], meta: { durations } }` where `audio_data_url` is a streaming URL
 
 ## Performance and warming
 
 - Lemma metadata warming: client fires low-priority, concurrent requests to fill missing metadata
 - Background deck preparation: the page may pre-generate a deck while the user reviews words
-- Audio preloading: data URLs are preloaded to minimize delays during practice
+- Audio preloading: streaming URLs are preloaded to minimize delays during practice
  - Concurrency is managed with p-queue; see `../../docs/reference/libraries/p-queue.md`
 
 ## Error handling
@@ -85,17 +86,15 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
 - Generate: `num_sentences = 10`, `language_level = null` (server may choose defaults)
 - Deck: shuffled on start; repeat visits re-generate and re-shuffle
 
-## Limitations (MVP)
+## Limitations
 
-- No persistence: generated sentences and audio are not saved
-- Audio as data URLs increases memory usage at scale
-- LLM variability may change sentence content across sessions
+- Batch/session object is deferred; we do not support exact replay of a prior Learn run yet
 
 ## Planned future work
 
 - Background warming improvements (client-initiated vs server-initiated)
-- Optional persistence with provenance, batch tracking, analytics
-- Streaming audio or external storage instead of data URLs
+- Batch tracking for exact session replay and cleanup
+- External storage for audio if DB size becomes a concern
 - Progress tracking and adaptive session continuation
 
 ## Implementation references
@@ -105,3 +104,5 @@ The Learn page provides an end-to-end, ephemeral practice flow for a single sour
 - Backend view: `../../backend/views/learn_api.py`
 - Audio generation: `../../backend/utils/audio_utils.py`
 - Lemma metadata utilities: `../../backend/utils/store_utils.py`
+
+Note: We intentionally defer a dedicated batch/session model for now. If added later, this doc should be updated with retrieval and cleanup semantics.

@@ -8,6 +8,8 @@ from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
     SUPPORTED_LANGUAGES,
     ELEVENLABS_VOICE_POOL,
+    ELEVENLABS_DEFAULT_VOICE,
+    ELEVENLABS_DEFAULT_VOICE_PER_LANG,
 )
 from gjdutils.audios import play_mp3
 from gjdutils.outloud_text_to_speech import outloud_elevenlabs
@@ -143,6 +145,7 @@ def ensure_audio_data(
     verbose: int = 0,
     voice_name: Optional[str] = None,
     voice_settings: Optional[dict[str, Any]] = None,
+    target_language_code: Optional[str] = None,
 ) -> bytes:
     """Core function to generate audio data from text.
 
@@ -161,8 +164,14 @@ def ensure_audio_data(
     # Add delays if requested
     text_with_delays = add_delays(text) if should_add_delays else text
 
-    # Select a voice: use provided voice_name or random from pool
-    selected_voice = voice_name if voice_name else random.choice(ELEVENLABS_VOICE_POOL)
+    # Select a voice: prefer explicit voice_name, else per-language default, else global default, else first in pool
+    selected_voice = voice_name
+    if not selected_voice and target_language_code:
+        selected_voice = ELEVENLABS_DEFAULT_VOICE_PER_LANG.get(target_language_code)
+    if not selected_voice:
+        selected_voice = ELEVENLABS_DEFAULT_VOICE or (
+            ELEVENLABS_VOICE_POOL[0] if ELEVENLABS_VOICE_POOL else ""
+        )
 
     if verbose >= 1:
         print(f"Selected voice: {selected_voice}")
