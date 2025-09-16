@@ -80,7 +80,9 @@
   let showLoginToast = false;
   let progressCount = 0;
 
-  async function fetchVariants(): Promise<{ provider: string; voice_name: string; url: string }[]> {
+  async function fetchVariants(): Promise<
+    { id: number; provider: string; metadata: Record<string, any>; url: string }[]
+  > {
     const res = await apiFetch({
       supabaseClient: null, // public endpoint
       routeName: RouteName.LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API,

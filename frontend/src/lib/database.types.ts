@@ -1138,6 +1138,7 @@ export type Database = {
           created_by_id: string | null
           id: number
           lemma_id: number
+          metadata: Json
           provider: string
           updated_at: string
           voice_name: string
@@ -1148,6 +1149,7 @@ export type Database = {
           created_by_id?: string | null
           id?: number
           lemma_id: number
+          metadata: Json
           provider: string
           updated_at: string
           voice_name: string
@@ -1158,6 +1160,7 @@ export type Database = {
           created_by_id?: string | null
           id?: number
           lemma_id?: number
+          metadata?: Json
           provider?: string
           updated_at?: string
           voice_name?: string
@@ -1417,9 +1420,11 @@ export type Database = {
           audio_data: string | null
           created_at: string
           created_by_id: string | null
+          generation_metadata: Json | null
           id: number
           language_level: string | null
           lemma_words: Json | null
+          provenance: string
           sentence: string
           slug: string
           target_language_code: string
@@ -1430,9 +1435,11 @@ export type Database = {
           audio_data?: string | null
           created_at: string
           created_by_id?: string | null
+          generation_metadata?: Json | null
           id?: number
           language_level?: string | null
           lemma_words?: Json | null
+          provenance: string
           sentence: string
           slug: string
           target_language_code: string
@@ -1443,9 +1450,11 @@ export type Database = {
           audio_data?: string | null
           created_at?: string
           created_by_id?: string | null
+          generation_metadata?: Json | null
           id?: number
           language_level?: string | null
           lemma_words?: Json | null
+          provenance?: string
           sentence?: string
           slug?: string
           target_language_code?: string
@@ -1453,6 +1462,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sentenceaudio: {
+        Row: {
+          audio_data: string
+          created_at: string
+          created_by_id: string | null
+          id: number
+          metadata: Json
+          provider: string
+          sentence_id: number
+          updated_at: string
+        }
+        Insert: {
+          audio_data: string
+          created_at: string
+          created_by_id?: string | null
+          id?: number
+          metadata: Json
+          provider: string
+          sentence_id: number
+          updated_at: string
+        }
+        Update: {
+          audio_data?: string
+          created_at?: string
+          created_by_id?: string | null
+          id?: number
+          metadata?: Json
+          provider?: string
+          sentence_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sentenceaudio_sentence_id_fkey"
+            columns: ["sentence_id"]
+            isOneToOne: false
+            referencedRelation: "sentence"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sentencelemma: {
         Row: {

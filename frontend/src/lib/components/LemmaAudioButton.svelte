@@ -4,6 +4,7 @@
   import { apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import type { SupabaseClient } from '@supabase/supabase-js';
+  import { LEMMA_AUDIO_SAMPLES } from '$lib/config';
 
   export let target_language_code: string;
   export let lemma: string;
@@ -16,7 +17,9 @@
   let progressCount = 0;
   let lastVariantUrls: string[] | null = null;
 
-  async function fetchVariants(): Promise<{ provider: string; voice_name: string; url: string }[]> {
+  async function fetchVariants(): Promise<
+    { id: number; provider: string; metadata: Record<string, any>; url: string }[]
+  > {
     const res = await apiFetch({
       supabaseClient: null, // public endpoint
       routeName: RouteName.LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API,
@@ -65,7 +68,7 @@
       }
       const a = audioElems[index];
       index += 1;
-      progressCount = index; // 1..3
+    progressCount = index; // 1..n
       a.onended = playNext;
       a.onerror = playNext;
       a.play().catch(() => playNext());
@@ -80,15 +83,20 @@
       // 1) Get existing variants
       let variants = await fetchVariants();
       // 2) Ensure up to 3 exist if needed
-      const needed = 3 - variants.length;
+      const needed = LEMMA_AUDIO_SAMPLES - variants.length;
       if (needed > 0 && supabaseClient) {
-        await ensureVariants(3);
+        await ensureVariants(LEMMA_AUDIO_SAMPLES);
         variants = await fetchVariants();
       }
       // 3) Build URLs and optionally shuffle order
-      const urls = variants.slice(0, 3).map((v) => v.url);
+      const urls = variants
+        .slice(0, LEMMA_AUDIO_SAMPLES)
+        .map((v) => v.url);
       lastVariantUrls = urls;
-      const toPlay = lastVariantUrls && lastVariantUrls.length === 3 ? shuffle(lastVariantUrls) : urls;
+      const toPlay =
+        lastVariantUrls && lastVariantUrls.length === LEMMA_AUDIO_SAMPLES
+          ? shuffle(lastVariantUrls)
+          : urls;
       await playSequential(toPlay);
     } catch (e) {
       // Swallow error; upstream pages may show login prompts
@@ -112,7 +120,7 @@
     <SpeakerHigh size={iconSize} />
   {/if}
   {#if isGeneratingAudio || isPlayingAudio}
-    <span class="badge bg-success ms-2">{progressCount}/3</span>
+    <span class="badge bg-success ms-2">{progressCount}/{LEMMA_AUDIO_SAMPLES}</span>
   {/if}
 </button>
 
@@ -121,4 +129,3 @@
     opacity: 0.7;
   }
 </style>
-

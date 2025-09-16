@@ -87,10 +87,11 @@ export enum RouteName {
   SENTENCE_API_GET_RANDOM_SENTENCE_API = "SENTENCE_API_GET_RANDOM_SENTENCE_API",
   SENTENCE_API_GET_SENTENCE_BY_SLUG_API = "SENTENCE_API_GET_SENTENCE_BY_SLUG_API",
   SENTENCE_API_GET_SENTENCE_AUDIO_API = "SENTENCE_API_GET_SENTENCE_AUDIO_API",
+  SENTENCE_API_GET_SENTENCE_AUDIO_VARIANTS_API = "SENTENCE_API_GET_SENTENCE_AUDIO_VARIANTS_API",
   SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API = "SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API",
   SENTENCE_API_DELETE_SENTENCE_API = "SENTENCE_API_DELETE_SENTENCE_API",
   SENTENCE_API_RENAME_SENTENCE_API = "SENTENCE_API_RENAME_SENTENCE_API",
-  SENTENCE_API_GENERATE_SENTENCE_AUDIO_API = "SENTENCE_API_GENERATE_SENTENCE_AUDIO_API",
+  SENTENCE_API_ENSURE_SENTENCE_AUDIO_API = "SENTENCE_API_ENSURE_SENTENCE_AUDIO_API",
   SENTENCE_API_SENTENCES_LIST_API = "SENTENCE_API_SENTENCES_LIST_API",
   LANGUAGES_API_GET_LANGUAGES_API = "LANGUAGES_API_GET_LANGUAGES_API",
   LANGUAGES_API_GET_LANGUAGE_NAME_API = "LANGUAGES_API_GET_LANGUAGE_NAME_API",
@@ -159,7 +160,7 @@ export const ROUTES = {
   WORDFORM_API_DELETE_WORDFORM_API: "/api/lang/word/{target_language_code}/wordform/{wordform}/delete",
   LEMMA_API_GET_LEMMA_DATA_API: "/api/lang/lemma/{target_language_code}/{lemma}/data",
   LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API: "/api/lang/lemma/{target_language_code}/{lemma}/audio/variants",
-  LEMMA_API_GET_LEMMA_AUDIO_STREAM_API: "/api/lang/lemma/{target_language_code}/{lemma}/audio/{provider}/{voice_name}",
+  LEMMA_API_GET_LEMMA_AUDIO_STREAM_API: "/api/lang/lemma/{target_language_code}/{lemma}/audio",
   LEMMA_API_ENSURE_LEMMA_AUDIO_API: "/api/lang/lemma/{target_language_code}/{lemma}/audio/ensure",
   LEMMA_API_LEMMAS_LIST_API: "/api/lang/lemma/{target_language_code}/lemmas",
   LEMMA_API_GET_LEMMA_METADATA_API: "/api/lang/lemma/{target_language_code}/lemma/{lemma}/metadata",
@@ -198,10 +199,11 @@ export const ROUTES = {
   SENTENCE_API_GET_RANDOM_SENTENCE_API: "/api/lang/sentence/{target_language_code}/random",
   SENTENCE_API_GET_SENTENCE_BY_SLUG_API: "/api/lang/sentence/{target_language_code}/{slug}",
   SENTENCE_API_GET_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{sentence_id}/audio",
+  SENTENCE_API_GET_SENTENCE_AUDIO_VARIANTS_API: "/api/lang/sentence/{target_language_code}/{sentence_id}/audio/variants",
   SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API: "/api/lang/sentence/language/{target_language_code}/{sentence_id}/audio",
   SENTENCE_API_DELETE_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}",
   SENTENCE_API_RENAME_SENTENCE_API: "/api/lang/sentence/{target_language_code}/{slug}/rename",
-  SENTENCE_API_GENERATE_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{slug}/generate_audio",
+  SENTENCE_API_ENSURE_SENTENCE_AUDIO_API: "/api/lang/sentence/{target_language_code}/{slug}/audio/ensure",
   SENTENCE_API_SENTENCES_LIST_API: "/api/lang/sentence/{target_language_code}/sentences",
   LANGUAGES_API_GET_LANGUAGES_API: "/api/lang/languages",
   LANGUAGES_API_GET_LANGUAGE_NAME_API: "/api/lang/language_name/{target_language_code}",
@@ -270,7 +272,7 @@ export type RouteParams = {
   [RouteName.WORDFORM_API_DELETE_WORDFORM_API]: { target_language_code: string; wordform: string };
   [RouteName.LEMMA_API_GET_LEMMA_DATA_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API]: { target_language_code: string; lemma: string };
-  [RouteName.LEMMA_API_GET_LEMMA_AUDIO_STREAM_API]: { target_language_code: string; lemma: string; provider: string; voice_name: string };
+  [RouteName.LEMMA_API_GET_LEMMA_AUDIO_STREAM_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_ENSURE_LEMMA_AUDIO_API]: { target_language_code: string; lemma: string };
   [RouteName.LEMMA_API_LEMMAS_LIST_API]: { target_language_code: string };
   [RouteName.LEMMA_API_GET_LEMMA_METADATA_API]: { target_language_code: string; lemma: string };
@@ -309,10 +311,11 @@ export type RouteParams = {
   [RouteName.SENTENCE_API_GET_RANDOM_SENTENCE_API]: { target_language_code: string };
   [RouteName.SENTENCE_API_GET_SENTENCE_BY_SLUG_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API]: { target_language_code: string; sentence_id: string };
+  [RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_VARIANTS_API]: { target_language_code: string; sentence_id: string };
   [RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_BY_LANGUAGE_API]: { target_language_code: string; sentence_id: string };
   [RouteName.SENTENCE_API_DELETE_SENTENCE_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_RENAME_SENTENCE_API]: { target_language_code: string; slug: string };
-  [RouteName.SENTENCE_API_GENERATE_SENTENCE_AUDIO_API]: { target_language_code: string; slug: string };
+  [RouteName.SENTENCE_API_ENSURE_SENTENCE_AUDIO_API]: { target_language_code: string; slug: string };
   [RouteName.SENTENCE_API_SENTENCES_LIST_API]: { target_language_code: string };
   [RouteName.LANGUAGES_API_GET_LANGUAGES_API]: {};
   [RouteName.LANGUAGES_API_GET_LANGUAGE_NAME_API]: { target_language_code: string };
