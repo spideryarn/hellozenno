@@ -14,6 +14,7 @@ from __future__ import annotations
 import base64
 import time
 from typing import Any, Dict, List, Optional
+from peewee import fn
 
 from flask import Blueprint, jsonify, request
 
@@ -202,49 +203,57 @@ def learn_sourcefile_generate_api(
 
         # First reuse any existing persisted sentences for this sourcefile
         reuse_t0 = time.time()
-        existing_q = (
-            Sentence.select()
-            .where(
-                (Sentence.target_language_code == target_language_code)
-                & (Sentence.provenance == "learn")
-                & (
-                    Sentence.generation_metadata.contains(
-                        {
-                            "source_context": {
-                                "type": "sourcefile",
-                                "slug": sourcefile_slug,
-                            }
-                        }
-                    )
-                )
-            )
-            .order_by(Sentence.created_at.asc())
-            .limit(num_sentences)
-        )
-        existing_sentences = list(existing_q)
         existing_items: List[Dict[str, Any]] = []
-        for s in existing_sentences:
-            # Strict — fail if audio missing
-            if not s.audio_data:
-                return (
-                    jsonify(
-                        {
-                            "error": "Persisted sentence is missing audio",
-                            "message": f"Sentence id={s.id} has no audio_data",
-                        }
-                    ),
-                    500,
+        try:
+            # Match by generation_metadata.source_context.slug == sourcefile_slug
+            # and source_context.type == 'sourcefile'
+            slug_expr = fn.json_extract_path_text(
+                Sentence.generation_metadata, "source_context", "slug"
+            )
+            type_expr = fn.json_extract_path_text(
+                Sentence.generation_metadata, "source_context", "type"
+            )
+
+            existing_q = (
+                Sentence.select()
+                .where(
+                    (Sentence.target_language_code == target_language_code)
+                    & (Sentence.provenance == "learn")
+                    & (slug_expr == sourcefile_slug)
+                    & (type_expr == "sourcefile")
                 )
-            meta = s.generation_metadata or {}
-            used_lemmas = meta.get("used_lemmas") or []
-            existing_items.append(
-                {
-                    "sentence": s.sentence,
-                    "translation": s.translation,
-                    "used_lemmas": used_lemmas,
-                    "language_level": s.language_level,
-                    "audio_data_url": f"/api/lang/sentence/{target_language_code}/{s.id}/audio",
-                }
+                .order_by(Sentence.created_at.asc())
+                .limit(num_sentences)
+            )
+
+            existing_sentences = list(existing_q)
+            for s in existing_sentences:
+                # Strict — fail if audio missing
+                if not s.audio_data:
+                    return (
+                        jsonify(
+                            {
+                                "error": "Persisted sentence is missing audio",
+                                "message": f"Sentence id={s.id} has no audio_data",
+                            }
+                        ),
+                        500,
+                    )
+                meta = s.generation_metadata or {}
+                used_lemmas = meta.get("used_lemmas") or []
+                existing_items.append(
+                    {
+                        "sentence": s.sentence,
+                        "translation": s.translation,
+                        "used_lemmas": used_lemmas,
+                        "language_level": s.language_level,
+                        "audio_data_url": f"/api/lang/sentence/{target_language_code}/{s.id}/audio",
+                    }
+                )
+        except Exception as e:
+            # If DB is not migrated yet or JSON operators unsupported, skip reuse gracefully
+            logger.warning(
+                f"Learn reuse query failed; proceeding without reuse. Reason: {e}"
             )
 
         remaining = max(0, num_sentences - len(existing_items))
@@ -346,12 +355,14 @@ def learn_sourcefile_generate_api(
                 {
                     "sentences": sentences_out,
                     "meta": {
+                        "reused_count": len(existing_items),
+                        "new_count": len(new_items),
                         "durations": {
                             "reuse_s": time.time() - reuse_t0,
                             "llm_s": llm_duration,
                             "audio_total_s": audio_duration,
                             "total_s": total_duration,
-                        }
+                        },
                     },
                 }
             ),
