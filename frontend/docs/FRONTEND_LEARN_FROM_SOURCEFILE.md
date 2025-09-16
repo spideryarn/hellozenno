@@ -23,7 +23,9 @@ The Learn page provides an end-to-end practice flow for a single sourcefile. It 
 - Warm missing lemma metadata as needed to keep the flow snappy
 - Batch-generate all sentences up-front; then practice with low latency between cards
 - Serve persisted audio via `/api/lang/sentence/{code}/{id}/audio` URLs (no base64 in responses)
-- Shuffle the practice deck at session start for varied repetition (generation orders easy→hard; shuffle trades sequence for variety)
+- Deck ordering:
+  - First time after generation: keep the LLM-provided order (typically easy → hard)
+  - Subsequent sessions with fully reused content: shuffle for variety
 
 ## Current state, target state, migration status
 
@@ -84,7 +86,7 @@ The Learn page provides an end-to-end practice flow for a single sourcefile. It 
 
 - Summary: `top = 20`
 - Generate: `num_sentences = 10`, `language_level = null` (server may choose defaults)
-- Deck: shuffled on start; repeat visits re-generate and re-shuffle
+- Deck: first session uses LLM order; later sessions shuffle if no new content was generated
 
 ## Limitations
 

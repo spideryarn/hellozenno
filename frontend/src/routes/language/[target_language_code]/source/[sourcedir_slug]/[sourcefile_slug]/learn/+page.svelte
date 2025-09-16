@@ -44,6 +44,7 @@
   // Background preparation of practice deck
   let preparing = false;
   let preparedCards: typeof cards = [];
+  let preparedMeta: any = null;
   let preparedError: string | null = null;
   let preloadedAudios: HTMLAudioElement[] = [];
   let loadingLemmaMap: Record<string, boolean> = {};
@@ -190,7 +191,10 @@
         },
         timeoutMs: 120000,
       });
-      cards = shuffleArray(js?.sentences || []);
+      const sentences = js?.sentences || [];
+      const meta = js?.meta || {};
+      const keepOrder = typeof meta?.new_count === 'number' ? meta.new_count > 0 : false;
+      cards = keepOrder ? sentences : shuffleArray(sentences);
       currentIndex = 0;
       currentStage = 1;
     } catch (e: any) {
@@ -260,6 +264,7 @@
     preparing = true;
     preparedError = null;
     preparedCards = [];
+    preparedMeta = null;
     try {
       const body = {
         lemmas: visibleLemmas.map((l) => l.lemma).slice(0, 20),
@@ -278,6 +283,7 @@
         timeoutMs: 120000,
       });
       preparedCards = js?.sentences || [];
+      preparedMeta = js?.meta || null;
       // Preload audio data URLs
       preloadAudioDataUrls(preparedCards.map((c: any) => c.audio_data_url).filter(Boolean));
     } catch (e: any) {
@@ -289,7 +295,8 @@
 
   function startOrShowPractice() {
     if (preparedCards.length > 0 && !preparing) {
-      cards = shuffleArray(preparedCards);
+      const keepOrder = typeof preparedMeta?.new_count === 'number' ? preparedMeta.new_count > 0 : false;
+      cards = keepOrder ? preparedCards : shuffleArray(preparedCards);
       currentIndex = 0;
       currentStage = 1;
       return;
@@ -421,6 +428,7 @@
       lemmas = lemmas.filter((x) => x?.lemma !== lemma);
       // Invalidate any prepared deck and re-prepare with the updated lemma set
       preparedCards = [];
+      preparedMeta = null;
       preparedError = null;
       if (!generating) {
         preparePracticeInBackground();
