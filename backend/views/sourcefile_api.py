@@ -25,7 +25,7 @@ from flask import (
 from peewee import DoesNotExist
 
 from utils.env_config import ELEVENLABS_API_KEY
-from utils.audio_utils import add_delays, ensure_model_audio_data
+from utils.audio_utils import add_delays, ensure_sentence_audio_variants
 from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
     DEFAULT_LANGUAGE_LEVEL,
@@ -351,7 +351,7 @@ def _process_individual_lemma(lemma: str, target_language_code: str):
 
         # Generate audio for each sentence
         for sentence in sentences:
-            ensure_model_audio_data(sentence, should_add_delays=True, verbose=1)
+            ensure_sentence_audio_variants(sentence)
 
     except Exception as e:
         print(f"Error processing lemma {lemma}: {str(e)}")
