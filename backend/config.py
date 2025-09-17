@@ -165,8 +165,6 @@ LEMMA_AUDIO_SAMPLES: int = 3
 # Number of distinct audio samples to store per sentence (server default)
 SENTENCE_AUDIO_SAMPLES: int = 3
 
-# Public auto-generation controls (robust fallback when variants are missing)
-# When enabled, unauthenticated requests may trigger minimal on-demand generation
-# to create at least one audio variant for a sentence.
-PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO: bool = False
+# Auto-generation policy: public never auto-generates; authenticated may auto-generate 1 sample
+# TODO remove this. we don't ever want to allow non-logged-in users to be able to generate
 PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES: int = 1
