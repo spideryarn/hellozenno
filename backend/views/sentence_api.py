@@ -16,7 +16,10 @@ from utils.sentence_utils import (
     get_detailed_sentence_data,
     get_all_sentences,
 )
-from utils.audio_utils import ensure_sentence_audio_variants, stream_random_sentence_audio
+from utils.audio_utils import (
+    ensure_sentence_audio_variants,
+    stream_random_sentence_audio,
+)
 from utils.exceptions import AuthenticationRequiredForGenerationError
 from utils.auth_utils import api_auth_required
 
@@ -198,7 +201,7 @@ def rename_sentence_api(target_language_code: str, slug: str):
         # Update the sentence text - this will trigger slug regeneration in save()
         sentence.sentence = new_text
         sentence.slug = slugify(new_text)  # Manually update slug
-            
+
         sentence.save()
 
         return jsonify({"new_text": new_text, "new_slug": sentence.slug}), 200
@@ -207,9 +210,7 @@ def rename_sentence_api(target_language_code: str, slug: str):
         return jsonify({"error": "Sentence not found"}), 404
 
 
-@sentence_api_bp.route(
-    "/<target_language_code>/<slug>/audio/ensure", methods=["POST"]
-)
+@sentence_api_bp.route("/<target_language_code>/<slug>/audio/ensure", methods=["POST"])
 @api_auth_required
 def ensure_sentence_audio_api(target_language_code: str, slug: str):
     """Ensure sentence audio variants exist."""

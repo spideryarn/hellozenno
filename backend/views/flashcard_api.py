@@ -1,5 +1,4 @@
 from db_models import Sentence, Sourcedir, Sourcefile, SourcefileWordform, Wordform
-from utils.audio_utils import ensure_model_audio_data
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_random_sentence
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas, normalize_text

@@ -246,20 +246,42 @@ def learn_sourcefile_generate_api(
                         .order_by(SentenceAudio.created_at)
                     )
 
+                # If still missing, auto-generate a minimal fallback when authenticated
                 if not variants:
-                    return (
-                        jsonify(
-                            {
-                                "error": "Persisted sentence is missing audio variants",
-                                "message": f"Sentence id={s.id} has no sentence_audio variants",
-                            }
-                        ),
-                        500,
+                    try:
+                        from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+                        from flask import g
+
+                        if getattr(g, "user", None):
+                            try:
+                                fallback_n = max(
+                                    1, int(PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES)
+                                )
+                            except Exception:
+                                fallback_n = 1
+                            try:
+                                # Use default enforce_auth=True, requires g.user
+                                variants, _ = ensure_sentence_audio_variants(
+                                    s, n=fallback_n
+                                )
+                            except Exception as gen_err:
+                                logger.warning(
+                                    f"Auto-generated audio fallback failed for sentence id={s.id}: {gen_err}"
+                                )
+                    except Exception:
+                        # If config import fails, just continue without auto-gen
+                        pass
+
+                if not variants:
+                    logger.warning(
+                        f"Persisted sentence id={s.id} has no sentence_audio variants; continuing without audio"
                     )
+                    selected_variant_id = None
+                else:
+                    # Pin a specific variant to avoid random selection across range requests
+                    selected_variant_id = variants[0].id
                 meta = s.generation_metadata or {}
                 used_lemmas = meta.get("used_lemmas") or []
-                # Pin a specific variant to avoid random selection across range requests
-                selected_variant_id = variants[0].id if variants else None
                 existing_items.append(
                     {
                         "sentence": s.sentence,
@@ -358,6 +380,32 @@ def learn_sourcefile_generate_api(
                         f"Failed to ensure audio variants for generated sentence id={sent_id}: {ensure_err}"
                     )
                     variants = []
+
+                # If variants are missing, auto-generate a minimal fallback when authenticated
+                if not variants:
+                    try:
+                        from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+                        from flask import g
+
+                        if getattr(g, "user", None):
+                            try:
+                                fallback_n = max(
+                                    1, int(PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES)
+                                )
+                            except Exception:
+                                fallback_n = 1
+                            try:
+                                # Use default enforce_auth=True, requires g.user
+                                variants, _ = ensure_sentence_audio_variants(
+                                    db_sentence, n=fallback_n
+                                )
+                            except Exception as gen_err:
+                                logger.warning(
+                                    f"Auto-generated audio fallback failed for generated sentence id={sent_id}: {gen_err}"
+                                )
+                    except Exception:
+                        # If config import fails, just continue without auto-gen
+                        pass
 
                 # Pin a specific variant to avoid random selection across range requests
                 selected_variant_id = variants[0].id if variants else None

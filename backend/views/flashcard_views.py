@@ -18,7 +18,6 @@ from typing import Dict, Any, cast
 
 from utils.lang_utils import get_language_name
 from utils.sentence_utils import get_random_sentence
-from utils.audio_utils import ensure_model_audio_data
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas
 from utils.flashcard_utils import (
     get_flashcard_landing_data,

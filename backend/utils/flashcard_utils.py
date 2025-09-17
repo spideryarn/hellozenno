@@ -4,10 +4,17 @@ Utility functions for the flashcard system.
 
 from peewee import DoesNotExist
 
-from db_models import Sourcedir, Sourcefile, SourcefileWordform, Sentence, Wordform
+from db_models import (
+    Sourcedir,
+    Sourcefile,
+    SourcefileWordform,
+    Sentence,
+    SentenceAudio,
+    Wordform,
+)
 from utils.lang_utils import get_language_name
 from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas, normalize_text
-from utils.audio_utils import ensure_model_audio_data, get_or_create_sentence_audio
+from utils.audio_utils import ensure_sentence_audio_variants
 from utils.sentence_utils import get_random_sentence
 from utils.vocab_llm_utils import extract_tokens, create_interactive_word_data
 from flask import url_for
@@ -136,21 +143,17 @@ def get_flashcard_sentence_data(
     except DoesNotExist:
         return {"error": "Sentence not found"}
 
-    # Default audio status flag
     audio_requires_login = False
+    variants = []
 
-    # Attempt to get or generate audio using the new utility
     try:
-        audio_data, audio_requires_login = get_or_create_sentence_audio(
-            sentence_model=sentence, should_add_delays=True, verbose=1
-        )
+        variants, _ = ensure_sentence_audio_variants(sentence)
+    except AuthenticationRequiredForGenerationError:
+        audio_requires_login = True
+        variants = list(sentence.audio_variants.order_by(SentenceAudio.created_at))  # type: ignore
     except Exception as e:
-        # Log audio generation errors but continue, as audio can be generated on demand
         print(f"Error getting/generating audio for Sentence {sentence.id}: {e}")
-        # If an unexpected error occurred (not AuthenticationRequired),
-        # audio_requires_login remains False, but audio_data will be None
-        # The frontend should handle the case where audio_url is present but audio fails to load.
-        audio_data = None  # Ensure audio_data is None if there was an error
+        variants = list(sentence.audio_variants.order_by(SentenceAudio.created_at))  # type: ignore
 
     sourcefile_entry = None
     sourcedir_entry = None
@@ -237,7 +240,7 @@ def get_flashcard_sentence_data(
                 target_language_code=target_language_code,
                 sentence_id=sentence.id,
             )
-            if audio_data
+            if variants
             else None
         ),  # Only provide URL if audio data exists or could be generated
         "audio_requires_login": audio_requires_login,
