@@ -159,13 +159,14 @@ ELEVENLABS_VOICE_POOL: list[str] = [
 
 # Deterministic default TTS voice configuration
 # Global default voice used when no per-language override is specified
-ELEVENLABS_DEFAULT_VOICE: str = "Brian"
-
-# Optional per-language overrides (ISO 639-1 code → voice name)
-ELEVENLABS_DEFAULT_VOICE_PER_LANG: dict[str, str] = {
-    # Greek
-    "el": "Brian",
-}
-
 # Number of distinct audio samples to store per lemma (server default)
 LEMMA_AUDIO_SAMPLES: int = 3
+
+# Number of distinct audio samples to store per sentence (server default)
+SENTENCE_AUDIO_SAMPLES: int = 3
+
+# Public auto-generation controls (robust fallback when variants are missing)
+# When enabled, unauthenticated requests may trigger minimal on-demand generation
+# to create at least one audio variant for a sentence.
+PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO: bool = False
+PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES: int = 1
