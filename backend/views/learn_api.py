@@ -16,7 +16,7 @@ import time
 from typing import Any, Dict, List, Optional
 from peewee import fn
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, g
 
 from loguru import logger
 
@@ -229,7 +229,7 @@ def learn_sourcefile_generate_api(
             existing_sentences = list(existing_q)
             for s in existing_sentences:
                 try:
-                    variants, _ = ensure_sentence_audio_variants(s)
+                    variants, _ = ensure_sentence_audio_variants(s, n=1)
                 except AuthenticationRequiredForGenerationError:
                     variants = list(
                         SentenceAudio.select()
@@ -303,6 +303,33 @@ def learn_sourcefile_generate_api(
 
         remaining = max(0, num_sentences - len(existing_items))
 
+        # If generation is required but the user is not authenticated, return fast
+        # to avoid long-running operations (LLM/audio) that can hit platform timeouts.
+        if remaining > 0 and not getattr(g, "user", None):
+            total_duration = time.time() - t0
+            return (
+                jsonify(
+                    {
+                        "error": "Authentication required to generate sentences",
+                        "message": "Authentication required to generate sentences",
+                        "description": "Please log in to generate new practice sentences.",
+                        "authentication_required_for_generation": True,
+                        "sentences": existing_items,
+                        "meta": {
+                            "reused_count": len(existing_items),
+                            "new_count": 0,
+                            "durations": {
+                                "reuse_s": time.time() - reuse_t0,
+                                "llm_s": 0.0,
+                                "audio_total_s": 0.0,
+                                "total_s": total_duration,
+                            },
+                        },
+                    }
+                ),
+                401,
+            )
+
         llm_duration = 0.0
         audio_duration = 0.0
         new_items: List[Dict[str, Any]] = []
@@ -372,7 +399,7 @@ def learn_sourcefile_generate_api(
                     )
 
                 try:
-                    variants, _ = ensure_sentence_audio_variants(db_sentence)
+                    variants, _ = ensure_sentence_audio_variants(db_sentence, n=1)
                 except AuthenticationRequiredForGenerationError:
                     variants = []
                 except Exception as ensure_err:
