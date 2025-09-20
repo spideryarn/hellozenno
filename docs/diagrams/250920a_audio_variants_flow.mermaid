@@ -1,0 +1,88 @@
+%% Diagram: Audio variants flow (sentences & lemmas)
+%% Context / prompt for regeneration:
+%% Create a concise flowchart showing how sentence and lemma audio variants are ensured and streamed.
+%% Focus on: frontend flashcard sentence page -> backend flashcard API -> audio utils ensure_*_audio_variants -> DB variants -> audio stream endpoint.
+%% Key functions and routes referenced:
+%% - backend/utils/audio_utils.py: ensure_sentence_audio_variants, ensure_lemma_audio_variants
+%% - backend/utils/flashcard_utils.py: get_flashcard_sentence_data
+%% - backend/views/sentence_api.py: GET /api/lang/sentence/{lang}/{id}/audio, GET /api/lang/sentence/{lang}/{id}/audio/variants, POST /api/lang/sentence/{lang}/{slug}/audio/ensure?n=3
+%% - backend/views/lemma_api.py: GET /api/lang/lemma/{lang}/{lemma}/audio, GET /api/lang/lemma/{lang}/{lemma}/audio/variants, POST /api/lang/lemma/{lang}/{lemma}/audio/ensure?n=3
+%% - frontend route: /language/{target_language_code}/flashcards/sentence/{slug} uses FLASHCARD_API_FLASHCARD_SENTENCE_API (/api/lang/{target_language_code}/flashcards/sentence/{slug})
+%% - Behavior: if auth required to generate new audio, frontend gets audio_requires_login=true and a disabled player until login.
+%% Reference commit: cb03e16 (feat: update flashcard/learn/lemma/sentence APIs and utils for audio variants)
+%% URL: https://github.com/spideryarn/hellozenno/commit/cb03e1689a26e9b50cf4668ca1bec48362b5dc20
+
+%%{init: {'theme':'default'}}%%
+flowchart LR
+  %% Systems
+  subgraph BROWSER[Browser SvelteKit]
+    F1[Flashcard sentence page /language/:code/flashcards/sentence/:slug]:::browser
+    F2[Audio player UI]:::browser
+  end
+
+  subgraph BACKEND[Backend Flask API]
+    A1[GET /api/lang/:code/flashcards/sentence/:slug flashcard_sentence_api get_flashcard_sentence_data]:::backend
+    A2{Need new audio variants?}:::backend
+    U1[ensure_sentence_audio_variants sentence n audio_utils.py]:::backend
+    L1[ensure_lemma_audio_variants lemma n audio_utils.py]:::backend
+    A3[POST /api/lang/sentence/:code/:slug/audio/ensure n=3]:::backend
+    A4[GET /api/lang/sentence/:code/:id/audio Streams random or pinned variant]:::backend
+    A5[GET /api/lang/sentence/:code/:id/audio/variants]:::backend
+    A6[POST /api/lang/lemma/:code/:lemma/audio/ensure n=3]:::backend
+    A7[GET /api/lang/lemma/:code/:lemma/audio]:::backend
+    A8[GET /api/lang/lemma/:code/:lemma/audio/variants]:::backend
+  end
+
+  subgraph DB[Database Postgres Supabase]
+    D1[(Sentence)]:::db
+    D2[(SentenceAudio variants)]:::db
+    D3[(Lemma)]:::db
+    D4[(LemmaAudio variants)]:::db
+  end
+
+  subgraph VENDOR[Voice provider]
+    V1[(ElevenLabs voice pool)]:::vendor
+  end
+
+  %% Primary sentence flow
+  F1 -->|fetch data| A1
+  A1 --> A2
+  A2 -- Yes auth present --> U1
+  A2 -- Yes auth missing --> F2
+  F2 ---|audio_requires_login true disabled player| F2
+
+  U1 -->|select missing voices| V1
+  V1 -->|generate bytes| U1
+  U1 -->|create| D2
+  D1 --- D2
+  A1 -->|data with audio_url when variants exist| F1
+  F1 -->|play| A4
+
+  %% Sentence variants listing
+  F1 -. admin/debug .-> A5
+
+  %% Explicit ensure via API (admin action)
+  F1 -. ensure .-> A3 --> U1
+
+  %% Lemma flows (analogous)
+  L1 -->|select missing voices| V1
+  V1 -->|generate bytes| L1
+  L1 -->|create| D4
+  D3 --- D4
+  A6 --> L1
+  F1 -. lemma audio .-> A7
+  F1 -. list lemma variants .-> A8
+
+  %% Classes / styling
+  classDef browser fill:#a17239,color:#fff,stroke:#754c24,stroke-width:1px
+  classDef backend fill:#2f80ed,color:#fff,stroke:#1b4d90,stroke-width:1px
+  classDef db fill:#f2c94c,color:#000,stroke:#b38f00,stroke-width:1px
+  classDef vendor fill:#9b51e0,color:#fff,stroke:#6a1fbf,stroke-width:1px
+
+  %% Notes
+  %% - A1 may set audio_requires_login=true if U1 needs to create new variants and no user is authenticated.
+  %% - A4 returns audio stream; headers include X-Voice-Name, X-Voice-Variant-Id, X-Audio-Provider.
+  %% - A3/A6 return JSON: { created, total } after ensuring variants.
+  %% - get_flashcard_sentence_data falls back to existing variants list when generation errors occur.
+
+

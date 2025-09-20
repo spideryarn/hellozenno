@@ -1,0 +1,68 @@
+flowchart LR
+
+  %% Classes (kept minimal for compatibility)
+  classDef user fill:#a78bfa,stroke:#6d28d9,color:#111;
+  classDef browser fill:#b08968,stroke:#7f5539,color:#111;
+  classDef backend fill:#93c5fd,stroke:#3b82f6,color:#111;
+  classDef database fill:#fde68a,stroke:#f59e0b,color:#111;
+  classDef cloud fill:#c084fc,stroke:#a855f7,color:#111;
+
+  U[User]:::user
+
+  subgraph FE[Frontend - SvelteKit]
+    B1[SvelteKit UI<br/>frontend/src/routes]:::browser
+    B3[Supabase client<br/>@supabase/ssr]:::browser
+    B2[apiFetch<br/>frontend/src/lib/api.ts<br/>- builds URL<br/>- attaches Authorization header<br/>- timeout and JSON]:::browser
+  end
+
+  subgraph BE[Backend - Flask API]
+    A1[App factory<br/>backend/api/index.py]:::backend
+    A2[Auth decorators<br/>api_auth_required and api_auth_optional<br/>verify_jwt_token<br/>backend/utils/auth_utils.py]:::backend
+    A3[API endpoints<br/>backend/views/*_api.py<br/>sentence, lemma, phrase, sourcedir, sourcefile]:::backend
+    A4[Peewee models<br/>backend/db_models.py]:::backend
+    A5[Audio utils<br/>backend/utils/audio_utils.py]:::backend
+  end
+
+  subgraph SUPA[Supabase]
+    S2[Auth JWT]:::cloud
+    S1[(Postgres database)]:::database
+  end
+
+  E1[ElevenLabs TTS]:::cloud
+
+  U --> B1
+  B1 --> B3
+  B3 -. browser auth .-> S2
+
+  B1 --> B2
+  B2 -->|GET or POST /api/... with Authorization| A3
+  A3 --> A2
+  A2 -->|verify with SUPABASE_JWT_SECRET| S2
+
+  A3 <--> A4
+  A4 <--> S1
+
+  A3 -->|generate audio| A5
+  A5 --> E1
+  E1 -->|mp3 bytes| A5
+  A5 -->|persist audio and metadata| A4
+
+  A3 -->|JSON| B2
+  B2 -->|render| B1
+
+  subgraph Legend[Legend]
+    L1[User]:::user
+    L2[Browser]:::browser
+    L3[Backend]:::backend
+    L4[Database]:::database
+    L5[Cloud]:::cloud
+  end
+
+%% References
+%% - frontend/src/lib/api.ts
+%% - backend/api/index.py
+%% - backend/utils/auth_utils.py
+%% - backend/views/*_api.py
+%% - backend/db_models.py
+%% - backend/utils/audio_utils.py
+%% - docs/reference/ARCHITECTURE.md
