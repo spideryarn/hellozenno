@@ -1,0 +1,4 @@
+[submodule "gjdutils"]
+	path = gjdutils
+	url = git@github.com:gregdetre/gjdutils.git
+	branch = main
