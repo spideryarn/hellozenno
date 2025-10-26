@@ -250,7 +250,6 @@ def learn_sourcefile_generate_api(
                 if not variants:
                     try:
                         from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
-                        from flask import g
 
                         if getattr(g, "user", None):
                             try:
@@ -412,7 +411,6 @@ def learn_sourcefile_generate_api(
                 if not variants:
                     try:
                         from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
-                        from flask import g
 
                         if getattr(g, "user", None):
                             try:

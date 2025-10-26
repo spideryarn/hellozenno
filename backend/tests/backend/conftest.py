@@ -55,6 +55,7 @@ from views.phrase_api import phrase_api_bp
 from views.sourcedir_api import sourcedir_api_bp
 from views.sourcefile_api import sourcefile_api_bp
 from views.sentence_api import sentence_api_bp
+from views.learn_api import learn_api_bp
 from tests.mocks.search_mocks import mock_quick_search_for_wordform
 from utils.db_connection import init_db
 from views.flashcard_views import flashcard_views_bp
@@ -210,6 +211,7 @@ def client(fixture_for_testing_db):
     app.register_blueprint(sourcedir_api_bp)
     app.register_blueprint(sourcefile_api_bp)
     app.register_blueprint(sentence_api_bp)
+    app.register_blueprint(learn_api_bp)
 
     # Register custom context processors for testing
     from utils.url_registry import endpoint_for, generate_route_registry
@@ -356,6 +358,24 @@ def mock_llm_autouse(monkeypatch):
                 "register": "neutral",
                 "example_usage": [],
                 "example_wordforms": ["test"],
+            }, {}
+        if template_name == "generate_sentence_flashcards":
+            # Minimal, well-formed fake sentences for Learn flow
+            return {
+                "sentences": [
+                    {
+                        "sentence": "Το βιβλίο είναι ενδιαφέρον.",
+                        "translation": "The book is interesting.",
+                        "lemma_words": ["βιβλίο", "ενδιαφέρων"],
+                        "language_level": "A1",
+                    },
+                    {
+                        "sentence": "Η μουσική είναι όμορφη.",
+                        "translation": "The music is beautiful.",
+                        "lemma_words": ["μουσική", "όμορφος"],
+                        "language_level": "A1",
+                    },
+                ]
             }, {}
         if template_name == "extract_phrases_from_text":
             return {"phrases": [], "source": {"txt_tgt": ""}}, {}
