@@ -75,6 +75,7 @@
 
   // Reactive current audio src for the active card, always absolute
   $: currentAudioSrc = toAbsoluteApiUrl(cards?.[currentIndex]?.audio_data_url);
+  $: hasAudioForCurrentCard = !!currentAudioSrc;
 
   type CardMetrics = {
     replayCount: number;
@@ -887,7 +888,7 @@
           <div class="mb-3">
             <div class="row g-2">
               <div class="col-6">
-                <button class="btn btn-secondary w-100 py-3" on:click={currentStage === 1 ? playAudio : prevStage}>
+                <button class="btn btn-secondary w-100 py-3" on:click={currentStage === 1 ? playAudio : prevStage} disabled={!hasAudioForCurrentCard && currentStage === 1} title={!hasAudioForCurrentCard && currentStage === 1 ? 'No audio available for this card' : ''}>
                   {currentStage === 1 ? 'Play audio (←)' : currentStage === 2 ? 'Play audio (←)' : 'Show sentence (←)'}
                 </button>
               </div>
@@ -925,7 +926,11 @@
 
           {#key currentIndex}
             <div class="mb-3">
-              <AudioPlayer bind:this={audioPlayer} src={currentAudioSrc} downloadUrl={currentAudioSrc} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
+              {#if hasAudioForCurrentCard}
+                <AudioPlayer bind:this={audioPlayer} src={currentAudioSrc} downloadUrl={currentAudioSrc} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
+              {:else}
+                <Alert type="warning">No audio available for this card. {($page.data as any)?.supabase ? '' : 'Login to enable generation.'}</Alert>
+              {/if}
             </div>
 
           {#if currentStage >= 2}
