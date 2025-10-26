@@ -33,7 +33,7 @@ export const LEMMA_AUDIO_SAMPLES = 3;
 export const SENTENCE_AUDIO_SAMPLES = 3;
 
 // Learn from Sourcefile defaults
-export const LEARN_DEFAULT_TOP_WORDS = 20;
+export const LEARN_DEFAULT_TOP_WORDS = 10;
 export const LEARN_DEFAULT_NUM_CARDS = 10;
 // '' = Any (no constraint). Other values: 'sourcefile', 'A1'...'C2'
 export const LEARN_DEFAULT_CEFR: string = '';

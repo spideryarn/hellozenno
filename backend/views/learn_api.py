@@ -29,7 +29,7 @@ from utils.prompt_utils import get_prompt_template_path
 from utils.vocab_llm_utils import anthropic_client, generate_gpt_from_template
 from utils.sentence_utils import generate_sentence
 from utils.audio_utils import ensure_sentence_audio_variants
-from db_models import Sentence, SentenceAudio
+from db_models import Sentence, SentenceAudio, Lemma
 
 
 learn_api_bp = Blueprint("learn_api", __name__, url_prefix="/api/lang/learn")
@@ -84,38 +84,118 @@ def learn_sourcefile_summary_api(
         )
         durations["collect_lemmas_s"] = time.time() - t0
 
-        # Load/generate metadata and score
+        # Time budget for summary (seconds), with sane bounds
+        budget_param = request.args.get("time_budget_s")
+        try:
+            time_budget_s = float(str(budget_param)) if budget_param is not None else 12.0
+        except Exception:
+            time_budget_s = 12.0
+        time_budget_s = max(3.0, min(45.0, time_budget_s))
+
+        # Bulk-prefetch existing lemma metadata in one query to avoid N queries
+        bulk_t0 = time.time()
+        existing_map: Dict[str, Dict[str, Any]] = {}
+        try:
+            if lemmas:
+                # Peewee will expand the IN (...) safely
+                q = (
+                    Lemma.select(
+                        Lemma.lemma,
+                        Lemma.translations,
+                        Lemma.etymology,
+                        Lemma.commonality,
+                        Lemma.guessability,
+                        Lemma.part_of_speech,
+                        Lemma.example_usage,
+                        Lemma.mnemonics,
+                        Lemma.is_complete,
+                    )
+                    .where((Lemma.target_language_code == target_language_code) & (Lemma.lemma.in_(lemmas)))
+                )
+                for row in q:
+                    existing_map[row.lemma] = {
+                        "lemma": row.lemma,
+                        "translations": list(row.translations or []),
+                        "etymology": row.etymology or "",
+                        "commonality": row.commonality,
+                        "guessability": row.guessability,
+                        "part_of_speech": row.part_of_speech or "unknown",
+                        "example_usage": list(row.example_usage or []),
+                        "mnemonics": list(row.mnemonics or []),
+                        "is_complete": bool(row.is_complete),
+                    }
+        except Exception as e:
+            logger.warning(f"Bulk lemma prefetch failed; falling back to per-item loads. Reason: {e}")
+            existing_map = {}
+        durations["bulk_fetch_s"] = time.time() - bulk_t0
+
+        # Load/generate metadata and score with time budget and partial behavior
         ranked: List[Dict[str, Any]] = []
+        generation_s_total = 0.0
+        counts = {
+            "lemmas_total": len(lemmas),
+            "existing_loaded": len(existing_map),
+            "generated": 0,
+            "fallback_defaults": 0,
+            "skipped_due_to_budget": 0,
+        }
+
         t1 = time.time()
         for lemma in lemmas:
-            try:
-                md = load_or_generate_lemma_metadata(
-                    lemma=lemma,
-                    target_language_code=target_language_code,
-                    generate_if_incomplete=True,
-                )
-            except AuthenticationRequiredForGenerationError:
-                # Fall back to minimal defaults if generation requires auth
-                md = {
-                    "lemma": lemma,
-                    "translations": [],
-                    "etymology": "",
-                    "commonality": 0.5,
-                    "guessability": 0.5,
-                    "part_of_speech": "unknown",
-                    "is_complete": False,
-                }
-            except Exception as e:
-                logger.warning(f"Failed to load/generate metadata for '{lemma}': {e}")
-                md = {
-                    "lemma": lemma,
-                    "translations": [],
-                    "etymology": "",
-                    "commonality": 0.5,
-                    "guessability": 0.5,
-                    "part_of_speech": "unknown",
-                    "is_complete": False,
-                }
+            now = time.time()
+            elapsed = now - started_at
+            have = existing_map.get(lemma)
+            md: Dict[str, Any]
+            if have and have.get("is_complete"):
+                md = have
+            else:
+                # If budget remains, attempt to load/generate; otherwise fallback defaults
+                if elapsed < time_budget_s:
+                    gen_t0 = time.time()
+                    try:
+                        md = load_or_generate_lemma_metadata(
+                            lemma=lemma,
+                            target_language_code=target_language_code,
+                            generate_if_incomplete=True,
+                        )
+                        counts["generated"] += 1
+                    except AuthenticationRequiredForGenerationError:
+                        md = {
+                            "lemma": lemma,
+                            "translations": [],
+                            "etymology": "",
+                            "commonality": 0.5,
+                            "guessability": 0.5,
+                            "part_of_speech": "unknown",
+                            "is_complete": False,
+                        }
+                        counts["fallback_defaults"] += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to load/generate metadata for '{lemma}': {e}")
+                        md = {
+                            "lemma": lemma,
+                            "translations": [],
+                            "etymology": "",
+                            "commonality": 0.5,
+                            "guessability": 0.5,
+                            "part_of_speech": "unknown",
+                            "is_complete": False,
+                        }
+                        counts["fallback_defaults"] += 1
+                    finally:
+                        generation_s_total += time.time() - gen_t0
+                else:
+                    counts["skipped_due_to_budget"] += 1
+                    md = {
+                        "lemma": lemma,
+                        "translations": [],
+                        "etymology": "",
+                        "commonality": 0.5,
+                        "guessability": 0.5,
+                        "part_of_speech": "unknown",
+                        "is_complete": False,
+                    }
+                    counts["fallback_defaults"] += 1
 
             # Build summary item; include a couple of examples/mnemonics for UX
             example_usage = md.get("example_usage") or []
@@ -139,7 +219,8 @@ def learn_sourcefile_summary_api(
             item["difficulty_score"] = _difficulty_score(item)
             ranked.append(item)
 
-        durations["lemma_warmup_total_s"] = time.time() - t1
+        durations["lemma_warmup_total_s"] = durations.get("bulk_fetch_s", 0.0) + generation_s_total
+        durations["generation_s"] = generation_s_total
 
         # Sort by difficulty desc and take top N
         ranked.sort(key=lambda x: x.get("difficulty_score", 0.0), reverse=True)
@@ -154,6 +235,8 @@ def learn_sourcefile_summary_api(
                         "total_candidates": len(ranked),
                         "returned": len(top_items),
                         "durations": durations,
+                        "partial": counts["skipped_due_to_budget"] > 0,
+                        "counts": counts,
                     },
                 }
             ),
