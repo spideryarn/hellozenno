@@ -10,9 +10,11 @@
   export let showFullLink: boolean = false; // Whether to show the "View Full Lemma Page" link
   export let isAuthError: boolean = false; // To hide sections if auth error exists
   export let context_sentence: string | undefined = undefined; // Optional context from sourcefile
+  export let context_sentence_full: string | undefined = undefined; // Full sentence for tooltip
   export let source_wordforms: string[] = []; // Wordforms for this lemma present in the current sourcefile
   export let showIgnore: boolean = false; // Show an ignore button (dispatches 'ignore')
-  export let source_sentences: string[] = []; // Full sentences from source containing lemma or wordforms
+  export let source_sentences: string[] = []; // Sentences/snippets from source containing lemma or wordforms
+  export let source_sentences_full: string[] = []; // Full sentences aligned to source_sentences for tooltips
   
   // Supabase client is provided via root layout data
   $: supabaseClient = ($page?.data as any)?.supabase ?? null;
@@ -71,7 +73,7 @@
     </div>
   </svelte:fragment>
   {#if context_sentence}
-    <blockquote class="context-sentence hz-foreign-text">{context_sentence}</blockquote>
+    <blockquote class="context-sentence hz-foreign-text" title={context_sentence_full || context_sentence}>{context_sentence}</blockquote>
   {/if}
   <div class="translations mb-3">
     <p>
@@ -90,8 +92,8 @@
     <div class="mb-3">
       <strong>In this text (sentences):</strong>
       <ul class="mt-2 mb-0">
-        {#each source_sentences as s}
-          <li class="hz-foreign-text">{s}</li>
+        {#each source_sentences as s, i}
+          <li class="hz-foreign-text" title={(source_sentences_full && source_sentences_full[i]) ? source_sentences_full[i] : s}>{s}</li>
         {/each}
       </ul>
     </div>

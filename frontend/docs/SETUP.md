@@ -27,8 +27,11 @@ npm run dev -- --open
 ```
 
 The SvelteKit frontend runs on port 5173 by default (see `run_sveltekit.sh`): http://localhost:5173
+Note: The SvelteKit/Vite dev server normally hot-reloads changes automatically; if HMR seems stuck, restart the dev server.
 
 The Flask backend should be running separately (see `scripts/local/run_backend.sh`) on port 3000: http://localhost:3000
+
+Note: In development, the Flask backend should auto-reload on Python changes. However, it can sometimes fail to pick up changes; if that happens, restart `./scripts/local/run_backend.sh`.
 
 ## Build for Production
 

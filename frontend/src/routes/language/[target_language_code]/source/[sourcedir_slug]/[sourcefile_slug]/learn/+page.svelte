@@ -4,13 +4,14 @@
   import Card from '$lib/components/Card.svelte';
   import Alert from '$lib/components/Alert.svelte';
   import { AudioPlayer } from '$lib';
-  import { API_BASE_URL, LEARN_DEFAULT_TOP_WORDS, LEARN_DEFAULT_NUM_CARDS, LEARN_DEFAULT_CEFR } from '$lib/config';
+  import { API_BASE_URL, LEARN_DEFAULT_TOP_WORDS, LEARN_DEFAULT_NUM_CARDS, LEARN_DEFAULT_CEFR, SITE_NAME } from '$lib/config';
   import { apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import LemmaContent from '$lib/components/LemmaContent.svelte';
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
   import CaretRight from 'phosphor-svelte/lib/CaretRight';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  import { truncate } from '$lib/utils';
   // Use dynamic import for p-queue to avoid build-time type resolution issues
 
   // No exported props required for this page in MVP
@@ -22,6 +23,7 @@
   let sourcefileWordforms: Record<string, string[]> = {};
   let sourceText: string = '';
   let sourcefileLevel: string | null = null;
+  let sourcefileFilename: string = '';
 
   // One-at-a-time navigation for priority words
   let currentLemmaIndex = 0;
@@ -118,6 +120,8 @@
   $: target_language_code = $page.params.target_language_code;
   $: sourcedir_slug = $page.params.sourcedir_slug;
   $: sourcefile_slug = $page.params.sourcefile_slug;
+  let language_name: string = '';
+  $: language_name = ($page.data as any)?.language_name || target_language_code;
 
   async function fetchSummary() {
     loadingSummary = true;
@@ -144,6 +148,7 @@
         const td = await textRes.json();
         sourceText = td?.sourcefile?.text_target || td?.text_data?.text_target || '';
         sourcefileLevel = (td?.sourcefile?.language_level || '').toUpperCase() || null;
+        sourcefileFilename = td?.sourcefile?.filename || sourcefile_slug;
         const wordforms = td?.wordforms || [];
         // Build map of lemma -> forms present in this sourcefile
         sourcefileWordforms = {};
@@ -208,17 +213,27 @@
         num_sentences: settingNumSentences,
         language_level: langLevel,
       };
-      const js = await apiFetch({
-        supabaseClient: ($page.data as any).supabase ?? null,
-        routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
-        params: { target_language_code, sourcedir_slug, sourcefile_slug },
-        options: {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        },
-        timeoutMs: 120000,
-      });
+      let js: any;
+      try {
+        js = await apiFetch({
+          supabaseClient: ($page.data as any).supabase ?? null,
+          routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
+          params: { target_language_code, sourcedir_slug, sourcefile_slug },
+          options: {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          },
+          timeoutMs: 120000,
+        });
+      } catch (e: any) {
+        // Gracefully handle unauthenticated reuse: backend returns 401 with sentences
+        if (e?.status === 401 && Array.isArray(e?.body?.sentences)) {
+          js = { sentences: e.body.sentences, meta: e.body.meta };
+        } else {
+          throw e;
+        }
+      }
       const sentences = js?.sentences || [];
       const meta = js?.meta || {};
       if (meta?.durations) {
@@ -331,18 +346,28 @@
       };
       // Create a controller to allow cancellation
       prepareAbortCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const js = await apiFetch({
-        supabaseClient: ($page.data as any).supabase ?? null,
-        routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
-        params: { target_language_code, sourcedir_slug, sourcefile_slug },
-        options: {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          ...(prepareAbortCtrl ? { signal: prepareAbortCtrl.signal as any } : {}),
-        },
-        timeoutMs: 120000,
-      });
+      let js: any;
+      try {
+        js = await apiFetch({
+          supabaseClient: ($page.data as any).supabase ?? null,
+          routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
+          params: { target_language_code, sourcedir_slug, sourcefile_slug },
+          options: {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+            ...(prepareAbortCtrl ? { signal: prepareAbortCtrl.signal as any } : {}),
+          },
+          timeoutMs: 120000,
+        });
+      } catch (e: any) {
+        // Handle unauthenticated reuse (401) by using returned sentences
+        if (e?.status === 401 && Array.isArray(e?.body?.sentences)) {
+          js = { sentences: e.body.sentences, meta: e.body.meta };
+        } else {
+          throw e;
+        }
+      }
       preparedCards = js?.sentences || [];
       preparedMeta = js?.meta || null;
       if (preparedMeta?.durations) {
@@ -463,11 +488,32 @@
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
+  function snippetAroundTerm(text: string, matchStart: number, matchLength: number, before: number = 100, after: number = 100): string {
+    const from = Math.max(0, matchStart - before);
+    const to = Math.min(text.length, matchStart + matchLength + after);
+    const prefix = from > 0 ? '…' : '';
+    const suffix = to < text.length ? '…' : '';
+    return `${prefix}${text.slice(from, to)}${suffix}`;
+  }
+
   function getContextSentence(text: string, lemma: string | undefined): string | undefined {
     if (!text || !lemma) return undefined;
-    const sentences = text.split(/(?<=[.!?])\s+/);
-    const idx = sentences.findIndex(s => s.includes(lemma));
-    if (idx >= 0) return sentences[idx];
+    const sentences = text.split(/(?<=[.!?;··])\s+/);
+    for (const s of sentences) {
+      const pos = s.indexOf(lemma);
+      if (pos !== -1) {
+        return snippetAroundTerm(s, pos, lemma.length, 100, 100);
+      }
+    }
+    return undefined;
+  }
+
+  function getContextSentenceFull(text: string, lemma: string | undefined): string | undefined {
+    if (!text || !lemma) return undefined;
+    const sentences = text.split(/(?<=[.!?;··])\s+/);
+    for (const s of sentences) {
+      if (s.includes(lemma)) return s;
+    }
     return undefined;
   }
 
@@ -478,12 +524,37 @@
     for (const f of forms || []) if (f) searchTerms.add(f);
     const sentences = text.split(/(?<=[.!?;··])\s+/);
     const result: string[] = [];
+    const terms = Array.from(searchTerms);
     for (const s of sentences) {
-      for (const term of searchTerms) {
-        if (s.includes(term)) { result.push(s); break; }
+      let bestIdx = -1;
+      let bestTerm = '';
+      for (const term of terms) {
+        const pos = s.indexOf(term);
+        if (pos !== -1 && (bestIdx === -1 || pos < bestIdx)) {
+          bestIdx = pos;
+          bestTerm = term;
+        }
+      }
+      if (bestIdx !== -1) {
+        result.push(snippetAroundTerm(s, bestIdx, bestTerm.length, 100, 100));
       }
     }
     // Deduplicate while preserving order
+    return Array.from(new Set(result));
+  }
+
+  function getAllContextSentencesFull(text: string, lemma: string | undefined, forms: string[]): string[] {
+    if (!text) return [];
+    const searchTerms = new Set<string>();
+    if (lemma) searchTerms.add(lemma);
+    for (const f of forms || []) if (f) searchTerms.add(f);
+    const sentences = text.split(/(?<=[.!?;··])\s+/);
+    const result: string[] = [];
+    for (const s of sentences) {
+      for (const term of searchTerms) {
+        if (s.indexOf(term) !== -1) { result.push(s); break; }
+      }
+    }
     return Array.from(new Set(result));
   }
 
@@ -617,7 +688,7 @@
 </script>
 
 <svelte:head>
-  <title>Learn from sourcefile (MVP)</title>
+  <title>{truncate(sourcefileFilename || sourcefile_slug, 30)} | Learn | {language_name} | {SITE_NAME}</title>
   <meta name="robots" content="noindex" />
   <meta name="description" content="Priority words and generated audio flashcards" />
 </svelte:head>
@@ -770,8 +841,14 @@
                   showFullLink={false}
                   isAuthError={false}
                   context_sentence={getContextSentence(sourceText, visibleLemmas[currentLemmaIndex]?.lemma)}
+                  context_sentence_full={getContextSentenceFull(sourceText, visibleLemmas[currentLemmaIndex]?.lemma)}
                   source_wordforms={sourcefileWordforms[visibleLemmas[currentLemmaIndex]?.lemma] || []}
                   source_sentences={getAllContextSentences(
+                    sourceText,
+                    visibleLemmas[currentLemmaIndex]?.lemma,
+                    sourcefileWordforms[visibleLemmas[currentLemmaIndex]?.lemma] || []
+                  )}
+                  source_sentences_full={getAllContextSentencesFull(
                     sourceText,
                     visibleLemmas[currentLemmaIndex]?.lemma,
                     sourcefileWordforms[visibleLemmas[currentLemmaIndex]?.lemma] || []
