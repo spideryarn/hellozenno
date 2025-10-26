@@ -98,18 +98,26 @@ Key points:
 ```bash
 # Development (user has these running)
 source .env.local
-./scripts/local/run_backend.sh    # Flask on :3000
-./scripts/local/run_frontend.sh   # SvelteKit on :5173
+supabase start                     # requires Docker Desktop
+export FLASK_PORT=3000
+./scripts/local/run_backend.sh     # Flask on :3000
+./scripts/local/run_frontend.sh    # SvelteKit on :5173
+open -a "Google Chrome" http://localhost:5173
 
 # Type checking
 cd frontend && npm run check
 
 # Database
-./scripts/local/migrate.sh        # Run migrations
+./scripts/local/migrate.sh         # Run migrations
 ./scripts/local/migrations_list.sh # Check status
 
 # Production
 source /Users/greg/.venvs/hellozenno__backend/bin/activate
-./scripts/prod/deploy.sh          # Deploy (see backend/docs/DEVOPS.md)
-./scripts/prod/backup_db.sh       # Backup DB
+./scripts/prod/deploy.sh           # Deploy (see backend/docs/DEVOPS.md)
+./scripts/prod/backup_db.sh        # Backup DB
 ```
+
+Tip:
+- If port 5173 is in use: `lsof -ti:5173 | xargs kill -9` or run on 5174 with `cd frontend && PORT=5174 npm run dev`.
+
+- Flask backend should auto-reload on Python changes in development, but it can occasionally get stuck. If changes don't show up, restart `./scripts/local/run_backend.sh`.

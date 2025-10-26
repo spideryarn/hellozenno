@@ -28,6 +28,7 @@ Status: stable • Last updated: 2025-09-15
 ### Architecture & Design
 - **[reference/ARCHITECTURE.md](reference/ARCHITECTURE.md)** - High-level system architecture
 - **[frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md](../frontend/docs/FRONTEND_SVELTEKIT_ARCHITECTURE.md)** - Frontend architecture overview
+- **[reference/LEARN_FROM_SOURCEFILE_MVP.md](reference/LEARN_FROM_SOURCEFILE_MVP.md)** - Learn (MVP) flow with code signposts
 - [backend/docs/MODELS.md](../backend/docs/MODELS.md) - Database schema and models
 - [backend/docs/URL_REGISTRY.md](../backend/docs/URL_REGISTRY.md) - API URL pattern system
 - [frontend/docs/BACKEND_FLASK_API_INTEGRATION.md](../frontend/docs/BACKEND_FLASK_API_INTEGRATION.md) - Type-safe API integration

@@ -84,6 +84,9 @@ Both types of source files support:
 5. **View the application:**
    Open http://localhost:5173 in your browser
 
+Tip:
+- If another app is using port 5173, free it with `lsof -ti:5173 | xargs kill -9` or run the frontend on 5174 using `cd frontend && PORT=5174 npm run dev`, then open http://localhost:5174
+
 ### Detailed Documentation
 
 For more detailed setup and development information:
