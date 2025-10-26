@@ -65,6 +65,17 @@
   let settingLanguageLevel: string = LEARN_DEFAULT_CEFR; // '' means Any; 'sourcefile' to use sourcefile level
   let summaryMeta: any = null;
 
+  // Build absolute API URL for audio when backend returns a relative path
+  function toAbsoluteApiUrl(path: string | null | undefined): string {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    // Ensure we prefix with API_BASE_URL for production (different domain)
+    return `${API_BASE_URL}${path}`;
+  }
+
+  // Reactive current audio src for the active card, always absolute
+  $: currentAudioSrc = toAbsoluteApiUrl(cards?.[currentIndex]?.audio_data_url);
+
   type CardMetrics = {
     replayCount: number;
     startedAt: number | null;
@@ -318,7 +329,7 @@
       for (const url of limited) {
         const a = new Audio();
         a.preload = 'metadata';
-        a.src = url;
+        a.src = toAbsoluteApiUrl(url);
         a.load();
         preloadedAudios.push(a);
       }
@@ -914,7 +925,7 @@
 
           {#key currentIndex}
             <div class="mb-3">
-              <AudioPlayer bind:this={audioPlayer} src={cards[currentIndex].audio_data_url} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
+              <AudioPlayer bind:this={audioPlayer} src={currentAudioSrc} downloadUrl={currentAudioSrc} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
             </div>
 
           {#if currentStage >= 2}

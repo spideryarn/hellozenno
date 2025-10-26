@@ -132,7 +132,7 @@ def learn_sourcefile_summary_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
     """Return ranked lemma summaries for the given sourcefile.
-    Response shape: { lemmas: [...], meta: { durations } }
+    Response shape: { lemmas: [...], meta: { durations, partial?, counts? } }
     """
 ```
 
@@ -151,8 +151,9 @@ def learn_sourcefile_generate_api(
 
 Key behavior:
 - Summary computes a difficulty score = (1 - guessability) + (1 - commonality) and returns top-K lemmas.
+- Summary uses bulk prefetch of lemma metadata and a time budget; if exceeded, returns partial results with defaults for the remainder and sets `meta.partial=true` plus `meta.counts`.
 - Generation reuses existing `Sentence` rows for the same sourcefile, then tops up via LLM; audio variants are ensured.
-- Responses include durations for observability.
+- Responses include durations for observability. No caching is used in this MVP.
 
 ### Frontend behavior highlights
 
@@ -177,6 +178,8 @@ const js = await apiFetch({
 });
 ```
 
+- Progressive improvement (authenticated): each load fills more lemma metadata within a time budget; subsequent loads return faster, more complete summaries and prepared decks.
+
 - Practice generation and reuse:
 ```216:233:frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/learn/+page.svelte
 const js = await apiFetch({
@@ -198,7 +201,7 @@ const js = await apiFetch({
 ```26:39:frontend/src/lib/config.ts
 export const SITE_NAME = "Hello Zenno";
 export const TAGLINE = "AI-powered dictionary & listening practice";
-export const LEARN_DEFAULT_TOP_WORDS = 20;
+export const LEARN_DEFAULT_TOP_WORDS = 10;
 export const LEARN_DEFAULT_NUM_CARDS = 10;
 export const LEARN_DEFAULT_CEFR: string = '';
 ```

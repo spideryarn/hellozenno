@@ -56,6 +56,15 @@ def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
 
     Public endpoint: returns empty list if none exist.
     """
+    # Normalize lemma for consistent DB lookups (handle URL-encoded and Unicode forms)
+    try:
+        import urllib.parse
+        import unicodedata
+
+        lemma = urllib.parse.unquote(lemma)
+        lemma = unicodedata.normalize("NFC", lemma)
+    except Exception:
+        pass
     try:
         lemma_model = Lemma.get(
             (Lemma.lemma == lemma)
@@ -89,7 +98,15 @@ def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
 @lemma_api_bp.route("/<target_language_code>/<lemma>/audio", methods=["GET"])
 def get_lemma_audio_stream_api(target_language_code: str, lemma: str):
     """Stream a random lemma audio variant."""
+    # Normalize lemma for consistent DB lookups
+    try:
+        import urllib.parse
+        import unicodedata
 
+        lemma = urllib.parse.unquote(lemma)
+        lemma = unicodedata.normalize("NFC", lemma)
+    except Exception:
+        pass
     try:
         lemma_model = Lemma.get(
             (Lemma.lemma == lemma)
@@ -144,6 +161,16 @@ def ensure_lemma_audio_api(target_language_code: str, lemma: str):
         from config import LEMMA_AUDIO_SAMPLES
 
         n = LEMMA_AUDIO_SAMPLES
+
+    # Normalize lemma for consistent DB lookups
+    try:
+        import urllib.parse
+        import unicodedata
+
+        lemma = urllib.parse.unquote(lemma)
+        lemma = unicodedata.normalize("NFC", lemma)
+    except Exception:
+        pass
 
     try:
         lemma_model = Lemma.get(
