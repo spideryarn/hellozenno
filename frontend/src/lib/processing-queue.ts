@@ -358,22 +358,22 @@ export class SourcefileProcessingQueue {
       return true;
     }
 
-    // 3. Separate normal steps from lemma metadata steps to prioritize wordforms extraction
+    // 3. Separate normal steps from lemma metadata steps
+    // Normal steps will be run first; lemma metadata will be fetched fresh after normal steps complete
     const normalSteps: QueuedStep[] = [];
-    const lemmaMetadataSteps: QueuedStep[] = [];
 
-    // Separate lemma metadata from other steps
+    // Only keep non-lemma-metadata steps for now
     allSteps.forEach(step => {
-      if (step.type === 'lemma_metadata') {
-        lemmaMetadataSteps.push(step);
-      } else {
+      if (step.type !== 'lemma_metadata') {
         normalSteps.push(step);
       }
     });
 
-    // Calculate total steps for progress bar
-    const totalStepsCount = (normalSteps.length * iterations) + lemmaMetadataSteps.length;
-    console.log(`Processing ${normalSteps.length} normal steps × ${iterations} iterations + ${lemmaMetadataSteps.length} lemma metadata steps`);
+    // Calculate total steps for progress bar (lemma metadata will be added after normal steps)
+    // For now, estimate with initial lemma count - will be updated after normal steps
+    const initialLemmaCount = currentStatus.incomplete_lemmas_count;
+    let totalStepsCount = (normalSteps.length * iterations) + initialLemmaCount;
+    console.log(`Processing ${normalSteps.length} normal steps × ${iterations} iterations + ~${initialLemmaCount} lemma metadata steps`);
 
     this.updateStateIfCurrent(runId, state => ({
       ...state,
@@ -428,31 +428,68 @@ export class SourcefileProcessingQueue {
       }
     }
 
-    // 5. Add all lemma metadata steps to the end of the queue (only once)
-    console.log(`--- Queueing ${lemmaMetadataSteps.length} lemma metadata steps ---`);
-    for (const step of lemmaMetadataSteps) {
-      const stepCopy = { ...step } as QueuedStep;
-      runQueue.add(async () => {
-        if (aborted) {
-          return;
-        }
-        // For lemma metadata, we're in a special "finishing" phase
-        this.updateStateIfCurrent(runId, state => ({ 
-          ...state, 
-          currentIteration: iterations,
-          description: stepCopy.description 
-        }));
-        const success = await this.processSingleStep(stepCopy, runId);
-        if (!success) {
-          overallSuccess = false;
-          aborted = true;
-          return;
-        }
-      });
-    }
-
-    // 6. Process all steps in the queue (using the local reference)
+    // 5. Wait for normal steps to complete
     await runQueue.onIdle();
+    
+    // 6. If not aborted, re-fetch status and process lemma metadata with fresh data
+    if (!aborted) {
+      console.log('Normal steps complete. Re-fetching status for fresh lemma metadata...');
+      const freshStatus = await this.fetchSourcefileStatus();
+      
+      if (freshStatus && freshStatus.incomplete_lemmas_count > 0) {
+        // Update total steps count with actual lemma count
+        const normalStepsCompleted = normalSteps.length * iterations;
+        totalStepsCount = normalStepsCompleted + freshStatus.incomplete_lemmas_count;
+        
+        this.updateStateIfCurrent(runId, state => ({
+          ...state,
+          totalSteps: totalStepsCount
+        }));
+        
+        console.log(`--- Processing ${freshStatus.incomplete_lemmas_count} lemma metadata steps (fresh) ---`);
+        
+        // Create a new queue for lemma metadata steps
+        const lemmaQueue = new PQueue({ concurrency: 1 });
+        
+        for (const lemmaInfo of freshStatus.incomplete_lemmas) {
+          const step: QueuedStep = {
+            type: 'lemma_metadata',
+            apiEndpoint: getApiUrl(
+              RouteName.LEMMA_API_COMPLETE_LEMMA_METADATA_API,
+              {
+                target_language_code: this.sourcefileData.target_language_code,
+                lemma: lemmaInfo.lemma
+              }
+            ),
+            params: {},
+            description: `Completing metadata for "${lemmaInfo.lemma}"`,
+            lemma: lemmaInfo.lemma
+          };
+          
+          lemmaQueue.add(async () => {
+            if (aborted) {
+              return;
+            }
+            // For lemma metadata, we're in a special "finishing" phase
+            this.updateStateIfCurrent(runId, state => ({ 
+              ...state, 
+              currentIteration: iterations,
+              description: step.description 
+            }));
+            const success = await this.processSingleStep(step, runId);
+            if (!success) {
+              overallSuccess = false;
+              aborted = true;
+              return;
+            }
+          });
+        }
+        
+        await lemmaQueue.onIdle();
+      } else {
+        console.log('No incomplete lemmas to process.');
+      }
+    }
 
     // Final state update - only if this run is still current
     console.log("Processing finished. Fetching final data...");
