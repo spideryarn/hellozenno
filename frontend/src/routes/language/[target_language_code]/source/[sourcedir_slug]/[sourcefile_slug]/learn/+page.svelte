@@ -44,6 +44,103 @@
   let currentStage = 1; // 1: audio; 2: sentence; 3: translation
   let audioPlayer: any;
 
+  // Highlight segments for the current sentence (computed when card changes)
+  type HighlightSegment = { text: string; isHighlight: boolean };
+  let currentSentenceSegments: HighlightSegment[] = [];
+
+  // Compute highlight segments for a sentence given target lemmas and their wordforms
+  // Uses Unicode-aware boundary detection with manual validation (since \b doesn't work for Greek/Cyrillic)
+  function computeHighlightSegments(
+    sentence: string,
+    usedLemmas: string[],
+    wordformsMap: Record<string, string[]>
+  ): HighlightSegment[] {
+    if (!sentence || !usedLemmas?.length) {
+      return [{ text: sentence || '', isHighlight: false }];
+    }
+
+    // Expand lemmas with their known wordforms for better matching
+    const allTerms = new Set<string>();
+    for (const lemma of usedLemmas) {
+      const trimmed = lemma?.trim();
+      if (trimmed) allTerms.add(trimmed);
+      const forms = wordformsMap[lemma] || [];
+      for (const form of forms) {
+        const trimmedForm = form?.trim();
+        if (trimmedForm) allTerms.add(trimmedForm);
+      }
+    }
+
+    if (allTerms.size === 0) {
+      return [{ text: sentence, isHighlight: false }];
+    }
+
+    // Sort by length descending to match longer terms first (avoid partial matches)
+    const sortedTerms = Array.from(allTerms).sort((a, b) => b.length - a.length);
+
+    // Escape regex special characters and build alternation pattern
+    const escaped = sortedTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const pattern = new RegExp(`(${escaped.join('|')})`, 'giu');
+
+    // Unicode word character check: letters + combining marks (for proper boundary detection)
+    const isWordChar = (char: string): boolean => /[\p{L}\p{M}]/u.test(char);
+
+    const segments: HighlightSegment[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(sentence)) !== null) {
+      const matchStart = match.index;
+      const matchEnd = matchStart + match[0].length;
+      const matchedText = match[0];
+
+      // Get adjacent characters
+      const charBefore = matchStart > 0 ? sentence[matchStart - 1] : '';
+      const charAfter = matchEnd < sentence.length ? sentence[matchEnd] : '';
+      const firstMatchChar = matchedText[0] || '';
+      const lastMatchChar = matchedText[matchedText.length - 1] || '';
+
+      // Boundary logic: require boundary only if both sides are word characters
+      // This handles elision (τ'αγάπη) where the term ends with non-letter
+      const needsBoundaryBefore = isWordChar(firstMatchChar);
+      const needsBoundaryAfter = isWordChar(lastMatchChar);
+
+      const isValidBefore = !needsBoundaryBefore || !charBefore || !isWordChar(charBefore);
+      const isValidAfter = !needsBoundaryAfter || !charAfter || !isWordChar(charAfter);
+
+      if (isValidBefore && isValidAfter) {
+        // Add non-matching text before this match
+        if (matchStart > lastIndex) {
+          segments.push({ text: sentence.slice(lastIndex, matchStart), isHighlight: false });
+        }
+        // Add the matching text
+        segments.push({ text: matchedText, isHighlight: true });
+        lastIndex = matchEnd;
+      }
+    }
+
+    // Add remaining text after last match
+    if (lastIndex < sentence.length) {
+      segments.push({ text: sentence.slice(lastIndex), isHighlight: false });
+    }
+
+    return segments.length > 0 ? segments : [{ text: sentence, isHighlight: false }];
+  }
+
+  // Reactively compute segments when card changes
+  $: {
+    const card = cards[currentIndex];
+    if (card) {
+      currentSentenceSegments = computeHighlightSegments(
+        card.sentence,
+        card.used_lemmas,
+        sourcefileWordforms
+      );
+    } else {
+      currentSentenceSegments = [];
+    }
+  }
+
   // Background preparation of practice deck
   let preparing = false;
   let preparedCards: typeof cards = [];
@@ -53,6 +150,8 @@
   let loadingLemmaMap: Record<string, boolean> = {};
   let warmingQueue: any = null;
   let prepareAbortCtrl: AbortController | null = null;
+  let summaryAbortCtrl: AbortController | null = null;
+  let summaryRequestId = 0;
   let showWordsPanel = true;
   let showOptions = false;
   let showWordsHelp = false;
@@ -136,6 +235,13 @@
   $: language_name = ($page.data as any)?.language_name || target_language_code;
 
   async function fetchSummary() {
+    // Abort any in-flight request and track this request's ID
+    if (summaryAbortCtrl) {
+      summaryAbortCtrl.abort();
+    }
+    summaryAbortCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const thisRequestId = ++summaryRequestId;
+
     loadingSummary = true;
     summaryError = null;
     try {
@@ -144,10 +250,17 @@
         supabaseClient: ($page.data as any).supabase ?? null,
         routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_SUMMARY_API,
         params: { target_language_code, sourcedir_slug, sourcefile_slug },
-        options: { method: 'GET' },
+        options: {
+          method: 'GET',
+          ...(summaryAbortCtrl ? { signal: summaryAbortCtrl.signal as any } : {}),
+        },
         searchParams: { top: settingTopK },
         timeoutMs: 60000,
       });
+
+      // Only apply state if this is still the latest request
+      if (thisRequestId !== summaryRequestId) return;
+
       lemmas = js?.lemmas || [];
       summaryMeta = js?.meta || null;
       if (summaryMeta?.durations) {
@@ -155,7 +268,11 @@
       }
 
       // Also fetch the original source text for context sentence extraction
-      const textRes = await fetch(`${API_BASE_URL}/api/lang/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/text`);
+      const textRes = await fetch(
+        `${API_BASE_URL}/api/lang/sourcefile/${encodeURIComponent(target_language_code)}/${encodeURIComponent(sourcedir_slug)}/${encodeURIComponent(sourcefile_slug)}/text`,
+        summaryAbortCtrl ? { signal: summaryAbortCtrl.signal } : {}
+      );
+      if (thisRequestId !== summaryRequestId) return;
       if (textRes.ok) {
         const td = await textRes.json();
         sourceText = td?.sourcefile?.text_target || td?.text_data?.text_target || '';
@@ -182,6 +299,7 @@
           params: { target_language_code },
           options: { method: 'GET' },
         });
+        if (thisRequestId !== summaryRequestId) return;
         if (Array.isArray(ignored)) {
           ignoredLemmas = new Set(ignored.map((x: any) => x.lemma));
         }
@@ -189,9 +307,13 @@
         // not logged in or API error; proceed without filtering
       }
     } catch (e: any) {
+      if (e?.name === 'AbortError') return; // Request was cancelled, don't update state
+      if (thisRequestId !== summaryRequestId) return;
       summaryError = e?.message || 'Failed to load summary';
     } finally {
-      loadingSummary = false;
+      if (thisRequestId === summaryRequestId) {
+        loadingSummary = false;
+      }
     }
     // Kick off background preparation once summary is available
     if (!summaryError && lemmas.length > 0) {
@@ -323,8 +445,23 @@
     }
   }
 
+  function clearPreloadedAudios() {
+    // Release references to preloaded audio elements to avoid memory leaks
+    for (const a of preloadedAudios) {
+      try {
+        a.src = '';
+        a.load();
+      } catch {}
+    }
+    preloadedAudios = [];
+  }
+
   function preloadAudioDataUrls(urls: string[]) {
     try {
+      // Clear old preloads before adding new ones to cap memory usage
+      if (preloadedAudios.length > 10) {
+        clearPreloadedAudios();
+      }
       // Limit concurrent preloads to reduce DB pressure
       const limited = urls.slice(0, 2);
       for (const url of limited) {
@@ -463,6 +600,12 @@
 
   // For complete keyboard shortcuts reference, see frontend/docs/KEYBOARD_SHORTCUTS.md
   function handleKeyDown(event: KeyboardEvent) {
+    // Check if user is in an editable element (shared across all modes)
+    const active = (document.activeElement as HTMLElement | null);
+    const tag = active?.tagName?.toLowerCase();
+    const isEditable = active?.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select';
+    if (isEditable) return;
+
     // If practice hasn't started yet, use arrows to browse priority words
     if (cards.length === 0) {
       if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -474,10 +617,6 @@
       return;
     }
     // During practice, keep flashcard shortcuts
-    const active = (document.activeElement as HTMLElement | null);
-    const tag = active?.tagName?.toLowerCase();
-    const isEditable = active?.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select';
-    if (isEditable) return;
 
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
       event.preventDefault();
@@ -497,7 +636,13 @@
     fetchSummary();
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('beforeunload', saveSessionAnalyticsToLocalStorage);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('beforeunload', saveSessionAnalyticsToLocalStorage);
+      summaryAbortCtrl?.abort();
+      prepareAbortCtrl?.abort();
+      clearPreloadedAudios();
+    };
   });
 
   function snippetAroundTerm(text: string, matchStart: number, matchLength: number, before: number = 100, after: number = 100): string {
@@ -596,6 +741,7 @@
   function resetMetricsForNewDeck(deck: typeof cards) {
     cardMetrics = deck.map(() => ({ replayCount: 0, startedAt: null, revealSentenceAt: null, revealTranslationAt: null }));
     sessionSaved = false;
+    clearPreloadedAudios();
   }
 
   function markCardStartedIfNeeded() {
@@ -935,7 +1081,20 @@
 
           {#if currentStage >= 2}
             <div class="flashcard-box sentence-box">
-              <h3 class="hz-foreign-text text-center mb-0">{cards[currentIndex].sentence}</h3>
+              <h3 class="hz-foreign-text text-center mb-0">
+                {#each currentSentenceSegments as seg}
+                  {#if seg.isHighlight}
+                    <mark class="target-lemma">{seg.text}</mark>
+                  {:else}
+                    {seg.text}
+                  {/if}
+                {/each}
+              </h3>
+              {#if cards[currentIndex].used_lemmas?.length}
+                <div class="text-muted small text-center mt-2">
+                  Practicing: <span class="hz-foreign-text">{cards[currentIndex].used_lemmas.join(', ')}</span>
+                </div>
+              {/if}
             </div>
           {/if}
           {/key}
@@ -986,6 +1145,14 @@
   }
   .sentence-box {
     margin-bottom: 0.75rem;
+  }
+
+  /* Highlight for target lemmas in practice sentences */
+  .sentence-box :global(.target-lemma) {
+    background-color: var(--hz-color-accent, rgba(255, 193, 7, 0.25));
+    border-radius: 3px;
+    padding: 0.1em 0.2em;
+    color: inherit;
   }
 
   /* Remove hover accent from Card headers inside priority words list to avoid thicker dividers */
