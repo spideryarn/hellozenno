@@ -19,7 +19,6 @@ from utils.vocab_llm_utils import (
 )
 from utils.prompt_utils import get_prompt_template_path
 from utils.word_utils import normalize_text
-from peewee import DoesNotExist
 
 
 def generate_sentence(
@@ -31,14 +30,31 @@ def generate_sentence(
     *,
     provenance: Optional[str] = None,
     generation_metadata: Optional[dict[str, Any]] = None,
+    sourcefile_id: Optional[int] = None,
+    sourcedir_id: Optional[int] = None,
 ) -> tuple[Sentence, dict]:
-    """Create or update a sentence record without generating audio."""
+    """Create or update a sentence record without generating audio.
+
+    Args:
+        sourcefile_id: Optional FK to Sourcefile for sourcefile-level learn sentences.
+        sourcedir_id: Optional FK to Sourcedir for sourcedir-level learn sentences.
+        Note: At most one of sourcefile_id/sourcedir_id should be set.
+    """
+    if sourcefile_id is not None and sourcedir_id is not None:
+        raise ValueError("Cannot set both sourcefile_id and sourcedir_id")
 
     sentence_text = sentence[:-1] if sentence.endswith(".") else sentence
 
+    # Build lookup dict - include source FKs for proper uniqueness
+    lookup = {
+        "target_language_code": target_language_code,
+        "sentence": sentence_text,
+        "sourcefile_id": sourcefile_id,
+        "sourcedir_id": sourcedir_id,
+    }
+
     db_sentence, created = Sentence.get_or_create(
-        target_language_code=target_language_code,
-        sentence=sentence_text,
+        **lookup,
         defaults={
             "translation": translation,
             "language_level": language_level,

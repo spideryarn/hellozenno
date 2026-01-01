@@ -552,6 +552,12 @@ class Sentence(BaseModel):
     generation_metadata = JSONField(
         null=True
     )  # JSON with used_lemmas, used_wordforms, order_index, difficulty_score, prompt_version, tts_voice, source_context
+    sourcefile = ForeignKeyField(
+        "Sourcefile", backref="learn_sentences", null=True, on_delete="SET NULL"
+    )  # For sourcefile-level learn sentences
+    sourcedir = ForeignKeyField(
+        "Sourcedir", backref="learn_sentences", null=True, on_delete="SET NULL"
+    )  # For sourcedir-level learn sentences
     created_by = ForeignKeyField(
         AuthUser, backref="sentences", null=True, on_delete="CASCADE"
     )
@@ -645,10 +651,10 @@ class Sentence(BaseModel):
         return results
 
     class Meta:
-        indexes = (
-            (("sentence", "target_language_code"), True),  # Unique index
-            (("slug", "target_language_code"), True),  # Unique index for URLs
-        )
+        # Note: Unique indexes are defined as PARTIAL unique indexes in the DB
+        # (migration 048) to allow same sentence text for different sources.
+        # Peewee doesn't support partial indexes, so they're managed via raw SQL.
+        pass
 
 
 class SentenceLemma(BaseModel):

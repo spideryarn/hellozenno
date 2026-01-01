@@ -305,16 +305,20 @@ def metadata_for_lemma_full(
             slug = slug[:255]
 
         # Create sentence if it doesn't exist or update if it does
-        sentence, _ = Sentence.update_or_create(
-            lookup={
-                "target_language_code": target_language_code,
-                "sentence": phrase,
-            },
-            updates={
+        # Use sourcefile_id=None, sourcedir_id=None to distinguish from "learn" sentences
+        sentence, created = Sentence.get_or_create(
+            target_language_code=target_language_code,
+            sentence=phrase,
+            sourcefile_id=None,
+            sourcedir_id=None,
+            defaults={
                 "translation": example["translation"],
                 "slug": slug,
             },
         )
+        if not created and sentence.translation != example["translation"]:
+            sentence.translation = example["translation"]
+            sentence.save()
 
         # Create both the example sentence link and the lemma-sentence relationship
         LemmaExampleSentence.update_or_create(
