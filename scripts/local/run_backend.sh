@@ -71,13 +71,13 @@ fi
 # Install API requirements if Flask is not installed
 if ! pip show flask > /dev/null 2>&1; then
     echo "Installing API requirements..."
-    pip install -r api/requirements.txt
+    pip install -r backend/requirements.txt
 fi
 
 # Install gjdutils in development mode if not already installed
 if ! pip show gjdutils > /dev/null 2>&1; then
     echo "Installing gjdutils in development mode..."
-    pip install -e api/gjdutils
+    pip install -e gjdutils
 fi
 
 # Always kill existing Flask servers
