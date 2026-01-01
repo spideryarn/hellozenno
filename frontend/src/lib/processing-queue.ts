@@ -100,13 +100,18 @@ export class SourcefileProcessingQueue {
     }
   }
 
-  // Helper to make a fetch request with timeout and abort signal
+  // Helper to make a fetch request with timeout and external abort signal
   private async fetchWithTimeout(
     url: string,
     options: RequestInit,
     timeoutMs: number
   ): Promise<Response> {
+    // Create a new abort controller for this request
     const controller = new AbortController();
+    
+    // Store the controller so abort() can cancel it
+    this.abortController = controller;
+    
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
     try {
@@ -117,6 +122,10 @@ export class SourcefileProcessingQueue {
       return response;
     } finally {
       clearTimeout(timeoutId);
+      // Only clear if this is still the active controller
+      if (this.abortController === controller) {
+        this.abortController = null;
+      }
     }
   }
 
@@ -390,6 +399,8 @@ export class SourcefileProcessingQueue {
     processingState.update(state => ({
       ...state,
       isProcessing: true,
+      currentStep: null, // Reset current step from previous run
+      description: 'Starting...', // Reset description from previous run
       progress: 0,
       totalSteps: 0, // Will be updated per iteration
       error: null,
@@ -504,7 +515,18 @@ export class SourcefileProcessingQueue {
       console.log('Normal steps complete. Re-fetching status for fresh lemma metadata...');
       const freshStatus = await this.fetchSourcefileStatus();
       
-      if (freshStatus && freshStatus.incomplete_lemmas_count > 0) {
+      // Handle status fetch failure - don't silently skip lemma processing
+      if (!freshStatus) {
+        console.error('Failed to fetch fresh status for lemma metadata');
+        this.updateStateIfCurrent(runId, state => ({
+          ...state,
+          error: 'Failed to fetch status for lemma metadata completion',
+          isProcessing: false
+        }));
+        return false;
+      }
+      
+      if (freshStatus.incomplete_lemmas_count > 0) {
         // Update total steps count with actual lemma count
         const normalStepsCompleted = normalSteps.length * iterations;
         totalStepsCount = normalStepsCompleted + freshStatus.incomplete_lemmas_count;
@@ -556,6 +578,12 @@ export class SourcefileProcessingQueue {
         await lemmaQueue.onIdle();
       } else {
         console.log('No incomplete lemmas to process.');
+        // Update totalSteps to match actual count (no lemma steps)
+        const normalStepsCompleted = normalSteps.length * iterations;
+        this.updateStateIfCurrent(runId, state => ({
+          ...state,
+          totalSteps: normalStepsCompleted
+        }));
       }
     }
 

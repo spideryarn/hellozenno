@@ -118,7 +118,8 @@ def process_wordforms_api(
         )
 
         # Get processing parameters from request or use defaults
-        data = request.get_json() or {}
+        # Use silent=True to avoid 500 on malformed JSON
+        data = request.get_json(silent=True) or {}
 
         # Validate max_new_words parameter
         try:
@@ -185,7 +186,8 @@ def process_phrases_api(
         )
 
         # Get processing parameters from request or use defaults
-        data = request.get_json() or {}
+        # Use silent=True to avoid 500 on malformed JSON
+        data = request.get_json(silent=True) or {}
 
         # Validate max_new_phrases parameter
         try:
