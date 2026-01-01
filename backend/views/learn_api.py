@@ -11,10 +11,8 @@ Notes:
 
 from __future__ import annotations
 
-import base64
 import time
 from typing import Any, Dict, List, Optional
-from peewee import fn
 
 from flask import Blueprint, jsonify, request, g
 
@@ -29,7 +27,7 @@ from utils.prompt_utils import get_prompt_template_path
 from utils.vocab_llm_utils import anthropic_client, generate_gpt_from_template
 from utils.sentence_utils import generate_sentence
 from utils.audio_utils import ensure_sentence_audio_variants
-from db_models import Sentence, SentenceAudio, Lemma
+from db_models import Sentence, SentenceAudio, Lemma, Sourcefile, Sourcedir
 
 
 learn_api_bp = Blueprint("learn_api", __name__, url_prefix="/api/lang/learn")
@@ -140,7 +138,6 @@ def learn_sourcefile_summary_api(
             "skipped_due_to_budget": 0,
         }
 
-        t1 = time.time()
         for lemma in lemmas:
             now = time.time()
             elapsed = now - started_at
@@ -247,6 +244,12 @@ def learn_sourcefile_summary_api(
         return jsonify({"error": "Failed to build summary", "message": str(e)}), 500
 
 
+# Maximum time budget for the /generate endpoint to ensure we return before
+# Vercel's 60s function timeout kills the request (which causes CORS errors
+# because Vercel's termination response lacks CORS headers).
+GENERATE_TIME_BUDGET_S = 50.0
+
+
 @learn_api_bp.route(
     "/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/generate",
     methods=["POST"],
@@ -260,12 +263,26 @@ def learn_sourcefile_generate_api(
     Always persists to Sentence/SentenceLemma with provenance="learn" and
     generation_metadata containing source_context, used_lemmas, order_index, tts_voice.
 
-    Request JSON: { "lemmas": list[str], "num_sentences": int=10, "language_level": str|null }
+    Request JSON: { "lemmas": list[str], "num_sentences": int=5, "language_level": str|null }
     Response JSON: { "sentences": [{ sentence, translation, used_lemmas, language_level?, audio_data_url }] }
+
+    Note: This endpoint has a time budget to ensure it returns before serverless
+    timeouts. If generation takes too long, partial results are returned with
+    "timed_out": true in meta.
     """
     t0 = time.time()
     try:
         body = request.get_json(force=True, silent=True) or {}
+        if not isinstance(body, dict):
+            return (
+                jsonify(
+                    {
+                        "error": "Invalid request",
+                        "message": "Request body must be a JSON object",
+                    }
+                ),
+                400,
+            )
         lemmas: List[str] = body.get("lemmas") or []
         if not isinstance(lemmas, list) or not all(isinstance(x, str) for x in lemmas):
             return (
@@ -277,82 +294,108 @@ def learn_sourcefile_generate_api(
                 ),
                 400,
             )
-        num_sentences = body.get("num_sentences") or 10
+        num_sentences = body.get("num_sentences") or 5
         try:
-            num_sentences = max(1, min(20, int(num_sentences)))
+            num_sentences = max(1, min(10, int(num_sentences)))
         except Exception:
-            num_sentences = 10
+            num_sentences = 5
         language_level: Optional[str] = body.get("language_level")
 
-        # First reuse any existing persisted sentences for this sourcefile
+        # Resolve the Sourcefile to get its ID for FK-based lookups
         reuse_t0 = time.time()
         existing_items: List[Dict[str, Any]] = []
         try:
-            # Match by generation_metadata.source_context.slug == sourcefile_slug
-            # and source_context.type == 'sourcefile'
-            slug_expr = fn.json_extract_path_text(
-                Sentence.generation_metadata, "source_context", "slug"
+            sourcefile_obj = (
+                Sourcefile.select(Sourcefile.id)
+                .join(Sourcedir)
+                .where(
+                    (Sourcedir.slug == sourcedir_slug)
+                    & (Sourcedir.target_language_code == target_language_code)
+                    & (Sourcefile.slug == sourcefile_slug)
+                )
+                .get()
             )
-            type_expr = fn.json_extract_path_text(
-                Sentence.generation_metadata, "source_context", "type"
+            sourcefile_id = sourcefile_obj.id
+        except Sourcefile.DoesNotExist:
+            return (
+                jsonify({"error": "Sourcefile not found"}),
+                404,
             )
 
+        try:
+            # Use sourcefile_id FK for efficient lookup
             existing_q = (
                 Sentence.select()
                 .where(
                     (Sentence.target_language_code == target_language_code)
                     & (Sentence.provenance == "learn")
-                    & (slug_expr == sourcefile_slug)
-                    & (type_expr == "sourcefile")
+                    & (Sentence.sourcefile_id == sourcefile_id)
                 )
                 .order_by(Sentence.created_at.asc())
                 .limit(num_sentences)
             )
 
             existing_sentences = list(existing_q)
+            reuse_timed_out = False
             for s in existing_sentences:
-                try:
-                    variants, _ = ensure_sentence_audio_variants(s, n=1)
-                except AuthenticationRequiredForGenerationError:
-                    variants = list(
-                        SentenceAudio.select()
-                        .where(SentenceAudio.sentence == s)
-                        .order_by(SentenceAudio.created_at)
-                    )
-                except Exception as e:
+                # Check time budget before expensive audio operations
+                elapsed = time.time() - t0
+                if elapsed >= GENERATE_TIME_BUDGET_S:
                     logger.warning(
-                        f"Failed to ensure audio variants for sentence id={s.id}: {e}"
+                        f"Learn generate: time budget exhausted during reuse processing "
+                        f"({elapsed:.1f}s >= {GENERATE_TIME_BUDGET_S}s)"
                     )
+                    reuse_timed_out = True
+                    # Still include sentence but skip audio generation
                     variants = list(
                         SentenceAudio.select()
                         .where(SentenceAudio.sentence == s)
                         .order_by(SentenceAudio.created_at)
                     )
-
-                # If still missing, auto-generate a minimal fallback when authenticated
-                if not variants:
+                else:
                     try:
-                        from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+                        variants, _ = ensure_sentence_audio_variants(s, n=1)
+                    except AuthenticationRequiredForGenerationError:
+                        variants = list(
+                            SentenceAudio.select()
+                            .where(SentenceAudio.sentence == s)
+                            .order_by(SentenceAudio.created_at)
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to ensure audio variants for sentence id={s.id}: {e}"
+                        )
+                        variants = list(
+                            SentenceAudio.select()
+                            .where(SentenceAudio.sentence == s)
+                            .order_by(SentenceAudio.created_at)
+                        )
 
-                        if getattr(g, "user", None):
-                            try:
-                                fallback_n = max(
-                                    1, int(PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES)
-                                )
-                            except Exception:
-                                fallback_n = 1
-                            try:
-                                # Use default enforce_auth=True, requires g.user
-                                variants, _ = ensure_sentence_audio_variants(
-                                    s, n=fallback_n
-                                )
-                            except Exception as gen_err:
-                                logger.warning(
-                                    f"Auto-generated audio fallback failed for sentence id={s.id}: {gen_err}"
-                                )
-                    except Exception:
-                        # If config import fails, just continue without auto-gen
-                        pass
+                    # If still missing, auto-generate a minimal fallback when authenticated
+                    # (only if we haven't timed out)
+                    if not variants and not reuse_timed_out:
+                        try:
+                            from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+
+                            if getattr(g, "user", None):
+                                try:
+                                    fallback_n = max(
+                                        1, int(PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES)
+                                    )
+                                except Exception:
+                                    fallback_n = 1
+                                try:
+                                    # Use default enforce_auth=True, requires g.user
+                                    variants, _ = ensure_sentence_audio_variants(
+                                        s, n=fallback_n
+                                    )
+                                except Exception as gen_err:
+                                    logger.warning(
+                                        f"Auto-generated audio fallback failed for sentence id={s.id}: {gen_err}"
+                                    )
+                        except Exception:
+                            # If config import fails, just continue without auto-gen
+                            pass
 
                 if not variants:
                     logger.warning(
@@ -415,6 +458,20 @@ def learn_sourcefile_generate_api(
         llm_duration = 0.0
         audio_duration = 0.0
         new_items: List[Dict[str, Any]] = []
+        timed_out = False
+        skipped_due_to_timeout = 0
+
+        if remaining > 0:
+            # Check time budget before starting expensive LLM generation
+            elapsed = time.time() - t0
+            if elapsed >= GENERATE_TIME_BUDGET_S:
+                logger.warning(
+                    f"Learn generate: time budget exhausted before LLM call ({elapsed:.1f}s >= {GENERATE_TIME_BUDGET_S}s)"
+                )
+                timed_out = True
+                skipped_due_to_timeout = remaining  # Track how many we couldn't generate
+                remaining = 0  # Skip generation entirely
+
         if remaining > 0:
             # Call LLM once to generate a set of sentences (we'll slice to 'remaining')
             llm_t0 = time.time()
@@ -444,6 +501,18 @@ def learn_sourcefile_generate_api(
             audio_t0 = time.time()
             order_start = len(existing_items)
             for idx, s in enumerate(raw_sentences):
+                # Check time budget before processing each sentence
+                elapsed = time.time() - t0
+                if elapsed >= GENERATE_TIME_BUDGET_S:
+                    logger.warning(
+                        f"Learn generate: time budget exhausted during sentence processing "
+                        f"({elapsed:.1f}s >= {GENERATE_TIME_BUDGET_S}s), "
+                        f"processed {idx}/{len(raw_sentences)} sentences"
+                    )
+                    timed_out = True
+                    skipped_due_to_timeout = len(raw_sentences) - idx
+                    break
+
                 sentence_text = (s.get("sentence") or "").strip()
                 translation_text = (s.get("translation") or "").strip()
                 used_lemmas = s.get("lemma_words") or []
@@ -460,10 +529,11 @@ def learn_sourcefile_generate_api(
                     "source_context": {
                         "type": "sourcefile",
                         "slug": sourcefile_slug,
+                        "sourcedir_slug": sourcedir_slug,
                     },
                 }
 
-                # Persist sentence + audio
+                # Persist sentence + audio (sourcefile_id resolved at start of function)
                 db_sentence, meta = generate_sentence(
                     target_language_code=target_language_code,
                     sentence=sentence_text,
@@ -472,6 +542,7 @@ def learn_sourcefile_generate_api(
                     language_level=cefr,
                     provenance="learn",
                     generation_metadata=generation_metadata,
+                    sourcefile_id=sourcefile_id,
                 )
 
                 sent_id = meta.get("id") or db_sentence.id
@@ -536,20 +607,25 @@ def learn_sourcefile_generate_api(
         total_duration = time.time() - t0
         sentences_out = existing_items + new_items
 
+        response_meta = {
+            "reused_count": len(existing_items),
+            "new_count": len(new_items),
+            "durations": {
+                "reuse_s": time.time() - reuse_t0,
+                "llm_s": llm_duration,
+                "audio_total_s": audio_duration,
+                "total_s": total_duration,
+            },
+        }
+        if timed_out:
+            response_meta["timed_out"] = True
+            response_meta["skipped_due_to_timeout"] = skipped_due_to_timeout
+
         return (
             jsonify(
                 {
                     "sentences": sentences_out,
-                    "meta": {
-                        "reused_count": len(existing_items),
-                        "new_count": len(new_items),
-                        "durations": {
-                            "reuse_s": time.time() - reuse_t0,
-                            "llm_s": llm_duration,
-                            "audio_total_s": audio_duration,
-                            "total_s": total_duration,
-                        },
-                    },
+                    "meta": response_meta,
                 }
             ),
             200,
