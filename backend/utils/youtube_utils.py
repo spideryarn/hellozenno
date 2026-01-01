@@ -3,9 +3,15 @@
 import tempfile
 from pathlib import Path
 from typing import Optional, Tuple
-import yt_dlp
 from datetime import datetime
 import os
+
+try:
+    import yt_dlp
+    YT_DLP_AVAILABLE = True
+except ImportError:
+    yt_dlp = None
+    YT_DLP_AVAILABLE = False
 
 from config import MAX_AUDIO_SIZE_UPLOAD_ALLOWED
 
@@ -14,6 +20,14 @@ class YouTubeDownloadError(Exception):
     """Custom exception for YouTube download errors."""
 
     pass
+
+
+def _check_yt_dlp_available():
+    """Raise error if yt_dlp is not available."""
+    if not YT_DLP_AVAILABLE:
+        raise YouTubeDownloadError(
+            "YouTube functionality is not available (yt_dlp not installed)"
+        )
 
 
 def extract_video_metadata(url: str) -> dict:
@@ -32,6 +46,7 @@ def extract_video_metadata(url: str) -> dict:
     Raises:
         YouTubeDownloadError: If video info cannot be extracted
     """
+    _check_yt_dlp_available()
     ydl_opts = {
         "quiet": True,
         "no_warnings": True,
