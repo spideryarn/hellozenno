@@ -1,0 +1,40 @@
+flowchart LR
+  subgraph Browser [SvelteKit Learn page]
+    A0[Route resolves params] --> A1[Fetch summary GET]
+    A1 --> A2[Show priority words]
+    A2 --> A3[Warm lemma metadata]
+    A2 --> A4[Prepare deck in background]
+    A5[Start practice click] --> A6[POST generate]
+    A7[Audio player plays via audio data URL]
+    A8[Save session stats locally]
+  end
+
+  subgraph Backend [Flask learn_api]
+    B0[/get sourcefile lemmas/] --> B1[Bulk fetch Lemma rows]
+    B1 --> B2{Time budget left?}
+    B2 -- yes --> B3[load_or_generate_lemma_metadata]
+    B2 -- no --> B4[default fallback metadata]
+    B3 --> B5[score & rank]
+    B4 --> B5
+    B5 --> B6[Return top-K + durations + partial flag]
+
+    C0[Query existing Sentence by sourcefile slug] --> C1[Ensure audio variants]
+    C1 --> C2{Remaining needed?}
+    C2 -- no --> C7[Return reused deck + durations]
+    C2 -- yes --> C3[Authenticated?]
+    C3 -- no --> C8[401 reused-only + auth_required flag]
+    C3 -- yes --> C4[LLM generate sentences batch]
+    C4 --> C5[Persist Sentence + metadata]
+    C5 --> C6[Ensure audio variants fallback]
+    C6 --> C7[Return reused+new deck + durations]
+  end
+
+  A1 -->|/summary| B0
+  B6 --> A2
+  A3 -->|GET lemma metadata| B1
+  A4 -->|POST /generate| C0
+  A6 -->|POST /generate| C0
+  C7 --> A7
+  C8 --> A7
+  A7 --> A8
+
