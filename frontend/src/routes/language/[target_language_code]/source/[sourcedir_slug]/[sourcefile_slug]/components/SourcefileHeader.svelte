@@ -79,10 +79,10 @@
         sourcefile_slug,
         sourcefile.sourcefile_type as 'text' | 'image' | 'audio' // Type assertion after check
       );
-    } else {
-      console.error("Sourcefile data missing, or type is 'youtube_audio', cannot initialize processing queue.");
-      // Optionally disable the process button or show an error
+    } else if (!sourcefile || !sourcefile.sourcefile_type) {
+      console.error("Sourcefile data missing, cannot initialize processing queue.");
     }
+    // Note: youtube_audio files don't use the processing queue - they get transcription from YouTube
   });
   
   // Check if sourcefile needs INITIAL processing - only trigger for files that 
@@ -133,6 +133,11 @@
   
   // Trigger auto-processing if needed when component mounts
   onMount(() => {
+    // Skip auto-processing for youtube_audio (uses YouTube's transcription) and when not logged in
+    if (sourcefile.sourcefile_type === 'youtube_audio' || !data.session) {
+      return;
+    }
+    
     if (autoProcessEnabled && shouldAutoProcess(sourcefile)) {
       console.log('Auto-processing enabled and needed for this sourcefile');
       showAutoProcessNotification = true;
@@ -557,7 +562,12 @@
 
   <div class="action-row">
     <div class="section process-section">
-      {#if data.session}
+      {#if sourcefile.sourcefile_type === 'youtube_audio'}
+        <!-- YouTube audio files use subtitles/transcription from YouTube, not our processing pipeline -->
+        <div class="process-controls">
+          <span class="text-muted">YouTube audio uses automatic transcription</span>
+        </div>
+      {:else if data.session}
         <div class="process-controls">
           <button on:click={processSourcefile} class="button {$processingState.isProcessing ? 'is-processing' : ''}">
             {#if $processingState.isProcessing}
