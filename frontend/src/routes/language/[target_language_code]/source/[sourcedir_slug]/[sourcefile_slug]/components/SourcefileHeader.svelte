@@ -22,7 +22,7 @@
   import FolderOpen from 'phosphor-svelte/lib/FolderOpen';
   import SourcefileNavButtons from './SourcefileNavButtons.svelte';
   import { SourcefileProcessingQueue, processingState, getSourcefileKey } from '$lib/processing-queue';
-  import { derived } from 'svelte/store';
+  import { derived, writable } from 'svelte/store';
   import { page } from '$app/stores';
   import type { SupabaseClient } from '@supabase/supabase-js';
   
@@ -71,11 +71,17 @@
   
   // Create a derived store that only shows processing state for THIS sourcefile
   // This prevents state from other sourcefiles (in other tabs or after navigation) from showing
-  // Note: We compute the key from props which are stable for this component instance
-  const mySourcefileKey = getSourcefileKey(target_language_code, sourcedir_slug, sourcefile_slug);
-  const myProcessingState = derived(processingState, $state => {
+  // The key is computed reactively so it updates when props change (e.g., during navigation)
+  $: mySourcefileKey = getSourcefileKey(target_language_code, sourcedir_slug, sourcefile_slug);
+  
+  // We need a store-based approach to make the derived store reactive to key changes
+  // Using a custom store that updates when either processingState or mySourcefileKey changes
+  const mySourcefileKeyStore = writable(mySourcefileKey);
+  $: mySourcefileKeyStore.set(mySourcefileKey);
+  
+  const myProcessingState = derived([processingState, mySourcefileKeyStore], ([$state, $key]) => {
     // Only show state if it's for this sourcefile, otherwise show idle state
-    if ($state.sourcefileKey === '' || $state.sourcefileKey === mySourcefileKey) {
+    if ($state.sourcefileKey === '' || $state.sourcefileKey === $key) {
       return $state;
     }
     // Return idle state for other sourcefiles

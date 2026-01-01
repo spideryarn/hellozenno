@@ -515,18 +515,14 @@ export class SourcefileProcessingQueue {
       console.log('Normal steps complete. Re-fetching status for fresh lemma metadata...');
       const freshStatus = await this.fetchSourcefileStatus();
       
-      // Handle status fetch failure - don't silently skip lemma processing
+      // Handle status fetch failure - log warning but allow partial success
+      // The main processing (text extraction, translation, etc.) may have succeeded
       if (!freshStatus) {
-        console.error('Failed to fetch fresh status for lemma metadata');
-        this.updateStateIfCurrent(runId, state => ({
-          ...state,
-          error: 'Failed to fetch status for lemma metadata completion',
-          isProcessing: false
-        }));
-        return false;
+        console.warn('Failed to fetch fresh status for lemma metadata - continuing with partial results');
+        overallSuccess = false; // Mark as partial failure but continue to final data fetch
       }
       
-      if (freshStatus.incomplete_lemmas_count > 0) {
+      if (freshStatus && freshStatus.incomplete_lemmas_count > 0) {
         // Update total steps count with actual lemma count
         const normalStepsCompleted = normalSteps.length * iterations;
         totalStepsCount = normalStepsCompleted + freshStatus.incomplete_lemmas_count;
@@ -576,7 +572,8 @@ export class SourcefileProcessingQueue {
         }
         
         await lemmaQueue.onIdle();
-      } else {
+      } else if (freshStatus) {
+        // freshStatus exists but has no incomplete lemmas
         console.log('No incomplete lemmas to process.');
         // Update totalSteps to match actual count (no lemma steps)
         const normalStepsCompleted = normalSteps.length * iterations;
@@ -585,6 +582,7 @@ export class SourcefileProcessingQueue {
           totalSteps: normalStepsCompleted
         }));
       }
+      // If freshStatus is null, we already logged warning above
     }
 
     // Final state update - only if this run is still current
