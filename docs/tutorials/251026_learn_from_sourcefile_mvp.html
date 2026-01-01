@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Learn from Sourcefile (MVP): Understanding flow and architecture (for HelloZenno devs)</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/a11y-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height: 1.6; padding: 2rem; max-width: 1000px; margin: auto; color: #1e293b; }
+        h1, h2, h3, h4 { line-height: 1.25; margin-top: 2rem; }
+        h1 { border-bottom: 3px solid #2563eb; padding-bottom: 0.5rem; }
+        h2 { border-bottom: 1px solid #cbd5e1; padding-bottom: 0.3rem; }
+        code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 6px; overflow: auto; margin: 1rem 0; }
+        code:not(pre code) { background: #f1f5f9; color: #0f172a; padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
+        a { color: #0b67ff; text-decoration: none; } a:hover { text-decoration: underline; }
+        .callout { background: #f8fafc; border-left: 4px solid #2563eb; padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 4px; }
+        .callout.mental-model { background: #fef3c7; border-left: 4px solid #f59e0b; }
+        .callout h3 { margin: 0 0 0.5rem 0; }
+        .small { color: #64748b; font-size: 0.9rem; }
+        img.diagram { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; margin: 1rem 0; }
+        ul.toc { list-style: none; padding-left: 0; background: #f8fafc; padding: 1rem; border-radius: 6px; }
+        ul.toc > li { margin: 0.5rem 0; }
+        details { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 1rem; margin: 1rem 0; }
+        details summary { font-weight: 600; cursor: pointer; user-select: none; color: #1e40af; padding: 0.25rem; }
+        details[open] summary { margin-bottom: 1rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 0.5rem; }
+        .code-ref { font-family: monospace; background: #f1f5f9; padding: 0.5rem; margin: 0.25rem 0; border-left: 3px solid #3b82f6; border-radius: 3px; }
+        .code-ref .file-path { color: #1e40af; font-weight: 600; }
+        .code-ref .line-nums { color: #64748b; font-size: 0.85em; }
+        .data-structure { background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; padding: 1rem; margin: 1rem 0; }
+        .data-structure h4 { margin-top: 0; color: #1e40af; }
+        .step { background: #f1f5f9; border-left: 3px solid #3b82f6; padding: 0.75rem 1rem; margin: 1rem 0; }
+        .step-number { font-weight: bold; color: #3b82f6; font-size: 1.1em; }
+    </style>
+</head>
+
+<body>
+    <h1>Learn from Sourcefile (MVP): Understanding flow and architecture</h1>
+    <p class="small">
+        <strong>Audience</strong>: Experienced HelloZenno devs<br>
+        <strong>Reading time</strong>: ~10 minutes<br>
+        <strong>Prerequisites</strong>: SvelteKit pages, Flask views, Peewee models, Supabase auth
+    </p>
+
+    <div class="callout">
+        <strong>TL;DR</strong>: The Learn page ranks “tricky” lemmas using a time budget, then builds an audio flashcard deck by reusing persisted sentences and topping up with LLM + TTS when authenticated. Results include observability timings.
+    </div>
+
+    <h2>Table of contents</h2>
+    <ul class="toc">
+        <li><a href="#mental-models">Key Mental Models</a></li>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#product-experience">Product Experience</a></li>
+        <li><a href="#summary-vs-generate">Summary vs Generate</a></li>
+        <li><a href="#examples">Examples</a></li>
+        <li><a href="#spiral-curriculum">Spiral Curriculum</a></li>
+        <li><a href="#visual-flow">Visual Flow Diagram</a></li>
+        <li><a href="#deep-dive">Deep Dive</a></li>
+        <li><a href="#code-catalogue">Code Catalogue</a></li>
+        <li><a href="#data-dictionary">Data Dictionary</a></li>
+        <li><a href="#cookbook">Cookbook</a></li>
+        <li><a href="#file-map">File Map & References</a></li>
+    </ul>
+
+    <h2 id="mental-models">Key Mental Models</h2>
+    <div class="callout mental-model"><h3>Two-phase pipeline</h3><p>Summary warming → deck generation. Summary ranks; generation fills.</p></div>
+    <div class="callout mental-model"><h3>Time-budgeted warming</h3><p>Partial results are OK; durations expose the cost.</p></div>
+    <div class="callout mental-model"><h3>Reuse-first persistence</h3><p>Selection by sourcefile slug; audio ensured.</p></div>
+    <div class="callout mental-model"><h3>Auth gates expensive work</h3><p>Unauthenticated: reuse-only; authenticated: LLM+TTS.</p></div>
+    <div class="callout mental-model"><h3>Progressive prep</h3><p>Background warming and preloading reduce perceived latency.</p></div>
+
+    <h2 id="overview">Overview</h2>
+    <p>Per-sourcefile priority words drive a focused, audio-first deck with staged reveal (audio → sentence → translation) and simple continuation heuristics.</p>
+
+    <h2 id="product-experience">Product Experience</h2>
+    <p>We want a fast, confidence-building session that turns a single sourcefile into a short, audio-first practice set. The experience should feel immediate (reuse-first), with smart top-up when signed in.</p>
+    <ul>
+      <li><strong>Open a sourcefile</strong>: The page warms a ranked list of lemmas and shows “What you’ll practice”.</li>
+      <li><strong>Background preparation</strong>: We ensure there are enough sentences with audio for the session’s target size.</li>
+      <li><strong>Start practice</strong>: Each card reveals <em>audio → sentence → translation</em>; lemmas are highlighted; quick controls keep flow.</li>
+      <li><strong>Observability</strong>: Durations for reuse, LLM, and audio are surfaced so the team sees cost/latency.</li>
+      <li><strong>Auth behavior</strong>: If not signed in, you get a reuse-only deck; signed in, the deck is topped up via LLM+TTS.</li>
+    </ul>
+
+    <div class="callout"><h3>Experience goals</h3><p>Under 1s to “Practice ready” when reuse suffices; graceful 401 with useful content when it doesn’t; consistent audio quality; predictable card count.</p></div>
+
+    <h2 id="summary-vs-generate">Summary vs Generate</h2>
+    <h3>Summary (GET)</h3>
+    <ul>
+      <li><strong>Input</strong>: <code>lang</code>, <code>dir</code>, <code>slug</code>, optional <code>top</code>.</li>
+      <li><strong>Responsibility</strong>: Collect candidate lemmas for the sourcefile, fetch metadata in bulk, score difficulty, respect a time budget, return top‑K.</li>
+      <li><strong>Output</strong>: <code>lemmas[]</code> with <code>difficulty_score</code>, <code>meta.durations</code>, <code>meta.partial</code>.</li>
+      <li><strong>Side-effects</strong>: May kick off cache warming and light preloading (e.g., sentence/audio checks).</li>
+    </ul>
+    <h3>Generate (POST)</h3>
+    <ul>
+      <li><strong>Input</strong>: Lemmas (from summary or explicit), desired count, level; auth optional.</li>
+      <li><strong>Responsibility</strong>: Reuse persisted sentences (ensure audio). If still short and authed, generate new sentences in one LLM call, persist, and attach audio variants.</li>
+      <li><strong>Unauth behavior</strong>: If shortfall remains and user is unauthenticated, return 401 with reuse-only payload so practice can still start.</li>
+      <li><strong>Output</strong>: <code>sentences[]</code> with <code>audio_data_url</code>, plus <code>meta.reused_count</code>, <code>meta.new_count</code>, and durations.</li>
+    </ul>
+    <details><summary>Decision logic</summary>
+      <div class="data-structure"><pre><code>desired = K
+reused   = min(K, persisted_for_lemmas)
+remaining = desired - reused
+if remaining &lt;= 0:
+    return reused_only
+if unauthenticated:
+    return 401 with reused_only
+# authenticated
+new_items = llm_generate(remaining, level)
+persist(new_items); ensure_audio(new_items)
+return reused + new_items</code></pre></div>
+    </details>
+
+    <h2 id="examples">Examples</h2>
+    <h3>Example A: Unauthenticated reuse-only</h3>
+    <p><em>Setup</em>: top‑K=5; persisted sentences available=3 across target lemmas.</p>
+    <ol>
+      <li>User opens Learn → Summary returns 5 lemmas with scores.</li>
+      <li>Background Generate tries to build the deck, finds only 3 reusable.</li>
+      <li>User unauthenticated → Generate returns <code>401</code> with those 3 sentences and <code>authentication_required_for_generation=true</code>.</li>
+      <li>UI shows “Practice ready (3/5)” and allows immediate practice.</li>
+    </ol>
+    <details><summary>Sample response</summary><div class="data-structure"><pre><code class="language-json">{
+  "sentences": [
+    { "sentence": "Έχω ένα βιβλίο.", "translation": "I have a book.", "used_lemmas": ["βιβλίο"], "audio_data_url": "/api/.../audio?variant_id=456" }
+  ],
+  "meta": { "reused_count": 3, "new_count": 0, "durations": { "reuse_s": 0.04, "total_s": 0.07 }, "authentication_required_for_generation": true }
+}</code></pre></div></details>
+
+    <h3>Example B: Authenticated top‑up</h3>
+    <p><em>Setup</em>: top‑K=5; persisted=2; user signed in.</p>
+    <ol>
+      <li>Summary returns top lemmas and starts warming.</li>
+      <li>Generate reuses 2, then calls LLM once to produce 3 sentences, persists them, and ensures audio.</li>
+      <li>Response returns 5 sentences with durations: <code>reuse_s</code>, <code>llm_s</code>, <code>audio_total_s</code>, <code>total_s</code>.</li>
+      <li>UI shows “Practice ready (5/5)” and starts with audio-first reveal.</li>
+    </ol>
+    <details><summary>Sample response</summary><div class="data-structure"><pre><code class="language-json">{
+  "meta": { "reused_count": 2, "new_count": 3, "durations": { "reuse_s": 0.03, "llm_s": 1.2, "audio_total_s": 0.8, "total_s": 2.1 } }
+}</code></pre></div></details>
+
+    <h2 id="spiral-curriculum">Spiral Curriculum</h2>
+    <p>Sessions intentionally revisit previously seen lemmas while introducing a manageable number of new ones. Over time, users cycle back to concepts with slightly increased challenge or fresh contexts.</p>
+    <ul>
+      <li><strong>Session balance</strong>: Aim for a mix (e.g., ~60% new, ~40% review) based on available persisted material and difficulty scores.</li>
+      <li><strong>Selection signal</strong>: Summary’s ranking can incorporate difficulty and any stored exposure/recency when available.</li>
+      <li><strong>Continuity</strong>: Generate prefers reusing sentences tied to past sessions for continuity, then tops up with LLM when needed.</li>
+      <li><strong>Outcome</strong>: Learners repeatedly encounter key lemmas across days, hearing them in new sentences at similar level, building automaticity.</li>
+    </ul>
+
+    <h2 id="visual-flow">Visual Flow Diagram</h2>
+    <p>Flow from summary warming to deck generation:</p>
+    <img class="diagram" src="../diagrams/251026_learn_from_sourcefile_flow.svg" alt="Learn from Sourcefile flow diagram" />
+    <p class="small">Source: <a href="../diagrams/251026_learn_from_sourcefile_flow.mermaid">Mermaid source</a></p>
+
+    <h2 id="deep-dive">Deep Dive</h2>
+    <h3>Pass 1: High-Level Overview</h3>
+    <p>Summary collects lemmas, bulk fetches metadata, fills within a time budget, scores by difficulty, returns top-K with durations and partial flag. Generate reuses persisted sentences (ensuring audio); if more needed and authed, a single LLM call produces sentences which are persisted and get audio variants.</p>
+
+    <h3>Pass 2: Key Components</h3>
+    <details>
+      <summary>Difficulty scoring</summary>
+      <pre><code class="language-python">def _difficulty_score(metadata: dict) -&gt; float:
+    commonality = metadata.get("commonality"); guessability = metadata.get("guessability")
+    c = commonality if isinstance(commonality, (int, float)) else 0.5
+    g = guessability if isinstance(guessability, (int, float)) else 0.5
+    return (1.0 - g) + (1.0 - c)</code></pre>
+    </details>
+
+    <details>
+      <summary>Summary & Generate endpoints</summary>
+      <pre><code class="language-python">@learn_api_bp.route("/sourcefile/&lt;lang&gt;/&lt;dir&gt;/&lt;slug&gt;/summary", methods=["GET"])  # auth optional
+@learn_api_bp.route("/sourcefile/&lt;lang&gt;/&lt;dir&gt;/&lt;slug&gt;/generate", methods=["POST"])   # auth optional</code></pre>
+      <pre><code class="language-python"># Unauth fast-path: reuse-only with 401
+if remaining &gt; 0 and not getattr(g, "user", None):
+    return jsonify({"sentences": existing_items, "authentication_required_for_generation": True, ...}), 401</code></pre>
+    </details>
+
+    <details>
+      <summary>Frontend page</summary>
+      <pre><code class="language-typescript">// GET summary
+await apiFetch({ routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_SUMMARY_API, params: { target_language_code, sourcedir_slug, sourcefile_slug }, options: { method: 'GET' }, searchParams: { top: settingTopK } });
+// POST generate with 401 fallback
+try { await apiFetch({ routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API, ... }); } catch (e: any) { if (e?.status === 401) { /* use e.body.sentences */ } }</code></pre>
+    </details>
+
+    <h3>Pass 3: Walkthrough</h3>
+    <div class="step"><span class="step-number">Step 1:</span> Navigate to Learn → GET summary; warming tasks begin.</div>
+    <div class="step"><span class="step-number">Step 2:</span> Background POST generate to prepare deck; audio preloaded; “Practice ready”.</div>
+    <div class="step"><span class="step-number">Step 3:</span> Start practice → reuse sentences (+audio); if needed and authed, LLM generation; return deck with durations.</div>
+
+    <h2 id="code-catalogue">Code Catalogue</h2>
+    <div class="code-ref"><div class="file-path">backend/views/learn_api.py</div><div class="line-nums">summary & generate</div><div><code>learn_sourcefile_summary_api, learn_sourcefile_generate_api</code></div></div>
+    <div class="code-ref"><div class="file-path">frontend/src/routes/.../learn/+page.svelte</div><div class="line-nums">page logic</div><div><code>fetchSummary, preparePracticeInBackground, startPractice</code></div></div>
+    <div class="code-ref"><div class="file-path">frontend/src/lib/generated/routes.ts</div><div class="line-nums">routes</div><div><code>LEARN_API_LEARN_SOURCEFILE_SUMMARY_API, ..._GENERATE_API</code></div></div>
+
+    <h2 id="data-dictionary">Data Dictionary</h2>
+    <details><summary>Summary response</summary><div class="data-structure"><pre><code class="language-json">{"lemmas":[{"lemma":"string","translations":["string"],"difficulty_score":0.0}],"meta":{"total_candidates":0,"returned":0,"durations":{"total_s":0.0},"partial":false,"counts":{}}}</code></pre></div></details>
+    <details><summary>Generate response</summary><div class="data-structure"><pre><code class="language-json">{"sentences":[{"sentence":"string","translation":"string","used_lemmas":["string"],"language_level":"A1","audio_data_url":"/api/lang/sentence/el/123/audio?variant_id=456"}],"meta":{"reused_count":0,"new_count":0,"durations":{"reuse_s":0.0,"llm_s":0.0,"audio_total_s":0.0,"total_s":0.0}}}</code></pre></div></details>
+
+    <h2 id="cookbook">Cookbook</h2>
+    <details><summary>Quick start</summary><pre><code class="language-bash">python scripts/local/learn_cli.py summary el 251013 1000015419-word-matching-jpg
+export AUTH_BEARER="&lt;SUPABASE_JWT&gt;"
+python scripts/local/learn_cli.py generate el 251013 1000015419-word-matching-jpg --lemmas βιβλίο,μουσική --num 3 --level A1</code></pre></details>
+
+    <h2 id="file-map">File Map & References</h2>
+    <ul>
+      <li><strong>Frontend page</strong>: <code>frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/learn/+page.svelte</code></li>
+      <li><strong>Backend views</strong>: <code>backend/views/learn_api.py</code></li>
+      <li><strong>Routes</strong>: <code>frontend/src/lib/generated/routes.ts</code></li>
+      <li><strong>Prompt</strong>: <code>backend/prompt_templates/generate_sentence_flashcards.jinja</code></li>
+      <li><strong>Doc</strong>: <a href="../reference/LEARN_FROM_SOURCEFILE_MVP.md">LEARN_FROM_SOURCEFILE_MVP.md</a></li>
+    </ul>
+
+    <hr />
+    <p class="small">Last updated: 2025-10-26</p>
+
+</body>
+
+</html>
+
