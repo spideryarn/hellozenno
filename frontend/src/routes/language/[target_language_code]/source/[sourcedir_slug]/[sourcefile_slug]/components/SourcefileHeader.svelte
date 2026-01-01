@@ -55,6 +55,7 @@
   // Multi-processing counter and queue system
   let processingClicks = 0; // Tracks total clicks for UI text
   let pendingRuns = 0; // Tracks how many times the button was clicked while processing
+  let isDriverRunning = false; // Local synchronous lock to prevent multiple drivers
   
   // Progress detail display state
   let showDetailedProgress = false;
@@ -250,20 +251,24 @@
       return;
     }
     
+    // Hide auto-process notification if showing
+    showAutoProcessNotification = false;
+    
+    // Increment the processing clicks counter and pending runs
+    processingClicks++;
+    pendingRuns++;
+    
+    // Use local synchronous lock to prevent multiple drivers from rapid clicks
+    // The store check ($processingState.isProcessing) is async and can race
+    if (isDriverRunning) {
+      console.log(`Added processing run to queue. Now have ${pendingRuns} pending runs.`);
+      return;
+    }
+    
+    // Acquire the lock synchronously before any await
+    isDriverRunning = true;
+    
     try {
-      // Hide auto-process notification if showing
-      showAutoProcessNotification = false;
-      
-      // Increment the processing clicks counter and pending runs
-      processingClicks++;
-      pendingRuns++;
-      
-      // If already processing, just queue this run (don't execute yet)
-      if ($processingState.isProcessing) {
-        console.log(`Added processing run to queue. Now have ${pendingRuns} pending runs.`);
-        return;
-      }
-      
       // Process all pending runs sequentially
       while (pendingRuns > 0) {
         // Use current pending runs count as iterations for this batch
@@ -322,6 +327,9 @@
       }));
       // Reset pending runs on error to avoid getting stuck
       pendingRuns = 0;
+    } finally {
+      // Always release the driver lock
+      isDriverRunning = false;
     }
   }
   
