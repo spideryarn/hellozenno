@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from peewee import DoesNotExist, fn, JOIN
+from peewee import DoesNotExist, fn, JOIN, prefetch
 import time
 import logging
 import urllib.parse
 
 from utils.lang_utils import get_language_name
-from db_models import Lemma, LemmaExampleSentence
+from db_models import Lemma, LemmaExampleSentence, Wordform, Sentence
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.url_registry import endpoint_for
 
@@ -32,10 +32,12 @@ def lemmas_list_vw(target_language_code: str):
 
     # Get all lemmas for this language from the database using the enhanced model method
     # which now handles optimized queries and multiple sorting options
-    lemmas = Lemma.get_all_lemmas_for(
+    query = Lemma.get_all_lemmas_for(
         target_language_code=target_language_code, sort_by=sort
     )
-    # TODO: Update parameter name to 'target_language_code' to match rename
+
+    # Prefetch relationships to avoid N+1 queries when calling to_dict()
+    lemmas = prefetch(query, Wordform, LemmaExampleSentence, Sentence)
 
     # Convert query results to the format expected by the template
     lemma_metadata = {lemma.lemma: lemma.to_dict() for lemma in lemmas}
@@ -44,8 +46,8 @@ def lemmas_list_vw(target_language_code: str):
         "lemmas.jinja",
         target_language_code=target_language_code,
         target_language_name=target_language_name,
-        lemmas=[lemma.lemma for lemma in lemmas],  # Just pass the lemma strings
-        lemma_metadata=lemma_metadata,  # Pass the metadata dictionary
+        lemmas=[lemma.lemma for lemma in lemmas],
+        lemma_metadata=lemma_metadata,
         current_sort=sort,
         show_commonality=True,  # We have commonality data for lemmas
     )

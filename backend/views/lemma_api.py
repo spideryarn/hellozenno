@@ -7,12 +7,12 @@ These endpoints follow the standard pattern:
 
 from flask import Blueprint, jsonify, request, send_file
 import io
-from peewee import DoesNotExist, fn
+from peewee import DoesNotExist, fn, prefetch
 import logging
 import urllib.parse
 
 from utils.lang_utils import get_language_name
-from db_models import Lemma, UserLemma, LemmaAudio
+from db_models import Lemma, UserLemma, LemmaAudio, Wordform, LemmaExampleSentence, Sentence
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.sourcefile_utils import complete_lemma_metadata
 from utils.audio_utils import ensure_lemma_audio_variants
@@ -211,16 +211,15 @@ def lemmas_list_api(target_language_code: str):
 
     # Get all lemmas for this language from the database
     # Still using target_language_code as parameter for backward compatibility
-    lemmas = Lemma.get_all_lemmas_for(
+    query = Lemma.get_all_lemmas_for(
         target_language_code=target_language_code, sort_by=sort
     )
 
+    # Prefetch relationships to avoid N+1 queries when calling to_dict()
+    lemmas = prefetch(query, Wordform, LemmaExampleSentence, Sentence)
+
     # Transform the response to match the frontend's expected format
-    lemma_list = []
-    for lemma_obj in lemmas:
-        lemma_data = lemma_obj.to_dict()
-        # Add any additional fields the frontend might need
-        lemma_list.append(lemma_data)
+    lemma_list = [lemma_obj.to_dict() for lemma_obj in lemmas]
 
     return jsonify(lemma_list)
 
