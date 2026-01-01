@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import SpeakerHigh from 'phosphor-svelte/lib/SpeakerHigh';
   import LoadingSpinner from './LoadingSpinner.svelte';
   import { apiFetch, getApiUrl } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { SENTENCE_AUDIO_SAMPLES } from '$lib/config';
+  import { shuffle, playAudioSequence, type PlaybackHandle } from '$lib/audioSequence';
 
   export let target_language_code: string;
   export let sentenceId: string | number | undefined = undefined;
@@ -16,10 +18,14 @@
 
   let isGeneratingAudio = false;
   let isPlayingAudio = false;
-  let progressCount = 0; // 0..n
+  let progressCount = 0;
   let variantCountDisplay = SENTENCE_AUDIO_SAMPLES;
   let resolvedSentenceId: string | null = null;
-  let lastVariantUrls: string[] | null = null;
+  let playbackHandle: PlaybackHandle | null = null;
+
+  onDestroy(() => {
+    playbackHandle?.cancel();
+  });
 
   async function ensureSentenceInfo(): Promise<{ id: string; has_audio: boolean } | null> {
     // Use provided id/hasAudio if available
@@ -78,50 +84,17 @@
       }));
   }
 
-  function shuffle<T>(arr: T[]): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  async function playSequential(urls: string[]): Promise<void> {
-    if (!urls.length) return;
-    isPlayingAudio = true;
-    progressCount = 0;
-    let idx = 0;
-
-    const audioElems = urls.map((u) => {
-      const audio = new Audio(u);
-      audio.preload = 'auto';
-      return audio;
-    });
-
-    const playNext = () => {
-      if (idx >= audioElems.length) {
-        isPlayingAudio = false;
-        progressCount = urls.length;
-        return;
-      }
-      const audio = audioElems[idx];
-      idx += 1;
-      progressCount = idx;
-      audio.onended = playNext;
-      audio.onerror = playNext;
-      audio.play().catch(() => playNext());
-    };
-
-    playNext();
-  }
-
   async function handleClick() {
     if (!target_language_code || !sentenceSlug) return;
     isGeneratingAudio = true;
+    progressCount = 0;
+    
     try {
       const info = await ensureSentenceInfo();
-      if (!info) return;
+      if (!info) {
+        isGeneratingAudio = false;
+        return;
+      }
 
       const { id, has_audio } = info;
 
@@ -135,6 +108,7 @@
       if ((!Array.isArray(variants) || variants.length < SENTENCE_AUDIO_SAMPLES) && !has_audio) {
         const ensured = await ensureVariants(sentenceSlug);
         if (!ensured) {
+          isGeneratingAudio = false;
           return;
         }
         variants = await apiFetch({
@@ -148,18 +122,32 @@
       const variantList = Array.isArray(variants) ? variants : [];
       if (!variantList.length) {
         console.warn('SentenceAudioButton: no audio variants available');
+        isGeneratingAudio = false;
         return;
       }
 
       const urls = buildVariantUrls(id, variantList);
       variantCountDisplay = Math.min(urls.length, SENTENCE_AUDIO_SAMPLES);
-      lastVariantUrls = urls;
-      const toPlay =
-        lastVariantUrls && lastVariantUrls.length === urls.length
-          ? shuffle(lastVariantUrls)
-          : urls;
-      await playSequential(toPlay);
-    } finally {
+      const toPlay = urls.length >= SENTENCE_AUDIO_SAMPLES ? shuffle(urls) : urls;
+      
+      isGeneratingAudio = false;
+      isPlayingAudio = true;
+      
+      playbackHandle = playAudioSequence(toPlay, {
+        onProgress: (current, total) => {
+          progressCount = current;
+        },
+        onComplete: () => {
+          isPlayingAudio = false;
+          playbackHandle = null;
+        },
+        onCancel: () => {
+          isPlayingAudio = false;
+          playbackHandle = null;
+        },
+      });
+    } catch (e) {
+      console.warn('SentenceAudioButton error:', e);
       isGeneratingAudio = false;
     }
   }

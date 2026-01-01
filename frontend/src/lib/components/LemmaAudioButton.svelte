@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import SpeakerHigh from 'phosphor-svelte/lib/SpeakerHigh';
   import LoadingSpinner from './LoadingSpinner.svelte';
   import { apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { LEMMA_AUDIO_SAMPLES } from '$lib/config';
+  import { shuffle, playAudioSequence, type PlaybackHandle } from '$lib/audioSequence';
 
   export let target_language_code: string;
   export let lemma: string;
@@ -15,7 +17,13 @@
   let isGeneratingAudio = false;
   let isPlayingAudio = false;
   let progressCount = 0;
-  let lastVariantUrls: string[] | null = null;
+  let totalToPlay = LEMMA_AUDIO_SAMPLES;
+  let errorMessage: string | null = null;
+  let playbackHandle: PlaybackHandle | null = null;
+
+  onDestroy(() => {
+    playbackHandle?.cancel();
+  });
 
   async function fetchVariants(): Promise<
     { id: number; provider: string; metadata: Record<string, any>; url: string }[]
@@ -29,79 +37,81 @@
     return Array.isArray(res) ? res : [];
   }
 
-  async function ensureVariants(n: number): Promise<void> {
-    await apiFetch({
-      supabaseClient: supabaseClient,
-      routeName: RouteName.LEMMA_API_ENSURE_LEMMA_AUDIO_API,
-      params: { target_language_code, lemma },
-      options: { method: 'POST' },
-      searchParams: { n },
-    });
-  }
-
-  function shuffle<T>(arr: T[]): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+  async function ensureVariants(n: number): Promise<boolean> {
+    try {
+      await apiFetch({
+        supabaseClient: supabaseClient,
+        routeName: RouteName.LEMMA_API_ENSURE_LEMMA_AUDIO_API,
+        params: { target_language_code, lemma },
+        options: { method: 'POST' },
+        searchParams: { n },
+      });
+      return true;
+    } catch (e) {
+      console.warn('LemmaAudioButton: failed to ensure audio (auth required?)', e);
+      return false;
     }
-    return a;
-  }
-
-  async function playSequential(urls: string[]) {
-    if (!urls.length) return;
-    isPlayingAudio = true;
-    progressCount = 0;
-    let index = 0;
-
-    const audioElems: HTMLAudioElement[] = urls.map((u) => {
-      const a = new Audio(u);
-      a.preload = 'auto';
-      return a;
-    });
-
-    const playNext = () => {
-      if (index >= audioElems.length) {
-        isPlayingAudio = false;
-        progressCount = 3;
-        return;
-      }
-      const a = audioElems[index];
-      index += 1;
-    progressCount = index; // 1..n
-      a.onended = playNext;
-      a.onerror = playNext;
-      a.play().catch(() => playNext());
-    };
-    playNext();
   }
 
   async function handleClick() {
     if (!lemma || !target_language_code) return;
+    errorMessage = null;
+    progressCount = 0;
+    totalToPlay = LEMMA_AUDIO_SAMPLES;
+    isGeneratingAudio = true;
+    
     try {
-      isGeneratingAudio = true;
       // 1) Get existing variants
       let variants = await fetchVariants();
-      // 2) Ensure up to 3 exist if needed
+      
+      // 2) Ensure up to N exist if needed (best-effort, don't block playback on failure)
       const needed = LEMMA_AUDIO_SAMPLES - variants.length;
-      if (needed > 0 && supabaseClient) {
-        await ensureVariants(LEMMA_AUDIO_SAMPLES);
-        variants = await fetchVariants();
+      if (needed > 0) {
+        if (supabaseClient) {
+          const ensured = await ensureVariants(LEMMA_AUDIO_SAMPLES);
+          if (ensured) {
+            variants = await fetchVariants();
+          } else if (variants.length === 0) {
+            errorMessage = 'Login required to generate audio.';
+            isGeneratingAudio = false;
+            return;
+          }
+        } else if (variants.length === 0) {
+          errorMessage = 'Login required to generate audio.';
+          isGeneratingAudio = false;
+          return;
+        }
       }
-      // 3) Build URLs and optionally shuffle order
-      const urls = variants
-        .slice(0, LEMMA_AUDIO_SAMPLES)
-        .map((v) => v.url);
-      lastVariantUrls = urls;
-      const toPlay =
-        lastVariantUrls && lastVariantUrls.length === LEMMA_AUDIO_SAMPLES
-          ? shuffle(lastVariantUrls)
-          : urls;
-      await playSequential(toPlay);
+      
+      // 3) Build URLs and play
+      const urls = variants.slice(0, LEMMA_AUDIO_SAMPLES).map((v) => v.url);
+      if (!urls.length) {
+        errorMessage = 'No audio available.';
+        isGeneratingAudio = false;
+        return;
+      }
+      
+      const toPlay = urls.length >= LEMMA_AUDIO_SAMPLES ? shuffle(urls) : urls;
+      isGeneratingAudio = false;
+      isPlayingAudio = true;
+      totalToPlay = toPlay.length;
+      
+      playbackHandle = playAudioSequence(toPlay, {
+        onProgress: (current, total) => {
+          progressCount = current;
+        },
+        onComplete: () => {
+          isPlayingAudio = false;
+          playbackHandle = null;
+        },
+        onCancel: () => {
+          isPlayingAudio = false;
+          playbackHandle = null;
+        },
+      });
     } catch (e) {
-      // Swallow error; upstream pages may show login prompts
       console.warn('LemmaAudioButton error:', e);
-    } finally {
+      errorMessage = 'Failed to load audio.';
       isGeneratingAudio = false;
     }
   }
@@ -112,17 +122,19 @@
   on:click|preventDefault={handleClick}
   disabled={isGeneratingAudio || isPlayingAudio}
   aria-label="Play pronunciations"
-  title="Play pronunciations"
+  title={errorMessage || "Play pronunciations"}
 >
   {#if isGeneratingAudio}
     <LoadingSpinner size="sm" />
-  {:else}
-    <SpeakerHigh size={iconSize} />
   {/if}
+  <SpeakerHigh size={iconSize} />
   {#if isGeneratingAudio || isPlayingAudio}
-    <span class="badge bg-success ms-2">{progressCount}/{LEMMA_AUDIO_SAMPLES}</span>
+    <span class="badge bg-success ms-2">{progressCount}/{totalToPlay}</span>
   {/if}
 </button>
+{#if errorMessage}
+  <span class="text-warning small ms-2" role="alert">{errorMessage}</span>
+{/if}
 
 <style>
   .btn:disabled {

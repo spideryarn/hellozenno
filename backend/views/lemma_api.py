@@ -79,6 +79,7 @@ def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
         .order_by(LemmaAudio.created_at)
     )
     out = []
+    encoded_lemma = urllib.parse.quote(lemma, safe="")
     for v in variants:
         metadata = v.metadata or {}
         out.append(
@@ -89,7 +90,7 @@ def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
                 "created_at": (
                     v.created_at.isoformat() if getattr(v, "created_at", None) else None
                 ),
-                "url": f"/api/lang/lemma/{target_language_code}/{lemma}/audio?variant_id={v.id}",
+                "url": f"/api/lang/lemma/{target_language_code}/{encoded_lemma}/audio?variant_id={v.id}",
             }
         )
     return jsonify(out)
