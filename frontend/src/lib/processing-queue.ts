@@ -38,6 +38,11 @@ interface SourcefileStatus {
 // Monotonically increasing run ID to prevent stale updates from old runs
 let nextRunId = 1;
 
+// Helper to create a unique key for a sourcefile
+export function getSourcefileKey(target_language_code: string, sourcedir_slug: string, sourcefile_slug: string): string {
+  return `${target_language_code}/${sourcedir_slug}/${sourcefile_slug}`;
+}
+
 // Create a store for tracking progress
 export const processingState = writable({
   isProcessing: false,
@@ -49,7 +54,8 @@ export const processingState = writable({
   currentIteration: 0,
   totalIterations: 1,
   processedSourcefileData: null as any, // Will contain the updated sourcefile data after processing
-  runId: 0 // Current run ID - used to prevent stale updates
+  runId: 0, // Current run ID - used to prevent stale updates
+  sourcefileKey: '' // Key to identify which sourcefile this state belongs to
 });
 
 // Default timeout for API requests (in ms)
@@ -374,6 +380,13 @@ export class SourcefileProcessingQueue {
     // Assign a new run ID to prevent stale updates from previous runs
     const runId = nextRunId++;
     
+    // Create the sourcefile key for this processing run
+    const sourcefileKey = getSourcefileKey(
+      this.sourcefileData.target_language_code,
+      this.sourcefileData.sourcedir_slug,
+      this.sourcefileData.sourcefile_slug
+    );
+    
     processingState.update(state => ({
       ...state,
       isProcessing: true,
@@ -383,7 +396,8 @@ export class SourcefileProcessingQueue {
       currentIteration: 0,
       totalIterations: iterations,
       processedSourcefileData: null,
-      runId: runId // Store current run ID
+      runId: runId, // Store current run ID
+      sourcefileKey: sourcefileKey // Store which sourcefile this is for
     }));
 
     let overallSuccess = true;

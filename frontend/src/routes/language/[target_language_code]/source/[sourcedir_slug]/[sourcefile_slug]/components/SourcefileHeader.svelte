@@ -21,7 +21,8 @@
   import PencilSimple from 'phosphor-svelte/lib/PencilSimple';
   import FolderOpen from 'phosphor-svelte/lib/FolderOpen';
   import SourcefileNavButtons from './SourcefileNavButtons.svelte';
-  import { SourcefileProcessingQueue, processingState } from '$lib/processing-queue';
+  import { SourcefileProcessingQueue, processingState, getSourcefileKey } from '$lib/processing-queue';
+  import { derived } from 'svelte/store';
   import { page } from '$app/stores';
   import type { SupabaseClient } from '@supabase/supabase-js';
   
@@ -67,6 +68,26 @@
   
   // Auto-process delay timeout (for cleanup on navigation)
   let autoProcessTimeout: ReturnType<typeof setTimeout> | null = null;
+  
+  // Create a derived store that only shows processing state for THIS sourcefile
+  // This prevents state from other sourcefiles (in other tabs or after navigation) from showing
+  // Note: We compute the key from props which are stable for this component instance
+  const mySourcefileKey = getSourcefileKey(target_language_code, sourcedir_slug, sourcefile_slug);
+  const myProcessingState = derived(processingState, $state => {
+    // Only show state if it's for this sourcefile, otherwise show idle state
+    if ($state.sourcefileKey === '' || $state.sourcefileKey === mySourcefileKey) {
+      return $state;
+    }
+    // Return idle state for other sourcefiles
+    return {
+      ...$state,
+      isProcessing: false,
+      error: null,
+      description: '',
+      progress: 0,
+      totalSteps: 0
+    };
+  });
   
   // Initialize the processing queue when the component mounts
   let processingQueue: SourcefileProcessingQueue;
@@ -263,7 +284,7 @@
     pendingRuns++;
     
     // Use local synchronous lock to prevent multiple drivers from rapid clicks
-    // The store check ($processingState.isProcessing) is async and can race
+    // The store check ($myProcessingState.isProcessing) is async and can race
     if (isDriverRunning) {
       console.log(`Added processing run to queue. Now have ${pendingRuns} pending runs.`);
       return;
@@ -286,9 +307,9 @@
         await processingQueue.processAll(iterations);
         
         // Check if we have processed data
-        if ($processingState.processedSourcefileData && !$processingState.error) {
+        if ($myProcessingState.processedSourcefileData && !$myProcessingState.error) {
           // Dispatch the event with the updated data
-          dispatchProcessingComplete($processingState.processedSourcefileData);
+          dispatchProcessingComplete($myProcessingState.processedSourcefileData);
           
           // Show success notification briefly (only for the last batch)
           if (pendingRuns === 0) {
@@ -309,9 +330,9 @@
           }
         } else {
           // Handle cases where processing finished but might have had errors
-          // or failed to return data (check $processingState.error)
-          console.log("Processing finished, but no data returned or error occurred. State:", $processingState);
-          if (!$processingState.error) {
+          // or failed to return data (check $myProcessingState.error)
+          console.log("Processing finished, but no data returned or error occurred. State:", $myProcessingState);
+          if (!$myProcessingState.error) {
              // If no specific error, maybe just skip reload or show generic message?
              // alert('Processing finished, but failed to retrieve updated data.'); 
           }
@@ -602,13 +623,13 @@
         </div>
       {:else if data.session}
         <div class="process-controls">
-          <button on:click={processSourcefile} class="button {$processingState.isProcessing ? 'is-processing' : ''}">
-            {#if $processingState.isProcessing}
-              {$processingState.description || 'Processing...'}
-              {#if $processingState.totalIterations > 1}
-                (Run {$processingState.currentIteration}/{$processingState.totalIterations})
+          <button on:click={processSourcefile} class="button {$myProcessingState.isProcessing ? 'is-processing' : ''}">
+            {#if $myProcessingState.isProcessing}
+              {$myProcessingState.description || 'Processing...'}
+              {#if $myProcessingState.totalIterations > 1}
+                (Run {$myProcessingState.currentIteration}/{$myProcessingState.totalIterations})
               {/if}
-              ({$processingState.progress}/{$processingState.totalSteps})
+              ({$myProcessingState.progress}/{$myProcessingState.totalSteps})
               {#if pendingRuns > 0}
                 <span class="queued-runs">+{pendingRuns} queued</span>
               {/if}
@@ -621,9 +642,9 @@
             {/if}
           </button>
         </div>
-        {#if $processingState.error}
+        {#if $myProcessingState.error}
           <!-- Use {@html} to allow rendered HTML links in error messages -->
-          <span class="error-message">{@html $processingState.error}</span>
+          <span class="error-message">{@html $myProcessingState.error}</span>
         {/if}
       {:else}
         <div class="process-controls login-prompt">
@@ -660,7 +681,7 @@
 </div>
 
 <!-- Notifications area -->
-{#if showAutoProcessNotification && !$processingState.isProcessing}
+{#if showAutoProcessNotification && !$myProcessingState.isProcessing}
   <div class="auto-process-notification">
     <div class="notification-text">{autoProcessNotificationMessage}</div>
   </div>
@@ -676,29 +697,29 @@
   </div>
 {/if}
 
-{#if $processingState.isProcessing && $processingState.totalSteps > 0}
+{#if $myProcessingState.isProcessing && $myProcessingState.totalSteps > 0}
   <div class="processing-status">
     <div class="progress-container">
-      <div class="progress-bar" style="width: {($processingState.progress / $processingState.totalSteps) * 100}%"></div>
+      <div class="progress-bar" style="width: {($myProcessingState.progress / $myProcessingState.totalSteps) * 100}%"></div>
     </div>
     <div class="progress-text">
-      {#if $processingState.totalIterations > 1}
+      {#if $myProcessingState.totalIterations > 1}
         <div class="iteration-indicator">
-          Run {$processingState.currentIteration} of {$processingState.totalIterations}
+          Run {$myProcessingState.currentIteration} of {$myProcessingState.totalIterations}
         </div>
       {/if}
-      {#if $processingState.currentStep === 'text_extraction'}
-        <span>Transcribing content... ({$processingState.progress}/{$processingState.totalSteps})</span>
-      {:else if $processingState.currentStep === 'translation'}
-        <span>Translating to English... ({$processingState.progress}/{$processingState.totalSteps})</span>
-      {:else if $processingState.currentStep === 'wordforms'}
-        <span>Extracting vocabulary... ({$processingState.progress}/{$processingState.totalSteps})</span>
-      {:else if $processingState.currentStep === 'phrases'}
-        <span>Finding useful phrases... ({$processingState.progress}/{$processingState.totalSteps})</span>
-      {:else if $processingState.currentStep === 'lemma_metadata'}
-        <span>{$processingState.description} ({$processingState.progress}/{$processingState.totalSteps})</span>
+      {#if $myProcessingState.currentStep === 'text_extraction'}
+        <span>Transcribing content... ({$myProcessingState.progress}/{$myProcessingState.totalSteps})</span>
+      {:else if $myProcessingState.currentStep === 'translation'}
+        <span>Translating to English... ({$myProcessingState.progress}/{$myProcessingState.totalSteps})</span>
+      {:else if $myProcessingState.currentStep === 'wordforms'}
+        <span>Extracting vocabulary... ({$myProcessingState.progress}/{$myProcessingState.totalSteps})</span>
+      {:else if $myProcessingState.currentStep === 'phrases'}
+        <span>Finding useful phrases... ({$myProcessingState.progress}/{$myProcessingState.totalSteps})</span>
+      {:else if $myProcessingState.currentStep === 'lemma_metadata'}
+        <span>{$myProcessingState.description} ({$myProcessingState.progress}/{$myProcessingState.totalSteps})</span>
       {:else}
-        <span>{$processingState.description || 'Processing...'} ({$processingState.progress}/{$processingState.totalSteps})</span>
+        <span>{$myProcessingState.description || 'Processing...'} ({$myProcessingState.progress}/{$myProcessingState.totalSteps})</span>
       {/if}
     </div>
   </div>
