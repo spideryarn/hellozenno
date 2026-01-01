@@ -154,7 +154,7 @@
     }
   });
   
-  // Cleanup timeouts on component destroy to prevent processing after navigation
+  // Cleanup timeouts and abort in-flight requests on component destroy
   onDestroy(() => {
     if (autoProcessTimeout) {
       clearTimeout(autoProcessTimeout);
@@ -163,6 +163,10 @@
     if (successNotificationTimeout) {
       clearTimeout(successNotificationTimeout);
       successNotificationTimeout = null;
+    }
+    // Abort any in-flight processing requests
+    if (processingQueue) {
+      processingQueue.abort();
     }
   });
   

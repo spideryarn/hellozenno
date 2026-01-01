@@ -52,6 +52,10 @@ export const processingState = writable({
   runId: 0 // Current run ID - used to prevent stale updates
 });
 
+// Default timeout for API requests (in ms)
+const DEFAULT_REQUEST_TIMEOUT = 60000; // 60 seconds for most steps
+const EXTRACTION_REQUEST_TIMEOUT = 120000; // 120 seconds for text extraction (can be slow)
+
 export class SourcefileProcessingQueue {
   private queue: PQueue;
   private sourcefileData: {
@@ -61,6 +65,7 @@ export class SourcefileProcessingQueue {
   };
   private sourcefileType: 'text' | 'image' | 'audio'; // Track sourcefile type
   private supabaseClient: SupabaseClient | null; // Store the client instance
+  private abortController: AbortController | null = null; // For cancelling in-flight requests
 
   constructor(
     supabaseClient: SupabaseClient | null, // Accept client instance
@@ -78,6 +83,35 @@ export class SourcefileProcessingQueue {
       sourcefile_slug
     };
     this.sourcefileType = sourcefile_type;
+  }
+
+  // Abort any in-flight requests for this queue
+  public abort(): void {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+      console.log('Processing aborted');
+    }
+  }
+
+  // Helper to make a fetch request with timeout and abort signal
+  private async fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    timeoutMs: number
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      return response;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   // Helper to safely update processing state only if this run is still current
@@ -101,7 +135,7 @@ export class SourcefileProcessingQueue {
   // Fetch the current status of the sourcefile
   private async fetchSourcefileStatus(): Promise<SourcefileStatus | null> {
     try {
-      const response = await fetch(
+      const response = await this.fetchWithTimeout(
         getApiUrl(
           RouteName.SOURCEFILE_PROCESSING_API_SOURCEFILE_STATUS_API,
           this.sourcefileData
@@ -110,7 +144,8 @@ export class SourcefileProcessingQueue {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           cache: 'no-cache' // Ensure fresh status
-        }
+        },
+        DEFAULT_REQUEST_TIMEOUT
       );
 
       if (!response.ok) {
@@ -121,7 +156,11 @@ export class SourcefileProcessingQueue {
       const data = await response.json();
       return data.status as SourcefileStatus;
     } catch (error) {
-      console.error('Error fetching sourcefile status:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('Status fetch timed out or was aborted');
+      } else {
+        console.error('Error fetching sourcefile status:', error);
+      }
       return null;
     }
   }
@@ -261,11 +300,20 @@ export class SourcefileProcessingQueue {
         console.warn('No access token available, request will be unauthenticated');
       }
 
-      const response = await fetch(step.apiEndpoint, {
-        method: 'POST', 
-        headers: headers,
-        body: JSON.stringify(step.params),
-      });
+      // Use longer timeout for text extraction (OCR/transcription can be slow)
+      const timeout = step.type === 'text_extraction' 
+        ? EXTRACTION_REQUEST_TIMEOUT 
+        : DEFAULT_REQUEST_TIMEOUT;
+
+      const response = await this.fetchWithTimeout(
+        step.apiEndpoint, 
+        {
+          method: 'POST', 
+          headers: headers,
+          body: JSON.stringify(step.params),
+        },
+        timeout
+      );
 
       console.log(`${step.type} response status:`, response.status);
 
@@ -304,10 +352,16 @@ export class SourcefileProcessingQueue {
         return true; // Step succeeded
       }
     } catch (error) {
+      // Handle timeout/abort differently from other errors
+      const isAbort = error instanceof Error && error.name === 'AbortError';
+      const errorMessage = isAbort 
+        ? `Request timed out for ${step.type}. Please try again.`
+        : (error instanceof Error ? error.message : 'Unknown error');
+      
       console.error(`Error processing ${step.type}:`, error);
       this.updateStateIfCurrent(runId, state => ({
         ...state,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
         isProcessing: false, // Stop processing on error
       }));
       return false; // Step failed
@@ -525,7 +579,7 @@ export class SourcefileProcessingQueue {
   // Throws on failure instead of returning error object, so caller can handle properly
   private async getFullSourcefileData(): Promise<any> {
     // Fetch the complete sourcefile text data to get updated recognized words
-    const response = await fetch(
+    const response = await this.fetchWithTimeout(
       getApiUrl(
         RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
         this.sourcefileData
@@ -534,7 +588,8 @@ export class SourcefileProcessingQueue {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-cache' // Ensure fresh data
-      }
+      },
+      DEFAULT_REQUEST_TIMEOUT
     );
 
     if (!response.ok) {
