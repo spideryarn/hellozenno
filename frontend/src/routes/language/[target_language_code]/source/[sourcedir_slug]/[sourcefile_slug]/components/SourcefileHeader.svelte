@@ -11,7 +11,7 @@
   import Info from 'phosphor-svelte/lib/Info';
   import { goto } from '$app/navigation';
   import { getPageUrl } from '$lib/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import Trash from 'phosphor-svelte/lib/Trash';
   import Image from 'phosphor-svelte/lib/Image';
   import Download from 'phosphor-svelte/lib/Download';
@@ -63,6 +63,9 @@
   let showSuccessNotification = false;
   let successMessage = '';
   let successNotificationTimeout: ReturnType<typeof setTimeout> | null = null;
+  
+  // Auto-process delay timeout (for cleanup on navigation)
+  let autoProcessTimeout: ReturnType<typeof setTimeout> | null = null;
   
   // Initialize the processing queue when the component mounts
   let processingQueue: SourcefileProcessingQueue;
@@ -143,9 +146,22 @@
       showAutoProcessNotification = true;
       
       // Add a slight delay to allow the UI to render first
-      setTimeout(() => {
+      autoProcessTimeout = setTimeout(() => {
+        autoProcessTimeout = null;
         processSourcefile();
       }, 500);
+    }
+  });
+  
+  // Cleanup timeouts on component destroy to prevent processing after navigation
+  onDestroy(() => {
+    if (autoProcessTimeout) {
+      clearTimeout(autoProcessTimeout);
+      autoProcessTimeout = null;
+    }
+    if (successNotificationTimeout) {
+      clearTimeout(successNotificationTimeout);
+      successNotificationTimeout = null;
     }
   });
   
@@ -278,6 +294,7 @@
             
             // Auto-hide after 5 seconds
             successNotificationTimeout = setTimeout(() => {
+              successNotificationTimeout = null;
               showSuccessNotification = false;
             }, 5000);
           }
@@ -327,6 +344,10 @@
       showAutoProcessNotification = false;
       
       // Clear any scheduled timeouts
+      if (autoProcessTimeout) {
+        clearTimeout(autoProcessTimeout);
+        autoProcessTimeout = null;
+      }
       if (successNotificationTimeout) {
         clearTimeout(successNotificationTimeout);
         successNotificationTimeout = null;
