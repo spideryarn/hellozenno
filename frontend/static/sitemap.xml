@@ -1,8 +1,148 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>http://localhost:5173/sitemaps/sitemap-static.xml</loc>
-    <lastmod>2025-09-18</lastmod>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-static.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-ar-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-ar-sentences.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-bn-phrases.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-bn-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-bn-sentences.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-zh-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-fi-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-fr-phrases.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-fr-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-fr-sentences.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-de-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-el-phrases.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-el-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-el-sentences.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-hi-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-it-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-it-sentences.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-ja-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-ko-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-mr-phrases.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-mr-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-pl-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-es-phrases.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-es-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-es-sentences.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-th-phrases.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-th-lemmas.xml</loc>
+    <lastmod>2025-10-26</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://www.hellozenno.com/sitemaps/sitemap-generated-th-sentences.xml</loc>
+    <lastmod>2025-10-26</lastmod>
   </sitemap>
 
 </sitemapindex>

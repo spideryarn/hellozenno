@@ -110,9 +110,11 @@ DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING = 1
 # Database pool configuration
 # These settings are used across all environments
 DB_POOL_CONFIG = {
-    "max_connections": 10,  # Reduced from 20 since traffic is light
-    "stale_timeout": 600,  # Increased to 10 minutes to keep connections alive longer
-    "timeout": 30,  # 30 seconds connection timeout
+    # Slightly increase pool headroom to tolerate brief spikes while
+    # audio generation runs in parallel (we keep DB windows short elsewhere)
+    "max_connections": 14,
+    "stale_timeout": 600,
+    "timeout": 30,
     "autoconnect": True,
     "thread_safe": True,
 }

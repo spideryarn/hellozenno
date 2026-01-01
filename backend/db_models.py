@@ -11,6 +11,7 @@ from peewee import (
     fn,
     DoesNotExist,
     ForeignKeyField,
+    DeferredForeignKey,
     UUIDField,
 )
 from playhouse.postgres_ext import JSONField
@@ -552,10 +553,10 @@ class Sentence(BaseModel):
     generation_metadata = JSONField(
         null=True
     )  # JSON with used_lemmas, used_wordforms, order_index, difficulty_score, prompt_version, tts_voice, source_context
-    sourcefile = ForeignKeyField(
+    sourcefile = DeferredForeignKey(
         "Sourcefile", backref="learn_sentences", null=True, on_delete="SET NULL"
     )  # For sourcefile-level learn sentences
-    sourcedir = ForeignKeyField(
+    sourcedir = DeferredForeignKey(
         "Sourcedir", backref="learn_sentences", null=True, on_delete="SET NULL"
     )  # For sourcedir-level learn sentences
     created_by = ForeignKeyField(

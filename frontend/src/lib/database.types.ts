@@ -1427,6 +1427,8 @@ export type Database = {
           provenance: string
           sentence: string
           slug: string
+          sourcedir_id: number | null
+          sourcefile_id: number | null
           target_language_code: string
           translation: string
           updated_at: string
@@ -1442,6 +1444,8 @@ export type Database = {
           provenance: string
           sentence: string
           slug: string
+          sourcedir_id?: number | null
+          sourcefile_id?: number | null
           target_language_code: string
           translation: string
           updated_at: string
@@ -1457,11 +1461,28 @@ export type Database = {
           provenance?: string
           sentence?: string
           slug?: string
+          sourcedir_id?: number | null
+          sourcefile_id?: number | null
           target_language_code?: string
           translation?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_sentence_sourcedir"
+            columns: ["sourcedir_id"]
+            isOneToOne: false
+            referencedRelation: "sourcedir"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_sentence_sourcefile"
+            columns: ["sourcefile_id"]
+            isOneToOne: false
+            referencedRelation: "sourcefile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sentenceaudio: {
         Row: {
