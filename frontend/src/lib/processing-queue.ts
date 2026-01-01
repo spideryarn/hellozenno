@@ -35,6 +35,9 @@ interface SourcefileStatus {
   incomplete_lemmas_count: number;
 }
 
+// Monotonically increasing run ID to prevent stale updates from old runs
+let nextRunId = 1;
+
 // Create a store for tracking progress
 export const processingState = writable({
   isProcessing: false,
@@ -45,7 +48,8 @@ export const processingState = writable({
   description: '',
   currentIteration: 0,
   totalIterations: 1,
-  processedSourcefileData: null as any // Will contain the updated sourcefile data after processing
+  processedSourcefileData: null as any, // Will contain the updated sourcefile data after processing
+  runId: 0 // Current run ID - used to prevent stale updates
 });
 
 export class SourcefileProcessingQueue {
@@ -74,6 +78,24 @@ export class SourcefileProcessingQueue {
       sourcefile_slug
     };
     this.sourcefileType = sourcefile_type;
+  }
+
+  // Helper to safely update processing state only if this run is still current
+  private updateStateIfCurrent(
+    runId: number,
+    updater: (state: typeof processingState extends import('svelte/store').Writable<infer T> ? T : never) => typeof processingState extends import('svelte/store').Writable<infer T> ? T : never
+  ): boolean {
+    let updated = false;
+    processingState.update(state => {
+      if (state.runId !== runId) {
+        // This run is stale, don't update
+        console.log(`Skipping state update for stale run ${runId} (current: ${state.runId})`);
+        return state;
+      }
+      updated = true;
+      return updater(state);
+    });
+    return updated;
   }
 
   // Fetch the current status of the sourcefile
@@ -198,16 +220,20 @@ export class SourcefileProcessingQueue {
 
 
   // Process a single step
-  private async processSingleStep(step: QueuedStep): Promise<boolean> {
+  private async processSingleStep(step: QueuedStep, runId: number): Promise<boolean> {
      console.log(`Processing step: ${step.type}`, { apiEndpoint: step.apiEndpoint, params: step.params });
 
-     processingState.update(state => ({
+     // Update state only if this run is still current
+     if (!this.updateStateIfCurrent(runId, state => ({
       ...state,
       isProcessing: true,
       currentStep: step.type,
       description: step.description,
       error: null,
-    }));
+    }))) {
+      // Run is stale, abort this step
+      return false;
+    }
 
     try {
       console.log(`Sending ${step.type} request to ${step.apiEndpoint}`);
@@ -266,7 +292,7 @@ export class SourcefileProcessingQueue {
              errorData.error.includes("violates unique constraint"))) {
           console.warn(`Duplicate entry detected during ${step.type} processing:`, errorData.error);
           // Treat as success to allow queue to continue for other steps
-          processingState.update(state => ({ ...state, progress: state.progress + 1 }));
+          this.updateStateIfCurrent(runId, state => ({ ...state, progress: state.progress + 1 }));
           return true;
         } else {
           throw new Error(errorData.error || `Failed to process ${step.type}`);
@@ -274,12 +300,12 @@ export class SourcefileProcessingQueue {
       } else {
         const responseData = await response.json();
         console.log(`${step.type} response data:`, responseData);
-        processingState.update(state => ({ ...state, progress: state.progress + 1 }));
+        this.updateStateIfCurrent(runId, state => ({ ...state, progress: state.progress + 1 }));
         return true; // Step succeeded
       }
     } catch (error) {
       console.error(`Error processing ${step.type}:`, error);
-      processingState.update(state => ({
+      this.updateStateIfCurrent(runId, state => ({
         ...state,
         error: error instanceof Error ? error.message : 'Unknown error',
         isProcessing: false, // Stop processing on error
@@ -291,6 +317,9 @@ export class SourcefileProcessingQueue {
 
   // Start processing for a given number of iterations
   public async processAll(iterations: number = 1): Promise<boolean> {
+    // Assign a new run ID to prevent stale updates from previous runs
+    const runId = nextRunId++;
+    
     processingState.update(state => ({
       ...state,
       isProcessing: true,
@@ -299,7 +328,8 @@ export class SourcefileProcessingQueue {
       error: null,
       currentIteration: 0,
       totalIterations: iterations,
-      processedSourcefileData: null
+      processedSourcefileData: null,
+      runId: runId // Store current run ID
     }));
 
     let overallSuccess = true;
@@ -308,7 +338,7 @@ export class SourcefileProcessingQueue {
     const currentStatus = await this.fetchSourcefileStatus();
     if (!currentStatus) {
       console.error(`Failed to fetch status, aborting.`);
-      processingState.update(state => ({
+      this.updateStateIfCurrent(runId, state => ({
         ...state,
         error: "Failed to fetch sourcefile status",
         isProcessing: false
@@ -320,7 +350,7 @@ export class SourcefileProcessingQueue {
     const allSteps = await this.determineSteps(currentStatus);
     if (allSteps.length === 0) {
       console.log(`No processing steps needed.`);
-      processingState.update(state => ({
+      this.updateStateIfCurrent(runId, state => ({
         ...state,
         isProcessing: false,
         description: 'No processing needed'
@@ -345,15 +375,16 @@ export class SourcefileProcessingQueue {
     const totalStepsCount = (normalSteps.length * iterations) + lemmaMetadataSteps.length;
     console.log(`Processing ${normalSteps.length} normal steps × ${iterations} iterations + ${lemmaMetadataSteps.length} lemma metadata steps`);
 
-    processingState.update(state => ({
+    this.updateStateIfCurrent(runId, state => ({
       ...state,
       totalSteps: totalStepsCount,
       progress: 0 // Reset progress counter
     }));
 
     // Build queue with desired order and preserve sequential execution.
-    // Recreate queue instance to ensure empty state for this run.
-    this.queue = new PQueue({ concurrency: 1 });
+    // Create a new queue for this run and keep a local reference to avoid
+    // issues if processAll() is called again while this run is in progress.
+    const runQueue = new PQueue({ concurrency: 1 });
 
     // Track iteration UI state; must be declared before scheduling tasks
     let currentStepIndex = 1;
@@ -369,7 +400,7 @@ export class SourcefileProcessingQueue {
       // Add all normal steps to the queue as scheduled tasks
       for (const step of normalSteps) {
         const stepCopy = { ...step } as QueuedStep;
-        this.queue.add(async () => {
+        runQueue.add(async () => {
           if (aborted) {
             return;
           }
@@ -381,12 +412,12 @@ export class SourcefileProcessingQueue {
             } else {
               currentStepIndex++;
             }
-            processingState.update(state => ({ 
+            this.updateStateIfCurrent(runId, state => ({ 
               ...state, 
               currentIteration: currentIterationTracking 
             }));
           }
-          const success = await this.processSingleStep(stepCopy);
+          const success = await this.processSingleStep(stepCopy, runId);
           if (!success) {
             overallSuccess = false;
             aborted = true;
@@ -401,17 +432,17 @@ export class SourcefileProcessingQueue {
     console.log(`--- Queueing ${lemmaMetadataSteps.length} lemma metadata steps ---`);
     for (const step of lemmaMetadataSteps) {
       const stepCopy = { ...step } as QueuedStep;
-      this.queue.add(async () => {
+      runQueue.add(async () => {
         if (aborted) {
           return;
         }
         // For lemma metadata, we're in a special "finishing" phase
-        processingState.update(state => ({ 
+        this.updateStateIfCurrent(runId, state => ({ 
           ...state, 
           currentIteration: iterations,
           description: stepCopy.description 
         }));
-        const success = await this.processSingleStep(stepCopy);
+        const success = await this.processSingleStep(stepCopy, runId);
         if (!success) {
           overallSuccess = false;
           aborted = true;
@@ -420,15 +451,14 @@ export class SourcefileProcessingQueue {
       });
     }
 
-    // 6. Process all steps in the queue
+    // 6. Process all steps in the queue (using the local reference)
+    await runQueue.onIdle();
 
-    await this.queue.onIdle();
-
-    // Final state update
+    // Final state update - only if this run is still current
     console.log("Processing finished. Fetching final data...");
     try {
       const finalSourcefileData = await this.getFullSourcefileData(); // Fetch final state for UI update
-      processingState.update(state => ({
+      this.updateStateIfCurrent(runId, state => ({
         ...state,
         isProcessing: false, // Processing is complete (or stopped due to error)
         currentStep: null,
@@ -439,7 +469,7 @@ export class SourcefileProcessingQueue {
       }));
     } catch (error) {
       console.error('Error fetching final sourcefile data:', error);
-      processingState.update(state => ({
+      this.updateStateIfCurrent(runId, state => ({
         ...state,
         isProcessing: false,
         currentStep: null,
