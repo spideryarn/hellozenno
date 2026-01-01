@@ -5,11 +5,20 @@
   import { SITE_NAME } from '$lib/config';
   import X from 'phosphor-svelte/lib/X';
   import FunnelSimple from 'phosphor-svelte/lib/FunnelSimple';
+  import { Breadcrumbs, type BreadcrumbItem } from '$lib';
   
   export let data;
   
   // Destructure data
   const { target_language_code, language_name, sourcefile, sourcedir, lemma_count } = data;
+
+  // Breadcrumb items
+  $: breadcrumbItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: language_name ?? target_language_code, href: `/language/${target_language_code}/sources` },
+    { label: 'Flashcards' }
+  ] as BreadcrumbItem[];
   
   // Get error message from URL if present
   let error = '';
@@ -98,6 +107,8 @@
 </svelte:head>
 
 <div class="container my-4">
+  <Breadcrumbs items={breadcrumbItems} />
+  
   <div class="row justify-content-center">
     <div class="col-md-8">
       <Card>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';  
-  import { Card, LemmaCard, MetadataCard, LemmaContent } from '$lib';
+  import { Card, LemmaCard, MetadataCard, LemmaContent, Breadcrumbs } from '$lib';
+  import type { BreadcrumbItem } from '$lib';
   import { apiFetch, getApiUrl } from '$lib/api'; // Import apiFetch
   import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/stores'; // Import page store for current URL
@@ -27,6 +28,15 @@
 
   // Define login URL with redirect back to current page
   $: loginUrl = `/auth?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`;
+
+  // Breadcrumb items - reactive to handle data changes during navigation
+  $: breadcrumbItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: lemmaResult?.target_language_name ?? target_language_code, href: `/language/${target_language_code}/sources` },
+    { label: 'Lemmas', href: `/language/${target_language_code}/lemmas` },
+    { label: lemma_metadata?.lemma ?? 'Lemma' }
+  ] as BreadcrumbItem[];
 
   // Debugging logs
   $: console.log('Lemma Page - data prop:', data);
@@ -195,14 +205,7 @@
 <div class="container">
   <div class="row mb-4">
     <div class="col">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
-          <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{lemmaResult?.target_language_name || target_language_code}</a></li>
-          <li class="breadcrumb-item"><a href="/language/{target_language_code}/lemmas">Lemmas</a></li>
-          <li class="breadcrumb-item active" aria-current="page">{lemma_metadata?.lemma || 'Lemma'}</li>
-        </ol>
-      </nav>
+      <Breadcrumbs items={breadcrumbItems} />
     </div>
   </div>
   
@@ -260,11 +263,6 @@
 </div>
 
 <style>
-  .breadcrumb {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-  }
   .toast-container {
     position: fixed;
     top: 1rem;

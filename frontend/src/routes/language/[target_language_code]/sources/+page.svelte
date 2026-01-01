@@ -7,11 +7,20 @@
   import { supabase } from '$lib/supabaseClient';
   import { getApiUrl, apiFetch } from '$lib/api';
   import { createUserIdColumn } from '$lib/datagrid/utils';
+  import { Breadcrumbs, type BreadcrumbItem } from '$lib';
   
   export let data: PageData;
   
   // Extract data with reactive declarations
   $: ({ target_language_code: languageCode, languageName, sources, total } = data);
+
+  // Breadcrumb items
+  $: breadcrumbItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: languageName ?? languageCode, href: `/language/${languageCode}/sources` },
+    { label: 'Sources' }
+  ] as BreadcrumbItem[];
   
   // Define columns for the DataGrid
   const columns = [
@@ -108,6 +117,8 @@
 </svelte:head>
 
 <div class="container mt-4">
+  <Breadcrumbs items={breadcrumbItems} />
+  
   <div class="row mb-4">
     <div class="col">
       <h1 class="mb-3">{languageName} Sources</h1>

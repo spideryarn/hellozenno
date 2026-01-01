@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { Sourcefile, Sourcedir, Metadata, Navigation, Stats } from '$lib/types/sourcefile';
   import SourcefileHeader from '../../routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileHeader.svelte';
-  import { NavTabs } from '$lib';
+  import { NavTabs, Breadcrumbs } from '$lib';
+  import type { BreadcrumbItem } from '$lib';
   
   export let sourcefile: Sourcefile;
   export let sourcedir: Sourcedir;
@@ -21,6 +22,16 @@
   $: isAudioFile = sourcefile.sourcefile_type === 'audio' || 
                   sourcefile.sourcefile_type === 'youtube_audio';
                   
+  // Build breadcrumb items reactively with safe fallbacks
+  $: items = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: language_name || target_language_code, href: `/language/${target_language_code}/sources` },
+    { label: sourcedir?.path ?? 'Source', href: `/language/${target_language_code}/source/${sourcedir_slug}` },
+    { label: sourcefile?.filename ?? 'File', href: `/language/${target_language_code}/source/${sourcedir_slug}/${sourcefile_slug}/text` },
+    { label: activeTab ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : 'Text' }
+  ] as BreadcrumbItem[];
+
   // Set up tabs for navigation
   $: tabs = [
     {
@@ -61,16 +72,7 @@
 
 <div class="container py-4">
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
-        <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{language_name || target_language_code}</a></li>
-        <li class="breadcrumb-item"><a href="/language/{target_language_code}/source/{sourcedir_slug}">{sourcedir.path}</a></li>
-        <li class="breadcrumb-item"><a href="/language/{target_language_code}/source/{sourcedir_slug}/{sourcefile_slug}/text">{sourcefile.filename}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</li>
-      </ol>
-    </nav>
+    <Breadcrumbs {items} />
     
     <!-- Search box is now provided by the parent language layout -->
   </div>
@@ -94,12 +96,6 @@
 </div>
 
 <style>
-  .breadcrumb {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-  }
-  
   .container {
     max-width: 100%;
     padding-left: 1rem;

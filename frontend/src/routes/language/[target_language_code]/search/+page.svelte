@@ -8,6 +8,7 @@
   import { SITE_NAME } from '$lib/config';
   import { truncate } from '$lib/utils';
   import SearchBarMini from '$lib/components/SearchBarMini.svelte';
+  import { Breadcrumbs, type BreadcrumbItem } from '$lib';
   
   export let data: PageData;
   // Get supabase client from data prop (passed from +layout.ts)
@@ -19,6 +20,14 @@
   const targetLanguageCode = data.target_language_code ?? '';
   const langName = data.langName ?? 'Language';
   let loading = false;
+
+  // Breadcrumb items
+  $: breadcrumbItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: langName ?? targetLanguageCode, href: `/language/${targetLanguageCode}/sources` },
+    { label: 'Search' }
+  ] as BreadcrumbItem[];
   
   // Ensure query is properly set from URL on mount and perform search if needed
   // Extract the query from the URL parameter
@@ -114,6 +123,8 @@
 </svelte:head>
 
 <div class="container">
+  <Breadcrumbs items={breadcrumbItems} />
+  
   <h1>Search {langName || result?.target_language_name || 'Language'} Words</h1>
   
   <div class="mb-4">

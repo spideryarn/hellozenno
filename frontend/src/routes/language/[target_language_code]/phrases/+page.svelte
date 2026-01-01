@@ -2,12 +2,21 @@
     import type { PageData } from './$types';
     import DataGrid from '$lib/components/DataGrid.svelte';
     import { SITE_NAME } from '$lib/config';
+    import { Breadcrumbs, type BreadcrumbItem } from '$lib';
     // import { page } from '$app/stores'; // page store not used, can be removed or commented if planned for future
     
     export let data: PageData;
     
     // Destructure data for easier access
     const { target_language_code, language_name, phrases, total, supabase: supabaseClient, session } = data;
+
+    // Breadcrumb items
+    $: breadcrumbItems = [
+      { label: 'Home', href: '/' },
+      { label: 'Languages', href: '/languages' },
+      { label: language_name ?? target_language_code, href: `/language/${target_language_code}/sources` },
+      { label: 'Phrases' }
+    ] as BreadcrumbItem[];
 
     import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
     // import { supabase } from '$lib/supabaseClient'; // page store not used, can be removed or commented if planned for future
@@ -190,6 +199,8 @@
 </svelte:head>
 
 <div class="container mt-4">
+    <Breadcrumbs items={breadcrumbItems} />
+    
     <div class="row mb-4">
         <div class="col">
             <h1 class="mb-3">Phrases and idioms in {language_name}</h1>

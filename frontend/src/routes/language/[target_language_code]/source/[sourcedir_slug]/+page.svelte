@@ -9,7 +9,7 @@
   import User from 'phosphor-svelte/lib/User';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { onMount } from 'svelte';
-  import { DescriptionFormatted, SourcedirHeader } from '$lib';
+  import { Breadcrumbs, DescriptionFormatted, SourcedirHeader, type BreadcrumbItem } from '$lib';
   import { page } from '$app/stores';
   import DataGrid from '$lib/components/DataGrid.svelte';
   import { createUserIdColumn } from '$lib/datagrid/utils';
@@ -85,6 +85,14 @@
   }
   
   const { sourcedir, sourcefiles, target_language_code, language_name, has_vocabulary, supported_languages } = data;
+  
+  // Breadcrumb items for the Breadcrumbs component
+  const items = $derived([
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: language_name ?? target_language_code, href: `/language/${target_language_code}/sources` },
+    { label: sourcedir?.path ?? 'Source' }
+  ] as BreadcrumbItem[]);
   
   let showCreateTextModal = $state(false);
   let showYoutubeModal = $state(false);
@@ -676,14 +684,9 @@
 </svelte:head>
 
 <div class="container">
-  <nav aria-label="breadcrumb" class="my-3">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/languages">Languages</a></li>
-      <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{language_name}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{sourcedir.path}</li>
-    </ol>
-  </nav>
+  <div class="my-3">
+    <Breadcrumbs {items} />
+  </div>
 
   <!-- Use the new SourcedirHeader component with metadata -->
   <SourcedirHeader 

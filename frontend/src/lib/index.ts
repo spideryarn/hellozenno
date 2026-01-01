@@ -27,6 +27,8 @@ export { default as NavTabs } from "./components/NavTabs.svelte";
 export { default as LoadingSpinner } from "./components/LoadingSpinner.svelte";
 export { default as SearchBarMini } from "./components/SearchBarMini.svelte";
 export { default as DataGrid } from "./components/DataGrid.svelte";
+export { default as Breadcrumbs } from "./components/Breadcrumbs.svelte";
+export type { BreadcrumbItem } from "./components/Breadcrumbs.svelte";
 
 // Re-export utility functions
 export * from "./utils";

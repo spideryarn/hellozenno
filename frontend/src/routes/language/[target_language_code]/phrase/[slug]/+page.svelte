@@ -2,7 +2,8 @@
   import { getApiUrl, apiFetch } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import { page } from '$app/state';
-  import { MetadataCard, Card } from '$lib';
+  import { MetadataCard, Card, Breadcrumbs } from '$lib';
+  import type { BreadcrumbItem } from '$lib';
   import { SITE_NAME } from '$lib/config';
   import { truncate } from '$lib/utils';
   import WordformCard from '$lib/components/WordformCard.svelte';
@@ -12,6 +13,15 @@
   // Get parameters
   export let data;
   const { phrase, target_language_code: languageCode, supabase, session } = data;
+  
+  // Build breadcrumb items reactively
+  $: items = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: data.language_name ?? languageCode, href: `/language/${languageCode}/sources` },
+    { label: 'Phrases', href: `/language/${languageCode}/phrases` },
+    { label: phrase?.canonical_form ?? 'Phrase' }
+  ] as BreadcrumbItem[];
   const { slug } = page.params;
   const target_language_code = languageCode;
   
@@ -61,17 +71,7 @@
 <div class="container mt-4">
   <div class="row">
     <div class="col">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/">Home</a></li>
-          <li class="breadcrumb-item">
-            <a href="/language/{languageCode}/phrases">Phrases</a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">
-            {phrase.canonical_form}
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumbs {items} />
     </div>
   </div>
   
@@ -286,12 +286,6 @@
   .hz-foreign-text {
     font-family: 'Times New Roman', Times, serif;
     font-style: italic;
-  }
-  
-  .breadcrumb {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
   }
   
   .badge {

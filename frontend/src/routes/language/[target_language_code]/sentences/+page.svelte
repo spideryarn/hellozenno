@@ -8,6 +8,7 @@
     import { createUserIdColumn } from '$lib/datagrid/utils';
     import { onMount } from 'svelte';
     import { browser } from '$app/environment';
+    import { Breadcrumbs, type BreadcrumbItem } from '$lib';
     
     // Define a type for the sentence row data
     interface SentenceRow {
@@ -25,6 +26,14 @@
     
     // Destructure data for easier access
     const { target_language_code, language_name, sentences, total, supabase: supabaseClient, session } = data;
+
+    // Breadcrumb items
+    $: breadcrumbItems = [
+      { label: 'Home', href: '/' },
+      { label: 'Languages', href: '/languages' },
+      { label: language_name ?? target_language_code, href: `/language/${target_language_code}/sources` },
+      { label: 'Sentences' }
+    ] as BreadcrumbItem[];
 
     // Ensure supabaseClient is non-null for the DataGrid provider and delete actions
     if (!supabaseClient) {
@@ -180,6 +189,8 @@
 </svelte:head>
 
 <div class="container mt-4">
+    <Breadcrumbs items={breadcrumbItems} />
+    
     <div class="row mb-4">
         <div class="col">
             <h1>Sentences in {language_name}</h1>

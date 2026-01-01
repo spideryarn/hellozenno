@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import Sentence from '$lib/components/Sentence.svelte';
+  import { Breadcrumbs } from '$lib';
+  import type { BreadcrumbItem } from '$lib';
   import { SITE_NAME } from '$lib/config';
   import { truncate } from '$lib/utils';
   
@@ -8,6 +10,15 @@
   export let data: PageData;
   // Destructure supabase and session from data to pass to the Sentence component
   const { supabase, session } = data;
+  
+  // Build breadcrumb items reactively
+  $: items = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: data.sentence?.target_language_code ?? 'Language', href: `/language/${data.sentence?.target_language_code}/sources` },
+    { label: 'Sentences', href: `/language/${data.sentence?.target_language_code}/sentences` },
+    { label: 'Sentence' }
+  ] as BreadcrumbItem[];
 </script>
 
 <svelte:head>
@@ -16,14 +27,7 @@
 </svelte:head>
 
 <div class="sentence-view">
-  <div class="breadcrumbs">
-    <a href="/">Home</a> » 
-    <a href="/languages">Languages</a> » 
-    <a href="/language/{data.sentence.target_language_code}/sources">
-      {data.sentence.target_language_code}
-    </a> » 
-    <span>Sentence</span>
-  </div>
+  <Breadcrumbs {items} />
   
   <Sentence 
     sentence={data.sentence}
@@ -40,20 +44,5 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
-  }
-  
-  .breadcrumbs {
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  .breadcrumbs a {
-    color: #333;
-    text-decoration: none;
-  }
-  
-  .breadcrumbs a:hover {
-    text-decoration: underline;
   }
 </style> 

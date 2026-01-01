@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';  
-  import { Card, MetadataCard, LemmaDetails } from '$lib';
+  import { Card, MetadataCard, LemmaDetails, Breadcrumbs } from '$lib';
+  import type { BreadcrumbItem } from '$lib';
   import { apiFetch } from '$lib/api'; // Import apiFetch
   import { RouteName } from '$lib/generated/routes';
   import { SITE_NAME } from '$lib/config';
@@ -44,6 +45,15 @@
   $: metadata = isValidData 
     ? (wordformData.metadata ?? wordformData.wordform_metadata) // If metadata is distinct, check it, else default to wordform_metadata
     : null;
+
+  // Breadcrumb items - reactive to handle data changes during navigation
+  $: breadcrumbItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Languages', href: '/languages' },
+    { label: target_language_name || target_language_code, href: `/language/${target_language_code}/sources` },
+    { label: 'Wordforms', href: `/language/${target_language_code}/wordforms` },
+    { label: wordform_metadata?.wordform ?? 'Wordform' }
+  ] as BreadcrumbItem[];
   
   async function handleDeleteSubmit(event: SubmitEvent) {
     event.preventDefault();
@@ -130,14 +140,7 @@
   {:else}
     <div class="row mb-4">
       <div class="col">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Languages</a></li>
-            <li class="breadcrumb-item"><a href="/language/{target_language_code}/sources">{target_language_name}</a></li>
-            <li class="breadcrumb-item"><a href="/language/{target_language_code}/wordforms">Wordforms</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{wordform_metadata.wordform}</li>
-          </ol>
-        </nav>
+        <Breadcrumbs items={breadcrumbItems} />
       </div>
     </div>
     
@@ -231,12 +234,6 @@
   .hz-foreign-text {
     font-family: 'Times New Roman', Times, serif;
     font-style: italic;
-  }
-  
-  .breadcrumb {
-    background-color: rgba(0, 0, 0, 0.05);
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
   }
   
   .badge {

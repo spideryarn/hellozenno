@@ -4,6 +4,7 @@ import os
 import tempfile
 import random
 from peewee import fn
+from loguru import logger
 from utils.env_config import ELEVENLABS_API_KEY, OPENAI_API_KEY
 from config import (
     MAX_AUDIO_SIZE_FOR_STORAGE,
@@ -20,6 +21,7 @@ from openai import OpenAI
 from .exceptions import AuthenticationRequiredForGenerationError
 
 from db_models import Lemma, Sentence, LemmaAudio, SentenceAudio
+from utils.db_connection import database
 
 # Import the exception and g for global context
 from flask import g
@@ -242,17 +244,25 @@ def ensure_sentence_audio_variants(
     *,
     enforce_auth: bool = True,
 ) -> tuple[list[SentenceAudio], int]:
-    """Ensure up to n distinct voice variants exist for a sentence."""
+    """Ensure up to n distinct voice variants exist for a sentence.
+
+    Important: Keep DB connections scoped to the minimal sections of code that
+    actually touch the database so we don't hold pool connections during slow
+    external TTS calls. This helps avoid pool exhaustion under load.
+    """
 
     text = (sentence.sentence or "").strip()
     if not text:
         raise ValueError("Sentence text is required for audio generation")
 
-    existing_variants = list(
-        SentenceAudio.select()
-        .where(SentenceAudio.sentence == sentence)
-        .order_by(SentenceAudio.created_at)
-    )
+    # Load existing variants within a short-lived DB connection
+    with database.connection_context():
+        existing_variants = list(
+            SentenceAudio.select()
+            .where(SentenceAudio.sentence == sentence)
+            .order_by(SentenceAudio.created_at)
+        )
+
     existing_voice_names = {
         (variant.metadata or {}).get("voice_name")
         for variant in existing_variants
@@ -269,9 +279,10 @@ def ensure_sentence_audio_variants(
         )
 
     created_variants: list[SentenceAudio] = []
-    # Pass user UUID (not the whole dict) to ForeignKeyField
-    created_by = getattr(g, "user_id", None)
+    created_by = getattr(g, "user_id", None)  # Pass user UUID (FK)
 
+    # Generate audio outside of any DB connection
+    generated_payloads: list[tuple[str, bytes, dict]] = []
     for voice_name in new_voice_names:
         audio_bytes = ensure_audio_data(
             text=text,
@@ -281,17 +292,48 @@ def ensure_sentence_audio_variants(
             voice_name=voice_name,
         )
         metadata = _build_metadata(voice_name)
-        variant = SentenceAudio.create(
-            sentence=sentence,
-            provider=metadata["provider"],
-            audio_data=audio_bytes,
-            metadata=metadata,
-            created_by=created_by,
-        )
-        created_variants.append(variant)
+        generated_payloads.append((voice_name, audio_bytes, metadata))
+
+    # Persist generated variants using short-lived DB connections
+    # Re-check for each voice to handle concurrent requests gracefully
+    for voice_name, audio_bytes, metadata in generated_payloads:
+        with database.connection_context():
+            # Check if this voice was created by a concurrent request
+            already_exists = (
+                SentenceAudio.select()
+                .where(SentenceAudio.sentence == sentence)
+                .where(
+                    fn.json_extract_path_text(
+                        SentenceAudio.metadata, "voice_name"
+                    )
+                    == voice_name
+                )
+                .exists()
+            )
+            if already_exists:
+                continue
+
+            try:
+                variant = SentenceAudio.create(
+                    sentence=sentence,
+                    provider=metadata["provider"],
+                    audio_data=audio_bytes,
+                    metadata=metadata,
+                    created_by=created_by,
+                )
+                created_variants.append(variant)
+            except Exception as e:
+                # Handle race condition where another request created this variant
+                logger.debug(f"Skipping duplicate audio variant: {e}")
 
     if created_variants:
-        existing_variants.extend(created_variants)
+        # Refresh final list so callers can rely on ordering/ids
+        with database.connection_context():
+            existing_variants = list(
+                SentenceAudio.select()
+                .where(SentenceAudio.sentence == sentence)
+                .order_by(SentenceAudio.created_at)
+            )
 
     return existing_variants, len(created_variants)
 
@@ -302,17 +344,22 @@ def ensure_lemma_audio_variants(
     *,
     enforce_auth: bool = True,
 ) -> tuple[list[LemmaAudio], int]:
-    """Ensure up to n distinct voice variants exist for a lemma."""
+    """Ensure up to n distinct voice variants exist for a lemma.
+
+    Keep DB connection windows short to protect the pool under concurrent play.
+    """
 
     text = (lemma.lemma or "").strip()
     if not text:
         raise ValueError("Lemma text is required for audio generation")
 
-    existing_variants = list(
-        LemmaAudio.select()
-        .where(LemmaAudio.lemma == lemma)
-        .order_by(LemmaAudio.created_at)
-    )
+    with database.connection_context():
+        existing_variants = list(
+            LemmaAudio.select()
+            .where(LemmaAudio.lemma == lemma)
+            .order_by(LemmaAudio.created_at)
+        )
+
     existing_voice_names = {
         (variant.metadata or {}).get("voice_name")
         for variant in existing_variants
@@ -329,10 +376,10 @@ def ensure_lemma_audio_variants(
         )
 
     created_variants: list[LemmaAudio] = []
-    # Pass user UUID (not the whole dict) to ForeignKeyField
     created_by = getattr(g, "user_id", None)
     voice_settings = {"stability": 0.92}
 
+    generated_payloads: list[tuple[str, bytes, dict]] = []
     for voice_name in new_voice_names:
         audio_bytes = ensure_audio_data(
             text=text,
@@ -343,17 +390,44 @@ def ensure_lemma_audio_variants(
             voice_settings=voice_settings,
         )
         metadata = _build_metadata(voice_name, settings=voice_settings)
-        variant = LemmaAudio.create(
-            lemma=lemma,
-            provider=metadata["provider"],
-            audio_data=audio_bytes,
-            metadata=metadata,
-            created_by=created_by,
-        )
-        created_variants.append(variant)
+        generated_payloads.append((voice_name, audio_bytes, metadata))
+
+    # Re-check for each voice to handle concurrent requests gracefully
+    for voice_name, audio_bytes, metadata in generated_payloads:
+        with database.connection_context():
+            # Check if this voice was created by a concurrent request
+            already_exists = (
+                LemmaAudio.select()
+                .where(LemmaAudio.lemma == lemma)
+                .where(
+                    fn.json_extract_path_text(LemmaAudio.metadata, "voice_name")
+                    == voice_name
+                )
+                .exists()
+            )
+            if already_exists:
+                continue
+
+            try:
+                variant = LemmaAudio.create(
+                    lemma=lemma,
+                    provider=metadata["provider"],
+                    audio_data=audio_bytes,
+                    metadata=metadata,
+                    created_by=created_by,
+                )
+                created_variants.append(variant)
+            except Exception as e:
+                # Handle race condition where another request created this variant
+                logger.debug(f"Skipping duplicate lemma audio variant: {e}")
 
     if created_variants:
-        existing_variants.extend(created_variants)
+        with database.connection_context():
+            existing_variants = list(
+                LemmaAudio.select()
+                .where(LemmaAudio.lemma == lemma)
+                .order_by(LemmaAudio.created_at)
+            )
 
     return existing_variants, len(created_variants)
 
