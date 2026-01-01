@@ -229,7 +229,11 @@
   @media (max-width: 768px) {
     .text-content,
     .plain-text p {
-      padding: 0 5px; /* Minimal padding on mobile */
+      padding: 0; /* No extra padding on mobile - container handles margins */
+    }
+    
+    .plain-text p {
+      line-height: 1.8; /* Match EnhancedText for easier touch targets */
     }
   }
 </style>

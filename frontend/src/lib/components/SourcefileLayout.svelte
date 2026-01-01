@@ -117,8 +117,8 @@
   /* For mobile devices, maximize content width */
   @media (max-width: 768px) {
     .container {
-      padding-left: 10px;
-      padding-right: 10px;
+      padding-left: 8px;
+      padding-right: 8px;
     }
   }
 </style> 

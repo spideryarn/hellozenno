@@ -588,7 +588,14 @@
   /* Responsive styling for different screen sizes */
   @media (max-width: 768px) {
     .enhanced-text {
-      padding: 0 5px; /* Minimal padding on mobile */
+      padding: 0; /* No padding on mobile - let parent container handle margins */
+      line-height: 1.8; /* Increased from 1.4 for easier touch targets */
+      max-width: 100%; /* Use full width on mobile */
+    }
+    
+    /* Reduce br margin since line-height is already increased */
+    .enhanced-text :global(br) {
+      margin-top: 0.1rem;
     }
   }
 </style> 
