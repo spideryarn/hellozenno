@@ -1,6 +1,5 @@
 addict
 anthropic
-cryptography>=41.0.0  # For JWT and encryption support
 elevenlabs>=2.1.0
 flask
 beautifulsoup4
@@ -26,10 +25,9 @@ psycopg2-binary==2.9.9
 python-dotenv>=1.0.0  # For environment variable management
 requests>=2.31.0  # For HTTP requests to Supabase
 # spacy>=3.8.0  # For NLP processing - not actually used in the codebase
-ujson>=5.10.0  # For JSON handling
-yt-dlp>=2023.12.30  # For YouTube audio downloads
 flask-cors>=4.0.0  # For cross-origin API access
 whitenoise>=6.6.0  # For static file serving on Vercel
 # pytest-postgresql>=5.0.0
-pythainlp>=5.0.0  # Thai tokenization (optional plugin)
+# pythainlp>=5.0.0  # Thai tokenization - large dep, set SEGMENTATION_TH=naive on Vercel
+# yt-dlp>=2023.12.30  # YouTube downloads - large dep, disabled for Vercel size limits
 pyahocorasick>=1.4.4  # Known-word multi-pattern search (optional fast path)
