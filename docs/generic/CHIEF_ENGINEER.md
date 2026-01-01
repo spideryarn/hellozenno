@@ -52,6 +52,8 @@ Create a staged implementation plan:
 - Document approach, risks, and dependencies
 - Save plan to `docs/plans/YYMMDD_<task>.md`
 
+**See:** `gjdutils/docs/instructions/WRITE_PLANNING_DOC.md` for planning document structure and best practices.
+
 **Output:** Planning document with staged implementation steps.
 
 ---
@@ -139,6 +141,17 @@ Summarize and close:
 
 ---
 
+### Phase 9: Documentation
+
+Update evergreen documentation to reflect changes:
+- Update relevant `docs/reference/*.md` files
+- Add cross-references to/from new documentation
+- Ensure examples match current implementation
+
+**See:** `gjdutils/docs/instructions/WRITE_EVERGREEN_DOC.md` for documentation standards.
+
+---
+
 ## Subagent Reference
 
 | Subagent | Purpose | Model |
@@ -167,4 +180,5 @@ Phase 5: User Review     → Direct (get approval)
 Phase 6: Implementation  → @implementer (per stage)
 Phase 7: Impl Review     → @reviewer-gpt5.2-high (or all 3)
 Phase 8: Conclusion      → Direct (summarize, offer commit)
+Phase 9: Documentation   → Direct (update evergreen docs)
 ```
