@@ -485,31 +485,25 @@ export class SourcefileProcessingQueue {
   }
 
   // Get the full sourcefile data including recognized words for updating the UI
+  // Throws on failure instead of returning error object, so caller can handle properly
   private async getFullSourcefileData(): Promise<any> {
-    try {
-      // Fetch the complete sourcefile text data to get updated recognized words
-      const response = await fetch(
-        getApiUrl(
-          RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
-          this.sourcefileData
-        ),
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          cache: 'no-cache' // Ensure fresh data
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to get complete sourcefile data (status: ${response.status})`);
+    // Fetch the complete sourcefile text data to get updated recognized words
+    const response = await fetch(
+      getApiUrl(
+        RouteName.SOURCEFILE_API_INSPECT_SOURCEFILE_TEXT_API,
+        this.sourcefileData
+      ),
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-cache' // Ensure fresh data
       }
+    );
 
-      return await response.json();
-    } catch (error) {
-      console.error('Error getting full sourcefile data:', error);
-      // Return a minimal error structure or null? Decide based on consuming component needs
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return { error: `Failed to load final data: ${errorMessage}` };
+    if (!response.ok) {
+      throw new Error(`Failed to get complete sourcefile data (status: ${response.status})`);
     }
+
+    return await response.json();
   }
 }
