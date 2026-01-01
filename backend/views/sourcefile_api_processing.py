@@ -9,7 +9,6 @@ from flask import (
     jsonify,
     request,
 )
-from peewee import DoesNotExist
 
 from config import (
     DEFAULT_LANGUAGE_LEVEL,
@@ -121,13 +120,24 @@ def process_wordforms_api(
         # Get processing parameters from request or use defaults
         data = request.get_json() or {}
 
-        max_new_words = int(
-            data.get("max_new_words", DEFAULT_MAX_NEW_WORDS_PER_PROCESSING)
-        )
+        # Validate max_new_words parameter
+        try:
+            max_new_words = int(
+                data.get("max_new_words", DEFAULT_MAX_NEW_WORDS_PER_PROCESSING)
+            )
+            if max_new_words < 0:
+                return jsonify({"success": False, "error": "max_new_words must be non-negative"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "max_new_words must be a valid integer"}), 400
+
+        # Validate language_level parameter
         language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
-        assert language_level in get_args(
-            LanguageLevel
-        ), f"Invalid language level: {language_level}"
+        valid_levels = get_args(LanguageLevel)
+        if language_level not in valid_levels:
+            return jsonify({
+                "success": False, 
+                "error": f"Invalid language level: {language_level}. Must be one of: {', '.join(valid_levels)}"
+            }), 400
 
         # Process wordforms
         sourcefile_entry, _ = ensure_tricky_wordforms(
@@ -177,13 +187,24 @@ def process_phrases_api(
         # Get processing parameters from request or use defaults
         data = request.get_json() or {}
 
-        max_new_phrases = int(
-            data.get("max_new_phrases", DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING)
-        )
+        # Validate max_new_phrases parameter
+        try:
+            max_new_phrases = int(
+                data.get("max_new_phrases", DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING)
+            )
+            if max_new_phrases < 0:
+                return jsonify({"success": False, "error": "max_new_phrases must be non-negative"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "max_new_phrases must be a valid integer"}), 400
+
+        # Validate language_level parameter
         language_level = data.get("language_level", DEFAULT_LANGUAGE_LEVEL)
-        assert language_level in get_args(
-            LanguageLevel
-        ), f"Invalid language level: {language_level}"
+        valid_levels = get_args(LanguageLevel)
+        if language_level not in valid_levels:
+            return jsonify({
+                "success": False, 
+                "error": f"Invalid language level: {language_level}. Must be one of: {', '.join(valid_levels)}"
+            }), 400
 
         # Process phrases
         sourcefile_entry, _ = ensure_tricky_phrases(
