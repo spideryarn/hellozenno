@@ -283,29 +283,64 @@ type Card = {
 
 **Goal**: Generate fewer sentences initially for faster first response.
 
+**Rationale**: Even with skip_audio, the LLM call to generate sentences can take ~5-15s. If we request 10 sentences, that's one long request. By requesting 4 sentences first, we can reduce initial wait time to ~3-8s, then fetch more in background.
+
 ### Changes
 
-#### 3.1 Reduce initial batch size
+#### 3.1 Add config constant for initial batch size
 
 **File**: `frontend/src/lib/config.ts`
 
 ```typescript
-export const LEARN_INITIAL_CARDS = 4;  // First batch (quick)
+export const LEARN_INITIAL_CARDS = 4;  // First batch (quick ~3-8s)
 export const LEARN_DEFAULT_NUM_CARDS = 10;  // Total target
 ```
 
-#### 3.2 Two-phase generation
+#### 3.2 Two-phase generation in preparePracticeInBackground
 
 **File**: `frontend/src/routes/.../learn/+page.svelte`
 
-1. First call: `num_sentences: 4, skip_audio: true` (~5-10s)
-2. User can start practicing immediately
-3. Background call: `num_sentences: 10, skip_audio: true` to get more
-4. Merge additional sentences into deck
+Modify `preparePracticeInBackground()`:
+1. First call: `num_sentences: LEARN_INITIAL_CARDS (4), skip_audio: true`
+2. Set `preparedCards` with initial batch, mark as "partial"
+3. If user starts practice, they get initial cards immediately
+4. Background follow-up call: `num_sentences: LEARN_DEFAULT_NUM_CARDS (10)`
+5. Merge new sentences into deck (append, dedupe by sentence_id)
 
-#### 3.3 "More cards loading" indicator
+**Key consideration**: The second call may return some of the same sentences (reused). We need to:
+- Deduplicate by sentence_id
+- Preserve audio status from first batch
+- Only add truly new sentences
 
-Show progress while additional cards generate in background.
+#### 3.3 Track partial deck state
+
+Add state variable:
+```typescript
+let preparedDeckIsPartial = false;  // True if more cards coming
+```
+
+Update UI to show "More cards loading..." when partial.
+
+#### 3.4 Merge logic
+
+```typescript
+function mergeCards(existing: Card[], incoming: Card[]): Card[] {
+  const existingIds = new Set(existing.map(c => c.sentence_id));
+  const newCards = incoming.filter(c => !existingIds.has(c.sentence_id));
+  return [...existing, ...newCards];
+}
+```
+
+### Risk Mitigation
+
+1. **Race condition**: User starts practice before second batch arrives
+   - Solution: Merge into cards array even if practice started, preserving current index
+   
+2. **Duplicate requests**: Background prep starts while user triggers manual start
+   - Solution: Track `preparingMoreCards` flag, skip if already in progress
+
+3. **UI confusion**: User sees card count change mid-session
+   - Solution: Show "(N cards, more loading...)" indicator
 
 ---
 
