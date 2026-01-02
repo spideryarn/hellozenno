@@ -85,7 +85,9 @@ def learn_sourcefile_summary_api(
         # Time budget for summary (seconds), with sane bounds
         budget_param = request.args.get("time_budget_s")
         try:
-            time_budget_s = float(str(budget_param)) if budget_param is not None else 12.0
+            time_budget_s = (
+                float(str(budget_param)) if budget_param is not None else 12.0
+            )
         except Exception:
             time_budget_s = 12.0
         time_budget_s = max(3.0, min(45.0, time_budget_s))
@@ -96,19 +98,19 @@ def learn_sourcefile_summary_api(
         try:
             if lemmas:
                 # Peewee will expand the IN (...) safely
-                q = (
-                    Lemma.select(
-                        Lemma.lemma,
-                        Lemma.translations,
-                        Lemma.etymology,
-                        Lemma.commonality,
-                        Lemma.guessability,
-                        Lemma.part_of_speech,
-                        Lemma.example_usage,
-                        Lemma.mnemonics,
-                        Lemma.is_complete,
-                    )
-                    .where((Lemma.target_language_code == target_language_code) & (Lemma.lemma.in_(lemmas)))
+                q = Lemma.select(
+                    Lemma.lemma,
+                    Lemma.translations,
+                    Lemma.etymology,
+                    Lemma.commonality,
+                    Lemma.guessability,
+                    Lemma.part_of_speech,
+                    Lemma.example_usage,
+                    Lemma.mnemonics,
+                    Lemma.is_complete,
+                ).where(
+                    (Lemma.target_language_code == target_language_code)
+                    & (Lemma.lemma.in_(lemmas))
                 )
                 for row in q:
                     existing_map[row.lemma] = {
@@ -123,7 +125,9 @@ def learn_sourcefile_summary_api(
                         "is_complete": bool(row.is_complete),
                     }
         except Exception as e:
-            logger.warning(f"Bulk lemma prefetch failed; falling back to per-item loads. Reason: {e}")
+            logger.warning(
+                f"Bulk lemma prefetch failed; falling back to per-item loads. Reason: {e}"
+            )
             existing_map = {}
         durations["bulk_fetch_s"] = time.time() - bulk_t0
 
@@ -168,7 +172,9 @@ def learn_sourcefile_summary_api(
                         }
                         counts["fallback_defaults"] += 1
                     except Exception as e:
-                        logger.warning(f"Failed to load/generate metadata for '{lemma}': {e}")
+                        logger.warning(
+                            f"Failed to load/generate metadata for '{lemma}': {e}"
+                        )
                         md = {
                             "lemma": lemma,
                             "translations": [],
@@ -216,7 +222,9 @@ def learn_sourcefile_summary_api(
             item["difficulty_score"] = _difficulty_score(item)
             ranked.append(item)
 
-        durations["lemma_warmup_total_s"] = durations.get("bulk_fetch_s", 0.0) + generation_s_total
+        durations["lemma_warmup_total_s"] = (
+            durations.get("bulk_fetch_s", 0.0) + generation_s_total
+        )
         durations["generation_s"] = generation_s_total
 
         # Sort by difficulty desc and take top N
@@ -263,8 +271,20 @@ def learn_sourcefile_generate_api(
     Always persists to Sentence/SentenceLemma with provenance="learn" and
     generation_metadata containing source_context, used_lemmas, order_index, tts_voice.
 
-    Request JSON: { "lemmas": list[str], "num_sentences": int=5, "language_level": str|null }
-    Response JSON: { "sentences": [{ sentence, translation, used_lemmas, language_level?, audio_data_url }] }
+    Request JSON: {
+        "lemmas": list[str],
+        "num_sentences": int=5,
+        "language_level": str|null,
+        "skip_audio": bool=False  # When True, skip TTS generation for faster response
+    }
+    Response JSON: {
+        "sentences": [{
+            sentence, translation, used_lemmas, language_level?,
+            audio_data_url,  # null if skip_audio=True and no cached audio
+            audio_status,    # "ready" | "pending" (included when skip_audio=True)
+            sentence_id      # Always included for ensure-audio calls
+        }]
+    }
 
     Note: This endpoint has a time budget to ensure it returns before serverless
     timeouts. If generation takes too long, partial results are returned with
@@ -300,6 +320,7 @@ def learn_sourcefile_generate_api(
         except Exception:
             num_sentences = 5
         language_level: Optional[str] = body.get("language_level")
+        skip_audio: bool = body.get("skip_audio", False) is True
 
         # Resolve the Sourcefile to get its ID for FK-based lookups
         reuse_t0 = time.time()
@@ -338,88 +359,115 @@ def learn_sourcefile_generate_api(
             existing_sentences = list(existing_q)
             reuse_timed_out = False
             for s in existing_sentences:
-                # Check time budget before expensive audio operations
-                elapsed = time.time() - t0
-                if elapsed >= GENERATE_TIME_BUDGET_S:
-                    logger.warning(
-                        f"Learn generate: time budget exhausted during reuse processing "
-                        f"({elapsed:.1f}s >= {GENERATE_TIME_BUDGET_S}s)"
-                    )
-                    reuse_timed_out = True
-                    # Still include sentence but skip audio generation
+                selected_variant_id = None
+                audio_status = "pending"
+
+                if skip_audio:
+                    # When skip_audio=True, only do cheap DB lookup for existing audio
                     variants = list(
                         SentenceAudio.select()
                         .where(SentenceAudio.sentence == s)
                         .order_by(SentenceAudio.created_at)
+                        .limit(1)
                     )
+                    if variants:
+                        selected_variant_id = variants[0].id
+                        audio_status = "ready"
                 else:
-                    try:
-                        variants, _ = ensure_sentence_audio_variants(s, n=1)
-                    except AuthenticationRequiredForGenerationError:
-                        variants = list(
-                            SentenceAudio.select()
-                            .where(SentenceAudio.sentence == s)
-                            .order_by(SentenceAudio.created_at)
-                        )
-                    except Exception as e:
+                    # Original behavior: generate audio if missing
+                    # Check time budget before expensive audio operations
+                    elapsed = time.time() - t0
+                    if elapsed >= GENERATE_TIME_BUDGET_S:
                         logger.warning(
-                            f"Failed to ensure audio variants for sentence id={s.id}: {e}"
+                            f"Learn generate: time budget exhausted during reuse processing "
+                            f"({elapsed:.1f}s >= {GENERATE_TIME_BUDGET_S}s)"
                         )
+                        reuse_timed_out = True
+                        # Still include sentence but skip audio generation
+                        # Use .limit(1) for efficiency when budget exhausted
                         variants = list(
                             SentenceAudio.select()
                             .where(SentenceAudio.sentence == s)
                             .order_by(SentenceAudio.created_at)
+                            .limit(1)
                         )
-
-                    # If still missing, auto-generate a minimal fallback when authenticated
-                    # (only if we haven't timed out)
-                    if not variants and not reuse_timed_out:
+                    else:
                         try:
-                            from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+                            variants, _ = ensure_sentence_audio_variants(s, n=1)
+                        except AuthenticationRequiredForGenerationError:
+                            variants = list(
+                                SentenceAudio.select()
+                                .where(SentenceAudio.sentence == s)
+                                .order_by(SentenceAudio.created_at)
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"Failed to ensure audio variants for sentence id={s.id}: {e}"
+                            )
+                            variants = list(
+                                SentenceAudio.select()
+                                .where(SentenceAudio.sentence == s)
+                                .order_by(SentenceAudio.created_at)
+                            )
 
-                            if getattr(g, "user", None):
-                                try:
-                                    fallback_n = max(
-                                        1, int(PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES)
-                                    )
-                                except Exception:
-                                    fallback_n = 1
-                                try:
-                                    # Use default enforce_auth=True, requires g.user
-                                    variants, _ = ensure_sentence_audio_variants(
-                                        s, n=fallback_n
-                                    )
-                                except Exception as gen_err:
-                                    logger.warning(
-                                        f"Auto-generated audio fallback failed for sentence id={s.id}: {gen_err}"
-                                    )
-                        except Exception:
-                            # If config import fails, just continue without auto-gen
-                            pass
+                        # If still missing, auto-generate a minimal fallback when authenticated
+                        # (only if we haven't timed out)
+                        if not variants and not reuse_timed_out:
+                            try:
+                                from config import (
+                                    PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES,
+                                )
 
-                if not variants:
-                    logger.warning(
-                        f"Persisted sentence id={s.id} has no sentence_audio variants; continuing without audio"
-                    )
-                    selected_variant_id = None
-                else:
-                    # Pin a specific variant to avoid random selection across range requests
-                    selected_variant_id = variants[0].id
+                                if getattr(g, "user", None):
+                                    try:
+                                        fallback_n = max(
+                                            1,
+                                            int(
+                                                PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+                                            ),
+                                        )
+                                    except Exception:
+                                        fallback_n = 1
+                                    try:
+                                        # Use default enforce_auth=True, requires g.user
+                                        variants, _ = ensure_sentence_audio_variants(
+                                            s, n=fallback_n
+                                        )
+                                    except Exception as gen_err:
+                                        logger.warning(
+                                            f"Auto-generated audio fallback failed for sentence id={s.id}: {gen_err}"
+                                        )
+                            except Exception:
+                                # If config import fails, just continue without auto-gen
+                                pass
+
+                    if not variants:
+                        logger.warning(
+                            f"Persisted sentence id={s.id} has no sentence_audio variants; continuing without audio"
+                        )
+                    else:
+                        # Pin a specific variant to avoid random selection across range requests
+                        selected_variant_id = variants[0].id
+                        audio_status = "ready"
+
                 meta = s.generation_metadata or {}
                 used_lemmas = meta.get("used_lemmas") or []
-                existing_items.append(
-                    {
-                        "sentence": s.sentence,
-                        "translation": s.translation,
-                        "used_lemmas": used_lemmas,
-                        "language_level": s.language_level,
-                        "audio_data_url": (
-                            f"/api/lang/sentence/{target_language_code}/{s.id}/audio?variant_id={selected_variant_id}"
-                            if selected_variant_id is not None
-                            else None
-                        ),
-                    }
-                )
+                item = {
+                    "sentence": s.sentence,
+                    "translation": s.translation,
+                    "used_lemmas": used_lemmas,
+                    "language_level": s.language_level,
+                    "audio_data_url": (
+                        f"/api/lang/sentence/{target_language_code}/{s.id}/audio?variant_id={selected_variant_id}"
+                        if selected_variant_id is not None
+                        else None
+                    ),
+                    "sentence_id": s.id,
+                }
+                # Include audio_status when skip_audio=True for frontend tracking
+                if skip_audio:
+                    item["audio_status"] = audio_status
+                existing_items.append(item)
         except Exception as e:
             # If DB is not migrated yet or JSON operators unsupported, skip reuse gracefully
             logger.warning(
@@ -469,7 +517,9 @@ def learn_sourcefile_generate_api(
                     f"Learn generate: time budget exhausted before LLM call ({elapsed:.1f}s >= {GENERATE_TIME_BUDGET_S}s)"
                 )
                 timed_out = True
-                skipped_due_to_timeout = remaining  # Track how many we couldn't generate
+                skipped_due_to_timeout = (
+                    remaining  # Track how many we couldn't generate
+                )
                 remaining = 0  # Skip generation entirely
 
         if remaining > 0:
@@ -551,56 +601,74 @@ def learn_sourcefile_generate_api(
                         "Failed to persist generated sentence (missing id)"
                     )
 
-                try:
-                    variants, _ = ensure_sentence_audio_variants(db_sentence, n=1)
-                except AuthenticationRequiredForGenerationError:
-                    variants = []
-                except Exception as ensure_err:
-                    logger.warning(
-                        f"Failed to ensure audio variants for generated sentence id={sent_id}: {ensure_err}"
-                    )
-                    variants = []
+                selected_variant_id = None
+                audio_status = "pending"
 
-                # If variants are missing, auto-generate a minimal fallback when authenticated
-                if not variants:
+                if skip_audio:
+                    # Skip audio generation entirely for new sentences when skip_audio=True
+                    pass
+                else:
+                    # Original behavior: generate audio
                     try:
-                        from config import PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+                        variants, _ = ensure_sentence_audio_variants(db_sentence, n=1)
+                    except AuthenticationRequiredForGenerationError:
+                        variants = []
+                    except Exception as ensure_err:
+                        logger.warning(
+                            f"Failed to ensure audio variants for generated sentence id={sent_id}: {ensure_err}"
+                        )
+                        variants = []
 
-                        if getattr(g, "user", None):
-                            try:
-                                fallback_n = max(
-                                    1, int(PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES)
-                                )
-                            except Exception:
-                                fallback_n = 1
-                            try:
-                                # Use default enforce_auth=True, requires g.user
-                                variants, _ = ensure_sentence_audio_variants(
-                                    db_sentence, n=fallback_n
-                                )
-                            except Exception as gen_err:
-                                logger.warning(
-                                    f"Auto-generated audio fallback failed for generated sentence id={sent_id}: {gen_err}"
-                                )
-                    except Exception:
-                        # If config import fails, just continue without auto-gen
-                        pass
+                    # If variants are missing, auto-generate a minimal fallback when authenticated
+                    if not variants:
+                        try:
+                            from config import (
+                                PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES,
+                            )
 
-                # Pin a specific variant to avoid random selection across range requests
-                selected_variant_id = variants[0].id if variants else None
-                new_items.append(
-                    {
-                        "sentence": sentence_text,
-                        "translation": translation_text,
-                        "used_lemmas": used_lemmas,
-                        "language_level": cefr,
-                        "audio_data_url": (
-                            f"/api/lang/sentence/{target_language_code}/{sent_id}/audio?variant_id={selected_variant_id}"
-                            if selected_variant_id is not None
-                            else None
-                        ),
-                    }
-                )
+                            if getattr(g, "user", None):
+                                try:
+                                    fallback_n = max(
+                                        1,
+                                        int(
+                                            PUBLIC_AUTO_GENERATE_SENTENCE_AUDIO_SAMPLES
+                                        ),
+                                    )
+                                except Exception:
+                                    fallback_n = 1
+                                try:
+                                    # Use default enforce_auth=True, requires g.user
+                                    variants, _ = ensure_sentence_audio_variants(
+                                        db_sentence, n=fallback_n
+                                    )
+                                except Exception as gen_err:
+                                    logger.warning(
+                                        f"Auto-generated audio fallback failed for generated sentence id={sent_id}: {gen_err}"
+                                    )
+                        except Exception:
+                            # If config import fails, just continue without auto-gen
+                            pass
+
+                    if variants:
+                        selected_variant_id = variants[0].id
+                        audio_status = "ready"
+
+                item = {
+                    "sentence": sentence_text,
+                    "translation": translation_text,
+                    "used_lemmas": used_lemmas,
+                    "language_level": cefr,
+                    "audio_data_url": (
+                        f"/api/lang/sentence/{target_language_code}/{sent_id}/audio?variant_id={selected_variant_id}"
+                        if selected_variant_id is not None
+                        else None
+                    ),
+                    "sentence_id": sent_id,
+                }
+                # Include audio_status when skip_audio=True for frontend tracking
+                if skip_audio:
+                    item["audio_status"] = audio_status
+                new_items.append(item)
 
             audio_duration = time.time() - audio_t0
 
@@ -634,5 +702,156 @@ def learn_sourcefile_generate_api(
         logger.exception("Error in learn_sourcefile_generate_api")
         return (
             jsonify({"error": "Failed to generate sentences", "message": str(e)}),
+            500,
+        )
+
+
+@learn_api_bp.route("/sentence/<int:sentence_id>/ensure-audio", methods=["POST"])
+@api_auth_optional
+def ensure_sentence_audio_api(sentence_id: int):
+    """Ensure audio exists for a sentence, generating if needed.
+
+    This endpoint is designed for lazy audio loading. It:
+    - Returns existing audio immediately if cached (works for anonymous users)
+    - Generates audio on-demand if missing (requires authentication)
+    - Completes quickly (~3-8s for generation) to avoid timeouts
+
+    Response: {
+        "audio_data_url": "/api/lang/sentence/{lang}/{id}/audio?variant_id=...",
+        "generated": true/false,  # Whether audio was freshly generated
+        "duration_s": 3.5         # Time taken (for observability)
+    }
+
+    Error responses:
+    - 404: Sentence not found
+    - 401: Authentication required (when audio needs generation but user not logged in)
+    - 500: Audio generation failed
+    """
+    t0 = time.time()
+    try:
+        # Look up the sentence
+        try:
+            sentence = Sentence.get_by_id(sentence_id)
+        except Sentence.DoesNotExist:
+            return (
+                jsonify(
+                    {
+                        "error": "Sentence not found",
+                        "message": f"No sentence with id={sentence_id}",
+                    }
+                ),
+                404,
+            )
+
+        target_language_code = sentence.target_language_code
+
+        # Check for existing audio variants (cheap DB lookup)
+        existing_variants = list(
+            SentenceAudio.select()
+            .where(SentenceAudio.sentence == sentence)
+            .order_by(SentenceAudio.created_at)
+            .limit(1)
+        )
+
+        if existing_variants:
+            # Audio already exists - return it
+            selected_variant_id = existing_variants[0].id
+            duration_s = time.time() - t0
+            return (
+                jsonify(
+                    {
+                        "audio_data_url": f"/api/lang/sentence/{target_language_code}/{sentence_id}/audio?variant_id={selected_variant_id}",
+                        "generated": False,
+                        "duration_s": round(duration_s, 3),
+                    }
+                ),
+                200,
+            )
+
+        # Audio needs generation - requires authentication
+        if not getattr(g, "user", None):
+            duration_s = time.time() - t0
+            return (
+                jsonify(
+                    {
+                        "error": "Authentication required",
+                        "message": "Please log in to generate audio for this sentence.",
+                        "authentication_required_for_generation": True,
+                        "duration_s": round(duration_s, 3),
+                    }
+                ),
+                401,
+            )
+
+        # Generate audio (single TTS call, typically 3-8s)
+        try:
+            variants, created_count = ensure_sentence_audio_variants(sentence, n=1)
+        except AuthenticationRequiredForGenerationError:
+            # Shouldn't happen since we checked g.user above, but handle gracefully
+            duration_s = time.time() - t0
+            return (
+                jsonify(
+                    {
+                        "error": "Authentication required",
+                        "message": "Authentication required to generate audio.",
+                        "authentication_required_for_generation": True,
+                        "duration_s": round(duration_s, 3),
+                    }
+                ),
+                401,
+            )
+        except Exception as gen_err:
+            logger.exception(f"Failed to generate audio for sentence id={sentence_id}")
+            duration_s = time.time() - t0
+            return (
+                jsonify(
+                    {
+                        "error": "Audio generation failed",
+                        "message": str(gen_err),
+                        "duration_s": round(duration_s, 3),
+                    }
+                ),
+                500,
+            )
+
+        if not variants:
+            duration_s = time.time() - t0
+            return (
+                jsonify(
+                    {
+                        "error": "Audio generation failed",
+                        "message": "No audio variants were created.",
+                        "duration_s": round(duration_s, 3),
+                    }
+                ),
+                500,
+            )
+
+        selected_variant_id = variants[0].id
+        duration_s = time.time() - t0
+        return (
+            jsonify(
+                {
+                    "audio_data_url": f"/api/lang/sentence/{target_language_code}/{sentence_id}/audio?variant_id={selected_variant_id}",
+                    "generated": created_count > 0,
+                    "duration_s": round(duration_s, 3),
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        logger.exception(
+            f"Error in ensure_sentence_audio_api for sentence_id={sentence_id}"
+        )
+        duration_s = time.time() - t0
+        return (
+            jsonify(
+                {
+                    "error": "Internal server error",
+                    "message": str(e),
+                    "duration_s": round(duration_s, 3),
+                }
+            ),
             500,
         )

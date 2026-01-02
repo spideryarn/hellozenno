@@ -36,7 +36,7 @@ Hello Zenno uses a hybrid architecture: SvelteKit frontend and Flask backend API
 - Backend and frontend are deployed on Vercel as separate projects (API and frontend)
 - Supabase provides managed Postgres and Auth
 - See `../../backend/docs/DEVOPS.md` for environment and deployment scripts
-- Vercel function timeout defaults to ~30s; long-running generation should be queued or pre-warmed
+- Vercel function timeout is 60s (configured in backend/vercel.json); long-running generation should be queued or pre-warmed
 
 ### Rationale for the hybrid approach
 

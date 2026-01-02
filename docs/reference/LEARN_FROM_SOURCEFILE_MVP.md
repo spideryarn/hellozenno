@@ -96,6 +96,8 @@ End-to-end and CLI testing for the MVP flow.
 
 ## Architecture and data flow
 
+**Diagram**: See `docs/diagrams/260102a_learn_mvp_detailed_flow.svg` for a visual overview of the complete flow including timeout-prone operations (LLM calls, TTS calls) and time budgets.
+
 - Frontend route: `frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/learn/+page.svelte`
 - Entry point button on the sourcefile page:
 ```601:603:frontend/src/routes/language/[target_language_code]/source/[sourcedir_slug]/[sourcefile_slug]/components/SourcefileHeader.svelte

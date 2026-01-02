@@ -37,7 +37,9 @@
     translation: string;
     used_lemmas: string[];
     language_level?: string;
-    audio_data_url: string;
+    audio_data_url: string | null;  // null when audio not yet loaded
+    audio_status?: 'pending' | 'loading' | 'ready' | 'error';
+    sentence_id?: number;  // Needed for ensure-audio calls
   }> = [];
 
   let currentIndex = 0;
@@ -141,6 +143,13 @@
     }
   }
 
+  // Audio prefetch tracking
+  // We use a Map to track request state per sentence_id, keyed by the sentence_id
+  // This allows retry after errors and proper deck reset handling
+  let audioRequestState = new Map<number, 'pending' | 'loading' | 'done' | 'error'>();
+  // Track which sentence_id is currently loading for the current card (for spinner)
+  let audioLoadingForSentenceId: number | null = null;
+
   // Background preparation of practice deck
   let preparing = false;
   let preparedCards: typeof cards = [];
@@ -174,7 +183,44 @@
 
   // Reactive current audio src for the active card, always absolute
   $: currentAudioSrc = toAbsoluteApiUrl(cards?.[currentIndex]?.audio_data_url);
-  $: hasAudioForCurrentCard = !!currentAudioSrc;
+  $: hasAudioForCurrentCard = !!cards?.[currentIndex]?.audio_data_url;
+
+  // Prefetch audio for current and next cards when practice starts or card changes
+  $: if (cards.length > 0 && currentIndex >= 0) {
+    const indicesToPrefetch = [currentIndex, currentIndex + 1, currentIndex + 2].filter(
+      i => i < cards.length && cards[i]?.sentence_id
+    );
+
+    for (const idx of indicesToPrefetch) {
+      const sentenceId = cards[idx].sentence_id!;
+      const state = audioRequestState.get(sentenceId);
+      // Skip if already loading, done, or errored (no auto-retry on error to prevent loops)
+      if (state === 'loading' || state === 'done' || state === 'error') continue;
+      // Skip if already has audio
+      if (cards[idx].audio_data_url && cards[idx].audio_status === 'ready') continue;
+      
+      audioRequestState.set(sentenceId, 'loading');
+      if (idx === currentIndex) {
+        // Current card - blocking (show loading spinner)
+        audioLoadingForSentenceId = sentenceId;
+        prefetchAudioForCard(idx, sentenceId).finally(() => {
+          // Only clear if we're still waiting for this specific sentence
+          if (audioLoadingForSentenceId === sentenceId) {
+            audioLoadingForSentenceId = null;
+          }
+        });
+      } else {
+        // Future cards - queue in background with low priority
+        ensureWarmingQueue().then(() => {
+          warmingQueue?.add(() => prefetchAudioForCard(idx, sentenceId), { priority: 0 });
+        });
+      }
+    }
+  }
+  
+  // Check if current card's audio is loading (for UI spinner)
+  $: isCurrentCardAudioLoading = audioLoadingForSentenceId !== null && 
+    cards[currentIndex]?.sentence_id === audioLoadingForSentenceId;
 
   type CardMetrics = {
     replayCount: number;
@@ -201,6 +247,80 @@
     }
     return arr;
   }
+
+  // Fetch audio for a specific card on-demand
+  // originalSentenceId is passed to validate the card hasn't changed during fetch
+  async function prefetchAudioForCard(cardIndex: number, originalSentenceId: number): Promise<void> {
+    // Helper to safely update card if it still matches
+    function updateCardIfValid(updates: Partial<typeof cards[0]>) {
+      if (cardIndex < cards.length && cards[cardIndex]?.sentence_id === originalSentenceId) {
+        Object.assign(cards[cardIndex], updates);
+        cards = [...cards];
+      }
+    }
+
+    const card = cards[cardIndex];
+    if (!card?.sentence_id || card.sentence_id !== originalSentenceId) return;
+    if (card.audio_data_url && card.audio_status === 'ready') {
+      audioRequestState.set(originalSentenceId, 'done');
+      return;
+    }
+
+    // Mark as loading
+    updateCardIfValid({ audio_status: 'loading' });
+
+    try {
+      const supabase = ($page.data as any).supabase ?? null;
+      const session = supabase ? await supabase.auth.getSession() : null;
+      const token = session?.data?.session?.access_token;
+      
+      // Skip generation if not authenticated (can only use cached audio)
+      if (!token) {
+        audioRequestState.set(originalSentenceId, 'error');
+        updateCardIfValid({ audio_status: card.audio_data_url ? 'ready' : 'error' });
+        return;
+      }
+
+      // Construct URL manually since route may not be generated yet
+      const url = `${API_BASE_URL}/api/lang/learn/sentence/${originalSentenceId}/ensure-audio`;
+      
+      // Use AbortController for timeout (15s)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        console.warn('Audio prefetch failed:', response.status, errData);
+        audioRequestState.set(originalSentenceId, 'error');
+        updateCardIfValid({ audio_status: 'error' });
+        return;
+      }
+
+      const result = await response.json();
+      audioRequestState.set(originalSentenceId, 'done');
+      updateCardIfValid({ audio_data_url: result.audio_data_url, audio_status: 'ready' });
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        console.warn('Audio prefetch timed out for sentence:', originalSentenceId);
+      } else {
+        console.warn('Audio prefetch failed:', e);
+      }
+      audioRequestState.set(originalSentenceId, 'error');
+      updateCardIfValid({ audio_status: 'error' });
+    }
+  }
+
   async function ensureWarmingQueue() {
     if (warmingQueue) return warmingQueue;
     try {
@@ -346,6 +466,7 @@
           .slice(0, 20),
         num_sentences: settingNumSentences,
         language_level: langLevel,
+        skip_audio: true,  // Audio loaded on-demand via prefetch
       };
       let js: any;
       try {
@@ -492,6 +613,7 @@
         lemmas: visibleLemmas.map((l) => l.lemma).slice(0, 20),
         num_sentences: settingNumSentences,
         language_level: langLevel,
+        skip_audio: true,  // Audio loaded on-demand via prefetch
       };
       // Create a controller to allow cancellation
       prepareAbortCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -742,6 +864,9 @@
     cardMetrics = deck.map(() => ({ replayCount: 0, startedAt: null, revealSentenceAt: null, revealTranslationAt: null }));
     sessionSaved = false;
     clearPreloadedAudios();
+    // Clear audio request state so prefetch can run for new deck
+    audioRequestState.clear();
+    audioLoadingForSentenceId = null;
   }
 
   function markCardStartedIfNeeded() {
@@ -1072,7 +1197,11 @@
 
           {#key currentIndex}
             <div class="mb-3">
-              {#if hasAudioForCurrentCard}
+              {#if isCurrentCardAudioLoading || cards[currentIndex]?.audio_status === 'loading'}
+                <div class="text-center py-3">
+                  <LoadingSpinner /> <span class="ms-2">Loading audio...</span>
+                </div>
+              {:else if hasAudioForCurrentCard}
                 <AudioPlayer bind:this={audioPlayer} src={currentAudioSrc} downloadUrl={currentAudioSrc} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
               {:else}
                 <Alert type="warning">No audio available for this card. {($page.data as any)?.supabase ? '' : 'Login to enable generation.'}</Alert>

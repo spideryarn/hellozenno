@@ -50,7 +50,7 @@ except Exception as e:
 
 **Files**: `backend/views/learn_api.py`, `backend/utils/vocab_llm_utils.py`
 
-**Problem**: LLM generation (Claude calls) and TTS happen synchronously within HTTP request handlers. Functions like `learn_sourcefile_generate_api` can run 30+ seconds. Vercel has 30s function timeout.
+**Problem**: LLM generation (Claude calls) and TTS happen synchronously within HTTP request handlers. Functions like `learn_sourcefile_generate_api` can run 30+ seconds. Vercel has 60s function timeout (configured in backend/vercel.json).
 
 **Recommendation**: 
 - Return `202 Accepted` with `job_id`

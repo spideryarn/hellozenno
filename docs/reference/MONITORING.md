@@ -35,7 +35,7 @@ This guide covers runtime observability, common bottlenecks, and resource limits
 
 ## Common bottlenecks
 
-- LLM generation timeouts (Vercel ~30s)
+- LLM generation timeouts (Vercel 60s limit, see backend/vercel.json)
   - Pre-warm content where possible; trigger background warming after initial loads
 - Audio processing (TTS)
   - External TTS providers can have cold starts; cache audio and throttle requests
@@ -46,7 +46,7 @@ This guide covers runtime observability, common bottlenecks, and resource limits
 
 ## Resource limits
 
-- Vercel function timeout ~30s (plan-dependent)
+- Vercel function timeout 60s (configured in backend/vercel.json)
 - Supabase free tier limits (connections, egress)
 - Rate limiting where applicable on external services
 

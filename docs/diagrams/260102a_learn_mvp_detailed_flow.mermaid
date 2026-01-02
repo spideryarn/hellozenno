@@ -1,0 +1,179 @@
+%% Learn from Sourcefile MVP - Detailed Flow with Timeout Points
+%% Prompt: Detailed diagram of Learn flow showing frontend/backend interaction,
+%% synchronous operations that risk timeouts (LLM, TTS), time budgets, and
+%% reuse vs generation paths. Created to analyze timeout issues.
+%% Files: backend/views/learn_api.py, frontend/.../learn/+page.svelte,
+%% backend/utils/audio_utils.py, backend/utils/sentence_utils.py
+%% Reviewed: 260102 by reviewer-gpt5.2-high (82% confidence)
+
+flowchart TB
+  subgraph User["👤 User"]
+    U1[Opens Learn page]
+    U2[Browses priority words]
+    U3[Clicks Start Practice]
+    U4[Listens to audio flashcards]
+  end
+
+  subgraph Browser["🌐 Browser - SvelteKit"]
+    direction TB
+    subgraph Init["Page Mount"]
+      F1[fetchSummary]
+      F2[Fetch sourcefile text]
+      F3[Fetch ignored lemmas]
+    end
+    
+    subgraph Background["Background Tasks"]
+      BG1[warmTopLemmasInBackground<br/>p-queue concurrency=2]
+      BG2[preparePracticeInBackground<br/>POST /generate]
+    end
+    
+    subgraph Practice["Practice Mode"]
+      P1[startOrShowPractice]
+      P2[AudioPlayer autoplay]
+      P3[Navigate cards]
+      P4["GET /sentence/.../audio<br/>Range requests per card"]
+    end
+    
+    F1 -->|on success| BG1
+    F1 -->|on success| BG2
+  end
+
+  subgraph Backend["🔧 Flask Backend"]
+    direction TB
+    
+    subgraph Summary["GET /summary endpoint<br/>time_budget_s param: 3-45s, default 12s"]
+      S1[get_sourcefile_lemmas]
+      S2[Bulk fetch Lemma rows<br/>from Postgres]
+      S3{Time budget<br/>remaining?}
+      S4[load_or_generate_lemma_metadata]
+      S4a{Auth check<br/>for generation}
+      S5[Fallback defaults<br/>commonality=0.5]
+      S6[Score & rank by difficulty]
+      S7[Return top-K lemmas]
+    end
+    
+    subgraph LemmaAPI["GET /lemma/{lemma}/metadata endpoint"]
+      L1[load_or_generate_lemma_metadata]
+      L2{Lemma complete?}
+      L3["🐢 LLM: Generate metadata<br/>~2-5s"]
+      L4[Return cached metadata]
+    end
+    
+    subgraph Generate["POST /generate endpoint<br/>⚠️ TIMEOUT BUDGET: 50s"]
+      G0{Budget check<br/>before each step}
+      G1[Resolve Sourcefile FK]
+      G2[Query existing Sentences<br/>by sourcefile_id]
+      G3{Has enough<br/>reused?}
+      G4[ensure_sentence_audio_variants<br/>for reused sentences]
+      G4a[Skip audio if budget exceeded<br/>no timed_out flag]
+      G5{Authenticated?}
+      G6[Return 401 + reused only]
+      G7["🐢 LLM Call: Claude<br/>generate_sentence_flashcards<br/>~5-15s"]
+      G8[Persist Sentence rows]
+      G9["🐢 TTS: ElevenLabs<br/>ensure_sentence_audio_variants<br/>~3-8s per sentence"]
+      G10{Budget exhausted<br/>during generation?}
+      G11[Return partial + timed_out flag]
+      G12[Return full deck]
+    end
+    
+    subgraph Audio["Audio Generation"]
+      A1[ensure_audio_data]
+      A2["ElevenLabs API<br/>outloud_elevenlabs<br/>⚠️ External call ~3-8s"]
+      A3[Store audio_data blob<br/>in SentenceAudio table]
+    end
+  end
+
+  subgraph External["☁️ External Services"]
+    EXT1["Anthropic Claude<br/>LLM for sentences/metadata"]
+    EXT2["ElevenLabs<br/>TTS for audio"]
+  end
+
+  subgraph DB["🗄️ Supabase PostgreSQL"]
+    DB1[(Lemma)]
+    DB2[(Sentence)]
+    DB3[(SentenceAudio<br/>⚠️ Stores MP3 blobs)]
+    DB4[(SentenceLemma)]
+  end
+
+  %% User flow
+  U1 --> F1
+  U2 --> BG1
+  U3 --> P1
+  U4 --> P2
+  P2 --> P4
+
+  %% Frontend to Backend
+  F1 -->|"GET /summary<br/>timeout: 60s"| S1
+  BG1 -->|"GET /lemma/{lemma}/metadata<br/>separate endpoint"| L1
+  BG2 -->|"POST /generate<br/>timeout: 120s"| G1
+  P1 -->|"Use prepared or POST"| G1
+  P4 -->|"GET audio blob"| DB3
+
+  %% Summary flow
+  S1 --> S2
+  S2 --> S3
+  S3 -->|yes| S4
+  S3 -->|no| S5
+  S4 --> S4a
+  S4a -->|no auth| S5
+  S4a -->|authed| S6
+  S5 --> S6
+  S6 --> S7
+
+  %% Lemma API flow
+  L1 --> L2
+  L2 -->|no| L3
+  L2 -->|yes| L4
+  L3 --> L4
+
+  %% Generate flow with budget checks
+  G1 --> G0
+  G0 --> G2
+  G2 --> G3
+  G3 -->|yes| G0
+  G0 -->|budget ok| G4
+  G0 -->|budget exceeded| G4a
+  G4 --> G12
+  G4a --> G12
+  G3 -->|no| G5
+  G5 -->|no| G6
+  G5 -->|yes| G0
+  G0 -->|budget ok| G7
+  G7 --> G8
+  G8 --> G0
+  G0 -->|budget ok| G9
+  G9 --> G10
+  G10 -->|yes| G11
+  G10 -->|no| G12
+
+  %% Audio flow
+  G4 --> A1
+  G9 --> A1
+  A1 --> A2
+  A2 --> A3
+
+  %% External calls
+  L3 -->|"🐢 ~2-5s"| EXT1
+  G7 -->|"🐢 ~5-15s"| EXT1
+  A2 -->|"🐢 ~3-8s each"| EXT2
+
+  %% Database
+  S2 --> DB1
+  L1 --> DB1
+  G2 --> DB2
+  G8 --> DB2
+  G8 --> DB4
+  A3 --> DB3
+
+  %% Styling
+  classDef timeout fill:#ff6b6b,stroke:#c92a2a,color:#fff
+  classDef external fill:#ffd43b,stroke:#fab005,color:#000
+  classDef db fill:#69db7c,stroke:#37b24d,color:#000
+  classDef warning fill:#ffe066,stroke:#fab005,color:#000
+  classDef budget fill:#da77f2,stroke:#9c36b5,color:#fff
+  
+  class G7,G9,A2,L3 timeout
+  class EXT1,EXT2 external
+  class DB1,DB2,DB3,DB4 db
+  class G10,S3,S4a warning
+  class G0 budget
