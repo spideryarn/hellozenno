@@ -103,6 +103,7 @@ export enum RouteName {
   SEARCH_API_UNIFIED_SEARCH_API = "SEARCH_API_UNIFIED_SEARCH_API",
   LEARN_API_LEARN_SOURCEFILE_SUMMARY_API = "LEARN_API_LEARN_SOURCEFILE_SUMMARY_API",
   LEARN_API_LEARN_SOURCEFILE_GENERATE_API = "LEARN_API_LEARN_SOURCEFILE_GENERATE_API",
+  LEARN_API_ENSURE_SENTENCE_AUDIO_API = "LEARN_API_ENSURE_SENTENCE_AUDIO_API",
   PROFILE_API_GET_CURRENT_PROFILE_API = "PROFILE_API_GET_CURRENT_PROFILE_API",
   PROFILE_API_UPDATE_PROFILE_API = "PROFILE_API_UPDATE_PROFILE_API",
   PROFILE_API_GET_USER_EMAIL_API = "PROFILE_API_GET_USER_EMAIL_API",
@@ -215,6 +216,7 @@ export const ROUTES = {
   SEARCH_API_UNIFIED_SEARCH_API: "/api/lang/{target_language_code}/unified_search",
   LEARN_API_LEARN_SOURCEFILE_SUMMARY_API: "/api/lang/learn/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/summary",
   LEARN_API_LEARN_SOURCEFILE_GENERATE_API: "/api/lang/learn/sourcefile/{target_language_code}/{sourcedir_slug}/{sourcefile_slug}/generate",
+  LEARN_API_ENSURE_SENTENCE_AUDIO_API: "/api/lang/learn/sentence/{sentence_id}/ensure-audio",
   PROFILE_API_GET_CURRENT_PROFILE_API: "/api/profile/current",
   PROFILE_API_UPDATE_PROFILE_API: "/api/profile/update",
   PROFILE_API_GET_USER_EMAIL_API: "/api/profile/user/{user_id}",
@@ -327,6 +329,7 @@ export type RouteParams = {
   [RouteName.SEARCH_API_UNIFIED_SEARCH_API]: { target_language_code: string };
   [RouteName.LEARN_API_LEARN_SOURCEFILE_SUMMARY_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
   [RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API]: { target_language_code: string; sourcedir_slug: string; sourcefile_slug: string };
+  [RouteName.LEARN_API_ENSURE_SENTENCE_AUDIO_API]: { sentence_id: string };
   [RouteName.PROFILE_API_GET_CURRENT_PROFILE_API]: {};
   [RouteName.PROFILE_API_UPDATE_PROFILE_API]: {};
   [RouteName.PROFILE_API_GET_USER_EMAIL_API]: { user_id: string };
