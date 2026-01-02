@@ -22,7 +22,7 @@ from flask import (
     g,
     url_for,
 )
-from peewee import DoesNotExist
+from peewee import DoesNotExist, IntegrityError
 
 from utils.env_config import ELEVENLABS_API_KEY
 from utils.audio_utils import add_delays, ensure_sentence_audio_variants
@@ -675,35 +675,23 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         filename = f"{_slugify(title)}.txt"
         metadata = {"text_format": "plain"}
 
-        # Check for existing file with same name before creating
-        if (
-            Sourcefile.select()
-            .where(
-                (Sourcefile.sourcedir == sourcedir_entry)
-                & (Sourcefile.filename == filename)
+        # Create sourcefile - catch IntegrityError for duplicate filename (race-safe)
+        try:
+            sourcefile = _create_text_sourcefile(
+                sourcedir_entry=sourcedir_entry,
+                filename=filename,
+                text_target=text_target,
+                description=description,
+                metadata=metadata,
+                sourcefile_type="text",
+                created_by_id=g.user["id"] if g.user else None,
+                language_level=language_level,
             )
-            .exists()
-        ):
+        except IntegrityError:
             return (
-                jsonify(
-                    {
-                        "error": f"File {filename} already exists"
-                    }
-                ),
+                jsonify({"error": f"File {filename} already exists"}),
                 409,
             )
-
-        # Use helper to create sourcefile
-        sourcefile = _create_text_sourcefile(
-            sourcedir_entry=sourcedir_entry,
-            filename=filename,
-            text_target=text_target,
-            description=description,
-            metadata=metadata,
-            sourcefile_type="text",
-            created_by_id=g.user["id"] if g.user else None,
-            language_level=language_level,
-        )
 
         return (
             jsonify(
