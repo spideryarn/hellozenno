@@ -22,6 +22,7 @@
   let variantCountDisplay = SENTENCE_AUDIO_SAMPLES;
   let resolvedSentenceId: string | null = null;
   let playbackHandle: PlaybackHandle | null = null;
+  let errorMessage: string | null = null;
 
   onDestroy(() => {
     playbackHandle?.cancel();
@@ -52,10 +53,9 @@
     }
   }
 
-  async function ensureVariants(slug: string): Promise<boolean> {
+  async function ensureVariants(slug: string): Promise<{ success: boolean; isAuthError: boolean }> {
     if (!supabaseClient) {
-      alert('Login required to generate audio.');
-      return false;
+      return { success: false, isAuthError: true };
     }
     try {
       await apiFetch({
@@ -65,10 +65,11 @@
         options: { method: 'POST' },
         searchParams: { n: SENTENCE_AUDIO_SAMPLES },
       });
-      return true;
-    } catch (e) {
-      console.warn('SentenceAudioButton: failed to ensure audio (auth required?)', e);
-      return false;
+      return { success: true, isAuthError: false };
+    } catch (e: any) {
+      const isAuthError = e?.status === 401;
+      console.warn('SentenceAudioButton: failed to ensure audio', isAuthError ? '(auth required)' : '', e);
+      return { success: false, isAuthError };
     }
   }
 
@@ -86,12 +87,14 @@
 
   async function handleClick() {
     if (!target_language_code || !sentenceSlug) return;
+    errorMessage = null;
     isGeneratingAudio = true;
     progressCount = 0;
     
     try {
       const info = await ensureSentenceInfo();
       if (!info) {
+        errorMessage = 'Failed to load audio.';
         isGeneratingAudio = false;
         return;
       }
@@ -106,22 +109,28 @@
       });
 
       if ((!Array.isArray(variants) || variants.length < SENTENCE_AUDIO_SAMPLES) && !has_audio) {
-        const ensured = await ensureVariants(sentenceSlug);
-        if (!ensured) {
+        const { success, isAuthError } = await ensureVariants(sentenceSlug);
+        if (success) {
+          // Refetch variants after successful generation
+          variants = await apiFetch({
+            supabaseClient: null,
+            routeName: RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_VARIANTS_API,
+            params: { target_language_code, sentence_id: id },
+            options: { method: 'GET' },
+          });
+        } else if (!Array.isArray(variants) || variants.length === 0) {
+          // Only error if we have no variants to play at all
+          errorMessage = isAuthError ? 'Login required to generate audio.' : 'Failed to generate audio.';
           isGeneratingAudio = false;
           return;
         }
-        variants = await apiFetch({
-          supabaseClient: null,
-          routeName: RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_VARIANTS_API,
-          params: { target_language_code, sentence_id: id },
-          options: { method: 'GET' },
-        });
+        // Otherwise proceed with existing variants (best-effort, don't block playback)
       }
 
       const variantList = Array.isArray(variants) ? variants : [];
       if (!variantList.length) {
         console.warn('SentenceAudioButton: no audio variants available');
+        errorMessage = 'No audio available.';
         isGeneratingAudio = false;
         return;
       }
@@ -148,6 +157,7 @@
       });
     } catch (e) {
       console.warn('SentenceAudioButton error:', e);
+      errorMessage = 'Failed to load audio.';
       isGeneratingAudio = false;
     }
   }
@@ -158,7 +168,7 @@
   on:click|preventDefault|stopPropagation={handleClick}
   disabled={isGeneratingAudio || isPlayingAudio}
   aria-label="Play sentence"
-  title="Play sentence"
+  title={errorMessage || "Play sentence"}
 >
   {#if isGeneratingAudio}
     <LoadingSpinner size="sm" />
@@ -168,6 +178,9 @@
     <span class="badge bg-success ms-2">{progressCount}/{variantCountDisplay}</span>
   {/if}
 </button>
+{#if errorMessage}
+  <span class="text-warning small ms-2" role="alert">{errorMessage}</span>
+{/if}
 
 <style>
   .btn:disabled {

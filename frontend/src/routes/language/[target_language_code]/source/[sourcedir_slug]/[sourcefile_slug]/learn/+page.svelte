@@ -271,11 +271,9 @@
 
     try {
       const supabase = ($page.data as any).supabase ?? null;
-      const session = supabase ? await supabase.auth.getSession() : null;
-      const token = session?.data?.session?.access_token;
       
       // Skip generation if not authenticated (can only use cached audio)
-      if (!token) {
+      if (!supabase) {
         audioRequestState.set(originalSentenceId, 'error');
         updateCardIfValid({ audio_status: card.audio_data_url ? 'ready' : 'error' });
         return;
@@ -283,6 +281,18 @@
 
       // Construct URL manually since route may not be generated yet
       const url = `${API_BASE_URL}/api/lang/learn/sentence/${originalSentenceId}/ensure-audio`;
+      
+      // Get token via session (apiFetch handles refresh, but we need raw fetch for abort)
+      const sessionData = await supabase.auth.getSession();
+      const token = sessionData?.data?.session?.access_token;
+      
+      if (!token) {
+        // User appears logged in (supabase client exists) but no valid session
+        console.warn('Audio prefetch: supabase client present but no session token');
+        audioRequestState.set(originalSentenceId, 'error');
+        updateCardIfValid({ audio_status: card.audio_data_url ? 'ready' : 'error' });
+        return;
+      }
       
       // Use AbortController for timeout (15s)
       const controller = new AbortController();

@@ -37,7 +37,7 @@
     return Array.isArray(res) ? res : [];
   }
 
-  async function ensureVariants(n: number): Promise<boolean> {
+  async function ensureVariants(n: number): Promise<{ success: boolean; isAuthError: boolean }> {
     try {
       await apiFetch({
         supabaseClient: supabaseClient,
@@ -46,10 +46,11 @@
         options: { method: 'POST' },
         searchParams: { n },
       });
-      return true;
-    } catch (e) {
-      console.warn('LemmaAudioButton: failed to ensure audio (auth required?)', e);
-      return false;
+      return { success: true, isAuthError: false };
+    } catch (e: any) {
+      const isAuthError = e?.status === 401;
+      console.warn('LemmaAudioButton: failed to ensure audio', isAuthError ? '(auth required)' : '', e);
+      return { success: false, isAuthError };
     }
   }
 
@@ -68,11 +69,11 @@
       const needed = LEMMA_AUDIO_SAMPLES - variants.length;
       if (needed > 0) {
         if (supabaseClient) {
-          const ensured = await ensureVariants(LEMMA_AUDIO_SAMPLES);
-          if (ensured) {
+          const { success, isAuthError } = await ensureVariants(LEMMA_AUDIO_SAMPLES);
+          if (success) {
             variants = await fetchVariants();
           } else if (variants.length === 0) {
-            errorMessage = 'Login required to generate audio.';
+            errorMessage = isAuthError ? 'Login required to generate audio.' : 'Failed to generate audio.';
             isGeneratingAudio = false;
             return;
           }
