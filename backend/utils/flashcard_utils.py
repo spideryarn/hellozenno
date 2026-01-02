@@ -382,7 +382,6 @@ def get_random_flashcard_data(
         target_language_code=target_language_code,
         required_lemmas=lemmas if lemmas else None,
         profile=profile,
-        generate_missing_audio=False,
     )
 
     if not sentence_data:

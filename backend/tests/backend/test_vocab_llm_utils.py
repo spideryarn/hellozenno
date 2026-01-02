@@ -182,7 +182,7 @@ def test_extract_phrases_from_text_empty(mock_gpt_from_template, monkeypatch):
 def test_extract_phrases_from_text_invalid_response(
     mock_gpt_from_template, monkeypatch
 ):
-    """Test handling of invalid response from LLM."""
+    """Test handling of invalid response from LLM raises ValueError."""
 
     def mock_generate_invalid(*args, **kwargs):
         template_name = None
@@ -197,16 +197,12 @@ def test_extract_phrases_from_text_invalid_response(
         "utils.vocab_llm_utils.generate_gpt_from_template", mock_generate_invalid
     )
 
-    result, extra = extract_phrases_from_text(
-        txt="Test text in Greek",
-        target_language_name="Greek",
-    )
-
-    assert isinstance(result, dict)
-    assert "phrases" in result
-    assert len(result["phrases"]) == 0
-    assert "source" in result
-    assert result["source"]["txt_tgt"] == "Test text in Greek"
+    # Production code raises ValueError for invalid response type (fail-fast)
+    with pytest.raises(ValueError, match="Invalid response format from API"):
+        extract_phrases_from_text(
+            txt="Test text in Greek",
+            target_language_name="Greek",
+        )
 
 
 def test_extract_phrases_from_text_missing_fields(mock_gpt_from_template, monkeypatch):

@@ -929,39 +929,34 @@ def test_sourcefile_slug_generation(client, fixture_for_testing_db):
     assert sourcefile3.slug == "test-file-jpg"  # Same slug is ok in different sourcedir
 
 
-def test_process_sourcefile(client, monkeypatch):
+def test_process_sourcefile(client, monkeypatch, fixture_for_testing_db):
     """Test processing a sourcefile."""
+    from db_models import SourcefileWordform
 
-    def mock_process_sourcefile_content(*args, **kwargs):
-        return (
-            {
-                "txt_tgt": "test text",
-                "txt_en": "test translation",
-                "sorted_words_display": "1. test -> test",
-            },
-            [
-                {
-                    "lemma": "test",
-                    "wordform": "test",
-                    "translations": ["test"],
-                    "part_of_speech": "noun",
-                    "inflection_type": "singular",
-                    "centrality": 0.5,
-                }
-            ],
-            {},
+    # Mock process_sourcefile at the import site (views.sourcefile_views)
+    # The mock must perform the same side effects that the test asserts
+    def mock_process_sourcefile(sourcefile_entry, **kwargs):
+        # Update the sourcefile as the real function would
+        sourcefile_entry.text_target = "test text"
+        sourcefile_entry.text_english = "test translation"
+        sourcefile_entry.save()
+
+        # Create wordform and link it
+        wordform, _ = Wordform.get_or_create(
+            wordform="test",
+            target_language_code=sourcefile_entry.sourcedir.target_language_code,
+            defaults={"translations": ["test"]},
+        )
+        SourcefileWordform.create(
+            sourcefile=sourcefile_entry,
+            wordform=wordform,
+            ordering=1,
+            centrality=0.5,
         )
 
-    def mock_translate_to_english(*args, **kwargs):
-        return "test translation", {}
-
     monkeypatch.setattr(
-        "views.sourcefile_views.process_sourcefile_content",
-        mock_process_sourcefile_content,
-    )
-    monkeypatch.setattr(
-        "utils.vocab_llm_utils.translate_to_english",
-        mock_translate_to_english,
+        "views.sourcefile_views.process_sourcefile",
+        mock_process_sourcefile,
     )
 
     # Create test data
@@ -1488,40 +1483,21 @@ def test_process_png_file(client, monkeypatch, fixture_for_testing_db):
         path="test_dir_png", target_language_code=TEST_TARGET_LANGUAGE_CODE
     )
 
-    # Mock process_sourcefile_content to return sample data
-    # This avoids making actual API calls to external services for text extraction and translation
-    def mock_process_sourcefile_content(*args, **kwargs):
-        return (
-            {
-                "txt_tgt": "Sample extracted text from PNG",
-                "txt_en": "Sample English translation",
-                "sorted_words_display": "1. sample -> sample",
-            },
-            [
-                {
-                    "lemma": "sample",
-                    "wordform": "sample",
-                    "translations": ["sample"],
-                    "part_of_speech": "noun",
-                    "inflection_type": "singular",
-                    "centrality": 0.8,
-                }
-            ],
-            {"image_processing": {"success": True}},
-        )
+    # Mock process_sourcefile at the import site (views.sourcefile_views)
+    # The mock must perform the same side effects that the test asserts
+    from db_models import SourcefileWordform
+
+    def mock_process_sourcefile(sourcefile_entry, **kwargs):
+        # Update the sourcefile as the real function would
+        sourcefile_entry.text_target = "Sample extracted text from PNG"
+        sourcefile_entry.text_english = "Sample English translation"
+        sourcefile_entry.metadata = {"image_processing": {"success": True}}
+        sourcefile_entry.save()
 
     # Apply the mock to the correct module path
     monkeypatch.setattr(
-        "views.sourcefile_views.process_sourcefile_content",
-        mock_process_sourcefile_content,
-    )
-
-    # Also mock translate_to_english to avoid API calls
-    def mock_translate_to_english(*args, **kwargs):
-        return "Sample English translation", {}
-
-    monkeypatch.setattr(
-        "utils.vocab_llm_utils.translate_to_english", mock_translate_to_english
+        "views.sourcefile_views.process_sourcefile",
+        mock_process_sourcefile,
     )
 
     # Read the PNG fixture (fallback to JPG if PNG missing in CI)

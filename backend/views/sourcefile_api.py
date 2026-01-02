@@ -675,31 +675,35 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         filename = f"{_slugify(title)}.txt"
         metadata = {"text_format": "plain"}
 
-        # Use helper to create sourcefile (handles collision)
-        try:
-            sourcefile = _create_text_sourcefile(
-                sourcedir_entry=sourcedir_entry,
-                filename=filename,
-                text_target=text_target,
-                description=description,
-                metadata=metadata,
-                sourcefile_type="text",
-                created_by_id=g.user["id"] if g.user else None,
-                language_level=language_level,
+        # Check for existing file with same name before creating
+        if (
+            Sourcefile.select()
+            .where(
+                (Sourcefile.sourcedir == sourcedir_entry)
+                & (Sourcefile.filename == filename)
             )
-        except ValueError as e:  # Catch collision error from helper
-            # Log the collision specifically
-            current_app.logger.error(
-                f"Filename collision error for {filename} in {sourcedir_slug}: {str(e)}"
-            )
+            .exists()
+        ):
             return (
                 jsonify(
                     {
-                        "error": f"File {filename} already exists or could not create unique name."
+                        "error": f"File {filename} already exists"
                     }
                 ),
                 409,
             )
+
+        # Use helper to create sourcefile
+        sourcefile = _create_text_sourcefile(
+            sourcedir_entry=sourcedir_entry,
+            filename=filename,
+            text_target=text_target,
+            description=description,
+            metadata=metadata,
+            sourcefile_type="text",
+            created_by_id=g.user["id"] if g.user else None,
+            language_level=language_level,
+        )
 
         return (
             jsonify(

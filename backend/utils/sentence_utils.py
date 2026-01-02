@@ -158,7 +158,8 @@ def get_random_sentence(
         # If profile is provided, exclude ignored lemmas
         if profile:
             # Modified query that excludes ignored lemmas
-            query = base_query.where(
+            # Use subquery to avoid DISTINCT on JSON columns (PostgreSQL limitation)
+            id_subquery = base_query.select(Sentence.id).where(
                 ~(
                     (
                         SentenceLemma.lemma
@@ -169,9 +170,11 @@ def get_random_sentence(
                     )
                 )
             ).distinct()
+            query = Sentence.select().where(Sentence.id.in_(id_subquery))
         else:
-            # Use the base query without ignoring lemmas
-            query = base_query.distinct()
+            # Use subquery to avoid DISTINCT on JSON columns (PostgreSQL limitation)
+            id_subquery = base_query.select(Sentence.id).distinct()
+            query = Sentence.select().where(Sentence.id.in_(id_subquery))
 
     # Get total count for random selection
     count = query.count()

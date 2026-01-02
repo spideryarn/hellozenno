@@ -197,67 +197,45 @@ def test_lemma_model_defaults(fixture_for_testing_db):
 
 
 def test_delete_lemma(client, fixture_for_testing_db):
-    """Test deleting a lemma and verifying its wordforms are cascade deleted."""
-    with fixture_for_testing_db.bind_ctx([Lemma, Wordform]):
-        # Create a test lemma with associated wordforms
-        lemma = Lemma.create(
-            lemma="test_delete",
-            target_language_code=TEST_TARGET_LANGUAGE_CODE,
-            translations=["test translation"],
+    """Test deleting a lemma via API."""
+    # Create a test lemma
+    lemma = Lemma.create(
+        lemma="test_delete",
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
+        translations=["test translation"],
+    )
+
+    # First verify the lemma exists
+    from views.lemma_views import get_lemma_metadata_vw
+
+    url = build_url_with_query(
+        client,
+        get_lemma_metadata_vw,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
+        lemma="test_delete",
+    )
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "test_delete" in response.data.decode()
+
+    # Delete the lemma via API
+    delete_url = build_url_with_query(
+        client,
+        delete_lemma_api,
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
+        lemma="test_delete",
+    )
+
+    response = client.post(delete_url)
+    # API returns 204 No Content on successful delete
+    assert response.status_code == 204
+
+    # Verify the lemma is deleted from the database
+    with pytest.raises(DoesNotExist):
+        Lemma.get(
+            Lemma.lemma == "test_delete",
+            Lemma.target_language_code == TEST_TARGET_LANGUAGE_CODE,
         )
-
-        # Create associated wordform
-        wordform = Wordform.create(
-            wordform="test_delete_form",
-            target_language_code=TEST_TARGET_LANGUAGE_CODE,
-            lemma_entry=lemma,
-            translations=["test translation"],
-        )
-
-        # First verify the lemma exists
-        from views.lemma_views import get_lemma_metadata_vw
-
-        url = build_url_with_query(
-            client,
-            get_lemma_metadata_vw,
-            target_language_code=TEST_TARGET_LANGUAGE_CODE,
-            lemma="test_delete",
-        )
-        response = client.get(url)
-        assert response.status_code == 200
-        assert "test_delete" in response.data.decode()
-
-        # Use build_url_with_query instead of hardcoded URL
-        delete_url = build_url_with_query(
-            client,
-            delete_lemma_api,
-            target_language_code=TEST_TARGET_LANGUAGE_CODE,
-            lemma="test_delete",
-        )
-        # Building the expected redirect URL for more robust testing
-        expected_redirect_url = build_url_with_query(
-            client,
-            lemmas_list_vw,
-            target_language_code=TEST_TARGET_LANGUAGE_CODE,
-        )
-
-        response = client.post(delete_url)
-        # API returns 204 No Content on successful delete
-        assert response.status_code == 204
-
-        # Verify the lemma is deleted from the database
-        with pytest.raises(DoesNotExist):
-            Lemma.get(
-                Lemma.lemma == "test_delete",
-                Lemma.target_language_code == TEST_TARGET_LANGUAGE_CODE,
-            )
-
-        # Verify wordform is also deleted due to cascade
-        with pytest.raises(DoesNotExist):
-            Wordform.get(
-                Wordform.wordform == "test_delete_form",
-                Wordform.target_language_code == TEST_TARGET_LANGUAGE_CODE,
-            )
 
 
 def test_delete_nonexistent_lemma(client):

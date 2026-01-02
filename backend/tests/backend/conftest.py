@@ -129,9 +129,18 @@ def fixture_for_testing_db():
             """
             CREATE TABLE IF NOT EXISTS auth.users (
                 id UUID PRIMARY KEY,
-                email TEXT
+                email TEXT,
+                created_at TIMESTAMP,
+                last_sign_in_at TIMESTAMP
             );
             """
+        )
+        # Add columns if table already exists but is missing them
+        database.execute_sql(
+            "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;"
+        )
+        database.execute_sql(
+            "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS last_sign_in_at TIMESTAMP;"
         )
     except Exception:
         # If running on an engine without schema support, ignore
@@ -294,7 +303,7 @@ def mock_tts_autouse(monkeypatch):
         mp3_filen = kwargs.get("mp3_filen")
         if mp3_filen:
             with open(mp3_filen, "wb") as f:
-                f.write(b"test audio data")
+                f.write(b"fake mp3 data")
 
     monkeypatch.setattr(
         "gjdutils.outloud_text_to_speech.outloud_elevenlabs", _fake_outloud
