@@ -5,10 +5,16 @@ import type { SearchResult } from "$lib/types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code, wordform } = params;
-    const { supabase } = locals;
+    const { supabase, session } = locals;
 
     try {
-        const apiResponse = await getWordformWithSearch(supabase, target_language_code, wordform);
+        // Pass the access token from locals.session to avoid double getSession() calls
+        const apiResponse = await getWordformWithSearch(
+            supabase, 
+            target_language_code, 
+            wordform,
+            session?.access_token
+        );
         
         if (apiResponse.status === 'found') {
             if (!apiResponse.data || !apiResponse.data.wordform_metadata || !apiResponse.data.wordform_metadata.wordform) {

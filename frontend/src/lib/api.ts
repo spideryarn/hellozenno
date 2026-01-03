@@ -63,7 +63,8 @@ export function getApiUrl<T extends RouteName>(
 /**
  * Type-safe API fetch function
  *
- * @param supabaseClient Optional Supabase client instance (required for SSR calls from load functions)
+ * @param supabaseClient Optional Supabase client instance (for client-side calls)
+ * @param accessToken Optional pre-fetched access token (preferred for SSR - use locals.session.access_token)
  * @param routeName Name of the route from RouteName enum
  * @param params Parameters required for the route
  * @param options Fetch options
@@ -71,14 +72,16 @@ export function getApiUrl<T extends RouteName>(
  * @returns The JSON response
  */
 export async function apiFetch<T extends RouteName, R = any>({
-    supabaseClient, // Make optional again for flexibility
+    supabaseClient,
+    accessToken,
     routeName,
     params,
     options = {},
     timeoutMs = 30000, // Default 30 second timeout
     searchParams,
 }: {
-    supabaseClient?: SupabaseClient | null; // Allow optional/null
+    supabaseClient?: SupabaseClient | null;
+    accessToken?: string | null; // Pre-fetched token from locals.session (preferred for SSR)
     routeName: T;
     params: RouteParams[T];
     options?: RequestInit;
@@ -100,17 +103,19 @@ export async function apiFetch<T extends RouteName, R = any>({
     }
     if (import.meta.env.DEV) console.log(`[apiFetch] Requesting URL: ${url}`);
     
-    // Use the passed supabaseClient. It might be null or undefined.
     const headers = new Headers(options.headers);
     
-    // Only try to get session if we have a non-null client instance
-    if (supabaseClient) {
+    // Use pre-fetched accessToken if provided (preferred for SSR to avoid double getSession calls)
+    // Fall back to getSession() for client-side calls where supabaseClient is provided
+    let token = accessToken?.trim();
+    
+    if (!token && supabaseClient) {
       try {
         let {
           data: { session },
         } = await supabaseClient.auth.getSession();
 
-        // If the session is about to expire (or already expired), refresh it server-side
+        // If the session is about to expire (or already expired), refresh it
         if (
           session?.expires_at &&
           session.expires_at * 1000 < Date.now() + 60 * 1000 // < 1 min buffer
@@ -122,15 +127,15 @@ export async function apiFetch<T extends RouteName, R = any>({
           session = data.session ?? session; // fall back to old session if refresh failed
         }
 
-        if (session?.access_token) {
-          // Trim any whitespace or newlines from the token
-          const cleanToken = session.access_token.trim();
-          headers.set('Authorization', `Bearer ${cleanToken}`);
-        }
+        token = session?.access_token?.trim();
       } catch (sessionError) {
         console.warn('Error preparing auth token:', sessionError);
         // Continue without auth token
       }
+    }
+    
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
     }
     // Ensure Content-Type is set if not already present (optional, good practice for POST/PUT)
     // if (!headers.has('Content-Type') && (options.method === 'POST' || options.method === 'PUT')) {
@@ -427,14 +432,12 @@ export async function getWordformWithSearch(
         // since wordform generation can take time
         const result = await apiFetch({
             supabaseClient,
+            accessToken, // Pass through to apiFetch instead of adding to headers manually
             routeName: RouteName.WORDFORM_API_GET_WORDFORM_METADATA_API,
             params: { target_language_code, wordform },
             options: {
                 method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
-                },
+                headers: { "Content-Type": "application/json" },
             },
             timeoutMs: 60000, // 60 second timeout to allow for synchronous wordform generation
         });
@@ -453,17 +456,24 @@ export async function getWordformWithSearch(
 /**
  * Get lemma metadata.
  * This function handles potential 401 errors if generation is required but user is not logged in.
+ * 
+ * @param supabaseClient Supabase client (used for client-side calls)
+ * @param target_language_code Language code
+ * @param lemma The lemma to fetch
+ * @param accessToken Pre-fetched access token from locals.session (preferred for SSR)
  */
 export async function getLemmaMetadata(
     supabaseClient: SupabaseClient | null,
     target_language_code: string,
-    lemma: string
+    lemma: string,
+    accessToken?: string | null
 ) {
     try {
         // Use the type-safe API fetch to get lemma metadata with a longer timeout
         // since lemma generation can take time
         const result = await apiFetch({
             supabaseClient,
+            accessToken,
             routeName: RouteName.LEMMA_API_GET_LEMMA_METADATA_API, 
             params: { target_language_code, lemma },
             options: {

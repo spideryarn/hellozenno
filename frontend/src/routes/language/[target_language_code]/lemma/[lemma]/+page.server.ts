@@ -1,8 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-// Remove API_BASE_URL if no longer needed directly
-// import { API_BASE_URL } from "$lib/config"; 
-import { getLemmaMetadata } from "$lib/api"; // Import the new helper
+import { getLemmaMetadata } from "$lib/api";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     const { target_language_code, lemma } = params;
@@ -11,8 +9,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     const { supabase, session } = locals;
 
     try {
-        // Call the helper function, passing the server client instance
-        const lemmaResult = await getLemmaMetadata(supabase, target_language_code, lemma);
+        // Pass the access token from locals.session to avoid double getSession() calls
+        // The token was already validated in hooks.server.ts via safeGetSession()
+        const lemmaResult = await getLemmaMetadata(
+            supabase, 
+            target_language_code, 
+            lemma,
+            session?.access_token
+        );
 
         // The helper function returns the data directly if successful,
         // or returns the specific error body for 401/404 cases.
