@@ -2,9 +2,8 @@ import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { getApiUrl } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
-import { supabase } from '$lib/supabaseClient';
 
-export const load: PageServerLoad = async ({ params, fetch, url, depends }) => {
+export const load: PageServerLoad = async ({ params, fetch, url, depends, locals: { supabase } }) => {
     // Register dependency on the query parameters (specifically the sort parameter)
     depends('url:sort');
     

@@ -1,8 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { supabase } from '$lib/supabaseClient';
 import { get_language_name } from '$lib/language-utils';
 
-export const load: PageServerLoad = async ({ params, locals: { session } }) => {
+export const load: PageServerLoad = async ({ params, locals: { session, supabase } }) => {
   const { target_language_code } = params;
 
   // Fetch existing sourcedirs via Supabase like sources page
