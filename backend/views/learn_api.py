@@ -18,7 +18,7 @@ from flask import Blueprint, jsonify, request, g
 
 from loguru import logger
 
-from utils.auth_utils import api_auth_optional
+from utils.auth_utils import api_auth_required
 from utils.word_utils import get_sourcefile_lemmas
 from utils.store_utils import load_or_generate_lemma_metadata
 from utils.exceptions import AuthenticationRequiredForGenerationError
@@ -46,7 +46,7 @@ def _difficulty_score(metadata: dict) -> float:
     "/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/summary",
     methods=["GET"],
 )
-@api_auth_optional
+@api_auth_required
 def learn_sourcefile_summary_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -262,7 +262,7 @@ GENERATE_TIME_BUDGET_S = 50.0
     "/sourcefile/<target_language_code>/<sourcedir_slug>/<sourcefile_slug>/generate",
     methods=["POST"],
 )
-@api_auth_optional
+@api_auth_required
 def learn_sourcefile_generate_api(
     target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
 ):
@@ -476,32 +476,7 @@ def learn_sourcefile_generate_api(
 
         remaining = max(0, num_sentences - len(existing_items))
 
-        # If generation is required but the user is not authenticated, return fast
-        # to avoid long-running operations (LLM/audio) that can hit platform timeouts.
-        if remaining > 0 and not getattr(g, "user", None):
-            total_duration = time.time() - t0
-            return (
-                jsonify(
-                    {
-                        "error": "Authentication required to generate sentences",
-                        "message": "Authentication required to generate sentences",
-                        "description": "Please log in to generate new practice sentences.",
-                        "authentication_required_for_generation": True,
-                        "sentences": existing_items,
-                        "meta": {
-                            "reused_count": len(existing_items),
-                            "new_count": 0,
-                            "durations": {
-                                "reuse_s": time.time() - reuse_t0,
-                                "llm_s": 0.0,
-                                "audio_total_s": 0.0,
-                                "total_s": total_duration,
-                            },
-                        },
-                    }
-                ),
-                401,
-            )
+        # Note: @api_auth_required ensures user is authenticated, so no anonymous fallback needed
 
         llm_duration = 0.0
         audio_duration = 0.0
@@ -707,14 +682,13 @@ def learn_sourcefile_generate_api(
 
 
 @learn_api_bp.route("/sentence/<int:sentence_id>/ensure-audio", methods=["POST"])
-@api_auth_optional
+@api_auth_required
 def ensure_sentence_audio_api(sentence_id: int):
     """Ensure audio exists for a sentence, generating if needed.
 
-    This endpoint is designed for lazy audio loading. It:
-    - Returns existing audio immediately if cached (works for anonymous users)
-    - Generates audio on-demand if missing (requires authentication)
-    - Completes quickly (~3-8s for generation) to avoid timeouts
+    Requires authentication. This endpoint is designed for lazy audio loading:
+    - Returns existing audio immediately if cached
+    - Generates audio on-demand if missing (~3-8s for generation)
 
     Response: {
         "audio_data_url": "/api/lang/sentence/{lang}/{id}/audio?variant_id=...",
@@ -723,8 +697,8 @@ def ensure_sentence_audio_api(sentence_id: int):
     }
 
     Error responses:
+    - 401: Unauthorized (handled by @api_auth_required decorator)
     - 404: Sentence not found
-    - 401: Authentication required (when audio needs generation but user not logged in)
     - 500: Audio generation failed
     """
     t0 = time.time()
@@ -768,33 +742,19 @@ def ensure_sentence_audio_api(sentence_id: int):
                 200,
             )
 
-        # Audio needs generation - requires authentication
-        if not getattr(g, "user", None):
-            duration_s = time.time() - t0
-            return (
-                jsonify(
-                    {
-                        "error": "Authentication required",
-                        "message": "Please log in to generate audio for this sentence.",
-                        "authentication_required_for_generation": True,
-                        "duration_s": round(duration_s, 3),
-                    }
-                ),
-                401,
-            )
-
         # Generate audio (single TTS call, typically 3-8s)
+        # Note: @api_auth_required decorator ensures user is authenticated
         try:
             variants, created_count = ensure_sentence_audio_variants(sentence, n=1)
         except AuthenticationRequiredForGenerationError:
-            # Shouldn't happen since we checked g.user above, but handle gracefully
+            # Shouldn't happen with @api_auth_required decorator, but handle defensively
+            logger.warning(f"Unexpected auth error for authenticated user on sentence id={sentence_id}")
             duration_s = time.time() - t0
             return (
                 jsonify(
                     {
                         "error": "Authentication required",
                         "message": "Authentication required to generate audio.",
-                        "authentication_required_for_generation": True,
                         "duration_s": round(duration_s, 3),
                     }
                 ),

@@ -270,15 +270,9 @@
     updateCardIfValid({ audio_status: 'loading' });
 
     try {
-      const supabase = ($page.data as any).supabase ?? null;
+      // Note: Page requires auth (server-side redirect), so supabase is always available
+      const supabase = ($page.data as any).supabase;
       
-      // Skip generation if not authenticated (can only use cached audio)
-      if (!supabase) {
-        audioRequestState.set(originalSentenceId, 'error');
-        updateCardIfValid({ audio_status: card.audio_data_url ? 'ready' : 'error' });
-        return;
-      }
-
       // Construct URL manually since route may not be generated yet
       const url = `${API_BASE_URL}/api/lang/learn/sentence/${originalSentenceId}/ensure-audio`;
       
@@ -287,8 +281,8 @@
       const token = sessionData?.data?.session?.access_token;
       
       if (!token) {
-        // User appears logged in (supabase client exists) but no valid session
-        console.warn('Audio prefetch: supabase client present but no session token');
+        // This shouldn't happen with server-side auth gate, but handle gracefully
+        console.warn('Audio prefetch: unexpected missing session token');
         audioRequestState.set(originalSentenceId, 'error');
         updateCardIfValid({ audio_status: card.audio_data_url ? 'ready' : 'error' });
         return;
@@ -478,27 +472,18 @@
         language_level: langLevel,
         skip_audio: true,  // Audio loaded on-demand via prefetch
       };
-      let js: any;
-      try {
-        js = await apiFetch({
-          supabaseClient: ($page.data as any).supabase ?? null,
-          routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
-          params: { target_language_code, sourcedir_slug, sourcefile_slug },
-          options: {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          },
-          timeoutMs: 120000,
-        });
-      } catch (e: any) {
-        // Gracefully handle unauthenticated reuse: backend returns 401 with sentences
-        if (e?.status === 401 && Array.isArray(e?.body?.sentences)) {
-          js = { sentences: e.body.sentences, meta: e.body.meta };
-        } else {
-          throw e;
-        }
-      }
+      // Note: Page requires auth (server-side redirect), so 401 errors won't occur here
+      const js = await apiFetch({
+        supabaseClient: ($page.data as any).supabase ?? null,
+        routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
+        params: { target_language_code, sourcedir_slug, sourcefile_slug },
+        options: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+        timeoutMs: 120000,
+      });
       const sentences = js?.sentences || [];
       const meta = js?.meta || {};
       if (meta?.durations) {
@@ -627,28 +612,19 @@
       };
       // Create a controller to allow cancellation
       prepareAbortCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      let js: any;
-      try {
-        js = await apiFetch({
-          supabaseClient: ($page.data as any).supabase ?? null,
-          routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
-          params: { target_language_code, sourcedir_slug, sourcefile_slug },
-          options: {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-            ...(prepareAbortCtrl ? { signal: prepareAbortCtrl.signal as any } : {}),
-          },
-          timeoutMs: 120000,
-        });
-      } catch (e: any) {
-        // Handle unauthenticated reuse (401) by using returned sentences
-        if (e?.status === 401 && Array.isArray(e?.body?.sentences)) {
-          js = { sentences: e.body.sentences, meta: e.body.meta };
-        } else {
-          throw e;
-        }
-      }
+      // Note: Page requires auth (server-side redirect), so 401 errors won't occur here
+      const js = await apiFetch({
+        supabaseClient: ($page.data as any).supabase ?? null,
+        routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
+        params: { target_language_code, sourcedir_slug, sourcefile_slug },
+        options: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          ...(prepareAbortCtrl ? { signal: prepareAbortCtrl.signal as any } : {}),
+        },
+        timeoutMs: 120000,
+      });
       preparedCards = js?.sentences || [];
       preparedMeta = js?.meta || null;
       if (preparedMeta?.durations) {
@@ -1214,7 +1190,7 @@
               {:else if hasAudioForCurrentCard}
                 <AudioPlayer bind:this={audioPlayer} src={currentAudioSrc} downloadUrl={currentAudioSrc} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
               {:else}
-                <Alert type="warning">No audio available for this card. {($page.data as any)?.supabase ? '' : 'Login to enable generation.'}</Alert>
+                <Alert type="warning">No audio available for this card.</Alert>
               {/if}
             </div>
 
