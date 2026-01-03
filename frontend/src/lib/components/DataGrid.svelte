@@ -179,7 +179,7 @@
         filterValue = value;
         
         // Log additional debug info for special filter types
-        if (column?.filterType) {
+        if (import.meta.env.DEV && column?.filterType) {
           console.log(`Applying ${column.filterType} filter on ${filterField}: ${filterValue}`);
         }
       } else {
@@ -188,7 +188,7 @@
       }
       page = 1;
       // For debugging
-      console.log(`Filtering on ${filterField ?? 'none'}: ${filterValue ?? 'none'}`);
+      if (import.meta.env.DEV) console.log(`Filtering on ${filterField ?? 'none'}: ${filterValue ?? 'none'}`);
     }, 300) as unknown as number;
   }
 

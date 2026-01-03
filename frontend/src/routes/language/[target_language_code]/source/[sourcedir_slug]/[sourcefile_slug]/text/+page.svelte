@@ -22,7 +22,7 @@
   } = data;
   
   // Use language_name from parent layout data (via page store)
-  const language_name = $page.data.language_name;
+  const language_name = $page.data.language_name || target_language_code;
   
   // Extract needed data
   const sourcefile = textData.sourcefile;

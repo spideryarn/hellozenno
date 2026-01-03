@@ -695,7 +695,7 @@
     sourcedir_slug={sourcedir.slug}
     {supported_languages} 
     metadata={data.metadata} 
-    data={{ supabase: data.supabase }}
+    data={{ supabase: data.supabase ?? undefined }}
     on:languageChange={handleHeaderLanguageChange} 
   />
 

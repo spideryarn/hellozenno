@@ -2,6 +2,20 @@
  * Type definitions for API responses
  */
 
+/**
+ * User profile data returned from the backend API.
+ * Matches the Profile.to_dict() output from backend/db_models.py
+ */
+export interface UserProfile {
+    id: number;
+    user_id: string;
+    target_language_code: string | null;
+    admin_granted_at: string | null; // ISO date string
+    created_at: string | null; // ISO date string
+    updated_at: string | null; // ISO date string
+    email?: string; // Added by profile_api.py from auth.users
+}
+
 export interface Language {
     code: string;
     name: string;
@@ -22,27 +36,74 @@ export interface SentenceMetadata {
     updated_at?: string;
 }
 
+/**
+ * Entry for example usage in lemmas.
+ */
+export interface ExampleUsageEntry {
+    phrase: string;
+    translation: string;
+    slug: string;
+}
+
+/**
+ * Entry for related lemmas (synonyms, antonyms, related words/phrases/idioms).
+ * These are simplified Lemma objects used in LemmaCard displays.
+ */
+export interface RelatedLemmaEntry {
+    lemma: string;
+    translations?: string[];
+    part_of_speech?: string;
+    commonality?: number;
+    is_complete?: boolean;
+}
+
+/**
+ * Type for LemmaCard component which can accept either a full Lemma
+ * or a simplified RelatedLemmaEntry.
+ */
+export type LemmaCardData = Lemma | RelatedLemmaEntry;
+
+/**
+ * Entry for easily confused lemmas with detailed comparison information.
+ * Used in the "Easily Confused With" section of lemma pages.
+ */
+export interface EasilyConfusedEntry {
+    lemma: string;
+    translations?: string[];
+    part_of_speech?: string;
+    commonality?: number;
+    is_complete?: boolean;
+    explanation?: string;
+    example_usage_this_target?: string;
+    example_usage_this_source?: string;
+    example_usage_this_slug?: string;
+    example_usage_other_target?: string;
+    example_usage_other_source?: string;
+    example_usage_other_slug?: string;
+    notes?: string;
+    mnemonic?: string;
+}
+
 export interface Lemma {
     lemma: string;
     is_complete: boolean;
     part_of_speech: string;
     translations: string[];
     etymology?: string;
-    synonyms?: any[];
-    antonyms?: any[];
-    related_words_phrases_idioms?: any[];
+    synonyms?: RelatedLemmaEntry[];
+    antonyms?: RelatedLemmaEntry[];
+    related_words_phrases_idioms?: RelatedLemmaEntry[];
     register?: string;
-    commonality?: number;
-    guessability?: number;
+    commonality?: number | null;
+    guessability?: number | null;
     cultural_context?: string;
     mnemonics?: string[];
-    example_usage?: {
-        phrase: string;
-        translation: string;
-        slug: string;
-    }[];
+    example_usage?: ExampleUsageEntry[];
     example_wordforms?: string[];
-    easily_confused_with?: any[];
+    easily_confused_with?: EasilyConfusedEntry[];
+    // API response may include these additional fields
+    generation_in_progress?: boolean;
+    authentication_required_for_generation?: boolean;
 }
 
 export interface Wordform {
@@ -116,4 +177,73 @@ export interface WordPreview {
         url?: string;
         error?: string;
     };
+}
+
+/**
+ * Learn page types
+ * 
+ * These interfaces define the API responses for the /api/lang/learn/* endpoints
+ * used in the learn page for priority words and flashcard generation.
+ */
+
+/**
+ * Lemma entry returned from the learn summary API.
+ * Contains lemma data with priority scoring metadata.
+ */
+export interface LearnSummaryLemma {
+    lemma: string;
+    translations: string[];
+    etymology?: string;
+    commonality?: number | null;
+    guessability?: number | null;
+    part_of_speech?: string;
+    is_complete?: boolean;
+}
+
+/**
+ * Meta information from the learn summary API response.
+ */
+export interface LearnSummaryMeta {
+    total_candidates: number;
+    returned: number;
+    durations?: {
+        total_s?: number;
+        bulk_fetch_s?: number;
+        lemma_warmup_total_s?: number;
+        [key: string]: number | undefined;
+    };
+    partial?: boolean;
+    counts?: {
+        lemmas_total?: number;
+        existing_loaded?: number;
+        generated?: number;
+        fallback_defaults?: number;
+        skipped_due_to_budget?: number;
+    };
+}
+
+/**
+ * Meta information from the learn generate API response.
+ */
+export interface LearnGenerateMeta {
+    reused_count?: number;
+    new_count?: number;
+    durations?: {
+        reuse_s?: number;
+        llm_s?: number;
+        audio_total_s?: number;
+        total_s?: number;
+        [key: string]: number | undefined;
+    };
+    timed_out?: boolean;
+    skipped_due_to_timeout?: number;
+}
+
+/**
+ * Interface for a p-queue-like task queue used for lemma warming
+ * and audio prefetch in the learn page.
+ */
+export interface WarmingQueue {
+    add<T>(fn: () => Promise<T>, options?: { priority?: number }): Promise<T>;
+    onIdle(): Promise<void>;
 }

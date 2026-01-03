@@ -4,8 +4,11 @@
   import LemmaCard from '$lib/components/LemmaCard.svelte';
   import { createEventDispatcher } from 'svelte';
   import { page } from '$app/stores';
+  import type { Lemma } from '$lib/types';
   
-  export let lemma_metadata: any;
+  // Accept either a full Lemma, partial Lemma data, or null
+  // Partial is used when data comes from LemmaDetails which may have incomplete data
+  export let lemma_metadata: Lemma | Partial<Lemma> | null;
   export let target_language_code: string;
   export let showFullLink: boolean = false; // Whether to show the "View Full Lemma Page" link
   export let isAuthError: boolean = false; // To hide sections if auth error exists

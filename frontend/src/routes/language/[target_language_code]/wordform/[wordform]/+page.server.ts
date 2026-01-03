@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     let { target_language_code, wordform } = params; // Make wordform mutable
     const { supabase, session } = locals;
 
-    console.log(
+    if (import.meta.env.DEV) console.log(
         `[Wordform Page Server] Initiating load for wordform: "${wordform}", lang: "${target_language_code}"`
     );
 
@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     }
 
     // Diagnostic: Log the wordform as received by SvelteKit
-    console.log(
+    if (import.meta.env.DEV) console.log(
         `[+page.server.ts] Initial params.wordform (normalized): "${wordform}" (Code points: ${
             Array.from(wordform).map((c) => c.charCodeAt(0).toString(16)).join(
                 " ",
@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         
         // Set a reasonable timeout for server-side rendering
         // This is important since we now wait for wordform generation to complete
-        console.log(
+        if (import.meta.env.DEV) console.log(
             `[Wordform Page Server] Calling getWordformWithSearch for wordform: "${wordform}"`
         );
         const apiResult = await getWordformWithSearch(
@@ -54,7 +54,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             session?.access_token ?? null,
         );
 
-        console.log(
+        if (import.meta.env.DEV) console.log(
             `[Wordform Page Server] Raw apiResult from getWordformWithSearch for "${wordform}":`,
             JSON.stringify(apiResult, null, 2)
         );
@@ -63,13 +63,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         if (apiResult && apiResult.status === "found") {
             // Direct wordform match found - return the data as is
             // This now includes newly generated wordforms too
-            console.log(`[Wordform Page Server] Wordform found: ${wordform}. Returning data.`);
+            if (import.meta.env.DEV) console.log(`[Wordform Page Server] Wordform found: ${wordform}. Returning data.`);
             return {
                 wordformData: apiResult.data,
             };
         } else if (apiResult && apiResult.status === "multiple_matches") {
             // Multiple matches found - redirect to search results page
-            console.log(
+            if (import.meta.env.DEV) console.log(
                 `[Wordform Page Server] Multiple matches for: ${wordform}, redirecting to search.`
             );
             throw redirect(
@@ -81,7 +81,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         } else if (apiResult && apiResult.status === "redirect") {
             // Should redirect to another wordform
             // This is now only used as a fallback
-            console.log(`[Wordform Page Server] Redirecting to: ${apiResult.data.redirect_to}`);
+            if (import.meta.env.DEV) console.log(`[Wordform Page Server] Redirecting to: ${apiResult.data.redirect_to}`);
             throw redirect(
                 302,
                 `/language/${target_language_code}/wordform/${
@@ -90,7 +90,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             );
         } else if (apiResult && apiResult.status === "invalid") {
             // Invalid word - redirect to search to show the error
-            console.log(`[Wordform Page Server] Invalid word: ${wordform}, redirecting to search.`);
+            if (import.meta.env.DEV) console.log(`[Wordform Page Server] Invalid word: ${wordform}, redirecting to search.`);
             throw redirect(
                 302,
                 `/language/${target_language_code}/search/${
@@ -123,7 +123,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         // Keep existing check for native Response objects (though less likely here now)
         if (err instanceof Response && err.status === 302) {
             // This is our redirect, pass it through
-            console.log(`[Wordform Page Server] Propagating redirect for "${wordform}".`);
+            if (import.meta.env.DEV) console.log(`[Wordform Page Server] Propagating redirect for "${wordform}".`);
             throw err;
         }
 
@@ -144,7 +144,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             "authentication_required_for_generation" in err.body &&
             err.body.authentication_required_for_generation
         ) {
-            console.log(
+            if (import.meta.env.DEV) console.log(
                 "Authentication required for generation, returning specific state",
             );
             return {
@@ -161,7 +161,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         if (err instanceof Error && err.message.includes("timed out")) {
             // If we time out during wordform generation, still return a loading state
             // The client-side JS will retry fetching the data
-            console.log(
+            if (import.meta.env.DEV) console.log(
                 `[Wordform Page Server] Request timed out for "${wordform}", returning null wordformData.`
             );
             return {
@@ -171,7 +171,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
         // If it's a 404, redirect to search page to show not found
         if (err instanceof Error && err.message.includes("404")) {
-            console.log(
+            if (import.meta.env.DEV) console.log(
                 `[Wordform Page Server] Received 404 for "${wordform}", redirecting to search.`
             );
             throw redirect(

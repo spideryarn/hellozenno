@@ -4,20 +4,23 @@
   import { LemmaContent, LoadingSpinner } from '$lib';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
+  import type { Lemma } from '$lib/types';
+  import type { Session } from '@supabase/supabase-js';
   
-  export let lemma_metadata: any | null;
+  export let lemma_metadata: Lemma | null;
   export let target_language_code: string;
   export let lemma: string | null = null;
-  export let session: any | null = null; // Auth session
+  export let session: Session | null = null; // Auth session
   
   let isLoading = false;
   let error: string | null = null;
   let authError = false;
-  let completeData: any | null = null;
+  let completeData: Lemma | null = null;
   let generationInProgress = false;
   
   // Merged data combines the original metadata with fetched complete data
-  $: displayData = completeData || lemma_metadata || {};
+  // Note: displayData may be an empty object {} if no data is available
+  $: displayData = (completeData || lemma_metadata || {}) as Partial<Lemma>;
   $: hasLemma = !!lemma || !!lemma_metadata?.lemma;
   $: lemmaValue = lemma || lemma_metadata?.lemma;
   $: isLoggedIn = !!session;
@@ -59,7 +62,7 @@
   });
   
   async function fetchCompleteData() {
-    if (!hasLemma || !browser) return false;
+    if (!hasLemma || !browser || !lemmaValue) return false;
     
     isLoading = true;
     error = null;

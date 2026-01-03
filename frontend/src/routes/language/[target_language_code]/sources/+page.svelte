@@ -4,8 +4,7 @@
   import { SITE_NAME } from '$lib/config';
   import DataGrid from '$lib/components/DataGrid.svelte';
   import { supabaseDataProvider } from '$lib/datagrid/providers/supabase';
-  import { supabase } from '$lib/supabaseClient';
-  import { getApiUrl, apiFetch } from '$lib/api';
+  import { apiFetch } from '$lib/api';
   import { createUserIdColumn } from '$lib/datagrid/utils';
   import { Breadcrumbs, type BreadcrumbItem } from '$lib';
   
@@ -55,12 +54,12 @@
     }
   ];
 
-  // Set up the data provider using Supabase
-  const loadData = supabaseDataProvider({
+  // Set up the data provider using Supabase (reactive to handle client initialization)
+  $: loadData = data.supabase ? supabaseDataProvider({
     table: 'sourcedir',
     selectableColumns: 'id,path,slug,description,created_by_id,updated_at', 
-    client: supabase
-  });
+    client: data.supabase
+  }) : null;
 
   // Function to generate URLs for each row
   function getSourcedirUrl(row: any): string {
@@ -146,7 +145,7 @@
   </div>
   
   <!-- DataGrid with built-in loading indicator -->
-  {#if sources !== undefined}
+  {#if sources !== undefined && loadData}
     <DataGrid 
       {columns}
       loadData={loadData}
@@ -158,7 +157,7 @@
       defaultSortDir="desc"
       queryModifier={(query) => query.eq('target_language_code', languageCode)}
     />
-  {:else}
+  {:else if sources === undefined}
     <div class="alert alert-info">
       No sources found for {languageName}.
     </div>

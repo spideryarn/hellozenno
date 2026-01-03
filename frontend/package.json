@@ -61,6 +61,7 @@
     "dependencies": {
         "@supabase/ssr": "^0.6.1",
         "@supabase/supabase-js": "^2.49.4",
+        "isomorphic-dompurify": "^2.35.0",
         "p-queue": "^8.0.0",
         "pdfjs-dist": "^4.10.38",
         "phosphor-svelte": "^3.0.1",

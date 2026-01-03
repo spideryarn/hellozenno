@@ -7,7 +7,7 @@
   export let data: PageData; // data will have { searchResults, language_name (from layout), ... }
   
   // Log the received searchResults to see its structure
-  $: if (browser && data && data.searchResults) {
+  $: if (import.meta.env.DEV && browser && data && data.searchResults) {
     console.log('Search Page (+page.svelte) received searchResults:', JSON.parse(JSON.stringify(data.searchResults)));
   }
 

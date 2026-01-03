@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher, type Component } from 'svelte';
 
   // Event dispatcher for component events
   const dispatch = createEventDispatcher();
@@ -8,7 +8,8 @@
   export let buttonText: string = '';
   export let buttonContent: string = ''; // Alternative to buttonText for icon/HTML content
   // Allow passing a Svelte component for the button content (e.g., an icon)
-  export let buttonSvelteContent: any = null; // Typed as any to keep usage flexible
+  // Using Component type from Svelte 5 for proper typing of component constructors
+  export let buttonSvelteContent: Component | null = null;
   export let buttonClass: string = 'btn btn-secondary';
   export let tooltipText: string = ''; // Optional tooltip for the button
   export let items: Array<{
@@ -47,8 +48,17 @@
     };
   });
 
+  // Define the item type for reuse
+  type DropdownItem = {
+    type: 'link' | 'button' | 'divider' | 'header';
+    text?: string;
+    href?: string;
+    onClick?: () => void;
+    class?: string;
+  };
+
   // Handle item click
-  function handleItemClick(item: any) {
+  function handleItemClick(item: DropdownItem) {
     if (item.onClick) {
       item.onClick();
     }

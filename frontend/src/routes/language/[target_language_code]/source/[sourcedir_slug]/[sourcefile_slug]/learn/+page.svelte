@@ -12,6 +12,7 @@
   import CaretRight from 'phosphor-svelte/lib/CaretRight';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { truncate } from '$lib/utils';
+  import type { LearnSummaryLemma, LearnSummaryMeta, LearnGenerateMeta, WarmingQueue } from '$lib/types';
   // Use dynamic import for p-queue to avoid build-time type resolution issues
 
   // Parallelism settings - tuned for DB pool pressure
@@ -27,7 +28,7 @@
 
   let loadingSummary = true;
   let summaryError: string | null = null;
-  let lemmas: Array<any> = [];
+  let lemmas: LearnSummaryLemma[] = [];
   let ignoredLemmas: Set<string> = new Set();
   let sourcefileWordforms: Record<string, string[]> = {};
   let sourceText: string = '';
@@ -53,7 +54,8 @@
 
   let currentIndex = 0;
   let currentStage = 1; // 1: audio; 2: sentence; 3: translation
-  let audioPlayer: any;
+  // AudioPlayer component instance (has .play() method)
+  let audioPlayer: { play: () => void } | null = null;
 
   // Highlight segments for the current sentence (computed when card changes)
   type HighlightSegment = { text: string; isHighlight: boolean };
@@ -162,11 +164,11 @@
   // Background preparation of practice deck
   let preparing = false;
   let preparedCards: typeof cards = [];
-  let preparedMeta: any = null;
+  let preparedMeta: LearnGenerateMeta | null = null;
   let preparedError: string | null = null;
   let preloadedAudios: HTMLAudioElement[] = [];
   let loadingLemmaMap: Record<string, boolean> = {};
-  let warmingQueue: any = null;
+  let warmingQueue: WarmingQueue | null = null;
   let prepareAbortCtrl: AbortController | null = null;
   let summaryAbortCtrl: AbortController | null = null;
   let summaryRequestId = 0;
@@ -181,7 +183,7 @@
   let settingTopK: number = LEARN_DEFAULT_TOP_WORDS;
   let settingNumSentences: number = LEARN_DEFAULT_NUM_CARDS;
   let settingLanguageLevel: string = LEARN_DEFAULT_CEFR; // '' means Any; 'sourcefile' to use sourcefile level
-  let summaryMeta: any = null;
+  let summaryMeta: LearnSummaryMeta | null = null;
 
   // Build absolute API URL for audio when backend returns a relative path
   function toAbsoluteApiUrl(path: string | null | undefined): string {
@@ -341,8 +343,9 @@
       const result = await response.json();
       audioRequestState.set(originalSentenceId, 'done');
       updateCardIfValid({ audio_data_url: result.audio_data_url, audio_status: 'ready' });
-    } catch (e: any) {
-      if (e?.name === 'AbortError') {
+    } catch (e: unknown) {
+      const err = e as Error | null;
+      if (err?.name === 'AbortError') {
         console.warn('Audio prefetch timed out for sentence:', originalSentenceId);
       } else {
         console.warn('Audio prefetch failed:', e);
@@ -434,8 +437,9 @@
         preparedCards = [...preparedCards]; // Trigger reactivity
       }
       audioRequestState.set(originalSentenceId, 'done');
-    } catch (e: any) {
-      if (e?.name !== 'AbortError') {
+    } catch (e: unknown) {
+      const err = e as Error | null;
+      if (err?.name !== 'AbortError') {
         console.warn('Stage 1 audio prefetch failed:', e);
       }
       audioRequestState.set(originalSentenceId, 'error');
@@ -475,15 +479,16 @@
     }
   }
 
-  async function ensureWarmingQueue() {
+  async function ensureWarmingQueue(): Promise<WarmingQueue> {
     if (warmingQueue) return warmingQueue;
     try {
       const mod = await import('p-queue');
-      const PQueue = (mod as any).default ?? (mod as any);
+      // p-queue uses default export; handle ESM/CJS interop
+      const PQueue = (mod.default ?? mod) as { new(opts: { concurrency: number }): WarmingQueue };
       warmingQueue = new PQueue({ concurrency: WARMING_QUEUE_CONCURRENCY });
-    } catch (e) {
+    } catch {
       // Fallback minimal queue with concurrency 1 (matches WARMING_QUEUE_CONCURRENCY)
-      const tasks: Array<() => Promise<any>> = [];
+      const tasks: Array<() => Promise<unknown>> = [];
       let running = false;
       const runNext = async () => {
         if (running) return;
@@ -495,9 +500,9 @@
         running = false;
       };
       warmingQueue = {
-        add(fn: () => Promise<any>) { tasks.push(fn); runNext(); return Promise.resolve(); },
+        add(fn: () => Promise<unknown>) { tasks.push(fn); runNext(); return Promise.resolve(); },
         onIdle() { return Promise.resolve(); }
-      };
+      } as WarmingQueue;
     }
     return warmingQueue;
   }
@@ -506,7 +511,7 @@
   $: sourcedir_slug = $page.params.sourcedir_slug;
   $: sourcefile_slug = $page.params.sourcefile_slug;
   let language_name: string = '';
-  $: language_name = ($page.data as any)?.language_name || target_language_code;
+  $: language_name = $page.data.language_name || target_language_code;
 
   async function fetchSummary() {
     // Abort any in-flight request and track this request's ID
@@ -575,15 +580,16 @@
         });
         if (thisRequestId !== summaryRequestId) return;
         if (Array.isArray(ignored)) {
-          ignoredLemmas = new Set(ignored.map((x: any) => x.lemma));
+          ignoredLemmas = new Set(ignored.map((x: { lemma: string }) => x.lemma));
         }
-      } catch (e) {
+      } catch {
         // not logged in or API error; proceed without filtering
       }
-    } catch (e: any) {
-      if (e?.name === 'AbortError') return; // Request was cancelled, don't update state
+    } catch (e: unknown) {
+      const err = e as Error | null;
+      if (err?.name === 'AbortError') return; // Request was cancelled, don't update state
       if (thisRequestId !== summaryRequestId) return;
-      summaryError = e?.message || 'Failed to load summary';
+      summaryError = err?.message || 'Failed to load summary';
     } finally {
       if (thisRequestId === summaryRequestId) {
         loadingSummary = false;
@@ -645,8 +651,9 @@
       currentStage = 1;
       resetMetricsForNewDeck(cards);
       markCardStartedIfNeeded();
-    } catch (e: any) {
-      generateError = e?.message || 'Failed to generate practice set';
+    } catch (e: unknown) {
+      const err = e as Error | null;
+      generateError = err?.message || 'Failed to generate practice set';
     } finally {
       generating = false;
     }
@@ -793,12 +800,13 @@
         console.log('Learn generate durations (prepared)', preparedMeta.durations);
       }
       // Preload audio data URLs
-      preloadAudioDataUrls(preparedCards.map((c: any) => c.audio_data_url).filter(Boolean));
-    } catch (e: any) {
-      if (e?.name === 'AbortError') {
+      preloadAudioDataUrls(preparedCards.map((c) => c.audio_data_url).filter((url): url is string => url !== null));
+    } catch (e: unknown) {
+      const err = e as Error | null;
+      if (err?.name === 'AbortError') {
         preparedError = 'Preparation cancelled';
       } else {
-        preparedError = e?.message || 'Failed to prepare practice set';
+        preparedError = err?.message || 'Failed to prepare practice set';
       }
     } finally {
       preparing = false;
@@ -838,7 +846,7 @@
       loadingLemmaMap[lemma] = true;
       loadingLemmaMap = { ...loadingLemmaMap };
       // Queue each warming task with low priority
-      ensureWarmingQueue().then(() => warmingQueue.add(async () => {
+      ensureWarmingQueue().then((queue) => queue.add(async () => {
         try {
           await apiFetch({
             supabaseClient: supabase,
@@ -847,7 +855,7 @@
             options: { method: 'GET' },
             timeoutMs: 60000,
           });
-        } catch (e) {
+        } catch {
           // ignore
         } finally {
           loadingLemmaMap[lemma] = false;
@@ -1003,8 +1011,9 @@
       if (!generating) {
         preparePracticeInBackground();
       }
-    } catch (e: any) {
-      alert(e?.message || 'Failed to ignore lemma');
+    } catch (e: unknown) {
+      const err = e as Error | null;
+      alert(err?.message || 'Failed to ignore lemma');
     }
   }
 

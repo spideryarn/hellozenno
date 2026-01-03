@@ -24,6 +24,9 @@ declare global {
 			supabase?: SupabaseClient<Database> | null
 			profile?: UserProfile | null
 			is_admin?: boolean | null
+			// From /language/[target_language_code]/+layout.server.ts
+			target_language_code?: string
+			language_name?: string
 		}
 		// interface PageState {}
 		// interface Platform {}

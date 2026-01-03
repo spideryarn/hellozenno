@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Card } from '$lib';
-  import type { Lemma } from '$lib/types';
+  import type { LemmaCardData } from '$lib/types';
   
-  export let lemma: Lemma;
+  export let lemma: LemmaCardData;
   export let target_language_code: string;
   export let showDetails: boolean = false;
 </script>
@@ -30,17 +30,17 @@
     {/if}
     
     {#if showDetails}
-      {#if lemma.guessability !== null && lemma.guessability !== undefined}
+      {#if 'guessability' in lemma && lemma.guessability !== null && lemma.guessability !== undefined}
         <p class="small text-muted mb-0">Guessability: {Math.round(lemma.guessability * 100)}%</p>
       {/if}
       
-      {#if lemma.etymology}
+      {#if 'etymology' in lemma && lemma.etymology}
         <div class="mt-2">
           <p class="small mb-0"><strong>Etymology:</strong> {lemma.etymology}</p>
         </div>
       {/if}
       
-      {#if lemma.register}
+      {#if 'register' in lemma && lemma.register}
         <div class="mt-2">
           <p class="small mb-0"><strong>Register:</strong> {lemma.register}</p>
         </div>

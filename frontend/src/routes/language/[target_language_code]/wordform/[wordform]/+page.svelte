@@ -18,7 +18,7 @@
   $: ({ supabase, session, user } = data); // from root layout
 
   // Client-side logging to inspect wordformData
-  $: if (browser && wordformData) {
+  $: if (import.meta.env.DEV && browser && wordformData) {
     console.log('WF page data received by client (+page.svelte):', JSON.parse(JSON.stringify(wordformData)));
   }
   

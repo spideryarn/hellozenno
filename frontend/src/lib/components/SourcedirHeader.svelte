@@ -17,8 +17,8 @@
   export let supported_languages: Language[]; // Use the correct type Language[]
   export let metadata: Metadata = { created_at: '', updated_at: '' }; // Add metadata prop with default empty values
   
-  // Add Supabase client data to props with undefined as default
-  export let data: { supabase?: SupabaseClient } = {};
+  // Add Supabase client data to props
+  export let data: { supabase?: SupabaseClient | null } = {};
 
   const dispatch = createEventDispatcher(); // Added for language change event
 

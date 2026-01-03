@@ -36,7 +36,7 @@
   export let sourcefile_slug: string;
   export let available_sourcedirs: any[] = [];
   export let data: {
-    supabase?: SupabaseClient;
+    supabase?: SupabaseClient | null;
     session?: any;
     user?: any;
     [key: string]: any;
@@ -119,7 +119,7 @@
   // Check if sourcefile needs INITIAL processing - only trigger for files that 
   // haven't been processed at all for a specific step
   function shouldAutoProcess(sourcefile: Sourcefile): boolean {
-    console.log('Auto-process check - Sourcefile state:', {
+    if (import.meta.env.DEV) console.log('Auto-process check - Sourcefile state:', {
       text_target: !!sourcefile.text_target,
       text_english: !!sourcefile.text_english,
       has_image: sourcefile.has_image,
@@ -133,7 +133,7 @@
     if (sourcefile.has_image || sourcefile.has_audio) {
       if (!sourcefile.text_target || sourcefile.text_target === '') {
         autoProcessNotificationMessage = 'Automatically extracting text from this file...';
-        console.log('Auto-process: Triggering text extraction for image/audio');
+        if (import.meta.env.DEV) console.log('Auto-process: Triggering text extraction for image/audio');
         return true;
       }
     }
@@ -143,7 +143,7 @@
     if (sourcefile.text_target && sourcefile.text_target.trim() !== '' && sourcefile.text_target !== '-') {
       if (!sourcefile.text_english || sourcefile.text_english === '') {
         autoProcessNotificationMessage = 'Automatically translating text...';
-        console.log('Auto-process: Triggering translation');
+        if (import.meta.env.DEV) console.log('Auto-process: Triggering translation');
         return true;
       }
     }
@@ -154,11 +154,11 @@
     const hasAbsolutelyNoWordforms = hasContent && (stats?.wordforms_count === 0);
     if (hasContent && hasAbsolutelyNoWordforms) {
       autoProcessNotificationMessage = 'Automatically extracting initial vocabulary from this text...';
-      console.log('Auto-process: Triggering wordform extraction');
+      if (import.meta.env.DEV) console.log('Auto-process: Triggering wordform extraction');
       return true;
     }
     
-    console.log('Auto-process: No processing needed');
+    if (import.meta.env.DEV) console.log('Auto-process: No processing needed');
     return false;
   }
   
@@ -170,7 +170,7 @@
     }
     
     if (autoProcessEnabled && shouldAutoProcess(sourcefile)) {
-      console.log('Auto-processing enabled and needed for this sourcefile');
+      if (import.meta.env.DEV) console.log('Auto-processing enabled and needed for this sourcefile');
       showAutoProcessNotification = true;
       
       // Add a slight delay to allow the UI to render first
@@ -292,7 +292,7 @@
     // Use local synchronous lock to prevent multiple drivers from rapid clicks
     // The store check ($myProcessingState.isProcessing) is async and can race
     if (isDriverRunning) {
-      console.log(`Added processing run to queue. Now have ${pendingRuns} pending runs.`);
+      if (import.meta.env.DEV) console.log(`Added processing run to queue. Now have ${pendingRuns} pending runs.`);
       return;
     }
     
@@ -337,7 +337,7 @@
         } else {
           // Handle cases where processing finished but might have had errors
           // or failed to return data (check $myProcessingState.error)
-          console.log("Processing finished, but no data returned or error occurred. State:", $myProcessingState);
+          if (import.meta.env.DEV) console.log("Processing finished, but no data returned or error occurred. State:", $myProcessingState);
           if (!$myProcessingState.error) {
              // If no specific error, maybe just skip reload or show generic message?
              // alert('Processing finished, but failed to retrieve updated data.'); 

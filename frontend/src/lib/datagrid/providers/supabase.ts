@@ -57,7 +57,7 @@ export function supabaseDataProvider({
 
       // Apply filtering if specified
       if (filterField && filterValue) {
-        console.log(`Filtering on ${filterField} with value: ${filterValue}`);
+        if (import.meta.env.DEV) console.log(`Filtering on ${filterField} with value: ${filterValue}`);
         
         // Check if this is a JSON array column either by explicit list or by column definition
         const isJsonArrayColumn = jsonArrayColumns.includes(filterField);
@@ -114,7 +114,7 @@ export function supabaseDataProvider({
         
         // Handle foreign table counts
         if (row.sourcefiles !== undefined) {
-          console.log('DataProvider - Sourcefiles structure:', row.sourcefiles);
+          if (import.meta.env.DEV) console.log('DataProvider - Sourcefiles structure:', row.sourcefiles);
           result.file_count = typeof row.sourcefiles === 'object' && row.sourcefiles !== null
             ? (Array.isArray(row.sourcefiles)
                 ? (row.sourcefiles[0]?.count ?? 0)

@@ -11,6 +11,21 @@ import type {
     Wordform,
     SearchResult,
 } from "./types";
+
+/**
+ * Custom error class for API errors with status and body
+ */
+export class ApiError extends Error {
+    status: number;
+    body: Record<string, unknown>;
+    
+    constructor(message: string, status: number, body: Record<string, unknown> = {}) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+        this.body = body;
+    }
+}
 import { resolveRoute, RouteName, type RouteParams } from "./generated/routes";
 import { API_BASE_URL } from "./config";
 
@@ -139,18 +154,16 @@ export async function apiFetch<T extends RouteName, R = any>({
     if (import.meta.env.DEV) console.log(`[apiFetch] Response status for ${url}: ${response.status}`);
 
     if (!response.ok) {
-        let errorData: any = {};
+        let errorData: Record<string, unknown> = {};
         try {
             errorData = await response.json();
-        } catch (e) {
+        } catch {
             // Ignore if response body is not JSON
         }
-        const message = errorData?.description || errorData?.message || `API request failed: ${response.status}`;
-        // Include status in the error object for easier handling
-        const error = new Error(message) as any;
-        error.status = response.status;
-        error.body = errorData;
-        throw error;        
+        const description = typeof errorData?.description === 'string' ? errorData.description : undefined;
+        const errorMessage = typeof errorData?.message === 'string' ? errorData.message : undefined;
+        const message = description || errorMessage || `API request failed: ${response.status}`;
+        throw new ApiError(message, response.status, errorData);        
     }
 
     // Handle status codes that typically have empty bodies
@@ -412,10 +425,10 @@ export async function getWordformWithSearch(
             timeoutMs: 60000, // 60 second timeout to allow for synchronous wordform generation
         });
         return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`API: Error fetching wordform ${wordform}:`, error);
         // For 401 and 404, rethrow so loaders can handle (redirect or show error page)
-        if (error.status === 401 || error.status === 404) {
+        if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
             throw error;
         }
         // Re-throw other errors
@@ -446,17 +459,19 @@ export async function getLemmaMetadata(
             timeoutMs: 60000, // 60 seconds
         });
         return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`API: Error fetching lemma ${lemma}:`, error);
         // Specifically handle the 401 case where generation requires login
-        if (error.status === 401 && error.body?.authentication_required_for_generation) {
-            console.warn(`API: Authentication required to generate lemma ${lemma}`);
-            // Return the error body which contains partial data and the flag
-            return error.body;
-        } else if (error.status === 404) {
-            console.warn(`API: Lemma ${lemma} not found (404).`);
-             // Return the error body which contains the 404 details
-            return error.body;
+        if (error instanceof ApiError) {
+            if (error.status === 401 && error.body?.authentication_required_for_generation) {
+                console.warn(`API: Authentication required to generate lemma ${lemma}`);
+                // Return the error body which contains partial data and the flag
+                return error.body;
+            } else if (error.status === 404) {
+                console.warn(`API: Lemma ${lemma} not found (404).`);
+                // Return the error body which contains the 404 details
+                return error.body;
+            }
         }
         // Re-throw other errors
         throw error; 
