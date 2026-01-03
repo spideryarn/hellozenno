@@ -147,14 +147,83 @@ export interface SearchResultCategory {
     possible_misspellings?: string[];
 }
 
-export interface SearchResult {
-    status: 'found' | 'multiple_matches' | 'redirect' | 'invalid' | 'empty_query' | 'error';
+// Base fields common to all SearchResult variants
+interface SearchResultBase {
     query: string;
     target_language_code: string;
     target_language_name: string;
-    data: any; // This will contain different data based on the status
-    error?: string;
 }
+
+// Wordform metadata returned when a word is found
+export interface SearchWordformMetadata {
+    wordform: string;
+    lemma?: string | null;
+    translations?: string[];
+    part_of_speech?: string | null;
+    inflection_type?: string | null;
+    inflection_types?: string[];
+}
+
+export interface SearchResultFound extends SearchResultBase {
+    status: 'found';
+    data: {
+        wordform_metadata: SearchWordformMetadata;
+    };
+}
+
+export interface SearchResultMultipleMatches extends SearchResultBase {
+    status: 'multiple_matches';
+    data: {
+        search_term: string;
+        target_language_results: SearchResultCategory;
+        english_results: SearchResultCategory;
+    };
+}
+
+export interface SearchResultInvalid extends SearchResultBase {
+    status: 'invalid';
+    data: {
+        error: string;
+        description?: string;
+        wordform: string;
+        possible_misspellings?: string[];
+    };
+}
+
+export interface SearchResultRedirect extends SearchResultBase {
+    status: 'redirect';
+    data: {
+        redirect_to?: string;
+        wordform?: string;
+    };
+}
+
+export interface SearchResultEmptyQuery extends SearchResultBase {
+    status: 'empty_query';
+    data: Record<string, never>;
+}
+
+export interface SearchResultAuthRequired extends SearchResultBase {
+    status: 'authentication_required';
+    error: string;
+    authentication_required_for_generation: true;
+    data: Record<string, never>;
+}
+
+export interface SearchResultError extends SearchResultBase {
+    status: 'error';
+    error: string;
+    data: Record<string, never>;
+}
+
+export type SearchResult =
+    | SearchResultFound
+    | SearchResultMultipleMatches
+    | SearchResultInvalid
+    | SearchResultRedirect
+    | SearchResultEmptyQuery
+    | SearchResultAuthRequired
+    | SearchResultError;
 
 /**
  * Word preview data for tooltips

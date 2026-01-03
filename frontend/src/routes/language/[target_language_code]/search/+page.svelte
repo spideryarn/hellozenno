@@ -269,16 +269,16 @@
         {/if}
         
         <!-- Possible misspellings for target language -->
-        {#if result.data.target_language_results?.possible_misspellings?.length > 0}
+        {#if result.data.target_language_results?.possible_misspellings && result.data.target_language_results.possible_misspellings.length > 0}
           <div class="card mb-4">
             <div class="card-header hz-card-header-warning">
               <h5 class="card-title mb-0">Did you mean one of these?</h5>
             </div>
             <div class="card-body">
               <ul class="list-group list-group-flush">
-                {#each result.data.target_language_results.possible_misspellings as suggestion}
+                {#each result.data.target_language_results.possible_misspellings as suggestion (suggestion)}
                   <li class="list-group-item">
-                    <a href="/language/{result.target_language_code}/search?q={encodeURIComponent(suggestion)}" class="hz-foreign-text">
+                    <a href="/language/{result.target_language_code}/search?q={encodeURIComponent(String(suggestion))}" class="hz-foreign-text">
                       {suggestion}
                     </a>
                   </li>
@@ -337,12 +337,12 @@
           <div class="card-body">
             <p>"{result.query}" did not match any words in {result.target_language_name} or English translations.</p>
             
-            {#if result.data.possible_misspellings?.length > 0}
+            {#if result.data.possible_misspellings && result.data.possible_misspellings.length > 0}
               <p>Did you mean:</p>
               <ul>
-                {#each result.data.possible_misspellings as suggestion}
+                {#each result.data.possible_misspellings as suggestion (suggestion)}
                   <li>
-                    <a href="/language/{result.target_language_code}/search?q={encodeURIComponent(suggestion)}" class="hz-foreign-text">
+                    <a href="/language/{result.target_language_code}/search?q={encodeURIComponent(String(suggestion))}" class="hz-foreign-text">
                       {suggestion}
                     </a>
                   </li>

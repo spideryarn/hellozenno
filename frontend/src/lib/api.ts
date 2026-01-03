@@ -26,6 +26,20 @@ export class ApiError extends Error {
         this.body = body;
     }
 }
+
+/**
+ * Extract error message from an unknown error
+ * Use this in catch blocks: catch (err: unknown) { const message = getErrorMessage(err); }
+ */
+export function getErrorMessage(err: unknown): string {
+    if (err instanceof ApiError) {
+        return err.body?.message ? String(err.body.message) : err.message;
+    }
+    if (err instanceof Error) {
+        return err.message;
+    }
+    return String(err);
+}
 import { resolveRoute, RouteName, type RouteParams } from "./generated/routes";
 import { API_BASE_URL } from "./config";
 
