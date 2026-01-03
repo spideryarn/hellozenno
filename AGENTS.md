@@ -92,6 +92,15 @@ Key points:
 
 ### AI Development Modes
 - See `docs/instructions/` for special modes
+- See `docs/generic/CHIEF_ENGINEER.md` for complex multi-phase workflow
+
+### Triple Review
+When asked to "use triple-review", invoke ALL THREE reviewers in parallel:
+- `@reviewer-gpt5.2-high` - Primary reviewer (thorough, high reasoning)
+- `@reviewer-gemini` - Secondary reviewer (alternative perspective)
+- `@reviewer-opus` - Deep reviewer (nuanced analysis)
+
+Proceed if all reviewers >= 80% confidence; refine if any < 80%.
 
 ## Common Commands
 
