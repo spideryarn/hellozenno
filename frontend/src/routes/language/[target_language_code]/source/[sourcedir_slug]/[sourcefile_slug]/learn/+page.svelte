@@ -14,6 +14,14 @@
   import { truncate } from '$lib/utils';
   // Use dynamic import for p-queue to avoid build-time type resolution issues
 
+  // Parallelism settings - tuned for DB pool pressure
+  // Keep generous lookahead so spending time on a card allows buffering ahead
+  // But use concurrency=1 to avoid overwhelming the connection pool
+  const AUDIO_PREFETCH_LOOKAHEAD = 3;  // Current + next N cards (buffer ahead)
+  const LEMMA_WARM_INITIAL = 5;        // Initial lemmas to warm on load
+  const LEMMA_WARM_LOOKAHEAD = 3;      // Lemmas to warm on navigation
+  const WARMING_QUEUE_CONCURRENCY = 1; // Max concurrent backend requests (KEY SETTING)
+
   // No exported props required for this page in MVP
 
   let loadingSummary = true;
@@ -186,15 +194,19 @@
   $: hasAudioForCurrentCard = !!cards?.[currentIndex]?.audio_data_url;
 
   // Prefetch audio for current and next cards when practice starts or card changes
+  // Uses AUDIO_PREFETCH_LOOKAHEAD constant for generous buffering with concurrency=1
   $: if (cards.length > 0 && currentIndex >= 0) {
-    const indicesToPrefetch = [currentIndex, currentIndex + 1, currentIndex + 2].filter(
-      i => i < cards.length && cards[i]?.sentence_id
-    );
+    // Generate indices for current + next N cards
+    const indicesToPrefetch = Array.from(
+      {length: AUDIO_PREFETCH_LOOKAHEAD + 1}, 
+      (_, i) => currentIndex + i
+    ).filter(i => i < cards.length && cards[i]?.sentence_id);
 
     for (const idx of indicesToPrefetch) {
       const sentenceId = cards[idx].sentence_id!;
       const state = audioRequestState.get(sentenceId);
-      // Skip if already loading, done, or errored (no auto-retry on error to prevent loops)
+      // Skip loading/done/error states - errors are only retried via manual button
+      // This prevents infinite retry loops when server persistently fails
       if (state === 'loading' || state === 'done' || state === 'error') continue;
       // Skip if already has audio
       if (cards[idx].audio_data_url && cards[idx].audio_status === 'ready') continue;
@@ -210,9 +222,16 @@
           }
         });
       } else {
-        // Future cards - queue in background with low priority
-        ensureWarmingQueue().then(() => {
-          warmingQueue?.add(() => prefetchAudioForCard(idx, sentenceId), { priority: 0 });
+        // Future cards - queue in background with error handling
+        ensureWarmingQueue().then((queue) => {
+          if (queue) {
+            queue.add(() => prefetchAudioForCard(idx, sentenceId), { priority: 0 });
+          } else {
+            // Queue init failed - revert state to allow retry later
+            audioRequestState.set(sentenceId, 'pending');
+          }
+        }).catch(() => {
+          audioRequestState.set(sentenceId, 'pending');
         });
       }
     }
@@ -330,9 +349,9 @@
     try {
       const mod = await import('p-queue');
       const PQueue = (mod as any).default ?? (mod as any);
-      warmingQueue = new PQueue({ concurrency: 2 });
+      warmingQueue = new PQueue({ concurrency: WARMING_QUEUE_CONCURRENCY });
     } catch (e) {
-      // Fallback minimal queue with concurrency 1
+      // Fallback minimal queue with concurrency 1 (matches WARMING_QUEUE_CONCURRENCY)
       const tasks: Array<() => Promise<any>> = [];
       let running = false;
       const runNext = async () => {
@@ -443,7 +462,7 @@
     if (!summaryError && lemmas.length > 0) {
       await ensureWarmingQueue();
       // Warm currently visible lemma and a small lookahead in background
-      warmTopLemmasInBackground(visibleLemmas.slice(0, 5).map((l) => l.lemma));
+      warmTopLemmasInBackground(visibleLemmas.slice(0, LEMMA_WARM_INITIAL).map((l) => l.lemma));
       preparePracticeInBackground();
     }
   }
@@ -531,6 +550,17 @@
   function prevStage() {
     if (currentStage > 1) currentStage -= 1; else playAudio();
   }
+  
+  // Retry audio for current card (called via manual retry button)
+  function retryCurrentCardAudio() {
+    const card = cards[currentIndex];
+    if (!card?.sentence_id) return;
+    // Reset state to 'pending' to allow the reactive prefetch to pick it up
+    audioRequestState.set(card.sentence_id, 'pending');
+    cards[currentIndex].audio_status = 'pending';
+    cards = [...cards];  // Trigger reactive update
+  }
+  
   async function prevLemma() {
     if (visibleLemmas.length === 0) return;
     if (currentLemmaIndex > 0) {
@@ -697,7 +727,7 @@
 
   // Warm the current lemma and a small lookahead whenever the selection changes
   $: if (visibleLemmas.length) {
-    const lookahead = 3;
+    const lookahead = LEMMA_WARM_LOOKAHEAD;
     const toWarm: string[] = [];
     for (let i = 0; i < lookahead && currentLemmaIndex + i < visibleLemmas.length; i++) {
       const lm = visibleLemmas[currentLemmaIndex + i]?.lemma;
@@ -1190,7 +1220,14 @@
               {:else if hasAudioForCurrentCard}
                 <AudioPlayer bind:this={audioPlayer} src={currentAudioSrc} downloadUrl={currentAudioSrc} autoplay={true} showControls={true} showSpeedControls={true} showDownload={false} />
               {:else}
-                <Alert type="warning">No audio available for this card.</Alert>
+                <Alert type="warning">
+                  No audio available for this card.
+                  {#if cards[currentIndex]?.audio_status === 'error'}
+                    <button class="btn btn-sm btn-outline-warning ms-2" on:click={retryCurrentCardAudio}>
+                      Retry
+                    </button>
+                  {/if}
+                </Alert>
               {/if}
             </div>
 

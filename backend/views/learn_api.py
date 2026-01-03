@@ -27,6 +27,7 @@ from utils.prompt_utils import get_prompt_template_path
 from utils.vocab_llm_utils import anthropic_client, generate_gpt_from_template
 from utils.sentence_utils import generate_sentence
 from utils.audio_utils import ensure_sentence_audio_variants
+from utils.db_connection import database
 from db_models import Sentence, SentenceAudio, Lemma, Sourcefile, Sourcedir
 
 
@@ -703,29 +704,32 @@ def ensure_sentence_audio_api(sentence_id: int):
     """
     t0 = time.time()
     try:
-        # Look up the sentence
-        try:
-            sentence = Sentence.get_by_id(sentence_id)
-        except Sentence.DoesNotExist:
-            return (
-                jsonify(
-                    {
-                        "error": "Sentence not found",
-                        "message": f"No sentence with id={sentence_id}",
-                    }
-                ),
-                404,
+        # Scope DB reads to release connection before slow TTS generation.
+        # This prevents holding a pool slot during the 3-8s TTS call.
+        with database.connection_context():
+            try:
+                sentence = Sentence.get_by_id(sentence_id)
+            except Sentence.DoesNotExist:
+                return (
+                    jsonify(
+                        {
+                            "error": "Sentence not found",
+                            "message": f"No sentence with id={sentence_id}",
+                        }
+                    ),
+                    404,
+                )
+
+            target_language_code = sentence.target_language_code
+
+            # Check for existing audio variants (cheap DB lookup)
+            existing_variants = list(
+                SentenceAudio.select()
+                .where(SentenceAudio.sentence == sentence)
+                .order_by(SentenceAudio.created_at)
+                .limit(1)
             )
-
-        target_language_code = sentence.target_language_code
-
-        # Check for existing audio variants (cheap DB lookup)
-        existing_variants = list(
-            SentenceAudio.select()
-            .where(SentenceAudio.sentence == sentence)
-            .order_by(SentenceAudio.created_at)
-            .limit(1)
-        )
+        # Connection released here - TTS runs without holding pool slot
 
         if existing_variants:
             # Audio already exists - return it
