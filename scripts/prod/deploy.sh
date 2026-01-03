@@ -11,11 +11,12 @@ source scripts/utils/common.sh
 
 # Check if preview flag is provided
 PREVIEW=false
+TIMESTAMP=$(date +"%y%m%d_%H%M")
 if [[ "$1" == "--preview" ]]; then
     PREVIEW=true
-    echo_success "Starting Vercel preview deployment process..."
+    echo_success "Starting Vercel preview deployment process... [$TIMESTAMP]"
 else
-    echo_success "Starting Vercel production deployment process..."
+    echo_success "Starting Vercel production deployment process... [$TIMESTAMP]"
 fi
 
 # Check git status once early to give immediate feedback
