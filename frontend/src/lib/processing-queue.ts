@@ -96,7 +96,7 @@ export class SourcefileProcessingQueue {
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
-      console.log('Processing aborted');
+      if (import.meta.env.DEV) console.log('Processing aborted');
     }
   }
 
@@ -138,7 +138,7 @@ export class SourcefileProcessingQueue {
     processingState.update(state => {
       if (state.runId !== runId) {
         // This run is stale, don't update
-        console.log(`Skipping state update for stale run ${runId} (current: ${state.runId})`);
+        if (import.meta.env.DEV) console.log(`Skipping state update for stale run ${runId} (current: ${state.runId})`);
         return state;
       }
       updated = true;
@@ -188,14 +188,14 @@ export class SourcefileProcessingQueue {
       return []; // Cannot proceed without status
     }
 
-    console.log('Determining steps based on status:', status);
+    if (import.meta.env.DEV) console.log('Determining steps based on status:', status);
 
     // Determine if text extraction is needed
     const needsTextExtraction = (this.sourcefileType === 'image' || this.sourcefileType === 'audio') && !status.has_text;
 
     // 1. Add text extraction step if needed
     if (needsTextExtraction) {
-      console.log('Adding text extraction step.');
+      if (import.meta.env.DEV) console.log('Adding text extraction step.');
       steps.push({
         type: 'text_extraction',
         apiEndpoint: getApiUrl(
@@ -212,7 +212,7 @@ export class SourcefileProcessingQueue {
 
     // 2. Translation (if needed and text exists or will exist)
     if (willHaveText && !status.has_translation) {
-      console.log('Adding translation step.');
+      if (import.meta.env.DEV) console.log('Adding translation step.');
       steps.push({
         type: 'translation',
         apiEndpoint: getApiUrl(
@@ -226,7 +226,7 @@ export class SourcefileProcessingQueue {
 
     // 3. Wordforms & Phrases (if text exists or will exist)
     if (willHaveText) {
-      console.log('Adding wordforms extraction step.');
+      if (import.meta.env.DEV) console.log('Adding wordforms extraction step.');
       steps.push({
         type: 'wordforms',
         apiEndpoint: getApiUrl(
@@ -237,7 +237,7 @@ export class SourcefileProcessingQueue {
         description: 'Extracting vocabulary'
       });
 
-      console.log('Adding phrases extraction step.');
+      if (import.meta.env.DEV) console.log('Adding phrases extraction step.');
       steps.push({
         type: 'phrases',
         apiEndpoint: getApiUrl(
@@ -251,7 +251,7 @@ export class SourcefileProcessingQueue {
 
     // 4. Lemma Metadata Completion (if text exists or will exist and there are incomplete lemmas)
     if (willHaveText && status.incomplete_lemmas_count > 0) {
-      console.log(`Adding ${status.incomplete_lemmas_count} lemma metadata completion steps.`);
+      if (import.meta.env.DEV) console.log(`Adding ${status.incomplete_lemmas_count} lemma metadata completion steps.`);
       for (const lemmaInfo of status.incomplete_lemmas) {
         steps.push({
           type: 'lemma_metadata',
@@ -275,7 +275,7 @@ export class SourcefileProcessingQueue {
 
   // Process a single step
   private async processSingleStep(step: QueuedStep, runId: number): Promise<boolean> {
-     console.log(`Processing step: ${step.type}`, { apiEndpoint: step.apiEndpoint, params: step.params });
+     if (import.meta.env.DEV) console.log(`Processing step: ${step.type}`, { apiEndpoint: step.apiEndpoint, params: step.params });
 
      // Update state only if this run is still current
      if (!this.updateStateIfCurrent(runId, state => ({
@@ -290,7 +290,7 @@ export class SourcefileProcessingQueue {
     }
 
     try {
-      console.log(`Sending ${step.type} request to ${step.apiEndpoint}`);
+      if (import.meta.env.DEV) console.log(`Sending ${step.type} request to ${step.apiEndpoint}`);
       
       // Use the stored supabaseClient instance
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
@@ -300,7 +300,7 @@ export class SourcefileProcessingQueue {
         try {
           const { data } = await this.supabaseClient.auth.getSession();
           accessToken = data?.session?.access_token ?? null;
-          console.log('Got access token:', accessToken ? 'Yes (token available)' : 'No (null token)');
+          if (import.meta.env.DEV) console.log('Got access token:', accessToken ? 'Yes (token available)' : 'No (null token)');
         } catch (error) {
           console.error('Error getting Supabase session:', error);
         }
@@ -310,7 +310,7 @@ export class SourcefileProcessingQueue {
       
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
-        console.log('Added Authorization header with Bearer token');
+        if (import.meta.env.DEV) console.log('Added Authorization header with Bearer token');
       } else {
         console.warn('No access token available, request will be unauthenticated');
       }
@@ -330,7 +330,7 @@ export class SourcefileProcessingQueue {
         timeout
       );
 
-      console.log(`${step.type} response status:`, response.status);
+      if (import.meta.env.DEV) console.log(`${step.type} response status:`, response.status);
 
       if (!response.ok) {
         let errorData = { error: `HTTP error ${response.status}`};
@@ -362,7 +362,7 @@ export class SourcefileProcessingQueue {
         }
       } else {
         const responseData = await response.json();
-        console.log(`${step.type} response data:`, responseData);
+        if (import.meta.env.DEV) console.log(`${step.type} response data:`, responseData);
         this.updateStateIfCurrent(runId, state => ({ ...state, progress: state.progress + 1 }));
         return true; // Step succeeded
       }
@@ -428,7 +428,7 @@ export class SourcefileProcessingQueue {
     // 2. Determine all steps needed based on current status
     const allSteps = await this.determineSteps(currentStatus);
     if (allSteps.length === 0) {
-      console.log(`No processing steps needed.`);
+      if (import.meta.env.DEV) console.log('No processing steps needed.');
       this.updateStateIfCurrent(runId, state => ({
         ...state,
         isProcessing: false,
@@ -452,7 +452,7 @@ export class SourcefileProcessingQueue {
     // For now, estimate with initial lemma count - will be updated after normal steps
     const initialLemmaCount = currentStatus.incomplete_lemmas_count;
     let totalStepsCount = (normalSteps.length * iterations) + initialLemmaCount;
-    console.log(`Processing ${normalSteps.length} normal steps × ${iterations} iterations + ~${initialLemmaCount} lemma metadata steps`);
+    if (import.meta.env.DEV) console.log(`Processing ${normalSteps.length} normal steps × ${iterations} iterations + ~${initialLemmaCount} lemma metadata steps`);
 
     this.updateStateIfCurrent(runId, state => ({
       ...state,
@@ -474,7 +474,7 @@ export class SourcefileProcessingQueue {
     // 4. Process normal steps for each iteration
     for (let i = 0; i < iterations; i++) {
       const currentIteration = i + 1;
-      console.log(`--- Queueing normal steps for iteration ${currentIteration}/${iterations} ---`);
+      if (import.meta.env.DEV) console.log(`--- Queueing normal steps for iteration ${currentIteration}/${iterations} ---`);
       
       // Add all normal steps to the queue as scheduled tasks
       for (const step of normalSteps) {
@@ -512,7 +512,7 @@ export class SourcefileProcessingQueue {
     
     // 6. If not aborted, re-fetch status and process lemma metadata with fresh data
     if (!aborted) {
-      console.log('Normal steps complete. Re-fetching status for fresh lemma metadata...');
+      if (import.meta.env.DEV) console.log('Normal steps complete. Re-fetching status for fresh lemma metadata...');
       const freshStatus = await this.fetchSourcefileStatus();
       
       // Handle status fetch failure - log warning but allow partial success
@@ -532,7 +532,7 @@ export class SourcefileProcessingQueue {
           totalSteps: totalStepsCount
         }));
         
-        console.log(`--- Processing ${freshStatus.incomplete_lemmas_count} lemma metadata steps (fresh) ---`);
+        if (import.meta.env.DEV) console.log(`--- Processing ${freshStatus.incomplete_lemmas_count} lemma metadata steps (fresh) ---`);
         
         // Create a new queue for lemma metadata steps
         const lemmaQueue = new PQueue({ concurrency: 1 });
@@ -574,7 +574,7 @@ export class SourcefileProcessingQueue {
         await lemmaQueue.onIdle();
       } else if (freshStatus) {
         // freshStatus exists but has no incomplete lemmas
-        console.log('No incomplete lemmas to process.');
+        if (import.meta.env.DEV) console.log('No incomplete lemmas to process.');
         // Update totalSteps to match actual count (no lemma steps)
         const normalStepsCompleted = normalSteps.length * iterations;
         this.updateStateIfCurrent(runId, state => ({
@@ -586,7 +586,7 @@ export class SourcefileProcessingQueue {
     }
 
     // Final state update - only if this run is still current
-    console.log("Processing finished. Fetching final data...");
+    if (import.meta.env.DEV) console.log('Processing finished. Fetching final data...');
     try {
       const finalSourcefileData = await this.getFullSourcefileData(); // Fetch final state for UI update
       this.updateStateIfCurrent(runId, state => ({
@@ -611,7 +611,7 @@ export class SourcefileProcessingQueue {
       overallSuccess = false;
     }
 
-    console.log(`Overall processing success: ${overallSuccess}`);
+    if (import.meta.env.DEV) console.log(`Overall processing success: ${overallSuccess}`);
     return overallSuccess;
   }
 

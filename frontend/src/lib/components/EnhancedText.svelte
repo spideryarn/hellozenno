@@ -40,14 +40,16 @@
   
   // API fetch function using type-safe URL generation and async/await
   async function fetchWordData(word: string, lang: string): Promise<WordPreview> {
-    console.log(`EnhancedText Debug:`);
-    console.log(`- API_BASE_URL: ${API_BASE_URL}`);
-    console.log(`- Language Code: ${lang}`);
-    console.log(`- Word to fetch: "${word}"`);
+    if (import.meta.env.DEV) {
+      console.log(`EnhancedText Debug:`);
+      console.log(`- API_BASE_URL: ${API_BASE_URL}`);
+      console.log(`- Language Code: ${lang}`);
+      console.log(`- Word to fetch: "${word}"`);
+    }
     
     // IMPORTANT: Check if we have a valid language code
     if (!lang) {
-      console.error(`- ERROR: Missing language code. This is required for API calls.`);
+      if (import.meta.env.DEV) console.error(`- ERROR: Missing language code. This is required for API calls.`);
       return {
         lemma: word,
         translation: "(translation not available - missing language code)",
@@ -65,9 +67,9 @@
         target_language_code: lang, 
         word: word
       });
-      console.log(`- Using type-safe URL: ${url}`);
+      if (import.meta.env.DEV) console.log(`- Using type-safe URL: ${url}`);
     } catch (error: unknown) {
-      console.error(`- Error generating type-safe URL:`, error);
+      if (import.meta.env.DEV) console.error(`- Error generating type-safe URL:`, error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       return {
         lemma: word,
@@ -92,7 +94,7 @@
       }
       
       const data = await response.json();
-      console.log(`- API request succeeded:`, data);
+      if (import.meta.env.DEV) console.log(`- API request succeeded:`, data);
       
       // Add URL to the data for debugging
       data._debug = {
@@ -101,7 +103,7 @@
       
       return data;
     } catch (error) {
-      console.error(`- API request failed:`, error);
+      if (import.meta.env.DEV) console.error(`- API request failed:`, error);
       // Ensure errorMessage is derived safely from the unknown error type
       const errorMessage = (error instanceof Error) ? error.message : String(error);
       // Return a fallback result
@@ -243,13 +245,13 @@
         // Hide all other tooltips
         hideAll({ exclude: instance });
         
-        console.log(`Showing tooltip for word: "${word}" in language: ${target_language_code}`);
+        if (import.meta.env.DEV) console.log(`Showing tooltip for word: "${word}" in language: ${target_language_code}`);
         
         // Set initial loading content with spinner
         instance.setContent('<div class="hz-tooltip-loading"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading...</div>');
         
         // Fetch data on-demand when the tooltip is shown
-        console.log(`Fetching data on-demand for "${word}"`);
+        if (import.meta.env.DEV) console.log(`Fetching data on-demand for "${word}"`);
         fetchWordData(word, target_language_code)
           .then(data => instance.setContent(createTooltipContent(data, word)))
           .catch(error => instance.setContent(createErrorContent(word, error)));
@@ -262,13 +264,13 @@
   // Initialize HTML-based tooltips (legacy mode)
   function initializeHTMLBasedTooltips() {
     if (!container) {
-      console.error("Container element not found");
+      if (import.meta.env.DEV) console.error("Container element not found");
       return;
     }
     
     // Find all word links in the enhanced text
     const wordLinks = container.querySelectorAll('.word-link');
-    console.log(`Found ${wordLinks.length} word links in enhanced text (HTML mode)`);
+    if (import.meta.env.DEV) console.log(`Found ${wordLinks.length} word links in enhanced text (HTML mode)`);
     
     // Create Tippy instances for each word link
     wordLinks.forEach((link) => {
@@ -282,7 +284,7 @@
   // Initialize structured-data-based tooltips (new mode)
   function initializeStructuredDataTooltips() {
     if (!container || !text || recognizedWords.length === 0) {
-      console.log("Skipping structured data tooltip initialization: missing data");
+      if (import.meta.env.DEV) console.log("Skipping structured data tooltip initialization: missing data");
       return;
     }
     
@@ -297,7 +299,7 @@
       wordSpans.set(word, wordElem);
     });
     
-    console.log(`Found ${spans.length} interactive words in structured data mode`);
+    if (import.meta.env.DEV) console.log(`Found ${spans.length} interactive words in structured data mode`);
     
     // Create Tippy instances for each word span
     for (const [word, element] of wordSpans.entries()) {
@@ -308,7 +310,7 @@
 
   // Function to reinitialize tooltips
   export function refreshTooltips() {
-    console.log('Refreshing tooltips in EnhancedText component');
+    if (import.meta.env.DEV) console.log('Refreshing tooltips in EnhancedText component');
     
     // First, clean up any existing tooltips
     tippyInstances.forEach((instance) => instance.destroy());
@@ -332,7 +334,7 @@
   
   // Initialize tooltips after the component mounts
   onMount(() => {
-    console.log(`EnhancedText component mounted with target_language_code: ${target_language_code}`);
+    if (import.meta.env.DEV) console.log(`EnhancedText component mounted with target_language_code: ${target_language_code}`);
     
     if (html) {
       // Legacy HTML mode - the HTML already has links embedded

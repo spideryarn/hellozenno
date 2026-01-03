@@ -13,7 +13,7 @@ import type {
 } from "./types";
 import { resolveRoute, RouteName, type RouteParams } from "./generated/routes";
 import { API_BASE_URL } from "./config";
-import { isBrowser } from '@supabase/ssr'; // Import isBrowser
+
 import type { SupabaseClient } from '@supabase/supabase-js'; // Import type
 
 /**
@@ -69,7 +69,7 @@ export async function apiFetch<T extends RouteName, R = any>({
             url = `${url}?${qs}`;
         }
     }
-    console.log(`[apiFetch] Requesting URL: ${url}`);
+    if (import.meta.env.DEV) console.log(`[apiFetch] Requesting URL: ${url}`);
     
     // Use the passed supabaseClient. It might be null or undefined.
     const headers = new Headers(options.headers);
@@ -117,9 +117,10 @@ export async function apiFetch<T extends RouteName, R = any>({
     // Use a timeout to ensure we wait long enough for operations like wordform generation
     const fetchPromise = fetch(url, fetchOptions);
     
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => {
-            console.warn(`[apiFetch] Request to ${url} timed out after ${timeoutMs}ms.`);
+    let timeoutId: ReturnType<typeof setTimeout>;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+            if (import.meta.env.DEV) console.warn(`[apiFetch] Request to ${url} timed out after ${timeoutMs}ms.`);
             reject(new Error('API request timed out'));
         }, timeoutMs);
     });
@@ -128,13 +129,14 @@ export async function apiFetch<T extends RouteName, R = any>({
     let response: Response;
     try {
         response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+        clearTimeout(timeoutId!);
     } catch (e) {
-        console.error(`[apiFetch] Error during fetch for ${url}:`, e);
-        throw e; // Re-throw timeout or other race error
+        clearTimeout(timeoutId!);
+        if (import.meta.env.DEV) console.error(`[apiFetch] Error during fetch for ${url}:`, e);
+        throw e;
     }
 
-    console.log(`[apiFetch] Response status for ${url}: ${response.status}`);
-    console.log(`[apiFetch] Response headers for ${url}:`, JSON.stringify(Object.fromEntries(response.headers.entries())));
+    if (import.meta.env.DEV) console.log(`[apiFetch] Response status for ${url}: ${response.status}`);
 
     if (!response.ok) {
         let errorData: any = {};
@@ -161,21 +163,20 @@ export async function apiFetch<T extends RouteName, R = any>({
     const contentType = response.headers.get('content-type');
     const hasEmptyBody = contentLength === '0' || (contentLength === null && !contentType?.includes('json'));
 
-    console.log(`[apiFetch] Response for ${url} - Content-Length: ${contentLength}, Content-Type: ${contentType}, HasEmptyBody: ${hasEmptyBody}`);
+    if (import.meta.env.DEV) console.log(`[apiFetch] Response for ${url} - Content-Length: ${contentLength}, Content-Type: ${contentType}, HasEmptyBody: ${hasEmptyBody}`);
 
     if (hasEmptyBody) {
-        console.warn(`[apiFetch] Returning empty object for ${url} due to empty body.`);
-        return {} as R; // Return empty object for empty responses
+        if (import.meta.env.DEV) console.log(`[apiFetch] Returning empty object for ${url} due to empty body.`);
+        return {} as R;
     }
     
     try {
         const jsonData = await response.json();
-        console.log(`[apiFetch] Returning JSON data for ${url}.`);
+        if (import.meta.env.DEV) console.log(`[apiFetch] Returning JSON data for ${url}.`);
         return jsonData;
     } catch (jsonError) {
-        console.error(`[apiFetch] Error parsing JSON for ${url}:`, jsonError);
-        console.warn(`[apiFetch] Returning empty object for ${url} due to JSON parsing error.`);
-        return {} as R; // Fallback for JSON parsing errors as well
+        if (import.meta.env.DEV) console.error(`[apiFetch] Error parsing JSON for ${url}:`, jsonError);
+        return {} as R;
     }
 }
 

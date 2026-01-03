@@ -38,12 +38,11 @@
     { label: lemma_metadata?.lemma ?? 'Lemma' }
   ] as BreadcrumbItem[];
 
-  // Debugging logs
-  $: console.log('Lemma Page - data prop:', data);
-  $: console.log('Lemma Page - supabaseClient from data:', supabaseClient);
-  $: console.log('Lemma Page - lemma_metadata:', lemma_metadata);
-  $: console.log('Lemma Page - target_language_code:', target_language_code);
-  $: console.log('Lemma Page - lemma_metadata.lemma value for URL:', lemma_metadata?.lemma);
+  // Debugging logs (development only)
+  $: if (import.meta.env.DEV) {
+    console.log('Lemma Page - data prop:', data);
+    console.log('Lemma Page - lemma_metadata:', lemma_metadata);
+  }
   // deleteUrl is now constructed inside handleDeleteSubmit if using apiFetch directly with RouteName
 
   async function handleDeleteSubmit(event: SubmitEvent) {
