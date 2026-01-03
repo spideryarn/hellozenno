@@ -7,6 +7,7 @@
   import { goto } from '$app/navigation';
   import Trash from 'phosphor-svelte/lib/Trash';
   import type { SupabaseClient, Session } from '@supabase/supabase-js';
+  import { sanitizeHtml, escapeHtml } from '$lib/utils/sanitize';
   
   // Props for the Sentence component
   export let sentence: Sentence;
@@ -96,8 +97,8 @@
       <div class="mb-4">
         <div class="d-flex align-items-start gap-2 mb-3">
           <div class="hz-foreign-text fs-4 flex-grow-1">
-            <!-- Render the enhanced text with fallback -->
-            {@html enhanced_sentence_text || `<p>${sentence.text}</p>`}
+            <!-- Render the enhanced text with fallback (sanitized for XSS prevention) -->
+            {@html sanitizeHtml(enhanced_sentence_text) || `<p>${escapeHtml(sentence.text)}</p>`}
           </div>
           <!-- Quick audio icon: always visible; generates on demand if needed -->
           <SentenceAudioButton

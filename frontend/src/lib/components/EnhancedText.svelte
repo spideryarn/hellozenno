@@ -7,6 +7,7 @@
   import { API_BASE_URL } from '../config';
   import { RouteName } from '../generated/routes';
   import type { WordPreview } from '../types';
+  import { sanitizeHtml } from '../utils/sanitize';
 
   // Support different input modes - either HTML string or structured data
   export let html: string | null = null;
@@ -121,6 +122,9 @@
   }
 
   // Helper to create tooltip content
+  // TODO: XSS - Tooltip content interpolates API data without escaping.
+  // Risk is LOW (requires compromised API) but should be addressed.
+  // See docs/plans/260103_frontend_xss_sanitization.md for full scope.
   function createTooltipContent(data: WordPreview, word: string) {
     // Get the lemma from data or default to the word
     const lemma = data?.lemma || word;
@@ -430,8 +434,8 @@
 
 <div class="enhanced-text" bind:this={container}>
   {#if html}
-    <!-- Legacy Mode: Using HTML with pre-generated links -->
-    {@html html}
+    <!-- Legacy Mode: Using HTML with pre-generated links (sanitized for XSS prevention) -->
+    {@html sanitizeHtml(html)}
   {:else if text && recognizedWords?.length > 0}
     <!-- New Structured Mode: Using text and recognized words data -->
     {#each processTextWithWords() as segment}
