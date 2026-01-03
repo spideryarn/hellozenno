@@ -45,6 +45,7 @@
         params: { target_language_code, lemma },
         options: { method: 'POST' },
         searchParams: { n },
+        timeoutMs: 90000, // 90s for audio generation (3 samples × ~10s each)
       });
       return { success: true, isAuthError: false };
     } catch (e: any) {

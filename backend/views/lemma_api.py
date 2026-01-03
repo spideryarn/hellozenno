@@ -191,6 +191,7 @@ def ensure_lemma_audio_api(target_language_code: str, lemma: str):
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
+        logger.exception(f"Failed to ensure audio variants for lemma '{lemma}'")
         return jsonify({"error": f"Failed to ensure audio variants: {exc}"}), 500
 
     return jsonify({"created": created, "total": len(variants)})

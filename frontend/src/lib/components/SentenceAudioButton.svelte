@@ -64,6 +64,7 @@
         params: { target_language_code, slug },
         options: { method: 'POST' },
         searchParams: { n: SENTENCE_AUDIO_SAMPLES },
+        timeoutMs: 90000, // 90s for audio generation
       });
       return { success: true, isAuthError: false };
     } catch (e: any) {

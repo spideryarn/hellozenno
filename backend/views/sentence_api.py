@@ -7,6 +7,7 @@ These endpoints follow the standard pattern:
 
 from flask import Blueprint, jsonify, request, send_file
 import io
+import logging
 from peewee import DoesNotExist
 from slugify import slugify
 
@@ -22,6 +23,8 @@ from utils.audio_utils import (
 )
 from utils.exceptions import AuthenticationRequiredForGenerationError
 from utils.auth_utils import api_auth_required
+
+logger = logging.getLogger(__name__)
 
 # Create a blueprint with standardized prefix
 sentence_api_bp = Blueprint("sentence_api", __name__, url_prefix="/api/lang/sentence")
@@ -242,6 +245,7 @@ def ensure_sentence_audio_api(target_language_code: str, slug: str):
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
+        logger.exception(f"Failed to ensure audio variants for sentence '{slug}'")
         return jsonify({"error": f"Failed to ensure audio variants: {exc}"}), 500
 
     return jsonify({"created": created, "total": len(variants)})
