@@ -30,7 +30,7 @@
     // Set a timer to retry after a delay if generation is in progress
     if (browser && !isLoading) {
       setTimeout(() => {
-        console.log('Retrying fetch after delay for in-progress generation');
+        if (import.meta.env.DEV) console.log('Retrying fetch after delay for in-progress generation');
         fetchCompleteData();
         // We don't need additional code here since fetchCompleteData now always reloads 
         // the page when it gets a response from the backend
@@ -48,10 +48,10 @@
   onMount(async () => {
     // Try to fetch complete data automatically if the user is logged in
     // and the lemma needs completion
-    console.log('LemmaDetails onMount - canFetch:', canFetch, 'needsComplete:', needsComplete, 'browser:', browser);
+    if (import.meta.env.DEV) console.log('LemmaDetails onMount - canFetch:', canFetch, 'needsComplete:', needsComplete, 'browser:', browser);
     
     if (canFetch && needsComplete && browser) {
-      console.log('Automatically fetching complete lemma data for:', lemmaValue);
+      if (import.meta.env.DEV) console.log('Automatically fetching complete lemma data for:', lemmaValue);
       fetchCompleteData();
       // We don't need to check for success or reload here since fetchCompleteData
       // now handles the page reload after getting a response from the backend
@@ -68,15 +68,15 @@
     try {
       // Use page.data.supabase to ensure auth token is included
       const supabaseClient = $page.data.supabase;
-      console.log(`Fetching complete data for lemma: ${lemmaValue} (target: ${target_language_code})`);
+      if (import.meta.env.DEV) console.log(`Fetching complete data for lemma: ${lemmaValue} (target: ${target_language_code})`);
       
-      completeData = await getLemmaMetadata(supabaseClient, target_language_code, lemmaValue);
-      console.log('Received lemma data:', completeData);
+      completeData = await getLemmaMetadata(supabaseClient ?? null, target_language_code, lemmaValue);
+      if (import.meta.env.DEV) console.log('Received lemma data:', completeData);
       
       // If response includes authentication_required_for_generation even with a session,
       // it means the API couldn't verify our token
       if (completeData?.authentication_required_for_generation) {
-        console.log('API returned auth required flag despite having session:', completeData);
+        if (import.meta.env.DEV) console.log('API returned auth required flag despite having session:', completeData);
         authError = true;
         isLoading = false;
         return false;
@@ -85,7 +85,7 @@
       // IMPORTANT: Always reload the page after we get a response from the backend
       // This ensures we have fresh data from the server
       if (browser && !authError) {
-        console.log('Reloading page to show fresh lemma data');
+        if (import.meta.env.DEV) console.log('Reloading page to show fresh lemma data');
         setTimeout(() => window.location.reload(), 500);
       }
       
@@ -96,7 +96,7 @@
       isLoading = false;
       
       if (err && typeof err === 'object' && 'status' in err && err.status === 401) {
-        console.log('Auth error when fetching lemma details:', err);
+        if (import.meta.env.DEV) console.log('Auth error when fetching lemma details:', err);
         authError = true;
       } else {
         error = (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') 

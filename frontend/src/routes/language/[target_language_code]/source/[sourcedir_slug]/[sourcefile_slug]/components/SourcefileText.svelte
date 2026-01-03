@@ -37,22 +37,22 @@
   
   // Function to handle the processing complete event
   function handleProcessingComplete(event: CustomEvent) {
-    console.log('Received processingComplete event in SourcefileText', event);
+    if (import.meta.env.DEV) console.log('Received processingComplete event in SourcefileText', event);
     const newData = event.detail;
     
     if (newData) {
       let dataUpdated = false;
       
-      // Update the recognized words and text data
-      if (newData.recognized_words && newData.recognized_words.length > 0) {
+      // Update the recognized words and text data (allow empty array to reset state)
+      if (newData.recognized_words) {
         recognized_words = newData.recognized_words;
-        console.log(`Updated recognized_words with ${recognized_words.length} items`);
+        if (import.meta.env.DEV) console.log(`Updated recognized_words with ${recognized_words.length} items`);
         dataUpdated = true;
       }
       
-      // Update the text content if needed
-      if (newData.text_target) {
-        text_target = newData.text_target;
+      // Update the text content if needed (check nested path first, then fallback)
+      if (newData.sourcefile?.text_target || newData.text_target) {
+        text_target = newData.sourcefile?.text_target ?? newData.text_target;
         dataUpdated = true;
       }
       
@@ -62,13 +62,10 @@
         dataUpdated = true;
       }
       
-      // If data was updated, manually refresh tooltips after a short delay
-      // to ensure the DOM has updated with the new content
-      if (dataUpdated && enhancedTextComponent) {
+      // Check if we need to show bottom navigation after content update
+      // Note: Tooltip refresh is handled reactively by EnhancedText when recognizedWords changes
+      if (dataUpdated) {
         setTimeout(() => {
-          console.log('Manually refreshing tooltips after data update');
-          enhancedTextComponent.refreshTooltips();
-          // Check if we need to show bottom navigation after content update
           checkContentHeight();
         }, 200);
       }

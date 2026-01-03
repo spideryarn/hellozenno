@@ -17,7 +17,7 @@
   export let source_sentences_full: string[] = []; // Full sentences aligned to source_sentences for tooltips
   
   // Supabase client is provided via root layout data
-  $: supabaseClient = ($page?.data as any)?.supabase ?? null;
+  $: supabaseClient = $page?.data?.supabase ?? null;
 
   const dispatch = createEventDispatcher();
   let lemmaHref: string | undefined = undefined;

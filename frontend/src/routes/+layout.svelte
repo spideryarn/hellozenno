@@ -4,6 +4,7 @@
   import { invalidateAll } from '$app/navigation'; // Use invalidateAll for simplicity
   import { page } from '$app/stores'; 
   import type { LayoutData } from './$types'; // Import the type for LayoutData
+  import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
   import { SITE_NAME, TAGLINE, CONTACT_EMAIL } from '$lib/config'; // Added Import
   import { getPageUrl } from '$lib/navigation';
   import { getLanguageName } from '$lib/generated/languages';
@@ -16,12 +17,10 @@
   // Get data passed from +layout.ts
   export let data: LayoutData;
   $: ({ supabase, session } = data); // Destructure supabase and session reactively
-  $: isAdmin = (data as any)?.is_admin === true;
+  $: isAdmin = data.is_admin === true;
   
-  // Extract target language from profile (handle both envelope and direct shapes)
-  $: targetLanguageCode = (data as any)?.profile?.profile?.target_language_code 
-    || (data as any)?.profile?.target_language_code 
-    || null;
+  // Extract target language from profile
+  $: targetLanguageCode = data.profile?.target_language_code || null;
   $: myLanguageUrl = targetLanguageCode 
     ? getPageUrl('sources', { target_language_code: targetLanguageCode }) 
     : null;
@@ -36,10 +35,10 @@
 
   // Handle auth state changes on the client
   onMount(() => {
-    const { data: { subscription } } = supabase?.auth.onAuthStateChange((event: any, newSession: any) => {
+    const { data: { subscription } } = supabase?.auth.onAuthStateChange((event: AuthChangeEvent, newSession: Session | null) => {
       // Important: Check if the session has actually changed to avoid infinite loops
       if (newSession?.access_token !== session?.access_token) {
-        console.log('Auth state changed detected in root layout, invalidating...');
+        if (import.meta.env.DEV) console.log('Auth state changed detected in root layout, invalidating...');
         invalidateAll(); // Re-run all load functions
       }
     }) ?? { data: { subscription: null } }; // Handle null supabase during SSR
@@ -56,7 +55,7 @@
         console.error('Error logging out:', error);
         alert('Logout failed: ' + error.message);
       } else {
-        console.log('User logged out successfully');
+        if (import.meta.env.DEV) console.log('User logged out successfully');
         // invalidateAll() will handle UI update via onAuthStateChange
       }
     } catch (error) {

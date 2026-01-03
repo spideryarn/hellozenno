@@ -6,6 +6,7 @@
 import type { Session, SupabaseClient, User } from '@supabase/supabase-js'
 // Optionally import database types if generated
 import type { Database } from '$lib/database.types'
+import type { UserProfile } from '$lib/types'
 
 declare global {
 	namespace App {
@@ -18,8 +19,11 @@ declare global {
 			user: User | null
 		}
 		interface PageData {
-			// Make session available in page data
 			session: Session | null
+			user?: User | null
+			supabase?: SupabaseClient<Database> | null
+			profile?: UserProfile | null
+			is_admin?: boolean | null
 		}
 		// interface PageState {}
 		// interface Platform {}

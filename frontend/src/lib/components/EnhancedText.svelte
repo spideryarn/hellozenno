@@ -24,6 +24,7 @@
 
   let tippyInstances: Instance[] = [];
   let container: HTMLElement;
+  let didMount = false;
   
   // Function to detect mobile/touch devices
   function isTouchDevice(): boolean {
@@ -220,7 +221,9 @@
   // Function to attach tippy to an element  
   function attachTippy(element: HTMLElement, word: string) {
     // For touch devices, prevent the default click behavior to allow tooltip to show
-    if (isTouchDevice()) {
+    // Use data attribute guard to prevent accumulating multiple handlers on refresh
+    if (isTouchDevice() && !element.hasAttribute('data-touch-handler')) {
+      element.setAttribute('data-touch-handler', 'true');
       element.addEventListener('click', (e) => {
         // Only prevent default if modifier keys aren't pressed
         // This allows opening in new tab with Ctrl/Cmd+click
@@ -288,24 +291,19 @@
       return;
     }
     
-    // Get the container's text nodes and create a map to track spans we've inserted
-    const wordSpans = new Map<string, HTMLElement>();
-    
-    // Find all the word spans we created
+    // Find all word link elements and attach tooltips to each one
     const spans = container.querySelectorAll('.word-link');
+    if (import.meta.env.DEV) console.log(`Found ${spans.length} interactive words in structured data mode`);
+    
+    // Create Tippy instances for each word span - attach to ALL occurrences
     spans.forEach(span => {
       const wordElem = span as HTMLElement;
       const word = wordElem.textContent?.trim() || '';
-      wordSpans.set(word, wordElem);
+      if (word) {
+        const instance = attachTippy(wordElem, word);
+        tippyInstances.push(instance);
+      }
     });
-    
-    if (import.meta.env.DEV) console.log(`Found ${spans.length} interactive words in structured data mode`);
-    
-    // Create Tippy instances for each word span
-    for (const [word, element] of wordSpans.entries()) {
-      const instance = attachTippy(element, word);
-      tippyInstances.push(instance);
-    }
   }
 
   // Function to reinitialize tooltips
@@ -324,25 +322,21 @@
     }
   }
   
-  // Watch for changes to recognized words and refresh tooltips when they change
-  $: if (recognizedWords) {
+  // Watch for changes to html, text, or recognizedWords and refresh tooltips when they change
+  // Guard with didMount to prevent double initialization on mount
+  $: if (didMount && container && (html || text || recognizedWords)) {
     // Use setTimeout to ensure the DOM has been updated before refreshing tooltips
-    if (typeof document !== 'undefined' && container) {
+    if (typeof document !== 'undefined') {
       setTimeout(() => refreshTooltips(), 0);
     }
   }
   
   // Initialize tooltips after the component mounts
+  // We only set didMount = true here; the reactive statement handles actual initialization
+  // This prevents double initialization (onMount + reactive statement both firing)
   onMount(() => {
     if (import.meta.env.DEV) console.log(`EnhancedText component mounted with target_language_code: ${target_language_code}`);
-    
-    if (html) {
-      // Legacy HTML mode - the HTML already has links embedded
-      initializeHTMLBasedTooltips();
-    } else if (text && recognizedWords.length > 0) {
-      // Structured data mode - we rendered spans in the template
-      initializeStructuredDataTooltips();
-    }
+    didMount = true;
   });
   
   // Clean up Tippy instances when the component is destroyed
@@ -410,15 +404,27 @@
   }
   
   /**
+   * Escape HTML entities to prevent XSS attacks in user-generated text.
+   */
+  function escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+  
+  /**
    * Process line breaks in text: 
-   * - Convert double newlines to paragraph breaks (<p>)
-   * - Convert single newlines to line breaks (<br>)
+   * - First escape HTML entities for security
+   * - Convert newlines to line breaks (<br>)
    */
   function processLineBreaks(text: string): string {
-    // Simple conversion: keep all spaces, convert all newlines to <br>.
+    // First escape HTML entities, then convert newlines to <br>.
     // Double newlines naturally become <br><br>, avoiding paragraph wrappers
     // that could split around inline word links.
-    return text.replace(/\n/g, '<br>');
+    return escapeHtml(text).replace(/\n/g, '<br>');
   }
 </script>
 
