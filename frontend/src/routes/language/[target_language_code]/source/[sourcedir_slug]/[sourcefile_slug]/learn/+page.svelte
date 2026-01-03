@@ -21,6 +21,7 @@
   const LEMMA_WARM_INITIAL = 5;        // Initial lemmas to warm on load
   const LEMMA_WARM_LOOKAHEAD = 3;      // Lemmas to warm on navigation
   const WARMING_QUEUE_CONCURRENCY = 1; // Max concurrent backend requests (KEY SETTING)
+  const STAGE1_AUDIO_PREFETCH_COUNT = 3; // How many cards to prefetch audio for during Stage 1
 
   // No exported props required for this page in MVP
 
@@ -169,6 +170,7 @@
   let prepareAbortCtrl: AbortController | null = null;
   let summaryAbortCtrl: AbortController | null = null;
   let summaryRequestId = 0;
+  let preparedRequestId = 0; // Track deck versions to guard against race conditions
   let showWordsPanel = true;
   let showOptions = false;
   let showWordsHelp = false;
@@ -290,7 +292,13 @@
 
     try {
       // Note: Page requires auth (server-side redirect), so supabase is always available
-      const supabase = ($page.data as any).supabase;
+      const supabase = $page.data.supabase;
+      if (!supabase) {
+        console.warn('Audio prefetch: supabase client not available');
+        audioRequestState.set(originalSentenceId, 'error');
+        updateCardIfValid({ audio_status: card.audio_data_url ? 'ready' : 'error' });
+        return;
+      }
       
       // Construct URL manually since route may not be generated yet
       const url = `${API_BASE_URL}/api/lang/learn/sentence/${originalSentenceId}/ensure-audio`;
@@ -344,6 +352,129 @@
     }
   }
 
+  // Prefetch audio for prepared cards during Stage 1 (before practice starts)
+  // Uses preparedRequestId to guard against race conditions when deck is replaced
+  // Note: audioRequestState is already set to 'loading' by caller before this is queued
+  async function prefetchAudioForPreparedCard(
+    cardIndex: number,
+    originalSentenceId: number,
+    expectedRequestId: number
+  ): Promise<void> {
+    // Guard: deck was replaced while this request was queued - revert state
+    if (expectedRequestId !== preparedRequestId) {
+      audioRequestState.set(originalSentenceId, 'pending');
+      return;
+    }
+    if (cardIndex >= preparedCards.length) {
+      audioRequestState.set(originalSentenceId, 'pending');
+      return;
+    }
+    
+    const card = preparedCards[cardIndex];
+    if (!card?.sentence_id || card.sentence_id !== originalSentenceId) {
+      audioRequestState.set(originalSentenceId, 'pending');
+      return;
+    }
+    if (card.audio_data_url && card.audio_status === 'ready') {
+      audioRequestState.set(originalSentenceId, 'done');
+      return;
+    }
+
+    try {
+      const supabase = $page.data.supabase;
+      if (!supabase) {
+        audioRequestState.set(originalSentenceId, 'error');
+        return;
+      }
+      
+      const url = `${API_BASE_URL}/api/lang/learn/sentence/${originalSentenceId}/ensure-audio`;
+      const sessionData = await supabase.auth.getSession();
+      const token = sessionData?.data?.session?.access_token;
+      
+      if (!token) {
+        audioRequestState.set(originalSentenceId, 'error');
+        return;
+      }
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      // Guard again after async operation - revert state if stale
+      if (expectedRequestId !== preparedRequestId) {
+        audioRequestState.set(originalSentenceId, 'pending');
+        return;
+      }
+
+      if (!response.ok) {
+        audioRequestState.set(originalSentenceId, 'error');
+        return;
+      }
+
+      const result = await response.json();
+      
+      // Final guard and update preparedCards directly - revert state if stale
+      if (expectedRequestId !== preparedRequestId) {
+        audioRequestState.set(originalSentenceId, 'pending');
+        return;
+      }
+      if (cardIndex < preparedCards.length && preparedCards[cardIndex]?.sentence_id === originalSentenceId) {
+        preparedCards[cardIndex].audio_data_url = result.audio_data_url;
+        preparedCards[cardIndex].audio_status = 'ready';
+        preparedCards = [...preparedCards]; // Trigger reactivity
+      }
+      audioRequestState.set(originalSentenceId, 'done');
+    } catch (e: any) {
+      if (e?.name !== 'AbortError') {
+        console.warn('Stage 1 audio prefetch failed:', e);
+      }
+      audioRequestState.set(originalSentenceId, 'error');
+    }
+  }
+
+  // Trigger Stage 1 audio prefetch when preparedCards is populated
+  $: if (preparedCards.length > 0 && cards.length === 0) {
+    const currentRequestId = preparedRequestId;
+    const toPrefetch = preparedCards.slice(0, STAGE1_AUDIO_PREFETCH_COUNT);
+    
+    for (let i = 0; i < toPrefetch.length; i++) {
+      const card = toPrefetch[i];
+      if (!card?.sentence_id) continue;
+      
+      const sentenceId = card.sentence_id;
+      const state = audioRequestState.get(sentenceId);
+      // Skip if already loading/done/error
+      if (state === 'loading' || state === 'done' || state === 'error') continue;
+      // Skip if already has audio
+      if (card.audio_data_url && card.audio_status === 'ready') continue;
+      
+      // Mark as loading BEFORE queueing to prevent duplicate queue entries on reactive re-runs
+      audioRequestState.set(sentenceId, 'loading');
+      
+      // Queue with lower priority (-1) than lemma warming (0) to avoid blocking Stage 1 UX
+      ensureWarmingQueue().then((queue) => {
+        if (queue && currentRequestId === preparedRequestId) {
+          queue.add(() => prefetchAudioForPreparedCard(i, sentenceId, currentRequestId), { priority: -1 });
+        } else {
+          // Queue init failed or deck replaced - revert state to allow retry
+          audioRequestState.set(sentenceId, 'pending');
+        }
+      }).catch(() => {
+        audioRequestState.set(sentenceId, 'pending');
+      });
+    }
+  }
+
   async function ensureWarmingQueue() {
     if (warmingQueue) return warmingQueue;
     try {
@@ -390,7 +521,7 @@
     try {
       // Authenticated request so backend can generate lemma metadata on-demand
       const js = await apiFetch({
-        supabaseClient: ($page.data as any).supabase ?? null,
+        supabaseClient: $page.data.supabase ?? null,
         routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_SUMMARY_API,
         params: { target_language_code, sourcedir_slug, sourcefile_slug },
         options: {
@@ -406,7 +537,7 @@
 
       lemmas = js?.lemmas || [];
       summaryMeta = js?.meta || null;
-      if (summaryMeta?.durations) {
+      if (import.meta.env.DEV && summaryMeta?.durations) {
         console.log('Learn summary durations', summaryMeta.durations);
       }
 
@@ -437,7 +568,7 @@
       // Fetch ignored lemmas for the current user; ignore errors silently
       try {
         const ignored = await apiFetch({
-          supabaseClient: ($page.data as any).supabase ?? null,
+          supabaseClient: $page.data.supabase ?? null,
           routeName: RouteName.LEMMA_API_GET_IGNORED_LEMMAS_API,
           params: { target_language_code },
           options: { method: 'GET' },
@@ -493,7 +624,7 @@
       };
       // Note: Page requires auth (server-side redirect), so 401 errors won't occur here
       const js = await apiFetch({
-        supabaseClient: ($page.data as any).supabase ?? null,
+        supabaseClient: $page.data.supabase ?? null,
         routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
         params: { target_language_code, sourcedir_slug, sourcefile_slug },
         options: {
@@ -505,7 +636,7 @@
       });
       const sentences = js?.sentences || [];
       const meta = js?.meta || {};
-      if (meta?.durations) {
+      if (import.meta.env.DEV && meta?.durations) {
         console.log('Learn generate durations (on-demand)', meta.durations);
       }
       const keepOrder = typeof meta?.new_count === 'number' ? meta.new_count > 0 : false;
@@ -629,6 +760,7 @@
     preparedError = null;
     preparedCards = [];
     preparedMeta = null;
+    preparedRequestId++; // Invalidate any in-flight Stage 1 audio prefetch
     try {
       let langLevel = settingLanguageLevel ? settingLanguageLevel : null;
       if (settingLanguageLevel === 'sourcefile') {
@@ -644,7 +776,7 @@
       prepareAbortCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
       // Note: Page requires auth (server-side redirect), so 401 errors won't occur here
       const js = await apiFetch({
-        supabaseClient: ($page.data as any).supabase ?? null,
+        supabaseClient: $page.data.supabase ?? null,
         routeName: RouteName.LEARN_API_LEARN_SOURCEFILE_GENERATE_API,
         params: { target_language_code, sourcedir_slug, sourcefile_slug },
         options: {
@@ -657,7 +789,7 @@
       });
       preparedCards = js?.sentences || [];
       preparedMeta = js?.meta || null;
-      if (preparedMeta?.durations) {
+      if (import.meta.env.DEV && preparedMeta?.durations) {
         console.log('Learn generate durations (prepared)', preparedMeta.durations);
       }
       // Preload audio data URLs
@@ -699,7 +831,7 @@
 
   function warmTopLemmasInBackground(lemmasToWarm: string[]) {
     if (!lemmasToWarm || lemmasToWarm.length === 0) return;
-    const supabase = ($page.data as any).supabase ?? null;
+    const supabase = $page.data.supabase ?? null;
     for (const lemma of lemmasToWarm) {
       if (!lemma) continue;
       if (loadingLemmaMap[lemma]) continue;
@@ -856,7 +988,7 @@
   async function ignoreLemma(lemma: string) {
     try {
       await apiFetch({
-        supabaseClient: ($page.data as any).supabase ?? null,
+        supabaseClient: $page.data.supabase ?? null,
         routeName: RouteName.LEMMA_API_IGNORE_LEMMA_API,
         params: { target_language_code, lemma },
         options: { method: 'POST' },
