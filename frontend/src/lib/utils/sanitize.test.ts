@@ -60,7 +60,9 @@ describe('sanitizeHtml', () => {
 
 		it('preserves br tags', () => {
 			const html = 'line 1<br>line 2<br>line 3';
-			expect(sanitizeHtml(html)).toBe('line 1<br>line 2<br>line 3');
+			const result = sanitizeHtml(html);
+			// sanitize-html outputs <br /> (XHTML style), both are valid
+			expect(result).toMatch(/line 1<br\s*\/?>line 2<br\s*\/?>line 3/);
 		});
 
 		it('preserves formatting tags', () => {
