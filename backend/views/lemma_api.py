@@ -20,6 +20,7 @@ from utils.audio_utils import ensure_lemma_audio_variants
 # Import the auth decorators and the new exception
 from utils.auth_utils import api_auth_required, api_auth_optional
 from utils.exceptions import AuthenticationRequiredForGenerationError
+from utils.error_utils import safe_error_message
 
 # Create a blueprint with standardized prefix
 lemma_api_bp = Blueprint("lemma_api", __name__, url_prefix="/api/lang/lemma")
@@ -311,7 +312,7 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
         )
         error_data = {
             "error": "Failed to process lemma",
-            "description": f"Could not retrieve or generate metadata for lemma '{lemma}': {str(e)}",
+            "description": safe_error_message(e, f"get lemma metadata for '{lemma}'"),
             "target_language_code": target_language_code,
             "target_language_name": get_language_name(target_language_code),
         }
@@ -360,7 +361,7 @@ def complete_lemma_metadata_api(target_language_code: str, lemma: str):
 
     except Exception as e:
         response = jsonify(
-            {"error": "Failed to complete lemma metadata", "description": str(e)}
+            {"error": "Failed to complete lemma metadata", "description": safe_error_message(e, "complete lemma metadata")}
         )
         response.status_code = 500
         return response
@@ -411,7 +412,7 @@ def ignore_lemma_api(target_language_code: str, lemma: str):
 
     except Exception as e:
         logger.exception(f"Error ignoring lemma '{lemma}': {str(e)}")
-        response = jsonify({"error": "Failed to ignore lemma", "description": str(e)})
+        response = jsonify({"error": "Failed to ignore lemma", "description": safe_error_message(e, "ignore lemma")})
         response.status_code = 500
         return response
 
@@ -460,7 +461,7 @@ def unignore_lemma_api(target_language_code: str, lemma: str):
 
     except Exception as e:
         logger.exception(f"Error unignoring lemma '{lemma}': {str(e)}")
-        response = jsonify({"error": "Failed to unignore lemma", "description": str(e)})
+        response = jsonify({"error": "Failed to unignore lemma", "description": safe_error_message(e, "unignore lemma")})
         response.status_code = 500
         return response
 
@@ -508,7 +509,7 @@ def get_ignored_lemmas_api(target_language_code: str):
     except Exception as e:
         logger.exception(f"Error getting ignored lemmas: {str(e)}")
         response = jsonify(
-            {"error": "Failed to get ignored lemmas", "description": str(e)}
+            {"error": "Failed to get ignored lemmas", "description": safe_error_message(e, "get ignored lemmas")}
         )
         response.status_code = 500
         return response

@@ -29,6 +29,7 @@ from utils.sourcedir_utils import (
 from loguru import logger
 from utils.sourcefile_utils import process_uploaded_file
 from utils.auth_utils import api_auth_required
+from utils.error_utils import safe_error_message
 
 # Create a blueprint with standardized prefix
 sourcedir_api_bp = Blueprint(
@@ -87,7 +88,7 @@ def create_sourcedir_api(target_language_code: str):
             201,
         )
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "create sourcedir")}), 500
 
 
 @sourcedir_api_bp.route("/<target_language_code>/<sourcedir_slug>", methods=["DELETE"])
@@ -114,7 +115,7 @@ def delete_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     except DoesNotExist:
         return jsonify({"error": "Directory not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "delete sourcedir")}), 500
 
 
 @sourcedir_api_bp.route(
@@ -167,7 +168,7 @@ def update_sourcedir_language_api(target_language_code: str, sourcedir_slug: str
     except DoesNotExist:
         return jsonify({"error": "Directory not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "update sourcedir language")}), 500
 
 
 @sourcedir_api_bp.route(
@@ -213,7 +214,7 @@ def rename_sourcedir_api(target_language_code: str, sourcedir_slug: str):
     except DoesNotExist:
         return jsonify({"error": "Directory not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "rename sourcedir")}), 500
 
 
 @sourcedir_api_bp.route(
@@ -358,7 +359,7 @@ def upload_sourcedir_new_sourcefile_api(target_language_code: str, sourcedir_slu
         return jsonify({"error": "Source directory not found"}), 404
     except Exception as e:
         print(f"DEBUG: Upload failed: {str(e)}")
-        return jsonify({"error": f"Upload failed: {str(e)}"}), 500
+        return jsonify({"error": safe_error_message(e, "upload sourcefile")}), 500
 
 
 @sourcedir_api_bp.route(
@@ -391,7 +392,7 @@ def update_sourcedir_description_api(target_language_code: str, sourcedir_slug: 
     except DoesNotExist:
         return jsonify({"error": "Sourcedir not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "update sourcedir description")}), 500
 
 
 @sourcedir_api_bp.route("/<target_language_code>/sources", methods=["GET"])
@@ -445,7 +446,7 @@ def get_sourcedirs_for_language_api(target_language_code: str):
 
     except Exception as e:
         logger.error(f"Error getting sourcedirs: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "get sourcedirs")}), 500
 
 
 @sourcedir_api_bp.route("/<target_language_code>/<sourcedir_slug>", methods=["GET"])
@@ -492,4 +493,4 @@ def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str
         return jsonify({"success": False, "error": "Source directory not found"}), 404
     except Exception as e:
         logger.error(f"Error retrieving sourcefiles: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, "get sourcefiles")}), 500

@@ -18,6 +18,8 @@ from flask import Blueprint, jsonify, request, g
 
 from loguru import logger
 
+from utils.error_utils import safe_error_message
+
 from utils.auth_utils import api_auth_required
 from utils.word_utils import get_sourcefile_lemmas
 from utils.store_utils import load_or_generate_lemma_metadata
@@ -249,8 +251,7 @@ def learn_sourcefile_summary_api(
             200,
         )
     except Exception as e:
-        logger.exception("Error in learn_sourcefile_summary_api")
-        return jsonify({"error": "Failed to build summary", "message": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "learn_sourcefile_summary_api")}), 500
 
 
 # Maximum time budget for the /generate endpoint to ensure we return before
@@ -675,11 +676,7 @@ def learn_sourcefile_generate_api(
             200,
         )
     except Exception as e:
-        logger.exception("Error in learn_sourcefile_generate_api")
-        return (
-            jsonify({"error": "Failed to generate sentences", "message": str(e)}),
-            500,
-        )
+        return jsonify({"error": safe_error_message(e, "learn_sourcefile_generate_api")}), 500
 
 
 @learn_api_bp.route("/sentence/<int:sentence_id>/ensure-audio", methods=["POST"])
@@ -805,15 +802,11 @@ def ensure_sentence_audio_api(sentence_id: int):
         )
 
     except Exception as e:
-        logger.exception(
-            f"Error in ensure_sentence_audio_api for sentence_id={sentence_id}"
-        )
         duration_s = time.time() - t0
         return (
             jsonify(
                 {
-                    "error": "Internal server error",
-                    "message": str(e),
+                    "error": safe_error_message(e, f"ensure_sentence_audio_api sentence_id={sentence_id}"),
                     "duration_s": round(duration_s, 3),
                 }
             ),

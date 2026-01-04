@@ -32,6 +32,7 @@ from typing import get_args
 
 # Import the auth decorator
 from utils.auth_utils import api_auth_required
+from utils.error_utils import safe_error_message
 
 
 # Create a blueprint with standardized prefix
@@ -67,7 +68,7 @@ def extract_text_api(
 
     except Exception as e:
         current_app.logger.error(f"Error extracting text: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, "extract text")}), 500
 
 
 @sourcefile_processing_api_bp.route(
@@ -99,7 +100,7 @@ def translate_api(target_language_code: str, sourcedir_slug: str, sourcefile_slu
 
     except Exception as e:
         current_app.logger.error(f"Error translating text: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, "translate text")}), 500
 
 
 @sourcefile_processing_api_bp.route(
@@ -167,7 +168,7 @@ def process_wordforms_api(
 
     except Exception as e:
         current_app.logger.error(f"Error processing wordforms: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, "process wordforms")}), 500
 
 
 @sourcefile_processing_api_bp.route(
@@ -235,7 +236,7 @@ def process_phrases_api(
 
     except Exception as e:
         current_app.logger.error(f"Error processing phrases: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, "process phrases")}), 500
 
 
 @sourcefile_processing_api_bp.route(
@@ -294,4 +295,4 @@ def sourcefile_status_api(
             f"Error getting sourcefile status for {target_language_code}/{sourcedir_slug}/{sourcefile_slug}"
         )
         # Return 500 with the error message (as before)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, "get sourcefile status")}), 500

@@ -9,6 +9,7 @@ from flask import Blueprint, jsonify, request
 import logging
 
 from utils.lang_utils import get_all_languages, get_language_name
+from utils.error_utils import safe_error_message
 
 
 logger = logging.getLogger(__name__)
@@ -41,4 +42,4 @@ def get_language_name_api(target_language_code):
         name = get_language_name(target_language_code)
         return jsonify({"code": target_language_code, "name": name})
     except LookupError as e:
-        return jsonify({"error": str(e)}), 404
+        return jsonify({"error": safe_error_message(e, "get language name")}), 404

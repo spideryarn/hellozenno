@@ -8,6 +8,7 @@ from peewee import DoesNotExist
 from loguru import logger
 
 from db_models import Profile, AuthUser
+from utils.error_utils import safe_error_message
 from utils.auth_utils import api_auth_required, get_user_by_id
 from utils.lang_utils import VALID_target_language_codeS, get_language_name
 
@@ -104,10 +105,9 @@ def update_profile_api():
         }), 200
 
     except Exception as e:
-        logger.exception(f"Error updating profile for user {g.user.get('id')}: {e}")
         return jsonify({
             "success": False,
-            "error": f"Failed to update profile: {str(e)}"
+            "error": safe_error_message(e, f"updating profile for user {g.user.get('id')}")
         }), 500
 
 
@@ -161,5 +161,5 @@ def get_user_email_api(user_id):
     except Exception as e:
         return jsonify({
             "success": False,
-            "error": f"Error retrieving user information: {str(e)}"
+            "error": safe_error_message(e, "retrieving user information")
         }), 500

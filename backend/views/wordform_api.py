@@ -19,6 +19,7 @@ from utils.auth_utils import api_auth_optional, api_auth_required
 
 # Import exception
 from utils.exceptions import AuthenticationRequiredForGenerationError
+from utils.error_utils import safe_error_message
 
 # Create a blueprint with standardized prefix
 wordform_api_bp = Blueprint("wordform_api", __name__, url_prefix="/api/lang/word")
@@ -154,7 +155,7 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
             f"[Flask API] Unhandled exception for '{decoded_wordform}': {e}"
         )
         return (
-            jsonify({"error": "Failed to process wordform", "description": str(e)}),
+            jsonify({"error": "Failed to process wordform", "description": safe_error_message(e, "process wordform")}),
             500,
         )
 

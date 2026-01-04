@@ -23,6 +23,7 @@ from utils.audio_utils import (
 )
 from utils.exceptions import AuthenticationRequiredForGenerationError
 from utils.auth_utils import api_auth_required
+from utils.error_utils import safe_error_message
 
 logger = logging.getLogger(__name__)
 
@@ -243,10 +244,10 @@ def ensure_sentence_audio_api(target_language_code: str, slug: str):
             401,
         )
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+        return jsonify({"error": safe_error_message(exc, "ensure sentence audio")}), 400
     except Exception as exc:
         logger.exception(f"Failed to ensure audio variants for sentence '{slug}'")
-        return jsonify({"error": f"Failed to ensure audio variants: {exc}"}), 500
+        return jsonify({"error": safe_error_message(exc, "ensure sentence audio")}), 500
 
     return jsonify({"created": created, "total": len(variants)})
 
