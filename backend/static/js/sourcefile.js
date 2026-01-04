@@ -94,15 +94,14 @@ function saveDescription() {
         const descriptionParagraph = descriptionDisplay.querySelector('p');
 
         if (description) {
-            if (descriptionParagraph.classList.contains('no-description')) {
-                descriptionParagraph.classList.remove('no-description');
-                descriptionParagraph.innerHTML = description;
-            } else {
-                descriptionParagraph.textContent = description;
-            }
+            descriptionParagraph.classList.remove('no-description');
+            descriptionParagraph.textContent = description;
         } else {
             descriptionParagraph.classList.add('no-description');
-            descriptionParagraph.innerHTML = '<em>No description available</em>';
+            descriptionParagraph.textContent = '';
+            const em = document.createElement('em');
+            em.textContent = 'No description available';
+            descriptionParagraph.appendChild(em);
         }
 
         // Hide editor and show display

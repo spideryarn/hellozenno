@@ -12,6 +12,7 @@ from peewee import DoesNotExist
 from utils.auth_utils import (
     page_auth_required,
     get_current_user,
+    is_safe_redirect_url,
 )
 from utils.url_registry import endpoint_for
 from db_models import Profile
@@ -35,8 +36,10 @@ def auth_page_vw(target_language_code=None):
     if target_language_code == "":
         return redirect("/auth/")
 
-    # Check if a redirect URL was provided
+    # Check if a redirect URL was provided (validate to prevent open redirect)
     redirect_url = request.args.get("redirect", "/")
+    if not is_safe_redirect_url(redirect_url):
+        redirect_url = "/"
     show_signup = request.args.get("signup", "false").lower() == "true"
 
     # If the user is already authenticated, redirect to the home page

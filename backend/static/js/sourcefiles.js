@@ -451,13 +451,17 @@ function saveSourcedirDescription() {
                 throw new Error('Failed to update description');
             }
 
-            // Update the display
+            // Update the display (use textContent to prevent XSS)
             const descriptionDisplay = document.getElementById('sourcedir-description-display');
+            descriptionDisplay.innerHTML = '';
+            const p = document.createElement('p');
             if (description) {
-                descriptionDisplay.innerHTML = `<p>${description}</p>`;
+                p.textContent = description;
             } else {
-                descriptionDisplay.innerHTML = `<p class="no-description"><em>No description available</em></p>`;
+                p.classList.add('no-description');
+                p.innerHTML = '<em>No description available</em>';
             }
+            descriptionDisplay.appendChild(p);
         })
         .catch(error => {
             alert(`Error: ${error.message}`);

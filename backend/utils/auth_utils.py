@@ -6,6 +6,7 @@ import time
 import requests
 from functools import wraps
 from typing import Optional, Dict, Any, Callable, Tuple
+from urllib.parse import urlparse
 import jwt
 from loguru import logger
 from flask import request, redirect, url_for, g, jsonify, make_response
@@ -234,6 +235,21 @@ def api_admin_required(f: Callable) -> Callable:
 # Remove the old complex implementation of api_auth_required that handled required=False
 
 
+def is_safe_redirect_url(url: str) -> bool:
+    """Validate that a redirect URL is safe (relative path only).
+    
+    Prevents open redirect attacks by blocking absolute URLs with schemes/netlocs.
+    """
+    if not url:
+        return False
+    # Block protocol-relative URLs like //evil.com/path
+    if url.startswith("//"):
+        return False
+    parsed = urlparse(url)
+    # Only allow relative URLs (no scheme, no netloc) that start with /
+    return not parsed.scheme and not parsed.netloc and url.startswith("/")
+
+
 def page_auth_required(f: Callable) -> Callable:
     """Decorator for page views that require authentication.
 
@@ -245,7 +261,8 @@ def page_auth_required(f: Callable) -> Callable:
         authenticated = _attempt_authentication_and_set_g()
         if not authenticated:
             next_url = request.full_path if request.query_string else request.path
-            # Use explicit path to avoid circular imports here
+            if not is_safe_redirect_url(next_url):
+                next_url = "/"
             return redirect(f"/auth?next={next_url}")
         return f(*args, **kwargs)
 
