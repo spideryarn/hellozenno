@@ -6,7 +6,7 @@ import time
 import requests
 from functools import wraps
 from typing import Optional, Dict, Any, Callable, Tuple
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 import jwt
 from loguru import logger
 from flask import request, redirect, url_for, g, jsonify, make_response
@@ -263,7 +263,7 @@ def page_auth_required(f: Callable) -> Callable:
             next_url = request.full_path if request.query_string else request.path
             if not is_safe_redirect_url(next_url):
                 next_url = "/"
-            return redirect(f"/auth?next={next_url}")
+            return redirect(f"/auth?next={quote(next_url, safe='/')}")
         return f(*args, **kwargs)
 
     return decorated
