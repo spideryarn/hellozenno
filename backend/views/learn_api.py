@@ -93,7 +93,7 @@ def learn_sourcefile_summary_api(
             )
         except Exception:
             time_budget_s = 12.0
-        time_budget_s = max(3.0, min(45.0, time_budget_s))
+        time_budget_s = max(3.0, min(120.0, time_budget_s))
 
         # Bulk-prefetch existing lemma metadata in one query to avoid N queries
         bulk_t0 = time.time()
@@ -255,9 +255,10 @@ def learn_sourcefile_summary_api(
 
 
 # Maximum time budget for the /generate endpoint to ensure we return before
-# Vercel's 60s function timeout kills the request (which causes CORS errors
+# Vercel's function timeout kills the request (which causes CORS errors
 # because Vercel's termination response lacks CORS headers).
-GENERATE_TIME_BUDGET_S = 50.0
+# With maxDuration=300 in vercel.json, we use 280s to leave margin for response.
+GENERATE_TIME_BUDGET_S = 280.0
 
 
 @learn_api_bp.route(
