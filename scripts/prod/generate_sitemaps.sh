@@ -31,6 +31,9 @@ fi
 # Move to backend directory to ensure imports work correctly
 cd "${PROJECT_ROOT}/backend"
 
+# Load production environment variables
+source "${PROJECT_ROOT}/.env.prod"
+
 # Run the sitemap generator
 echo "Running sitemap generator..."
 python -c "from utils.sitemap_generator import generate_sitemaps; generate_sitemaps()"
