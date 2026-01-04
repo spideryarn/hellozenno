@@ -37,7 +37,7 @@ def auth_page_vw(target_language_code=None):
         return redirect("/auth/")
 
     # Check if a redirect URL was provided (validate to prevent open redirect)
-    redirect_url = request.args.get("redirect", "/")
+    redirect_url = request.args.get("next", "/")
     if not is_safe_redirect_url(redirect_url):
         redirect_url = "/"
     show_signup = request.args.get("signup", "false").lower() == "true"
