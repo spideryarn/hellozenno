@@ -1,9 +1,94 @@
 """URL encoding and decoding utilities."""
 
+import ipaddress
 import os
+import socket
 import urllib.parse
 from flask import request, g, url_for
 from loguru import logger
+
+
+class SSRFValidationError(Exception):
+    """Raised when URL fails SSRF validation."""
+    pass
+
+
+def is_private_ip(ip_str: str) -> bool:
+    """Check if an IP address is private, loopback, or reserved."""
+    try:
+        ip = ipaddress.ip_address(ip_str)
+        return (
+            ip.is_private or
+            ip.is_loopback or
+            ip.is_reserved or
+            ip.is_link_local or
+            ip.is_multicast
+        )
+    except ValueError:
+        return False
+
+
+LOCALHOST_VARIANTS = frozenset({
+    "localhost", "127.0.0.1", "::1", "0.0.0.0",
+    "localhost.localdomain", "127.0.0.0", "[::1]"
+})
+
+
+def validate_url_for_ssrf(url: str) -> str:
+    """Validate a URL for SSRF vulnerabilities.
+    
+    Checks:
+    - Scheme is http or https only
+    - Host is not localhost or private IP
+    - Host doesn't resolve to private IP
+    
+    Returns the validated URL if safe.
+    Raises SSRFValidationError if URL fails validation.
+    """
+    if not url:
+        raise SSRFValidationError("URL is required")
+    
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except Exception as e:
+        raise SSRFValidationError(f"Invalid URL format: {e}")
+    
+    if parsed.scheme not in ("http", "https"):
+        raise SSRFValidationError(f"Invalid scheme: {parsed.scheme}. Only http/https allowed.")
+    
+    hostname = parsed.hostname
+    if not hostname:
+        raise SSRFValidationError("URL must include a hostname")
+    
+    if hostname.lower() in LOCALHOST_VARIANTS:
+        raise SSRFValidationError("Localhost URLs are not allowed")
+    
+    # Check if hostname is an IP address
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if is_private_ip(hostname):
+            raise SSRFValidationError("Private IP addresses are not allowed")
+    except ValueError:
+        pass  # Not an IP, proceed to DNS resolution
+    
+    # Resolve hostname and check resulting IP
+    try:
+        default_port = 443 if parsed.scheme == "https" else 80
+        resolved_ips = socket.getaddrinfo(hostname, parsed.port or default_port)
+        for family, type_, proto, canonname, sockaddr in resolved_ips:
+            ip = sockaddr[0]
+            if is_private_ip(ip):
+                logger.warning(f"SSRF blocked: {hostname} resolves to private IP {ip}")
+                raise SSRFValidationError("URL resolves to private IP address")
+    except socket.gaierror:
+        raise SSRFValidationError(f"Could not resolve hostname: {hostname}")
+    except SSRFValidationError:
+        raise
+    except Exception as e:
+        logger.error(f"SSRF validation error for {url}: {e}")
+        raise SSRFValidationError(f"URL validation failed: {e}")
+    
+    return url
 
 
 def fix_url_encoding(url_part):

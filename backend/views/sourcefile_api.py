@@ -65,6 +65,8 @@ from utils.url_registry import endpoint_for
 from utils.lang_utils import validate_language_level
 import utils.generate_sourcefiles as gen_sf
 from views.sourcefile_views import inspect_sourcefile_text_vw
+from utils.error_utils import safe_error_message
+from utils.url_utils import validate_url_for_ssrf, SSRFValidationError
 
 # Create a blueprint with standardized prefix
 sourcefile_api_bp = Blueprint(
@@ -169,7 +171,7 @@ def _inspect_sourcefile_core(
             f"Error in inspect_sourcefile_{purpose}_api for {target_language_code}/{sourcedir_slug}/{sourcefile_slug}"
         )
         # Return 500 with the error message (as before)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, f"inspect sourcefile {purpose}")}), 500
 
 
 @sourcefile_api_bp.route(
@@ -326,7 +328,7 @@ def process_sourcefile_api(
         return jsonify({"success": False, "error": "File not found"}), 404
     except Exception as e:
         current_app.logger.error(f"Error processing sourcefile: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": safe_error_message(e, "process sourcefile")}), 500
 
 
 def _process_individual_lemma(lemma: str, target_language_code: str):
@@ -396,7 +398,7 @@ def process_individual_words_api(target_language_code, sourcedir_slug, sourcefil
         # Return information about what was processed
         return "", 204
     except Exception as e:
-        response = jsonify({"success": False, "error": str(e)})
+        response = jsonify({"success": False, "error": safe_error_message(e, "process individual words")})
         response.status_code = 500
         return response
 
@@ -433,7 +435,7 @@ def update_sourcefile_description_api(
         return jsonify({"error": "File not found"}), 404
     except Exception as e:
         current_app.logger.error(f"Error updating description: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "update sourcefile description")}), 500
 
 
 @sourcefile_api_bp.route(
@@ -510,7 +512,7 @@ def move_sourcefile_api(
         return jsonify({"error": "File not found"}), 404
     except Exception as e:
         current_app.logger.error(f"Error moving sourcefile: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "move sourcefile")}), 500
 
 
 @sourcefile_api_bp.route(
@@ -550,7 +552,7 @@ def delete_sourcefile_api(
             return (
                 jsonify(
                     {
-                        "error": f"Failed to delete file: {str(e)}",
+                        "error": safe_error_message(e, "delete sourcefile"),
                         "details": {
                             "filename": sourcefile_entry.filename,
                             "id": sourcefile_entry.id,  # type: ignore
@@ -574,7 +576,7 @@ def delete_sourcefile_api(
         return (
             jsonify(
                 {
-                    "error": f"Unexpected error: {str(e)}",
+                    "error": safe_error_message(e, "delete sourcefile"),
                     "details": {
                         "sourcefile_slug": sourcefile_slug,
                         "sourcedir_slug": sourcedir_slug,
@@ -639,7 +641,7 @@ def rename_sourcefile_api(
     except DoesNotExist:
         return jsonify({"error": "File not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "rename sourcefile")}), 500
 
 
 @sourcefile_api_bp.route(
@@ -708,7 +710,7 @@ def create_sourcefile_from_text_api(target_language_code: str, sourcedir_slug: s
         return jsonify({"error": "Target directory not found"}), 404
     except Exception as e:
         current_app.logger.error(f"Error in create_sourcefile_from_text: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "create sourcefile from text")}), 500
 
 
 @sourcefile_api_bp.route(
@@ -917,7 +919,7 @@ def generate_sourcefile_api(target_language_code: str):
         )
     except Exception as e:
         current_app.logger.error(f"Error in generate_sourcefile_api: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "generate sourcefile")}), 500
 
 
 @sourcefile_api_bp.route(
@@ -974,12 +976,7 @@ def generate_sourcefile_audio_api(
 
         except Exception as e:
             current_app.logger.error(f"Error generating audio: {str(e)}")
-            error_msg = str(e)
-            if "API key" in error_msg:
-                error_msg = "Invalid or missing API key"
-            elif "quota" in error_msg.lower():
-                error_msg = "API quota exceeded"
-            return jsonify({"error": f"Failed to generate audio: {error_msg}"}), 500
+            return jsonify({"error": safe_error_message(e, "generate audio")}), 500
 
     except DoesNotExist:
         return jsonify({"error": "Source file not found"}), 404
@@ -1025,20 +1022,28 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
         if not url:
             return jsonify({"error": "URL cannot be empty"}), 400
 
-        # Fetch HTML content from URL
+        # Validate URL for SSRF before fetching
+        try:
+            validate_url_for_ssrf(url)
+        except SSRFValidationError as e:
+            return jsonify({"error": str(e)}), 400
+
+        # Fetch HTML content from URL (allow_redirects=False to prevent redirect-based SSRF)
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
             }
-            response = requests.get(url, timeout=15, headers=headers)
-            response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+            response = requests.get(url, timeout=15, headers=headers, allow_redirects=False)
+            if response.is_redirect:
+                return jsonify({"error": "URL redirects are not allowed for security reasons"}), 400
+            response.raise_for_status()
             html_content = response.text
         except requests.exceptions.RequestException as e:
             current_app.logger.error(f"Failed to fetch URL {url} with UA: {str(e)}")
-            return jsonify({"error": f"Failed to fetch URL: {str(e)}"}), 400
+            return jsonify({"error": safe_error_message(e, "fetch URL")}), 400
         except Exception as e:
             current_app.logger.error(f"Unexpected error fetching URL {url}: {str(e)}")
-            return jsonify({"error": f"Error fetching URL: {str(e)}"}), 500
+            return jsonify({"error": safe_error_message(e, "fetch URL")}), 500
 
         # --- Pre-process HTML using utility function --- START ---
         try:
@@ -1048,7 +1053,7 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
             current_app.logger.error(
                 f"HTML preprocessing failed for URL {url}: {str(e)}"
             )
-            return jsonify({"error": f"Failed to process HTML content: {str(e)}"}), 500
+            return jsonify({"error": safe_error_message(e, "process HTML content")}), 500
         # --- Pre-process HTML using utility function --- END ---
 
         # Extract title and text using LLM, passing the simplified HTML
@@ -1073,7 +1078,7 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
             current_app.logger.error(
                 f"LLM text extraction failed for URL {url}: {str(e)}"
             )
-            return jsonify({"error": f"Text extraction failed: {str(e)}"}), 500
+            return jsonify({"error": safe_error_message(e, "extract text from URL")}), 500
 
         # ---- Filename Generation using Title ---- START ----
         # Generate filename from title, fallback to URL-based name
@@ -1150,4 +1155,4 @@ def create_sourcefile_from_url_api(target_language_code: str, sourcedir_slug: st
         return jsonify({"error": "Target directory not found"}), 404
     except Exception as e:
         current_app.logger.error(f"Error in create_sourcefile_from_url: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": safe_error_message(e, "create sourcefile from URL")}), 500
