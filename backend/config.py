@@ -137,13 +137,13 @@ PYTHAINLP_ENGINE_DEFAULT: str = "newmm"
 # Text-to-speech voices
 # Centralized pool used for both sentences and lemma pronunciations
 ELEVENLABS_VOICE_POOL: list[str] = [
+    "Adam",
     "Alice",
     "Bill",
     "Brian",
     "Callum",
     "Charlie",
     "Chris",
-    "Clyde",
     "Daniel",
     "Eric",
     "George",
@@ -153,10 +153,10 @@ ELEVENLABS_VOICE_POOL: list[str] = [
     "Liam",
     "Lily",
     "Matilda",
-    "Rachel",
     "River",
     "Roger",
     "Sarah",
+    "Will",
 ]
 
 # Deterministic default TTS voice configuration
