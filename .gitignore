@@ -24,6 +24,8 @@ yarn-error.log*
 .vite/
 
 .cursor/browser-tools
+.cursor/mcp.json
+.env.security
 
 # Logs
 logs/
