@@ -12,8 +12,8 @@ gunicorn
 jinja2
 loguru>=0.7.2  # For simplified logging
 openai
-peewee>=3.17.0
-peewee-migrate>=1.12.2
+peewee>=3.17.0,<4  # 4.x removed PooledPostgresqlExtDatabase from playhouse.pool
+peewee-migrate>=1.12.2,<2
 pendulum
 Pillow
 psutil>=5.9.0
