@@ -49,12 +49,15 @@ Master external runbook: `~/security-investigations/260503-supabase-vercel/`.
 3. [ ] **Fix `deploy_frontend.sh` build-env handling** (15 min code) — pass
    `--build-env` for `PUBLIC_*` vars or drop the `-e` injection entirely and
    rely on Vercel project env vars. Bit us mid-rotation today.
-4. [ ] **Apply RLS migration to Hello Zenno** (30–60 min) — 17 public tables
-   currently have no row-level security (Supabase advisor flagged all of
-   them). SQL ready at
-   `~/security-investigations/260503-supabase-vercel/scripts/enable_rls_hellozenno.sql`.
-   Real defense-in-depth: without RLS, anyone with a publishable key can read
-   all the public tables. **Test locally first** so production isn't blindsided.
+4. [ ] **Apply RLS migration to Hello Zenno** — DEFERRED. Researched on
+   2026-05-25; the existing draft SQL is **not safe to apply as-is** because
+   5 SvelteKit SSR loaders query `public.*` tables directly via the anon key
+   (would silently break under RLS-no-policies). Full plan with the three
+   options (apply with 5 SELECT policies / refactor frontend / defer) plus
+   stages, smoke checklist, and rollback at
+   [`docs/plans/260525_supabase_rls_migration.md`](docs/plans/260525_supabase_rls_migration.md).
+   Resume when there's appetite for a careful prod migration with manual
+   smoke testing.
 
 ### Outstanding rotation work (Spideryarn + post-rotation cleanup)
 - [ ] **Spideryarn rotation** — handed off to a separate session. Runbook at
