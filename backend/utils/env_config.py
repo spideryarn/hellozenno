@@ -154,10 +154,9 @@ print(f"LOGS_DIR: {LOGS_DIR}")
 USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ignore
 
 # Supabase configuration
-SUPABASE_JWT_SECRET = get_env_var_and_track("SUPABASE_JWT_SECRET", SecretStr)  # type: ignore
-
 # Project URL used for fetching the JWKS endpoint when verifying asymmetric
-# (ES256/RS256) JWTs after migrating from the legacy HS256 shared secret.
+# (ES256/RS256) JWTs. The legacy HS256 shared-secret path (and its
+# SUPABASE_JWT_SECRET env var) was removed on 2026-05-25.
 SUPABASE_URL = get_env_var_and_track("SUPABASE_URL", str)
 
 VITE_FRONTEND_URL = get_env_var_and_track("VITE_FRONTEND_URL", str)
