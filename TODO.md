@@ -89,14 +89,14 @@ Master external runbook: `~/security-investigations/260503-supabase-vercel/`.
   evidence the attacker exfiltrated user data (only the proxy Edge Function).
   Consult the runbook for the disclosure decision matrix.
 
-### Uncommitted / untracked files (housekeeping)
-- [ ] `Dockerfile.fly`, `fly.toml` — leftover from the abandoned Fly.io
-  migration. `.gitignore` or delete.
-- [ ] `docs/conversations/260110a_sentry_flyio_setup_blocked.md` — log of
-  why the Fly migration was paused. Commit it or move under `obsolete/`.
-- [ ] *(Optional)* `pip-audit-backend-{before,after}.json` and
-  `security-audit-{before,after}.json` — tracked but should probably move
-  under `~/security-investigations/...` or be `.gitignore`d.
+### Housekeeping (lower urgency)
+- [ ] **Destroy abandoned Fly.io app `hello-zenno`** (placeholder from the
+  blocked-Sentry attempt; local files already deleted 2026-05-25).
+  `flyctl auth login && fly apps destroy hello-zenno --yes`.
+- [ ] *(Optional)* Move tracked `pip-audit-backend-{before,after}.json`
+  and `security-audit-{before,after}.json` under
+  `~/security-investigations/...` or `.gitignore` them. They're artifacts
+  from the 2025-09-14 vulnerability remediation; harmless to keep in repo.
 
 ### Reference
 - Session log: [`docs/conversations/260525a_supabase_pat_compromise_remediation.md`](docs/conversations/260525a_supabase_pat_compromise_remediation.md)
