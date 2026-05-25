@@ -156,6 +156,10 @@ USE_LOCAL_TO_PROD = get_env_var_and_track("USE_LOCAL_TO_PROD", int)  # type: ign
 # Supabase configuration
 SUPABASE_JWT_SECRET = get_env_var_and_track("SUPABASE_JWT_SECRET", SecretStr)  # type: ignore
 
+# Project URL used for fetching the JWKS endpoint when verifying asymmetric
+# (ES256/RS256) JWTs after migrating from the legacy HS256 shared secret.
+SUPABASE_URL = get_env_var_and_track("SUPABASE_URL", str)
+
 VITE_FRONTEND_URL = get_env_var_and_track("VITE_FRONTEND_URL", str)
 
 # # Validate we processed all required variables

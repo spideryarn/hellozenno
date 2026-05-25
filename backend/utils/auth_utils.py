@@ -8,51 +8,72 @@ from functools import wraps
 from typing import Optional, Dict, Any, Callable, Tuple
 from urllib.parse import urlparse, quote
 import jwt
+from jwt import PyJWKClient
 from loguru import logger
 from flask import request, redirect, url_for, g, jsonify, make_response
 
 from utils.url_registry import endpoint_for
 
-# Import SUPABASE_JWT_SECRET from env_config
-from utils.env_config import SUPABASE_JWT_SECRET
+from utils.env_config import SUPABASE_JWT_SECRET, SUPABASE_URL
 
-# Import Profile model
 from db_models import Profile
 
-# Get Supabase JWT Secret from environment - Now imported from env_config
-# supabase_jwt_secret = os.environ.get("SUPABASE_JWT_SECRET")
-# if not supabase_jwt_secret:
-#     logger.critical("SUPABASE_JWT_SECRET environment variable not set. Authentication will fail.")
-#     # Consider raising an exception or exiting if the secret is critical for startup
+_ASYMMETRIC_ALGORITHMS = ("ES256", "RS256", "EdDSA")
+
+_jwks_client: Optional[PyJWKClient] = None
+
+
+def _get_jwks_client() -> PyJWKClient:
+    """Return a cached PyJWKClient pointed at the project's JWKS endpoint.
+
+    Supabase exposes JWT signing keys at /auth/v1/.well-known/jwks.json once
+    the project has been migrated from the legacy HS256 shared secret to the
+    new JWT signing keys system.
+    """
+    global _jwks_client
+    if _jwks_client is None:
+        jwks_url = f"{SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+        _jwks_client = PyJWKClient(
+            jwks_url,
+            cache_keys=True,
+            lifespan=3600,
+        )
+    return _jwks_client
 
 
 def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
-    """Verify a JWT token using the Supabase JWT Secret.
+    """Verify a Supabase-issued JWT.
 
-    Args:
-        token: JWT token string to verify
-
-    Returns:
-        dict: The decoded JWT payload if valid, None otherwise
+    Supports both the legacy HS256 shared-secret path and the post-migration
+    asymmetric path (ES256 / RS256 / EdDSA) via JWKS. The algorithm is taken
+    from the token header so that during a JWT signing key rotation in-flight
+    tokens issued under either scheme continue to verify until they expire.
     """
-    # Remove check for secret existence, env_config handles it
-    # if not supabase_jwt_secret:
-    #     logger.error("JWT Secret not configured. Cannot verify token.")
-    #     return None
-
     try:
-        # Decode and verify the token using the JWT Secret
-        # Specify HS256 algorithm and verify audience 'authenticated'
-        payload = jwt.decode(
-            token,
-            SUPABASE_JWT_SECRET.get_secret_value().strip(),  # Use the imported secret
-            algorithms=["HS256"],  # Use HS256 algorithm
-            audience="authenticated",  # Verify audience
-            options={
-                "verify_exp": True,
-                # Remove verify_aud: False, it's handled by the audience parameter
-            },
-        )
+        unverified_header = jwt.get_unverified_header(token)
+        alg = unverified_header.get("alg", "")
+
+        if alg == "HS256":
+            payload = jwt.decode(
+                token,
+                SUPABASE_JWT_SECRET.get_secret_value().strip(),
+                algorithms=["HS256"],
+                audience="authenticated",
+                options={"verify_exp": True},
+            )
+        elif alg in _ASYMMETRIC_ALGORITHMS:
+            jwks_client = _get_jwks_client()
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
+            payload = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=[alg],
+                audience="authenticated",
+                options={"verify_exp": True},
+            )
+        else:
+            logger.warning(f"Unsupported JWT algorithm: {alg!r}")
+            return None
 
         return payload
 
@@ -62,7 +83,6 @@ def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
     except jwt.exceptions.ExpiredSignatureError:
         logger.warning("JWT token expired")
         return None
-    # Catch specific audience error
     except jwt.exceptions.InvalidAudienceError:
         logger.warning("Invalid JWT audience")
         return None
@@ -70,7 +90,6 @@ def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
         logger.warning(f"Invalid JWT token: {e}")
         return None
     except Exception as e:
-        # Catch potential errors during key fetching by PyJWKClient - No longer relevant
         logger.error(f"Error verifying JWT token: {e}")
         return None
 

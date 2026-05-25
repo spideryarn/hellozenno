@@ -19,7 +19,7 @@ Pillow
 psutil>=5.9.0
 pycountry
 pydantic
-PyJWT>=2.8.0  # For JWT token handling
+PyJWT[crypto]>=2.8.0  # For JWT token handling (crypto extra: ES256/RS256 via JWKS)
 python-slugify
 psycopg2-binary==2.9.9
 python-dotenv>=1.0.0  # For environment variable management
