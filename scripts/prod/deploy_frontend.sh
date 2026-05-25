@@ -18,7 +18,14 @@ else
     echo "Starting Frontend production deployment..."
 fi
 
-# Build the environment variables command line arguments
+# Build the environment variables command line arguments.
+#
+# We pass each var via BOTH -e (runtime) AND -b (build-env, alias for
+# --build-env) because SvelteKit inlines `$env/static/public` (any PUBLIC_*
+# var) at build time. If a var is only passed as -e, the built bundle ships
+# with the OLD value from Vercel's project-level env vars, even though SSR
+# uses the new value. This bit us during the 2026-05-25 publishable-key
+# rotation: see docs/conversations/260525a_supabase_pat_compromise_remediation.md
 echo "Building environment variables for deployment..."
 ENV_ARGS=""
 if [ -f .env.prod ]; then
@@ -27,14 +34,14 @@ if [ -f .env.prod ]; then
         # Skip comments and empty lines
         [[ $line =~ ^#.*$ ]] && continue
         [[ -z $line ]] && continue
-        
+
         # Extract key and value
         key=$(echo "$line" | cut -d'=' -f1)
         value=$(echo "$line" | cut -d'=' -f2-)
-        
-        # Add to environment arguments
-        ENV_ARGS="$ENV_ARGS -e $key=\"$value\""
-        
+
+        # Add to environment arguments (both runtime and build)
+        ENV_ARGS="$ENV_ARGS -e $key=\"$value\" -b $key=\"$value\""
+
         # Print environment variables being set
         echo "Setting environment variable: $key"
     done < .env.prod
