@@ -93,12 +93,33 @@ cd frontend && npm run lint        # prettier --check + eslint (`npm run format`
 
 Known baseline (don't be alarmed, and please don't "fix" it in an unrelated PR):
 - `ruff check .` reports ~261 findings, mostly unused imports/variables.
-- `black --check .` wants to reformat ~52 files.
+- `black --check .` wants to reformat ~84 files (was ~52 under black 25.1.0).
 - `npm run lint` fails on ~211 prettier formatting diffs.
 
 CI (`.github/workflows/lint-and-typecheck.yml`) runs all of these. Only the fatal ruff
 subset and `npm run check` block a PR; the rest are advisory until the backlog is
 cleared. If you clear one, flip its `continue-on-error` off in the same commit.
+
+### Frontend dependency overrides
+
+`frontend/package.json` has an `overrides` block. Every entry exists to hold a package at a
+version that was *already soaked* when the 2026-08-31 Dependabot critical/high sweep landed -
+npm otherwise resolves to the highest version a parent range allows, which at the time meant
+picking up releases only a day or two old. The lockfile alone would pin these, but the
+overrides record the intent so a later `npm update` cannot quietly undo it.
+
+| entry | held at | why |
+|---|---|---|
+| `js-yaml` | 4.3.1 | 4.3.2 landed 2026-08-26 |
+| `devalue` | 5.9.1 | 5.9.2 landed 2026-08-27; kit 2.70.x needs `^5.8.1` |
+| `rollup` | 4.59.1 | 4.63.1 landed 2026-08-28 |
+| `brace-expansion@1` | 1.1.18 | scoped to the 1.x line; 2.x consumers need `^2.0.1` |
+| `picomatch@2` / `picomatch@4` | 2.3.2 / 4.0.5 | 4.0.6 and 4.0.7 both landed 2026-08-24 |
+| `ast-types` | 0.16.1 | dormant since 2022, then 0.16.2 AND 0.16.3 both published 2026-08-30 |
+
+**Revisit from 2026-09-07**, once these have aged. Remove entries one at a time, re-run
+`npm install && npm audit --audit-level=high && npm run check`, and drop the row above.
+Before unpinning `ast-types`, diff 0.16.1...0.16.3 and run `npm audit signatures`.
 
 ### Debugging
 - Logs: `/logs/backend.log`, `/logs/frontend.log`
