@@ -94,6 +94,16 @@ Key points:
 - See `docs/instructions/` for special modes
 - See `docs/generic/CHIEF_ENGINEER.md` for complex multi-phase workflow
 
+### Codex CLI as a subagent
+For a cross-family (GPT) review or a delegated editing task, drive Codex via the wrapper —
+never bare `codex exec`, which wedges on stdin and floods your context:
+```bash
+node scripts/run-codex.ts --model gpt-5.6-sol --effort high --prompt-file <task> --output <answer>
+```
+Read-only by default; `--sandbox workspace-write` to let it edit (commit or stash first). Always
+check the answer file is non-empty — exit 0 with no answer is a failure that looks like agreement.
+See `docs/reusable/codex-cli-as-subagent.md`.
+
 ### Triple Review
 When asked to "use triple-review", invoke ALL THREE reviewers in parallel:
 - `@reviewer-gpt5.2-high` - Primary reviewer (thorough, high reasoning)
