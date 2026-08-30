@@ -11,6 +11,7 @@ from utils.auth_utils import api_auth_required
 from db_models import Phrase
 import urllib.parse
 from utils.phrase_utils import get_phrases_query, get_phrase_by_slug
+from utils.cache_utils import cache_publicly
 
 
 # Create a blueprint with standardized prefix
@@ -42,7 +43,7 @@ def phrases_list_api(target_language_code: str):
         if phrase.get("updated_at"):
             phrase["updated_at"] = phrase["updated_at"].strftime("%Y-%m-%d %H:%M:%S")
 
-    return jsonify(phrases_list)
+    return cache_publicly(jsonify(phrases_list))
 
 
 @phrase_api_bp.route("/<target_language_code>/preview/<phrase>")
@@ -88,9 +89,8 @@ def phrase_preview_api(target_language_code: str, phrase: str):
             "register": phrase_model.register,
         }
 
-        response = jsonify(preview)
-        response.headers["Cache-Control"] = "public, max-age=60"  # Cache for 1 minute
-        return response
+        # Pure DB read with no auth branch, so the hit is safe to share via the CDN
+        return cache_publicly(jsonify(preview))
     except Exception as e:
         response = jsonify({"error": "Internal Server Error", "description": str(e)})
         response.status_code = 500
@@ -108,7 +108,7 @@ def get_phrase_metadata_api(target_language_code: str, slug: str):
         phrase = get_phrase_by_slug(target_language_code, slug)
 
         # Convert the model to a dictionary and return as JSON
-        return jsonify(phrase.to_dict())
+        return cache_publicly(jsonify(phrase.to_dict()))
 
     except DoesNotExist:
         response = jsonify(

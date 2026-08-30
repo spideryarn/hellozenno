@@ -21,6 +21,13 @@ from utils.audio_utils import ensure_lemma_audio_variants
 from utils.auth_utils import api_auth_required, api_auth_optional
 from utils.exceptions import AuthenticationRequiredForGenerationError
 from utils.error_utils import safe_error_message
+from utils.cache_utils import (
+    cache_publicly,
+    S_MAXAGE_LONG,
+    STALE_WHILE_REVALIDATE_LONG,
+    S_MAXAGE_SHORT,
+    STALE_WHILE_REVALIDATE_SHORT,
+)
 
 # Create a blueprint with standardized prefix
 lemma_api_bp = Blueprint("lemma_api", __name__, url_prefix="/api/lang/lemma")
@@ -37,7 +44,7 @@ def get_lemma_data_api(target_language_code: str, lemma: str):
             & (Lemma.target_language_code == target_language_code)
         )
         data = lemma_model.to_dict()
-        return jsonify(data)
+        return cache_publicly(jsonify(data))
     except DoesNotExist:
         response = jsonify(
             {"error": "Not Found", "description": f"Lemma '{lemma}' not found"}
@@ -94,7 +101,9 @@ def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
                 "url": f"/api/lang/lemma/{target_language_code}/{encoded_lemma}/audio?variant_id={v.id}",
             }
         )
-    return jsonify(out)
+    # Short TTL: a logged-in user can add variants, and anonymous viewers
+    # shouldn't lag far behind the real list.
+    return cache_publicly(jsonify(out), S_MAXAGE_SHORT, STALE_WHILE_REVALIDATE_SHORT)
 
 
 @lemma_api_bp.route("/<target_language_code>/<lemma>/audio", methods=["GET"])
@@ -145,6 +154,10 @@ def get_lemma_audio_stream_api(target_language_code: str, lemma: str):
         response.headers["X-Voice-Name"] = voice_name
     response.headers["X-Voice-Variant-Id"] = str(variant.id)
     response.headers["X-Audio-Provider"] = variant.provider
+    if variant_id_param:
+        # A specific variant's bytes never change. Without variant_id the response
+        # is a random pick, so caching it would pin one variant for everyone.
+        cache_publicly(response, S_MAXAGE_LONG, STALE_WHILE_REVALIDATE_LONG)
     return response
 
 
@@ -223,7 +236,7 @@ def lemmas_list_api(target_language_code: str):
     # Transform the response to match the frontend's expected format
     lemma_list = [lemma_obj.to_dict() for lemma_obj in lemmas]
 
-    return jsonify(lemma_list)
+    return cache_publicly(jsonify(lemma_list))
 
 
 @lemma_api_bp.route("/<target_language_code>/lemma/<lemma>/metadata")
@@ -265,7 +278,10 @@ def get_lemma_metadata_api(target_language_code: str, lemma: str):
                 "updated_at": lemma_model.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
             },
         }
-        return jsonify(response_data)
+        # Anonymous callers can only reach here without generating: an incomplete
+        # or missing lemma raises AuthenticationRequiredForGenerationError below,
+        # and that 401 (with its partial metadata) is deliberately left uncached.
+        return cache_publicly(jsonify(response_data))
 
     except AuthenticationRequiredForGenerationError:
         # Handle the case where generation requires login

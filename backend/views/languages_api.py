@@ -10,6 +10,11 @@ import logging
 
 from utils.lang_utils import get_all_languages, get_language_name
 from utils.error_utils import safe_error_message
+from utils.cache_utils import (
+    cache_publicly,
+    S_MAXAGE_LONG,
+    STALE_WHILE_REVALIDATE_LONG,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +30,10 @@ def get_languages_api():
         JSON response with language data
     """
     languages = get_all_languages()
-    return jsonify(languages)
+    # Static config, identical for every caller
+    return cache_publicly(
+        jsonify(languages), S_MAXAGE_LONG, STALE_WHILE_REVALIDATE_LONG
+    )
 
 
 @languages_api_bp.route("/language_name/<target_language_code>", methods=["GET"])
@@ -40,6 +48,10 @@ def get_language_name_api(target_language_code):
     """
     try:
         name = get_language_name(target_language_code)
-        return jsonify({"code": target_language_code, "name": name})
+        return cache_publicly(
+            jsonify({"code": target_language_code, "name": name}),
+            S_MAXAGE_LONG,
+            STALE_WHILE_REVALIDATE_LONG,
+        )
     except LookupError as e:
         return jsonify({"error": safe_error_message(e, "get language name")}), 404

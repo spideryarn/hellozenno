@@ -66,6 +66,7 @@ from utils.lang_utils import validate_language_level
 import utils.generate_sourcefiles as gen_sf
 from views.sourcefile_views import inspect_sourcefile_text_vw
 from utils.error_utils import safe_error_message
+from utils.cache_utils import cache_publicly
 from utils.url_utils import validate_url_for_ssrf, SSRFValidationError
 
 # Create a blueprint with standardized prefix
@@ -161,7 +162,11 @@ def _inspect_sourcefile_core(
             # (this is already handled in get_sourcefile_details)
             pass
 
-        return jsonify(response_data)
+        # Pure DB read shared by all seven GET tabs; get_sourcefile_details has
+        # no auth branch, so an anonymous 200 is safe to share via the CDN.
+        # Logged-in editors never see this cached copy: their SSR tab loaders
+        # forward the access token, which keeps the response uncached.
+        return cache_publicly(jsonify(response_data))
 
     except DoesNotExist:
         return jsonify({"success": False, "error": "File not found"}), 404

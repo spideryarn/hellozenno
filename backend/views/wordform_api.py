@@ -20,6 +20,7 @@ from utils.auth_utils import api_auth_optional, api_auth_required
 # Import exception
 from utils.exceptions import AuthenticationRequiredForGenerationError
 from utils.error_utils import safe_error_message
+from utils.cache_utils import cache_publicly
 
 # Create a blueprint with standardized prefix
 wordform_api_bp = Blueprint("wordform_api", __name__, url_prefix="/api/lang/word")
@@ -38,9 +39,8 @@ def word_preview_api(target_language_code: str, word: str):
         )
         response.status_code = 404
         return response
-    response = jsonify(preview)
-    response.headers["Cache-Control"] = "public, max-age=60"  # Cache for 1 minute
-    return response
+    # Pure DB read with no auth branch, so the hit is safe to share via the CDN
+    return cache_publicly(jsonify(preview))
 
 
 @wordform_api_bp.route("/<target_language_code>/<word>/mp3")
@@ -71,7 +71,7 @@ def wordforms_list_api(target_language_code: str):
     # Convert to list of dictionaries for JSON serialization
     wordforms_data = [wordform.to_dict() for wordform in wordforms]
 
-    return jsonify(wordforms_data)
+    return cache_publicly(jsonify(wordforms_data))
 
 
 @wordform_api_bp.route("/<target_language_code>/wordform/<wordform>")
@@ -113,6 +113,12 @@ def get_wordform_metadata_api(target_language_code: str, wordform: str):
             logger.info(
                 f"[Flask API] Status 'found' for '{decoded_wordform}'. Sending {status_code}."
             )
+            # find_or_create_wordform only reaches 'found' without generating when
+            # the row already existed, and generation is unreachable anonymously
+            # (it raises AuthenticationRequiredForGenerationError). cache_publicly
+            # ignores authenticated requests, so this can only mark pre-existing
+            # rows as cacheable.
+            cache_publicly(response_json)
         elif result.get("status") == "multiple_matches":
             logger.info(
                 f"[Flask API] Status 'multiple_matches' for '{decoded_wordform}'. Sending {status_code}."

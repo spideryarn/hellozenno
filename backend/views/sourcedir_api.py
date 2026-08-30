@@ -30,6 +30,7 @@ from loguru import logger
 from utils.sourcefile_utils import process_uploaded_file
 from utils.auth_utils import api_auth_required
 from utils.error_utils import safe_error_message
+from utils.cache_utils import cache_publicly
 
 # Create a blueprint with standardized prefix
 sourcedir_api_bp = Blueprint(
@@ -441,8 +442,10 @@ def get_sourcedirs_for_language_api(target_language_code: str):
             }
             response["sources"].append(source)
 
-        # Return the formatted data
-        return jsonify(response)
+        # Pure DB read with no auth branch, so an anonymous 200 is safe to
+        # share via the CDN. Logged-in users who create/rename/delete
+        # sourcedirs send their access token, which keeps them off this cache.
+        return cache_publicly(jsonify(response))
 
     except Exception as e:
         logger.error(f"Error getting sourcedirs: {str(e)}")
@@ -487,7 +490,10 @@ def sourcefiles_for_sourcedir_api(target_language_code: str, sourcedir_slug: str
             "supported_languages": result["supported_languages"],
         }
 
-        return jsonify(response)
+        # Pure DB read with no auth branch. Logged-in users who create/move/
+        # rename/delete sourcefiles forward their access token from the SSR
+        # loader, which keeps them off this cache.
+        return cache_publicly(jsonify(response))
 
     except DoesNotExist:
         return jsonify({"success": False, "error": "Source directory not found"}), 404

@@ -13,6 +13,11 @@ from utils.lang_utils import get_language_name
 # Import auth decorator and exception
 from utils.auth_utils import api_auth_optional, api_auth_required
 from utils.exceptions import AuthenticationRequiredForGenerationError
+from utils.cache_utils import (
+    cache_publicly,
+    S_MAXAGE_LONG,
+    STALE_WHILE_REVALIDATE_LONG,
+)
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -28,7 +33,10 @@ def search_landing_api(target_language_code: str):
 
     # Prepare data using shared utility function
     response_data = prepare_search_landing_data(target_language_code, query)
-    return jsonify(response_data)
+    # Pure function of the path and query string - no DB, no auth branch
+    return cache_publicly(
+        jsonify(response_data), S_MAXAGE_LONG, STALE_WHILE_REVALIDATE_LONG
+    )
 
 
 @search_api_bp.route("/<target_language_code>/search/<wordform>")
@@ -42,12 +50,17 @@ def search_word_api(target_language_code: str, wordform: str):
         target_language_code, wordform
     )
 
-    return jsonify(
-        {
-            "target_language_code": target_language_code,
-            "wordform": decoded_wordform,
-            "redirect_url": redirect_url,
-        }
+    # Just builds a URL from the path - no DB lookup and no generation
+    return cache_publicly(
+        jsonify(
+            {
+                "target_language_code": target_language_code,
+                "wordform": decoded_wordform,
+                "redirect_url": redirect_url,
+            }
+        ),
+        S_MAXAGE_LONG,
+        STALE_WHILE_REVALIDATE_LONG,
     )
 
 

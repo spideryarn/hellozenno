@@ -24,6 +24,13 @@ from utils.audio_utils import (
 from utils.exceptions import AuthenticationRequiredForGenerationError
 from utils.auth_utils import api_auth_required
 from utils.error_utils import safe_error_message
+from utils.cache_utils import (
+    cache_publicly,
+    S_MAXAGE_LONG,
+    STALE_WHILE_REVALIDATE_LONG,
+    S_MAXAGE_SHORT,
+    STALE_WHILE_REVALIDATE_SHORT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +73,7 @@ def get_sentence_by_slug_api(target_language_code: str, slug: str):
     try:
         # Use the shared utility function to get sentence data
         sentence_data = get_detailed_sentence_data(target_language_code, slug)
-        return jsonify(sentence_data)
+        return cache_publicly(jsonify(sentence_data))
     except DoesNotExist:
         return jsonify({"error": "Sentence not found"}), 404
 
@@ -118,6 +125,10 @@ def get_sentence_audio_api(target_language_code: str, sentence_id: int):
         response.headers["X-Voice-Name"] = voice_name
     response.headers["X-Voice-Variant-Id"] = str(variant.id)
     response.headers["X-Audio-Provider"] = variant.provider
+    if variant_id_param:
+        # A specific variant's bytes never change. Without variant_id the response
+        # is a random pick, so caching it would pin one variant for everyone.
+        cache_publicly(response, S_MAXAGE_LONG, STALE_WHILE_REVALIDATE_LONG)
     return response
 
 
@@ -157,7 +168,11 @@ def get_sentence_audio_variants_api(target_language_code: str, sentence_id: int)
             }
         )
 
-    return jsonify(payload)
+    # Short TTL: a logged-in user can add variants, and anonymous viewers
+    # shouldn't lag far behind the real list.
+    return cache_publicly(
+        jsonify(payload), S_MAXAGE_SHORT, STALE_WHILE_REVALIDATE_SHORT
+    )
 
 
 # For compatibility with SvelteKit, add a route with 'language' in the path for audio too
@@ -267,4 +282,4 @@ def sentences_list_api(target_language_code: str):
         if "sentence" in sentence:
             sentence["text"] = sentence.pop("sentence")
 
-    return jsonify(sentences)
+    return cache_publicly(jsonify(sentences))
