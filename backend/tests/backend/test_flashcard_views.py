@@ -332,3 +332,52 @@ def test_sourcedir_multiple_files(
         f'window.sourcedir = "{test_sourcedir_with_files.slug}"'.encode()
         in response.data
     )
+
+
+def test_flashcard_sentence_recognizes_accented_wordforms(
+    fixture_for_testing_db, client
+):
+    """Accented Greek wordforms must still be recognised in flashcard sentences.
+
+    `get_flashcard_sentence_data` used to load every wordform for the language and
+    filter in Python. It now prefilters in SQL, which is where this can silently
+    break: `extract_tokens` strips accents, so the stored (accented) wordforms only
+    match if the SQL fold mirrors `normalize_text`. A regression here would show up
+    as empty tooltips rather than an error, so assert on real accented content.
+    """
+    from db_models import Lemma, Wordform
+    from utils.flashcard_utils import get_flashcard_sentence_data
+
+    sentence = create_test_sentence(fixture_for_testing_db)
+
+    # create_test_sentence already makes the "σπίτι" lemma, so reuse it.
+    lemma, _ = Lemma.get_or_create(
+        lemma="σπίτι",
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
+        defaults={"part_of_speech": "noun", "translations": ["house"]},
+    )
+    for wordform_text in ("σπίτι", "μεγάλο"):
+        Wordform.create(
+            wordform=wordform_text,
+            target_language_code=TEST_TARGET_LANGUAGE_CODE,
+            lemma_entry=lemma,
+            translations=["house"],
+        )
+    # Present in the language but absent from the sentence: must not be returned.
+    Wordform.create(
+        wordform="θάλασσα",
+        target_language_code=TEST_TARGET_LANGUAGE_CODE,
+        lemma_entry=lemma,
+        translations=["sea"],
+    )
+
+    with client.application.test_request_context():
+        data = get_flashcard_sentence_data(
+            target_language_code=TEST_TARGET_LANGUAGE_CODE, slug=sentence.slug
+        )
+
+    assert "error" not in data
+    recognised = {w["word"] for w in data["recognized_words"]}
+    assert "σπίτι" in recognised
+    assert "μεγάλο" in recognised
+    assert "θάλασσα" not in recognised

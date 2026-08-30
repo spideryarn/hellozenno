@@ -2,25 +2,35 @@
 Utility functions for the flashcard system.
 """
 
-from peewee import DoesNotExist
+from peewee import JOIN, DoesNotExist
 
 from db_models import (
     Sourcedir,
     Sourcefile,
     SourcefileWordform,
+    Lemma,
     Sentence,
     SentenceAudio,
     Wordform,
 )
 from utils.lang_utils import get_language_name
-from utils.word_utils import get_sourcedir_lemmas, get_sourcefile_lemmas, normalize_text
+from utils.word_utils import (
+    get_sourcedir_lemmas,
+    get_sourcefile_lemmas,
+    normalize_text,
+    prefilter_text,
+    sql_prefilter_text,
+)
 from utils.audio_utils import ensure_sentence_audio_variants
 from utils.sentence_utils import get_random_sentence
 from utils.vocab_llm_utils import extract_tokens, create_interactive_word_data
 from flask import url_for
 
 # Import the exception
-from utils.exceptions import AuthenticationRequiredForGenerationError
+from utils.exceptions import (
+    AuthenticationRequiredForGenerationError,
+    DatabaseOverloadedError,
+)
 
 
 def _make_error(
@@ -157,6 +167,10 @@ def get_flashcard_sentence_data(
     except AuthenticationRequiredForGenerationError:
         audio_requires_login = True
         variants = list(sentence.audio_variants.order_by(SentenceAudio.created_at))  # type: ignore
+    except DatabaseOverloadedError:
+        # Don't fall back to another query we also can't get a connection for -
+        # let overload reach the 503 handler with a useful message.
+        raise
     except Exception as e:
         print(f"Error getting/generating audio for Sentence {sentence.id}: {e}")
         variants = list(sentence.audio_variants.order_by(SentenceAudio.created_at))  # type: ignore
@@ -207,19 +221,30 @@ def get_flashcard_sentence_data(
     try:
         # Extract tokens from the sentence text
         tokens_in_text = extract_tokens(str(sentence.sentence))
-
-        # Query database for all wordforms in this language that might be in the text
-        wordforms = list(
-            Wordform.select().where(
-                (Wordform.target_language_code == target_language_code)
-            )
-        )
-
-        # Filter wordforms in Python using normalize_text to match tokens
         normalized_tokens = {normalize_text(t) for t in tokens_in_text}
-        matching_wordforms = [
-            wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
-        ]
+
+        # Fetch only the wordforms that could match these tokens (joining Lemma, since
+        # `to_dict()` reads `lemma_entry.lemma`), then apply `normalize_text` as the
+        # final authority - the SQL prefilter only ever over-matches. Same fix as
+        # `get_detailed_sentence_data`; this endpoint loaded every wordform row for
+        # the language on each view, holding a pool connection throughout.
+        if normalized_tokens:
+            candidates = {prefilter_text(t) for t in tokens_in_text}
+            matching_wordforms = list(
+                Wordform.select(Wordform, Lemma)
+                .join(Lemma, JOIN.LEFT_OUTER, on=Wordform.lemma_entry)
+                .where(
+                    (Wordform.target_language_code == target_language_code)
+                    & sql_prefilter_text(Wordform.wordform).in_(list(candidates))
+                )
+            )
+            matching_wordforms = [
+                wf
+                for wf in matching_wordforms
+                if normalize_text(wf.wordform) in normalized_tokens
+            ]
+        else:
+            matching_wordforms = []
 
         # Convert to dictionary format for create_interactive_word_data
         wordforms_d = []
@@ -233,6 +258,10 @@ def get_flashcard_sentence_data(
             wordforms=wordforms_d,
             target_language_code=target_language_code,
         )
+    except DatabaseOverloadedError:
+        # Overload is not a per-sentence problem: degrading to empty tooltips
+        # would hide it behind a 200. Let it reach the 503 handler.
+        raise
     except Exception as e:
         # Log error but don't fail the entire request
         print(f"Error generating word recognition data for sentence {sentence.id}: {e}")
