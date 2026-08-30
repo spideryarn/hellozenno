@@ -21,7 +21,7 @@
 
   $: if (!selectedSourcedir && Array.isArray(sourcedirs) && sourcedirs.length > 0) {
     // Default to AI-generated examples if present, else first option
-    const preferred = sourcedirs.find((d: any) => d.path === 'AI-generated examples');
+    const preferred = sourcedirs.find((d) => d.path === 'AI-generated examples');
     selectedSourcedir = preferred?.path || sourcedirs[0]?.path || 'AI-generated examples';
   }
 

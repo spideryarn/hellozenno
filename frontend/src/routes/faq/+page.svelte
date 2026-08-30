@@ -486,14 +486,15 @@
     /* categories-toc styles moved to TableOfContents.svelte */
   }
   
-  /* Language tags styling for FAQ */
-  .language-tags-container {
+  /* Language tags styling for FAQ.
+     These live inside {@html faq.answer}, so they need :global() to be reachable. */
+  .faq-answer :global(.language-tags-container) {
     margin-top: 1rem;
     margin-bottom: 1rem;
     line-height: 2;
   }
   
-  .language-tag {
+  .faq-answer :global(.language-tag) {
     display: inline;
     padding: 0.3rem 0.7rem;
     margin: 0 0.1rem;

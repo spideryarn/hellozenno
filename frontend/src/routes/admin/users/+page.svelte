@@ -1,9 +1,7 @@
 <script lang="ts">
   import DataGrid from '$lib/components/DataGrid.svelte';
   import { API_BASE_URL } from '$lib/config';
-  import type { PageData } from './$types';
 
-  export let data: PageData;
   let supabaseClient: any = null;
   // Get supabase from root layout data (provided client-side only)
   import { page } from '$app/stores';

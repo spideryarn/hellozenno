@@ -6,7 +6,8 @@
   export let navigation: Navigation;
   export let target_language_code: string;
   export let sourcedir_slug: string;
-  export let sourcefile_slug: string | undefined = undefined;
+  // Accepted for API symmetry with the other Sourcefile* components, but unused here
+  export const sourcefile_slug: string | undefined = undefined;
   export let view: string = 'text'; // The current view (text, words, phrases, etc.)
   export let contentRef: HTMLElement | null = null; // Reference to the content element
   

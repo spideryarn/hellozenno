@@ -539,17 +539,4 @@
     border-radius: 8px;
   }
   
-  /* Add pulsing animation to play button when autoplay fails */
-  @keyframes gentle-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(var(--hz-color-primary-green-rgb), 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(var(--hz-color-primary-green-rgb), 0); }
-    100% { box-shadow: 0 0 0 0 rgba(var(--hz-color-primary-green-rgb), 0); }
-  }
-  
-  /* Apply animation when audio element reports it needs interaction */
-  .audio-player-needs-interaction ~ .row .play-audio-btn {
-    animation: gentle-pulse 2s infinite;
-    background-color: var(--hz-color-primary-green);
-    border-color: var(--hz-color-primary-green-dark);
-  }
 </style> 
