@@ -1,6 +1,6 @@
 from typing import Optional, TypedDict
 from flask import abort, g
-from peewee import DoesNotExist, prefetch
+from peewee import SQL, DoesNotExist, fn, prefetch
 import unicodedata
 from werkzeug.exceptions import NotFound
 
@@ -28,6 +28,67 @@ def normalize_text(text: str) -> str:
     # Normalize back to NFKC for good measure
     text = unicodedata.normalize("NFKC", text)
     return text
+
+
+# Greek final sigma: Python's str.lower() turns a trailing "Σ" into "ς", Postgres'
+# lower() always gives "σ". Folding the two together on both sides keeps the
+# prefilter loose rather than wrong; normalize_text still decides the real matches.
+_EXTRA_FOLDS = {"ς": "σ"}
+
+
+def prefilter_text(text: str) -> str:
+    """Looser sibling of `normalize_text`, matching what `sql_prefilter_text`
+    can express in SQL. Callers must still filter with `normalize_text`.
+
+    Apply to raw text, not to `normalize_text` output: neither is idempotent,
+    since normalize_text lowercases before NFKD and a few compatibility
+    characters (ϒ, ϓ) decompose to an uppercase letter.
+    """
+    normalized = normalize_text(text)
+    for char, replacement in _EXTRA_FOLDS.items():
+        normalized = normalized.replace(char, replacement)
+    return normalized
+
+
+def _build_combining_mark_class() -> str:
+    """Regex character class covering the marks `normalize_text` drops after NFKD.
+
+    Derived from unicodedata so the two can't drift; combining marks outside the
+    scanned span don't exist in any script we support.
+    """
+    marks = [
+        chr(cp)
+        for cp in [*range(0x0300, 0x3000), *range(0xFE00, 0xFE30)]
+        if unicodedata.combining(chr(cp))
+    ]
+    spans, start, prev = [], marks[0], marks[0]
+    for char in marks[1:]:
+        if ord(char) == ord(prev) + 1:
+            prev = char
+            continue
+        spans.append((start, prev))
+        start = prev = char
+    spans.append((start, prev))
+    return "[" + "".join(a if a == b else f"{a}-{b}" for a, b in spans) + "]"
+
+
+_COMBINING_MARKS = _build_combining_mark_class()
+
+
+def sql_prefilter_text(field):
+    """SQL expression computing `prefilter_text` for a text column.
+
+    Lets us match wordforms accent- and case-insensitively in the database
+    instead of loading every row for a language and filtering in Python.
+    Mirrors `normalize_text` step for step: lowercase, NFKD, drop the combining
+    marks. `normalize()` needs PostgreSQL 13+ and a UTF-8 database.
+    """
+    stripped = fn.regexp_replace(
+        fn.normalize(fn.lower(field), SQL("NFKD")), _COMBINING_MARKS, "", "g"
+    )
+    for char, replacement in _EXTRA_FOLDS.items():
+        stripped = fn.replace(stripped, char, replacement)
+    return stripped
 
 
 def ensure_nfc(text: str) -> str:

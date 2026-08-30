@@ -1,6 +1,8 @@
 from typing import Optional, Any
 import random
 
+from peewee import JOIN
+
 from db_models import (
     Sentence,
     Lemma,
@@ -18,7 +20,7 @@ from utils.vocab_llm_utils import (
     create_interactive_word_links,
 )
 from utils.prompt_utils import get_prompt_template_path
-from utils.word_utils import normalize_text
+from utils.word_utils import normalize_text, prefilter_text, sql_prefilter_text
 
 
 def generate_sentence(
@@ -268,17 +270,26 @@ def get_detailed_sentence_data(target_language_code: str, slug: str) -> dict:
 
     # Extract tokens from the sentence text
     tokens_in_text = extract_tokens(str(sentence.sentence))
-
-    # Query database for all wordforms in this language
-    wordforms = list(
-        Wordform.select().where((Wordform.target_language_code == target_language_code))
-    )
-
-    # Filter wordforms in Python using normalize_text
     normalized_tokens = {normalize_text(t) for t in tokens_in_text}
-    wordforms = [
-        wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
-    ]
+
+    # Fetch only the wordforms that could match these tokens (joining Lemma, since
+    # `to_dict()` reads `lemma_entry.lemma`), then apply `normalize_text` as the
+    # final authority - the SQL prefilter only ever over-matches.
+    if normalized_tokens:
+        candidates = {prefilter_text(t) for t in tokens_in_text}
+        wordforms = list(
+            Wordform.select(Wordform, Lemma)
+            .join(Lemma, JOIN.LEFT_OUTER, on=Wordform.lemma_entry)
+            .where(
+                (Wordform.target_language_code == target_language_code)
+                & sql_prefilter_text(Wordform.wordform).in_(list(candidates))
+            )
+        )
+        wordforms = [
+            wf for wf in wordforms if normalize_text(wf.wordform) in normalized_tokens
+        ]
+    else:
+        wordforms = []
 
     # Convert to dictionary format
     wordforms_d = []
