@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { apiFetch } from "$lib/api";
+import { ApiError, apiFetch } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
 import { API_BASE_URL } from "$lib/config";
 
@@ -47,6 +47,12 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
         return data;
     } catch (err) {
         console.error("Error fetching sentence data:", err);
+        // Preserve backend overload as 503 rather than flattening it to 500, so
+        // clients and crawlers see a retryable status instead of what looks like
+        // a crash. Everything else stays a 500.
+        if (err instanceof ApiError && err.status === 503) {
+            throw error(503, "The server is briefly over capacity. Please retry.");
+        }
         throw error(500, "Failed to load sentence data");
     }
 };
