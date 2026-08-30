@@ -75,6 +75,40 @@ pip install -r backend/requirements.txt
 
 Each deployment script includes health checks to verify successful deployment.
 
+Note that neither Vercel project is connected to a git repository, so there is no
+auto-deploy on push - nothing reaches production until someone runs these scripts.
+Environment variables are read from `.env.prod` and injected per-deploy via the
+Vercel CLI, so changing `.env.prod` also requires a redeploy to take effect.
+
+#### Changing gjdutils (IMPORTANT)
+
+`gjdutils` is installed from two different places, and it is easy to fix
+something locally and deploy a build that still has the bug:
+
+- **Locally** it is an editable install pointing at the `gjdutils/` submodule, so
+  edits take effect immediately.
+- **In production** the submodule never ships (it sits outside `backend/`, which
+  is the deployment root). `backend/requirements.txt` installs gjdutils **from
+  PyPI**.
+
+So a fix in the submodule does not reach production on its own. After changing
+gjdutils you must publish it and bump the pin:
+
+```bash
+# in the gjdutils submodule
+# 1. bump the version in src/gjdutils/__version__.py
+# 2. commit and push (the release flow requires a clean working tree)
+gjdutils pypi deploy all
+
+# back in hellozenno
+# 3. raise the floor in backend/requirements.txt, e.g. gjdutils>=0.6.2
+# 4. deploy as usual
+./scripts/prod/deploy_backend.sh
+```
+
+Keep the version pinned rather than bare. An unpinned `gjdutils` means any
+redeploy silently picks up whatever is on PyPI at that moment.
+
 ### Database Setup
 
 ```bash

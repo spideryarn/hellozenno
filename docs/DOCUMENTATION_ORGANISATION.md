@@ -54,6 +54,7 @@ Status: stable • Last updated: 2025-09-15
 
 ### Operations & Monitoring
 - [docs/reference/MONITORING.md](reference/MONITORING.md) - Observability, performance, and limits
+- [docs/reference/CLAUDE_MODELS.md](reference/CLAUDE_MODELS.md) - Which Claude model we use, and handling model retirements
 
 ### Testing & Debugging
 - [backend/docs/DEBUGGING.md](../backend/docs/DEBUGGING.md) - Backend debugging tips
