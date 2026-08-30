@@ -256,14 +256,36 @@ def process_uploaded_file(
 
 
 def _get_sourcefile_entry(
-    target_language_code: str, sourcedir_slug: str, sourcefile_slug: str
+    target_language_code: str,
+    sourcedir_slug: str,
+    sourcefile_slug: str,
+    include_blobs: bool = False,
 ) -> Sourcefile:
-    """Helper function to get sourcefile entry by slug with language code."""
+    """Helper function to get sourcefile entry by slug with language code.
+
+    By default the image_data/audio_data blobs are left out (they average
+    ~1.5MB each) and `has_image`/`has_audio` booleans come back instead. Pass
+    include_blobs=True only when the blob itself is needed, e.g. to serve the
+    file or to extract text from it.
+    """
     sourcedir = _get_sourcedir_entry(target_language_code, sourcedir_slug)
-    return Sourcefile.get(
+    query = Sourcefile.select() if include_blobs else Sourcefile.select_metadata()
+    return query.where(
         Sourcefile.sourcedir == sourcedir,
         Sourcefile.slug == sourcefile_slug,
-    )
+    ).get()
+
+
+def _has_blob(sourcefile_entry, kind: str) -> bool:
+    """Whether the image/audio blob is populated, without fetching it if avoidable.
+
+    Sourcefile.select_metadata() supplies has_image/has_audio; fall back to the
+    blob itself for entries loaded with a plain select().
+    """
+    flag = getattr(sourcefile_entry, f"has_{kind}", None)
+    if flag is None:
+        return bool(getattr(sourcefile_entry, f"{kind}_data"))
+    return bool(flag)
 
 
 def ensure_text_extracted(sourcefile_entry):
@@ -488,8 +510,8 @@ def get_sourcefile_details(
             "slug": sourcefile_entry.slug,
             "description": sourcefile_entry.description,
             "sourcefile_type": sourcefile_entry.sourcefile_type,
-            "has_audio": bool(sourcefile_entry.audio_data),
-            "has_image": bool(sourcefile_entry.image_data),
+            "has_audio": _has_blob(sourcefile_entry, "audio"),
+            "has_image": _has_blob(sourcefile_entry, "image"),
             "ai_generated": sourcefile_entry.ai_generated,
             # Include title translation if available
             "title_translation": sourcefile_entry.metadata.get("title_translation") if sourcefile_entry.metadata else None,

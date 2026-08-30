@@ -51,9 +51,9 @@ def extract_text_api(
 ):
     """Extract text from a sourcefile (image or audio)."""
     try:
-        # Get the sourcefile entry
+        # extraction reads the image/audio blob
         sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
+            target_language_code, sourcedir_slug, sourcefile_slug, include_blobs=True
         )
 
         # Extract text

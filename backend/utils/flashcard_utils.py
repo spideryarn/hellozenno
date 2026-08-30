@@ -78,7 +78,13 @@ def get_flashcard_landing_data(
         try:
             # Validate the sourcefile belongs to the target language via its sourcedir
             sourcefile_entry = (
-                Sourcefile.select()
+                Sourcefile.select(
+                    Sourcefile.id,
+                    Sourcefile.slug,
+                    Sourcefile.filename,
+                    Sourcefile.sourcedir,
+                    Sourcedir.slug,
+                )
                 .join(Sourcedir)
                 .where(
                     (Sourcefile.slug == sourcefile_slug)
@@ -175,7 +181,13 @@ def get_flashcard_sentence_data(
         try:
             # Validate the sourcefile belongs to the target language via its sourcedir
             sourcefile_entry = (
-                Sourcefile.select()
+                Sourcefile.select(
+                    Sourcefile.id,
+                    Sourcefile.slug,
+                    Sourcefile.filename,
+                    Sourcefile.sourcedir,
+                    Sourcedir.slug,
+                )
                 .join(Sourcedir)
                 .where(
                     (Sourcefile.slug == sourcefile_slug)
@@ -326,7 +338,13 @@ def get_random_flashcard_data(
     elif sourcefile_slug:
         try:
             sourcefile_entry = (
-                Sourcefile.select()
+                Sourcefile.select(
+                    Sourcefile.id,
+                    Sourcefile.slug,
+                    Sourcefile.filename,
+                    Sourcefile.sourcedir,
+                    Sourcedir.slug,
+                )
                 .join(Sourcedir)
                 .where(
                     (Sourcefile.slug == sourcefile_slug)

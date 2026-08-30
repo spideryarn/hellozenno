@@ -393,9 +393,9 @@ def access_sourcefile(
 ):
     """Helper function to access source files."""
     try:
-        # Get the sourcefile entry using helper
+        # Get the sourcefile entry using helper - the blob is what we're serving
         sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
+            target_language_code, sourcedir_slug, sourcefile_slug, include_blobs=True
         )
 
         # Create a temporary file to store the content
@@ -494,8 +494,9 @@ def process_sourcefile_vw(
         return bool(sourcefile_entry.text_target)
 
     # try:
+    # processing may need to extract text from the image/audio blob
     sourcefile_entry = _get_sourcefile_entry(
-        target_language_code, sourcedir_slug, sourcefile_slug
+        target_language_code, sourcedir_slug, sourcefile_slug, include_blobs=True
     )
 
     if "max_new_words" in request.args:
@@ -544,9 +545,9 @@ def play_sourcefile_audio_vw(
 ):
     """Play the audio file associated with the source file."""
     try:
-        # Get the sourcefile entry using helper
+        # Get the sourcefile entry using helper - the blob is what we're serving
         sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
+            target_language_code, sourcedir_slug, sourcefile_slug, include_blobs=True
         )
 
         # Create a temporary file to store the content
@@ -580,9 +581,18 @@ def sourcefile_sentences_vw(
             Sourcedir.slug == sourcedir_slug,
             Sourcedir.target_language_code == target_language_code,
         )
-        sourcefile = Sourcefile.get(
-            Sourcefile.slug == sourcefile_slug,
-            Sourcefile.sourcedir == sourcedir,
+        sourcefile = (
+            Sourcefile.select(
+                Sourcefile.id,
+                Sourcefile.slug,
+                Sourcefile.filename,
+                Sourcefile.sourcedir,
+            )
+            .where(
+                Sourcefile.slug == sourcefile_slug,
+                Sourcefile.sourcedir == sourcedir,
+            )
+            .get()
         )
 
         # Get lemmas from sourcefile's wordforms

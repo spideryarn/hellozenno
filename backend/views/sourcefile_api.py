@@ -276,9 +276,9 @@ def process_sourcefile_api(
     This is now a synchronous operation - the request will complete after all processing is done.
     """
     try:
-        # Get the sourcefile entry using helper
+        # processing may need to extract text from the image/audio blob
         sourcefile_entry = _get_sourcefile_entry(
-            target_language_code, sourcedir_slug, sourcefile_slug
+            target_language_code, sourcedir_slug, sourcefile_slug, include_blobs=True
         )
 
         # Get processing parameters from request or use defaults
@@ -934,7 +934,14 @@ def generate_sourcefile_audio_api(
     temp_file = None
     try:
         sourcefile_entry = (
-            Sourcefile.select()
+            # filename/sourcefile_type are needed by Sourcefile.save() below
+            Sourcefile.select(
+                Sourcefile.id,
+                Sourcefile.filename,
+                Sourcefile.slug,
+                Sourcefile.sourcefile_type,
+                Sourcefile.text_target,
+            )
             .join(Sourcedir)
             .where(
                 (Sourcedir.target_language_code == target_language_code)

@@ -3,7 +3,7 @@ from peewee import DoesNotExist, fn
 from config import (
     SOURCE_EXTENSIONS,
 )
-from db_models import Sourcedir, Sourcefile, SourcefilePhrase
+from db_models import Sourcedir, Sourcefile, SourcefilePhrase, SourcefileWordform
 from utils.url_registry import endpoint_for
 from utils.lang_utils import get_language_name, get_all_languages
 
@@ -39,7 +39,7 @@ def _navigate_sourcefile(
 
         # Get all sourcefiles ordered by filename (case-insensitive)
         sourcefiles = (
-            Sourcefile.select()
+            Sourcefile.select(Sourcefile.slug)
             .where(Sourcefile.sourcedir == sourcedir_entry)
             .order_by(fn.LOWER(Sourcefile.filename))
         )
@@ -104,7 +104,7 @@ def _get_navigation_info(sourcedir: Sourcedir, sourcefile_slug: str) -> dict:
     """
     # Get all sourcefiles ordered by filename (case-insensitive)
     sourcefiles = list(
-        Sourcefile.select()
+        Sourcefile.select(Sourcefile.slug, Sourcefile.filename)
         .where(Sourcefile.sourcedir == sourcedir)
         .order_by(fn.LOWER(Sourcefile.filename))
     )
@@ -278,6 +278,17 @@ def get_sourcedirs_for_language(target_language_code: str, sort_by: str = "date"
     }
 
 
+def _counts_by_sourcefile(model, sourcedir: Sourcedir) -> dict[int, int]:
+    """Count rows of a Sourcefile junction model, keyed by sourcefile id."""
+    query = (
+        model.select(model.sourcefile, fn.COUNT(model.id).alias("count"))
+        .join(Sourcefile)
+        .where(Sourcefile.sourcedir == sourcedir)
+        .group_by(model.sourcefile)
+    )
+    return {row.sourcefile_id: row.count for row in query}
+
+
 def get_sourcefiles_for_sourcedir(target_language_code: str, sourcedir_slug: str):
     """
     Get all sourcefiles for a specific sourcedir with metadata.
@@ -306,22 +317,37 @@ def get_sourcefiles_for_sourcedir(target_language_code: str, sourcedir_slug: str
     # Get the sourcedir entry by slug
     sourcedir_entry = _get_sourcedir_entry(target_language_code, sourcedir_slug)
 
+    # Count wordforms/phrases for the whole directory up front, rather than
+    # two queries per sourcefile
+    wordform_counts = _counts_by_sourcefile(SourcefileWordform, sourcedir_entry)
+    phrase_counts = _counts_by_sourcefile(SourcefilePhrase, sourcedir_entry)
+
     # Get all sourcefiles for this directory
     sourcefiles = []
     for sourcefile_entry in (
-        Sourcefile.select()
+        Sourcefile.select(
+            Sourcefile.id,
+            Sourcefile.filename,
+            Sourcefile.slug,
+            Sourcefile.sourcefile_type,
+            Sourcefile.metadata,
+            Sourcefile.created_at,
+            Sourcefile.updated_at,
+            Sourcefile.created_by,
+            Sourcefile.ai_generated,
+            Sourcefile.blob_present(Sourcefile.audio_data).alias("has_audio"),
+        )
         .where(Sourcefile.sourcedir == sourcedir_entry)
         .order_by(fn.LOWER(Sourcefile.filename))
     ):
-        # Count wordforms and phrases
-        wordform_count = sourcefile_entry.wordform_entries.count()
-        phrase_count = sourcefile_entry.phrase_entries.count()
+        wordform_count = wordform_counts.get(sourcefile_entry.id, 0)
+        phrase_count = phrase_counts.get(sourcefile_entry.id, 0)
 
         # Prepare metadata for each file
         metadata = {
             "created_at": sourcefile_entry.created_at,
             "updated_at": sourcefile_entry.updated_at,
-            "has_audio": sourcefile_entry.audio_data is not None,
+            "has_audio": bool(sourcefile_entry.has_audio),
             "wordform_count": wordform_count,
             "phrase_count": phrase_count,
         }
