@@ -3,8 +3,18 @@ import { error } from "@sveltejs/kit";
 import { getApiUrl } from "$lib/api";
 import { RouteName } from "$lib/generated/routes";
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     const { target_language_code, slug } = params;
+
+    // Forward the access token (already validated in hooks.server.ts via
+    // safeGetSession, so this costs no extra round-trip). Without it an
+    // editor's SSR request looks anonymous to the CDN and can be served the
+    // shared cached copy - e.g. a stale has_audio right after generating audio.
+    const headers = new Headers();
+    const { session } = locals;
+    if (session?.access_token) {
+        headers.set('Authorization', `Bearer ${session.access_token}`);
+    }
 
     try {
         // Fetch sentence data using type-safe API URL
@@ -12,7 +22,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
             target_language_code: target_language_code,
             slug
         });
-        const response = await fetch(url);
+        const response = await fetch(url, { headers });
 
         if (!response.ok) {
             throw new Error(

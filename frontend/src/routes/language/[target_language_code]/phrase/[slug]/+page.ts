@@ -7,6 +7,16 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
     // Use target_language_code for API calls, mapping from the route parameter
     const { target_language_code, slug } = params;
 
+    // This is a universal load, so it also runs during SSR. Forward the access
+    // token there too: without it a logged-in user's SSR request looks
+    // anonymous to the CDN and can be served the shared cached copy of a phrase
+    // they just edited.
+    const { session } = await parent();
+    const headers = new Headers();
+    if (session?.access_token) {
+        headers.set('Authorization', `Bearer ${session.access_token}`);
+    }
+
     try {
         // Use the typed API utility for better type safety and refactoring support
         const url = getApiUrl(RouteName.PHRASE_API_GET_PHRASE_METADATA_API, {
@@ -14,7 +24,7 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
             slug,
         });
 
-        const response = await fetch(url);
+        const response = await fetch(url, { headers });
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -26,7 +36,6 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
         }
 
         const phraseData = await response.json();
-        const { session } = await parent();
 
         return {
             phrase: phraseData,
