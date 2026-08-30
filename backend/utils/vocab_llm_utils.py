@@ -775,7 +775,6 @@ def create_interactive_word_links(
         Tuple of (enhanced_text, found_wordforms) where found_wordforms is a set of
         wordforms that were found in the text
     """
-    from utils.store_utils import load_or_generate_lemma_metadata
     from utils.word_utils import ensure_nfc, normalize_text
     from flask import url_for
     from utils.url_registry import endpoint_for
@@ -785,16 +784,6 @@ def create_interactive_word_links(
 
     # Track which wordforms we actually find in the text
     found_wordforms = set()
-
-    def get_etymology(lemma: str) -> str:
-        """Get etymology from lemma metadata."""
-        try:
-            lemma_metadata = load_or_generate_lemma_metadata(
-                lemma=lemma, target_language_code=target_language_code
-            )
-            return lemma_metadata.get("etymology", "")
-        except FileNotFoundError:
-            return ""
 
     def replace_match(match):
         """Replace a matched word with an HTML link."""
@@ -812,12 +801,10 @@ def create_interactive_word_links(
         )
         if wf:
             found_wordforms.add(wf["wordform"])  # Track that we found this wordform
-            lemma = wf["lemma"]
             translations = wf.get("translations", [])
             if not translations:
                 translations = [wf.get("translated_word", "")]
             translation = "; ".join(t for t in translations if t)
-            etymology = get_etymology(lemma)
             # Use the original word (with its case) in the link text
             wordform_url = url_for(
                 endpoint_for(get_wordform_metadata_vw),
