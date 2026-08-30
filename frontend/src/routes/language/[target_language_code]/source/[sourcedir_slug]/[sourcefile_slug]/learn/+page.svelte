@@ -507,9 +507,11 @@
     return warmingQueue;
   }
 
-  $: target_language_code = $page.params.target_language_code;
-  $: sourcedir_slug = $page.params.sourcedir_slug;
-  $: sourcefile_slug = $page.params.sourcefile_slug;
+  // Required segments of this route's path, so always present at runtime. SvelteKit
+  // types `page.params` across the whole route union, where these are optional, hence `!`.
+  $: target_language_code = $page.params.target_language_code!;
+  $: sourcedir_slug = $page.params.sourcedir_slug!;
+  $: sourcefile_slug = $page.params.sourcefile_slug!;
   let language_name: string = '';
   $: language_name = $page.data.language_name || target_language_code;
 

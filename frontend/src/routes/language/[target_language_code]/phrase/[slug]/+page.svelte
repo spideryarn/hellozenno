@@ -22,7 +22,8 @@
     { label: 'Phrases', href: `/language/${languageCode}/phrases` },
     { label: phrase?.canonical_form ?? 'Phrase' }
   ] as BreadcrumbItem[];
-  const { slug } = page.params;
+  // Required segment of this route's path; see note in the learn route about `!`.
+  const slug = page.params.slug!;
   const target_language_code = languageCode;
   
   // Create metadata object for MetadataCard
