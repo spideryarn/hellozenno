@@ -21,7 +21,7 @@ from db_models import (
     SentenceAudio,
     LemmaAudio,
 )
-from config import MAX_AUDIO_SIZE_FOR_STORAGE
+from config import ELEVENLABS_VOICE_POOL, MAX_AUDIO_SIZE_FOR_STORAGE
 from utils.exceptions import AuthenticationRequiredForGenerationError
 
 
@@ -117,28 +117,7 @@ def test_ensure_audio_data(mock_elevenlabs):
     assert mock_elevenlabs.call_args[1]["text"] == "Test text"
 
     # Verify voice selection (display name passed into resolver)
-    assert mock_elevenlabs.call_args[1]["bot_name"] in [
-        "Alice",
-        "Bill",
-        "Brian",
-        "Callum",
-        "Charlie",
-        "Chris",
-        "Clyde",
-        "Daniel",
-        "Eric",
-        "George",
-        "Harry",
-        "Jessica",
-        "Laura",
-        "Liam",
-        "Lily",
-        "Matilda",
-        "Rachel",
-        "River",
-        "Roger",
-        "Sarah",
-    ]
+    assert mock_elevenlabs.call_args[1]["bot_name"] in ELEVENLABS_VOICE_POOL
 
     # Test with delays - use text that will trigger delays
     mock_elevenlabs.reset_mock()
@@ -153,28 +132,7 @@ def test_ensure_audio_data(mock_elevenlabs):
     assert "<break" in text_with_delays  # Should have delay markers
 
     # Verify voice selection again
-    assert mock_elevenlabs.call_args[1]["bot_name"] in [
-        "Alice",
-        "Bill",
-        "Brian",
-        "Callum",
-        "Charlie",
-        "Chris",
-        "Clyde",
-        "Daniel",
-        "Eric",
-        "George",
-        "Harry",
-        "Jessica",
-        "Laura",
-        "Liam",
-        "Lily",
-        "Matilda",
-        "Rachel",
-        "River",
-        "Roger",
-        "Sarah",
-    ]
+    assert mock_elevenlabs.call_args[1]["bot_name"] in ELEVENLABS_VOICE_POOL
 
 
 @pytest.mark.skip(reason="Low-value unit test - requires complex db binding; audio tested via API")
