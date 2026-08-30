@@ -3,6 +3,7 @@ from playhouse.pool import MaxConnectionsExceeded, PooledPostgresqlExtDatabase
 import logging
 from datetime import datetime
 from config import DB_POOL_CONFIG
+from utils.exceptions import DatabaseOverloadedError
 from utils.env_config import DATABASE_URL, is_vercel, is_local_to_prod
 import os
 from urllib.parse import urlparse
@@ -52,7 +53,10 @@ class MonitoredPooledPostgresqlExtDatabase(PooledPostgresqlExtDatabase):
             return super().connect(reuse_if_open)
         except MaxConnectionsExceeded as e:
             logger.error("Database connection failed: %s", str(e))
-            raise
+            # Re-raise as our own type: MaxConnectionsExceeded is a ValueError,
+            # and `except ValueError -> 400` handlers would otherwise report
+            # overload as malformed input. See DatabaseOverloadedError.
+            raise DatabaseOverloadedError(str(e)) from e
 
     def _close(self, conn, close_conn=False):
         """Monitor connection closure."""

@@ -20,6 +20,7 @@ from whitenoise import WhiteNoise
 from utils.env_config import is_vercel, FLASK_SECRET_KEY
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
+from utils.error_utils import register_pool_exhaustion_handler
 from utils.url_registry import generate_route_registry, generate_typescript_routes
 from utils.language_data_generator import generate_typescript_language_data
 
@@ -201,6 +202,8 @@ def create_app():
             logger.info(f"Generated TypeScript language data at {lang_output_path}")
 
     # Register error handlers
+    register_pool_exhaustion_handler(app)
+
     @app.errorhandler(404)
     def page_not_found(e):
         # Check if this is an API request
