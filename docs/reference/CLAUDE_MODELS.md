@@ -52,9 +52,10 @@ Anthropic's deprecation schedule: https://platform.claude.com/docs/en/about-clau
 
 Newer models are not always drop-in. When moving to a current model, check:
 
-- **`temperature` / `top_p` / `top_k` are rejected** (HTTP 400) on Sonnet 5,
-  Opus 5 and the 4.7+ family. gjdutils passes `temperature` only when it is
-  explicitly set, and the default is now `None`.
+- **`temperature` / `top_p` / `top_k` are rejected** on Sonnet 5, Opus 5 and the
+  4.7+ family - HTTP 400 from the API, or a `TypeError` from the SDK itself on
+  anthropic 1.x, which removed the parameter. gjdutils therefore omits the
+  keyword entirely unless it is explicitly set, rather than passing `NOT_GIVEN`.
 - **`response.content[0]` is often a `thinking` block, not the answer.** Current
   models think adaptively by default, so code must select the first block whose
   `type` is `"text"` rather than indexing by position. Indexing `content[0].text`
@@ -69,6 +70,25 @@ Newer models are not always drop-in. When moving to a current model, check:
 The handling for all four lives in `gjdutils/src/gjdutils/llms_claude.py`
 (`call_claude_gpt`), not in this repo - see DEVOPS.md for how that reaches
 production.
+
+## Watch out for SDK version skew
+
+`backend/requirements.txt` pins `anthropic>=1.2.0,<2`. Keep it pinned. It used to
+be bare, which meant local machines ran whatever was installed months ago while
+production installed the newest release at build time.
+
+That skew hid a real bug through a whole deploy: anthropic 1.x **removed**
+`temperature` from `Messages.create()`, so passing the keyword at all - even as
+`NOT_GIVEN` - raises `TypeError` before any request is made. On a local env
+still running anthropic 0.49 the code tested clean; production, on 1.2.0, 500'd
+on every wordform page.
+
+If you are verifying a change to the LLM path, check the SDK version you are
+testing against actually matches what production will install:
+
+```bash
+python -c "import anthropic, inspect; print(anthropic.__version__)"
+```
 
 ## Verifying a model change
 

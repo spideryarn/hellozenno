@@ -1,5 +1,5 @@
 addict
-anthropic
+anthropic>=1.2.0,<2  # 1.x dropped temperature from Messages.create(); pin to avoid silent major bumps
 elevenlabs>=2.1.0
 flask
 beautifulsoup4
@@ -7,7 +7,7 @@ beautifulsoup4
 # google-auth-httplib2
 # google-auth-oauthlib
 # google-cloud-storage
-gjdutils>=0.6.2  # Sonnet 5 support - see backend/docs/DEVOPS.md before changing
+gjdutils>=0.6.3  # Sonnet 5 support - see backend/docs/DEVOPS.md before changing
 gunicorn
 jinja2
 loguru>=0.7.2  # For simplified logging
