@@ -30,7 +30,7 @@ jobs:
       # Pinned so a new ruff/black release can't turn the tree red overnight.
       # Keep in step with backend/requirements-dev.txt.
       - name: Install linters
-        run: python -m pip install --upgrade pip ruff==0.13.0 black==25.1.0
+        run: python -m pip install --upgrade pip ruff==0.13.0 black==26.3.1
 
       # ENFORCING. This subset -- syntax errors, undefined names, broken
       # comparisons -- is the "is the code even runnable" gate. It passes
@@ -46,7 +46,8 @@ jobs:
         continue-on-error: true
         run: ruff check --output-format=github .
 
-      # ADVISORY (52 files would be reformatted). Running black over the tree is a
+      # ADVISORY (84 files would be reformatted under black 26.3.1; was 52 under 25.1.0).
+      # Running black over the tree is a
       # large mechanical diff that would swamp review, so it is deliberately not
       # done yet. Flip continue-on-error off in the same commit that reformats.
       - name: Black --check [advisory]
