@@ -34,11 +34,37 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# 1. Deploy the API
+# deploy_backend.sh checks this too, but the sitemap step below shells out to
+# python, so check it here to fail with a useful message rather than an
+# ImportError.
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo_error "Virtual environment is not activated. Please activate a virtual environment before deploying."
+    exit 1
+fi
+
+# 1. Generate sitemaps (production only) - BEFORE anything ships.
+#
+# Sitemap generation is purely local: it reads the production DB and writes
+# files into frontend/static/. Nothing about it needs the backend deployed
+# first. It used to run inside deploy_frontend.sh, which meant any failure
+# there - bad env, DB unreachable, localhost VITE_FRONTEND_URL - aborted the
+# frontend deploy *after* the backend had already shipped, leaving a
+# half-completed release. Running it up front means every sitemap failure mode
+# aborts before anything is deployed.
+#
+# deploy_frontend.sh honours HZ_SITEMAPS_ALREADY_GENERATED and skips its own
+# run, so invoking that script standalone still regenerates sitemaps.
+if [[ "$PREVIEW" == "false" ]]; then
+    echo "Generating sitemaps before deploying..."
+    ./scripts/prod/generate_sitemaps.sh
+    export HZ_SITEMAPS_ALREADY_GENERATED=1
+fi
+
+# 2. Deploy the API
 echo "Deploying API to Vercel..."
 ./scripts/prod/deploy_backend.sh $([[ "$PREVIEW" == "true" ]] && echo "--preview")
 
-# 2. Deploy the Frontend
+# 3. Deploy the Frontend
 echo "Deploying Frontend to Vercel..."
 ./scripts/prod/deploy_frontend.sh $([[ "$PREVIEW" == "true" ]] && echo "--preview")
 

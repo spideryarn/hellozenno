@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Generate XML sitemaps for HelloZenno, including a sitemap index and content-specific sitemaps."""
 
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -327,9 +328,37 @@ def update_sitemap_index(sitemap_files: list[str]) -> None:
         logger.error(f"Error updating sitemap index: {e}")
 
 
+LOCAL_HOSTS = ("localhost", "127.0.0.1", "0.0.0.0")
+
+
+def validate_site_url() -> None:
+    """Fail loudly if SITE_URL isn't a deployable public URL.
+
+    The sitemaps are written into frontend/static/, which is uploaded verbatim
+    by `vercel deploy` - so a dev SITE_URL here ships localhost links to
+    production. scripts/local/ sets SITEMAP_ALLOW_LOCAL_URL=1 to opt out.
+    """
+    if SITE_URL.endswith("/"):
+        raise ValueError(
+            f"VITE_FRONTEND_URL must not have a trailing slash, got {SITE_URL!r}"
+        )
+    if os.environ.get("SITEMAP_ALLOW_LOCAL_URL") == "1":
+        return
+    if not SITE_URL.startswith("https://") or any(
+        host in SITE_URL for host in LOCAL_HOSTS
+    ):
+        raise ValueError(
+            f"Refusing to generate sitemaps with a non-production VITE_FRONTEND_URL ({SITE_URL!r}). "
+            "Source .env.prod, or set SITEMAP_ALLOW_LOCAL_URL=1 for local-only output."
+        )
+
+
 def generate_sitemaps():
     """Main function to generate all sitemaps."""
     logger.info("Starting sitemap generation")
+
+    # Raise before the try/except below, so a bad URL aborts rather than being logged
+    validate_site_url()
 
     # Initialize database
     init_db()

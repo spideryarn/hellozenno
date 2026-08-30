@@ -67,15 +67,23 @@ Both scripts:
 
 #### 3.2 Deployment Integration
 
-The production sitemap generator is integrated in `scripts/prod/deploy_frontend.sh`:
+For a full deploy, `scripts/prod/deploy.sh` generates the sitemaps *first*, before
+either the backend or the frontend ships. Generation is purely local (it reads the
+production DB and writes into `frontend/static/`), so it doesn't need the backend
+deployed; running it up front means a sitemap failure - bad env, DB unreachable,
+localhost `VITE_FRONTEND_URL` - aborts before a half-completed release goes out.
 
 ```bash
-# Generate sitemaps
+# scripts/prod/deploy.sh, production only
 ./scripts/prod/generate_sitemaps.sh
+export HZ_SITEMAPS_ALREADY_GENERATED=1
 
-# Continue with normal build process
-cd frontend && npm run build
+./scripts/prod/deploy_backend.sh
+./scripts/prod/deploy_frontend.sh   # sees the flag, skips regeneration
 ```
+
+`scripts/prod/deploy_frontend.sh` still generates sitemaps itself when run
+standalone (the flag is unset), so it remains usable on its own.
 
 #### 3.3 XML Structure Examples
 

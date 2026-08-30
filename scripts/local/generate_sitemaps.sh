@@ -31,8 +31,9 @@ fi
 # Move to backend directory to ensure imports work correctly
 cd "${PROJECT_ROOT}/backend"
 
-# Run the sitemap generator
+# Run the sitemap generator. The localhost URLs this produces must never reach
+# production - scripts/prod/generate_sitemaps.sh re-checks before deploying.
 echo "Running sitemap generator..."
-python -c "from utils.sitemap_generator import generate_sitemaps; generate_sitemaps()"
+SITEMAP_ALLOW_LOCAL_URL=1 python -c "from utils.sitemap_generator import generate_sitemaps; generate_sitemaps()"
 
 echo_success "Sitemaps generated successfully"
