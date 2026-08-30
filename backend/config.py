@@ -107,6 +107,12 @@ SOURCEFILE_SLUG_MAX_LENGTH = 1024  # Characters allowed in URL slugs
 DEFAULT_MAX_NEW_WORDS_PER_PROCESSING = 8
 DEFAULT_MAX_NEW_PHRASES_PER_PROCESSING = 1
 
+# Claude model used for all LLM calls (see docs/reference/CLAUDE_MODELS.md).
+# Anthropic retires old models, at which point every call starts 404ing with no
+# warning - Sonnet 4 was retired 2026-06-15 and broke us silently. Check the
+# deprecations page before assuming a model is still callable.
+CLAUDE_MODEL_NAME: str = "claude-sonnet-5"
+
 # Database pool configuration
 # These settings are used across all environments
 DB_POOL_CONFIG = {

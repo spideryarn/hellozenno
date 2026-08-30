@@ -22,7 +22,7 @@ from typing import Optional
 from config import SUPPORTED_LANGUAGES
 from utils.env_config import VITE_FRONTEND_URL
 from db_models import Sourcedir, Sourcefile
-from gjdutils.llm_utils import generate_gpt_from_template
+from utils.vocab_llm_utils import generate_gpt_from_template
 from utils.lang_utils import validate_language_code, validate_language_level
 from utils.types import VALID_LANGUAGE_LEVELS
 from utils.env_config import CLAUDE_API_KEY

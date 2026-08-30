@@ -8,9 +8,14 @@ import re
 from typing import Any, Optional
 from slugify import slugify
 from loguru import logger
-from config import RECOGNITION_KNOWN_WORD_SEARCH_DEFAULT as CFG_KNOWN_WORD_DEFAULT
+from config import (
+    CLAUDE_MODEL_NAME,
+    RECOGNITION_KNOWN_WORD_SEARCH_DEFAULT as CFG_KNOWN_WORD_DEFAULT,
+)
 
-from gjdutils.llm_utils import generate_gpt_from_template
+from gjdutils.llm_utils import (
+    generate_gpt_from_template as _generate_gpt_from_template,
+)
 from utils.prompt_utils import get_prompt_template_path
 from utils.env_config import CLAUDE_API_KEY, OPENAI_API_KEY
 from utils.lang_utils import get_language_name, get_target_language_code
@@ -37,6 +42,16 @@ EMPTY_LOGD = {
 
 anthropic_client = Anthropic(api_key=CLAUDE_API_KEY.get_secret_value())
 openai_client = OpenAI(api_key=OPENAI_API_KEY.get_secret_value())
+
+
+def generate_gpt_from_template(*args, **kwargs):
+    """gjdutils' version, but using HelloZenno's own choice of Claude model.
+
+    Every LLM call in the app goes through here, so `config.CLAUDE_MODEL_NAME` is
+    the single place to change the model. Pass `model=` explicitly to override.
+    """
+    kwargs.setdefault("model", CLAUDE_MODEL_NAME)
+    return _generate_gpt_from_template(*args, **kwargs)
 
 
 def extract_text_from_image(
