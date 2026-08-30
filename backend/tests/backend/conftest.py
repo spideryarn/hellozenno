@@ -13,24 +13,7 @@ from pathlib import Path
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from flask import Flask
 
-from db_models import (
-    Lemma,
-    Wordform,
-    Sentence,
-    SentenceLemma,
-    Phrase,
-    LemmaAudio,
-    SentenceAudio,
-    LemmaExampleSentence,
-    PhraseExampleSentence,
-    RelatedPhrase,
-    Sourcedir,
-    Sourcefile,
-    SourcefileWordform,
-    SourcefilePhrase,
-    Profile,
-    UserLemma,
-)
+from db_models import get_models
 from tests.fixtures_for_tests import (
     TEST_TARGET_LANGUAGE_CODE,
     create_complete_test_data,
@@ -64,25 +47,10 @@ from utils.env_config import (
     is_testing,
 )
 
-# All models in dependency order for table creation/deletion
-MODELS = [
-    Lemma,
-    Wordform,
-    Sentence,
-    LemmaAudio,
-    SentenceAudio,
-    SentenceLemma,
-    Phrase,
-    LemmaExampleSentence,
-    PhraseExampleSentence,
-    RelatedPhrase,
-    Sourcedir,
-    Sourcefile,
-    SourcefileWordform,
-    SourcefilePhrase,
-    Profile,
-    UserLemma,
-]
+# Derived from get_models() rather than duplicated: a hand-maintained copy drifts
+# silently, and because the fixture below binds everything in this list itself,
+# the suite stays green while the app leaves the missing model unbound.
+MODELS = get_models()
 
 
 @pytest.fixture(scope="session", autouse=True)

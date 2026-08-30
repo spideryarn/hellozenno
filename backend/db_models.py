@@ -1144,7 +1144,13 @@ class UserLemma(BaseModel):
 
 
 def get_models():
-    """Return all models for database initialization"""
+    """Return the models we own: bound by init_db() and created by init_tables().
+
+    Every BaseModel subclass belongs here. A model left out is never bound to a
+    database, so the first query against it raises InterfaceError ("Query must be
+    bound to a database") - see get_unmanaged_models() for the models that are
+    deliberately absent.
+    """
     return [
         Lemma,
         Wordform,
@@ -1152,6 +1158,7 @@ def get_models():
         SentenceLemma,
         Phrase,
         LemmaAudio,
+        SentenceAudio,
         LemmaExampleSentence,
         PhraseExampleSentence,
         RelatedPhrase,
@@ -1162,3 +1169,13 @@ def get_models():
         Profile,
         UserLemma,
     ]  # Order matters for foreign key dependencies
+
+
+def get_unmanaged_models():
+    """Models we query but must never create or migrate.
+
+    AuthUser maps to Supabase's auth.users, which Supabase owns. It still needs
+    binding in init_db() to be queryable, but keeping it out of get_models()
+    keeps init_tables() from trying to CREATE TABLE over Supabase's own schema.
+    """
+    return [AuthUser]

@@ -175,10 +175,10 @@ def init_db(app=None, test_db=None):
         # Use environment-appropriate database
         database = get_db_config()
 
-    # Bind all models to the database
-    from db_models import get_models
+    # Bind all models to the database, including the ones we don't create
+    from db_models import get_models, get_unmanaged_models
 
-    for model in get_models():
+    for model in get_models() + get_unmanaged_models():
         model._meta.database = database
 
     if app:
