@@ -1,0 +1,86 @@
+# Tooling config for the Python side of the repo (backend/ plus the loose scripts/).
+#
+# This lives at the repo root, not in backend/, so that a bare `ruff check .` /
+# `black .` from the root covers every Python file we own with one config, and so
+# that editor integrations (which walk up from the file) find the same settings
+# wherever you have the project open.
+#
+# Note: backend/pytest.ini deliberately stays where it is. Its `pythonpath = .`
+# and `testpaths = tests` are resolved relative to the ini file's directory, so
+# moving pytest config here would silently change import resolution for the suite.
+# ruff and black have no equivalent path-relative behaviour, hence the split.
+
+[tool.black]
+line-length = 88  # black's default; the code already broadly conforms (p95 line = 80 chars)
+target-version = ["py312"]  # pin rather than autodetect, so formatting can't drift per-file
+extend-exclude = "^/gjdutils/"  # git submodule with its own pyproject.toml -- not ours to format
+
+[tool.ruff]
+line-length = 88  # keep in sync with [tool.black] above
+target-version = "py312"
+src = ["backend"]  # backend/ is the import root (matches pytest.ini's `pythonpath = .`)
+
+exclude = [
+    "gjdutils",  # git submodule; it has its own pyproject.toml and is not ours to lint
+]
+
+[tool.ruff.lint]
+# Ruff's default selection is ["E4", "E7", "E9", "F"]. We keep that and add
+# bugbear, because those are the families that find actual defects. We
+# deliberately do NOT enable the mechanical-churn families (see below) -- turning
+# them on would add ~600 findings that no one will ever action, and the config
+# stops being something a developer bothers to run.
+select = [
+    "E4",  # pycodestyle: import placement (E402)
+    "E7",  # pycodestyle: statement-level bugs (E711/E712 identity-vs-equality, E722 bare except, E713, E741)
+    "E9",  # pycodestyle: syntax / IO errors -- always fatal
+    "F",   # pyflakes: undefined names, unused imports/variables, redefinitions
+    "B",   # flake8-bugbear: likely-wrong constructs (mutable defaults, silently-swallowed loop vars, ...)
+]
+
+ignore = [
+    # B904 (`raise ... from err` inside except) is a traceback-chaining style
+    # preference, not a defect. Fixing the 13 current hits is a pure-churn diff;
+    # revisit as a standalone change if we ever want chained tracebacks.
+    "B904",
+]
+
+# Rules deliberately left OFF, recorded here so the decision isn't relitigated:
+#   E501 (line too long, 476 hits) -- black owns line length, and black cannot
+#     split long string literals/URLs/comments, so E501 would never reach zero
+#     even on a fully-formatted tree. Redundant and permanently noisy.
+#   W (trailing/blank-line whitespace, 166 hits) -- 100% owned by black; enabling
+#     it just double-reports what `black --check` already catches.
+#   I (isort, 161 hits), UP (pyupgrade, 76), RUF (125), SIM (18), PIE (13), C4 (4)
+#     -- all mechanical rewrites across the whole tree. Each is defensible on its
+#     own, but adopting one means a mass reformat that swamps code review. Enable
+#     individually, with its own cleanup commit, when someone has the appetite.
+
+[tool.ruff.lint.flake8-bugbear]
+# B008 flags function calls in argument defaults. `typer.Option(...)` in a default
+# *is* the typer API -- that's how you declare a CLI flag -- so it is a false
+# positive rather than the mutable-default bug B008 exists to catch.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]
+
+[tool.ruff.lint.per-file-ignores]
+# Each entry below is a verified false positive for this codebase, not a
+# convenient way to silence a category. Real-bug rules (F821 etc.) stay on everywhere.
+
+# The Flask entrypoint appends the project root to sys.path before it can import
+# anything from utils/ or views/ (backend/api/index.py:3-13), so its project
+# imports genuinely cannot sit at the top of the file.
+"backend/api/index.py" = ["E402"]
+
+# Same sys.path bootstrap, in standalone scripts run directly from the shell.
+"backend/oneoff/*.py" = ["E402"]
+
+# peewee-migrate scaffolds every migration with a fixed peewee/db_models import
+# block, most of which is unused because the migration body is raw SQL. Applied
+# migrations are frozen history and must not be edited, so these can never be fixed.
+"backend/migrations/*.py" = ["F401"]
+
+# Importing a pytest fixture into a test module and then taking it as a test
+# function parameter reads as a redefinition to pyflakes (see
+# backend/tests/backend/test_audio_utils.py:4 vs :111). That's the standard
+# fixture idiom, not a bug. F401 stays ON in tests -- much of it there is real cruft.
+"backend/tests/**/*.py" = ["F811"]

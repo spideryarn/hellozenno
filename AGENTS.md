@@ -79,8 +79,26 @@ Key points:
 - Local test user credentials: `docs/reference/LOCAL_TEST_USERS.md`
 
 ### Type Checking & Linting
-- Frontend: `cd frontend && npm run check`
-- Backend: `ruff check backend/`, `black backend/`
+Config lives in the root `pyproject.toml` (`[tool.ruff]`, `[tool.black]`), so run these
+from the repo root and they pick it up automatically. `gjdutils/` is excluded from both.
+
+```bash
+source /Users/greg/.venvs/hellozenno__backend/bin/activate
+ruff check .                       # lint (pass `--fix` to auto-fix)
+ruff check --select E9,F63,F7,F82 .  # fatal-only subset; this one is CLEAN, keep it that way
+black .                            # format (`black --check --diff .` to preview)
+cd frontend && npm run check       # svelte-check; CLEAN, keep it that way
+cd frontend && npm run lint        # prettier --check + eslint (`npm run format` to fix)
+```
+
+Known baseline (don't be alarmed, and please don't "fix" it in an unrelated PR):
+- `ruff check .` reports ~261 findings, mostly unused imports/variables.
+- `black --check .` wants to reformat ~52 files.
+- `npm run lint` fails on ~211 prettier formatting diffs.
+
+CI (`.github/workflows/lint-and-typecheck.yml`) runs all of these. Only the fatal ruff
+subset and `npm run check` block a PR; the rest are advisory until the backlog is
+cleared. If you clear one, flip its `continue-on-error` off in the same commit.
 
 ### Debugging
 - Logs: `/logs/backend.log`, `/logs/frontend.log`

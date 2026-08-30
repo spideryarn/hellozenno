@@ -1,7 +1,8 @@
 -r requirements.txt
-beautifulsoup4 
-black
-flake8
+beautifulsoup4
+black==25.1.0  # pinned: formatting output varies between releases; keep in step with CI
+ruff==0.13.0  # pinned: new releases add rules; keep in step with .github/workflows/lint-and-typecheck.yml
+flake8  # superseded by ruff; kept only until we confirm nothing still calls it
 flask-debugtoolbar==0.14.1
 ipdb
 ipykernel

@@ -1,0 +1,95 @@
+name: Lint & type-check
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+# A new push to the same branch supersedes the previous run.
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (ruff, black)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Pinned so a new ruff/black release can't turn the tree red overnight.
+      # Keep in step with backend/requirements-dev.txt.
+      - name: Install linters
+        run: python -m pip install --upgrade pip ruff==0.13.0 black==25.1.0
+
+      # ENFORCING. This subset -- syntax errors, undefined names, broken
+      # comparisons -- is the "is the code even runnable" gate. It passes
+      # cleanly today, so it is a real blocking check, not decoration.
+      - name: Ruff (fatal rules only)
+        run: ruff check --select E9,F63,F7,F82 .
+
+      # ADVISORY (261 findings as of this workflow landing: 188 F401 unused-import,
+      # 36 F841 unused-variable, plus assorted E7/B). Non-blocking so the workflow
+      # is green on day one; the point is that the number is now visible in every
+      # PR and can be driven down. Flip continue-on-error off once it reaches zero.
+      - name: Ruff (full rule set) [advisory]
+        continue-on-error: true
+        run: ruff check --output-format=github .
+
+      # ADVISORY (52 files would be reformatted). Running black over the tree is a
+      # large mechanical diff that would swamp review, so it is deliberately not
+      # done yet. Flip continue-on-error off in the same commit that reformats.
+      - name: Black --check [advisory]
+        continue-on-error: true
+        run: black --check --diff .
+
+  frontend:
+    name: Frontend (svelte-check, prettier, eslint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # ENFORCING. svelte-check currently reports 0 errors (5 warnings), so this
+      # is a genuine gate: it blocks any new type error entering the frontend.
+      - name: svelte-check
+        run: npm run check
+
+      # ADVISORY (prettier reports 211 files needing formatting, and because
+      # `lint` is `prettier --check && eslint`, eslint does not even get to run
+      # today). Fix by running `npm run format` as its own commit, after which
+      # this can become enforcing and eslint's real output becomes visible.
+      - name: Lint (prettier + eslint) [advisory]
+        continue-on-error: true
+        run: npm run lint
+
+  # TODO: add a `backend-tests` job running pytest.
+  # Deliberately not done here. backend/tests needs a live Postgres
+  # (`hellozenno_test`, expected on port 54322) *and* a running Supabase stack for
+  # auth -- the suite talks to both, so a naive `services: postgres` job would be
+  # red on the first run. Doing it properly means standing up supabase/cli in CI
+  # and seeding the test users from docs/reference/LOCAL_TEST_USERS.md, which is
+  # its own piece of work. Left as a TODO rather than shipped broken.
