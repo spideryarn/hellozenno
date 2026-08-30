@@ -21,10 +21,27 @@ echo_success "Virtual environment is active: $VIRTUAL_ENV"
 # Change to api directory
 cd backend
 
-# Check if preview flag is provided
+# Parse arguments.
+#
+# --with-sitemaps is internal: deploy.sh passes it so sitemap generation happens
+# at the one point in the sequence that satisfies both of its ordering
+# constraints (see the call site further down). It has no effect on a preview
+# deploy. It is an argument rather than an environment variable so that a stray
+# exported value in the caller's shell cannot change what a standalone run does.
 PREVIEW=false
-if [[ "$1" == "--preview" ]]; then
-    PREVIEW=true
+WITH_SITEMAPS=false
+for arg in "$@"; do
+    case "$arg" in
+        --preview) PREVIEW=true ;;
+        --with-sitemaps) WITH_SITEMAPS=true ;;
+        *)
+            echo_error "Unknown argument: $arg (expected --preview and/or --with-sitemaps)"
+            exit 1
+            ;;
+    esac
+done
+
+if [[ "$PREVIEW" == "true" ]]; then
     echo "Starting API preview deployment..."
 else
     echo "Starting API production deployment..."
@@ -88,6 +105,35 @@ else
     # Run database migrations for production deployment
     echo "Running database migrations..."
     ../scripts/prod/migrate.sh
+
+    # Generate sitemaps HERE - yes, in the *backend* deploy script.
+    #
+    # By subject matter this belongs in deploy_frontend.sh: it writes files into
+    # frontend/static/ that `vercel deploy` uploads with the frontend. It lives
+    # here instead because two ordering constraints pin it, and they only
+    # overlap at this exact point in the sequence:
+    #
+    #   * it queries the production database using THIS release's models, so it
+    #     must run after the migrations above - which rules out doing it early
+    #     in deploy.sh, before this script is even called;
+    #   * a failure must abort before any code ships, so it must run before the
+    #     `vercel --prod` below - which rules out deploy_frontend.sh, by which
+    #     point the backend is already live and the release half-completed.
+    #
+    # If you are tempted to move this: the migrations are the reason it cannot
+    # go earlier, and the backend deploy is the reason it cannot go later.
+    # Moving migrations out of this script into deploy.sh would free it up, but
+    # that would put the app-import check above after the migrations, letting a
+    # broken build migrate the production database. That trade was considered
+    # and rejected.
+    #
+    # deploy.sh passes --with-sitemaps here and --skip-sitemaps to
+    # deploy_frontend.sh. A standalone backend deploy passes neither and leaves
+    # sitemaps alone; a standalone frontend deploy generates its own.
+    if [[ "$WITH_SITEMAPS" == "true" ]]; then
+        echo "Generating sitemaps (after migrations, before anything ships)..."
+        "${PROJECT_ROOT}/scripts/prod/generate_sitemaps.sh"
+    fi
 
     echo "Deploying API to Vercel production..."
     DEPLOY_CMD="vercel --prod $ENV_ARGS"

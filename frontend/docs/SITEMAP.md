@@ -67,23 +67,35 @@ Both scripts:
 
 #### 3.2 Deployment Integration
 
-For a full deploy, `scripts/prod/deploy.sh` generates the sitemaps *first*, before
-either the backend or the frontend ships. Generation is purely local (it reads the
-production DB and writes into `frontend/static/`), so it doesn't need the backend
-deployed; running it up front means a sitemap failure - bad env, DB unreachable,
-localhost `VITE_FRONTEND_URL` - aborts before a half-completed release goes out.
+On a full production deploy the sitemaps are generated inside
+`scripts/prod/deploy_backend.sh`, between the database migrations and the backend's
+`vercel --prod`. That looks like the wrong script, and it is - by subject matter it
+belongs with the frontend. Two ordering constraints pin it there, and they overlap
+nowhere else:
+
+- generation queries the production DB using *this release's* models, so it must run
+  **after** the migrations (which live in `deploy_backend.sh`);
+- a failure must abort **before any code ships**, so it must run before that script's
+  `vercel --prod` - by the time `deploy_frontend.sh` runs, the backend is already live
+  and a failure leaves a half-completed release.
 
 ```bash
-# scripts/prod/deploy.sh, production only
-./scripts/prod/generate_sitemaps.sh
-export HZ_SITEMAPS_ALREADY_GENERATED=1
-
-./scripts/prod/deploy_backend.sh
-./scripts/prod/deploy_frontend.sh   # sees the flag, skips regeneration
+# scripts/prod/deploy.sh, production
+./scripts/prod/deploy_backend.sh --with-sitemaps
+#   ... migrations -> generate_sitemaps.sh -> vercel --prod
+./scripts/prod/deploy_frontend.sh --skip-sitemaps
 ```
 
-`scripts/prod/deploy_frontend.sh` still generates sitemaps itself when run
-standalone (the flag is unset), so it remains usable on its own.
+Both are arguments rather than environment variables, so a stray exported value can't
+bypass the sitemap gate. Run standalone, `deploy_frontend.sh` still generates and
+validates sitemaps itself; `deploy_backend.sh` without `--with-sitemaps` leaves them
+alone. Preview deploys skip sitemap generation entirely.
+
+`generate_sitemaps.sh` validates its own output before letting a deploy proceed -
+`generate_sitemaps()` swallows most failures and still exits 0, so a zero exit status
+proves nothing. It checks that the index was written by this run, that at least one
+per-language sitemap exists, that every file the index references exists on disk, that
+each generated file contains URLs, and that no dev URLs leaked in.
 
 #### 3.3 XML Structure Examples
 

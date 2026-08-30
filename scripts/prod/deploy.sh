@@ -34,39 +34,33 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# deploy_backend.sh checks this too, but the sitemap step below shells out to
-# python, so check it here to fail with a useful message rather than an
-# ImportError.
-if [ -z "$VIRTUAL_ENV" ]; then
-    echo_error "Virtual environment is not activated. Please activate a virtual environment before deploying."
-    exit 1
+# Sitemap generation (production only) happens inside deploy_backend.sh, not
+# here. It is pinned between two ordering constraints - after the migrations,
+# before anything ships - and that window only exists inside that script. See
+# the call site there for the full reasoning. We just route the flags:
+# --with-sitemaps tells the backend script to generate them, --skip-sitemaps
+# stops the frontend script from redoing the work.
+#
+# These are arguments rather than exported env vars so that a stray value in
+# the caller's shell can never change what a standalone run of either script
+# does - in particular it can never bypass the production sitemap gate.
+BACKEND_ARGS=()
+FRONTEND_ARGS=()
+if [[ "$PREVIEW" == "true" ]]; then
+    BACKEND_ARGS+=(--preview)
+    FRONTEND_ARGS+=(--preview)
+else
+    BACKEND_ARGS+=(--with-sitemaps)
+    FRONTEND_ARGS+=(--skip-sitemaps)
 fi
 
-# 1. Generate sitemaps (production only) - BEFORE anything ships.
-#
-# Sitemap generation is purely local: it reads the production DB and writes
-# files into frontend/static/. Nothing about it needs the backend deployed
-# first. It used to run inside deploy_frontend.sh, which meant any failure
-# there - bad env, DB unreachable, localhost VITE_FRONTEND_URL - aborted the
-# frontend deploy *after* the backend had already shipped, leaving a
-# half-completed release. Running it up front means every sitemap failure mode
-# aborts before anything is deployed.
-#
-# deploy_frontend.sh honours HZ_SITEMAPS_ALREADY_GENERATED and skips its own
-# run, so invoking that script standalone still regenerates sitemaps.
-if [[ "$PREVIEW" == "false" ]]; then
-    echo "Generating sitemaps before deploying..."
-    ./scripts/prod/generate_sitemaps.sh
-    export HZ_SITEMAPS_ALREADY_GENERATED=1
-fi
-
-# 2. Deploy the API
+# 1. Deploy the API (and, for production, generate the sitemaps en route)
 echo "Deploying API to Vercel..."
-./scripts/prod/deploy_backend.sh $([[ "$PREVIEW" == "true" ]] && echo "--preview")
+./scripts/prod/deploy_backend.sh "${BACKEND_ARGS[@]}"
 
-# 3. Deploy the Frontend
+# 2. Deploy the Frontend
 echo "Deploying Frontend to Vercel..."
-./scripts/prod/deploy_frontend.sh $([[ "$PREVIEW" == "true" ]] && echo "--preview")
+./scripts/prod/deploy_frontend.sh "${FRONTEND_ARGS[@]}"
 
 if [[ "$PREVIEW" == "true" ]]; then
     echo_success "Preview deployments completed successfully!"
