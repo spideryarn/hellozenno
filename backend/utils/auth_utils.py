@@ -307,7 +307,7 @@ def get_user_by_id(user_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Pro
             if hasattr(auth_user, "email"):
                 user_data["email"] = auth_user.email
 
-        except DoesNotExist:
+        except AuthUser.DoesNotExist:
             logger.warning(f"AuthUser not found for user_id: {user_id}")
             # Still create minimal user data if we at least have the ID
             user_data = {"id": user_id} if user_id else None

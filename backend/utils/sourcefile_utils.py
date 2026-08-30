@@ -725,24 +725,19 @@ def complete_lemma_metadata(lemma):
     target_language_name = get_language_name(lemma.target_language_code)
 
     # Generate full metadata
-    try:
-        metadata, _ = metadata_for_lemma_full(
-            lemma=lemma.lemma, target_language_name=target_language_name
-        )
+    metadata, _ = metadata_for_lemma_full(
+        lemma=lemma.lemma, target_language_name=target_language_name
+    )
 
-        # Update lemma with new metadata
-        for key, value in metadata.items():
-            setattr(lemma, key, value)
+    # Update lemma with new metadata
+    for key, value in metadata.items():
+        setattr(lemma, key, value)
 
-        # Mark as complete
-        lemma.is_complete = True
-        lemma.save()
+    # Mark as complete
+    lemma.is_complete = True
+    lemma.save()
 
-        return lemma
-    except Exception as e:
-        raise
-
-    return sourcefile_entry
+    return lemma
 
 
 def _create_text_sourcefile(
