@@ -28,13 +28,46 @@ if __name__ == "__main__":
         sys.exit(1)
 
     command = sys.argv[1]
+    args = sys.argv[2:]
+    # Flags are validated per-command, and every command rejects what it does not
+    # implement. A flag that is merely ignored is the accident this guards against:
+    # `migrate --dry-run` used to apply every pending migration for real, and a
+    # `--dry-run` waved through to `rollback` would likewise roll back for real.
+    dry_run = "--dry-run" in args
+    if dry_run and command != "migrate":
+        print(f"--dry-run is only supported for 'migrate', not '{command}'")
+        sys.exit(1)
+    unknown = [a for a in args if a.startswith("-") and a != "--dry-run"]
+    if unknown:
+        print(f"Unknown option(s): {' '.join(unknown)}")
+        sys.exit(1)
+
     if command == "create":
-        if len(sys.argv) != 3:
+        # Guard the name separately: `create --dry-run` otherwise satisfies the arity
+        # check and writes a migration file literally called "--dry-run".
+        if len(args) != 1 or args[0].startswith("-"):
             print("Usage: ./utils/migrate.py create <migration_name>")
             sys.exit(1)
-        router.create(sys.argv[2])
+        router.create(args[0])
     elif command == "migrate":
-        router.run()
+        if dry_run:
+            # router.diff reads router.done, which initialises peewee-migrate's history
+            # model and CREATEs the migratehistory table. On a fresh database that would
+            # make the preview itself mutate, so scan the filesystem instead: with no
+            # history table, nothing has been applied and everything on disk is pending.
+            if router.database.table_exists("migratehistory"):
+                pending = router.diff
+            else:
+                pending = router.todo
+            if not pending:
+                print("No pending migrations.")
+            else:
+                print(f"\nWould apply {len(pending)} migration(s):")
+                for migration in pending:
+                    print(f"⋯ {migration}")
+                print()
+        else:
+            router.run()
     elif command == "list":
         print("\nAvailable migrations:")
         for migration in router.done:
