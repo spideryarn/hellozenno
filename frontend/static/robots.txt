@@ -1,4 +1,126 @@
 User-agent: *
 Disallow: /auth
+Disallow: /admin
+# Bulk list pages: whole-table dumps, no SEO value, expensive to render.
+# Note: `*` spans slashes, so the /phrases rule also catches the sourcefile
+# phrases tab (/language/*/source/*/*/phrases). That is deliberate - it is a tab
+# view of an already-crawlable page. robots.txt has no non-greedy wildcard.
+Disallow: /language/*/wordforms
+Disallow: /language/*/lemmas
+Disallow: /language/*/sentences
+Disallow: /language/*/phrases
+# Interactive/personalised routes
+Disallow: /language/*/flashcards
+Disallow: /language/*/generate
+Disallow: /language/*/search
+Disallow: /language/*/test-error
 Crawl-delay: 10
-Sitemap: https://hellozenno.com/sitemap.xml
+
+# AI training/scraping crawlers: blocked outright (they ignore Crawl-delay)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-SearchBot
+Disallow: /
+
+User-agent: Claude-User
+Disallow: /
+
+# Legacy Anthropic token, no longer in their docs - kept for old crawlers
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: meta-webindexer
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+# OpenAI documents ChatGPT-User as covering GPT Actions traffic too, but says
+# robots.txt "may not apply" to it because the fetches are user-initiated.
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: DuckAssistBot
+Disallow: /
+
+User-agent: ShapBot
+Disallow: /
+
+# SEO-tool crawlers: no user-facing value for this site, high request volume.
+# Semrush runs each product as its own token - a single SemrushBot stanza does
+# not cover the variants, so they are listed individually.
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: SemrushBot-BA
+Disallow: /
+
+User-agent: SemrushBot-SI
+Disallow: /
+
+User-agent: SemrushBot-SWA
+Disallow: /
+
+User-agent: SemrushBot-OCOB
+Disallow: /
+
+User-agent: SemrushBot-FT
+Disallow: /
+
+User-agent: SemrushBot-ESI
+Disallow: /
+
+User-agent: SiteAuditBot
+Disallow: /
+
+User-agent: SplitSignalBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: AhrefsSiteAudit
+Disallow: /
+
+User-agent: Barkrowler
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+# Huawei's crawler (operated by Aspiegel SE), feeding Petal Search and Huawei's
+# AI assistants. ~1.0K requests/day here for negligible reach - Petal Search has
+# no meaningful audience for this site. Token per Aspiegel's own docs:
+# https://aspiegel.com/petalbot
+User-agent: PetalBot
+Disallow: /
+
+# DELIBERATELY NOT BLOCKED: baiduspider, yandexbot, qwantbot.
+# These are real search engines with a genuine product tie - HelloZenno teaches
+# both Chinese and Russian, so their reach is judged worth more than the compute
+# they cost. This was a considered decision, not an oversight: please don't add
+# them to the block list without talking to Greg first.
+
+Sitemap: https://www.hellozenno.com/sitemap.xml
