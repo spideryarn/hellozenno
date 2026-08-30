@@ -3,8 +3,18 @@ import { getApiUrl } from "$lib/api";
 import type { PageServerLoad } from "./$types";
 import { RouteName } from "$lib/generated/routes";
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch, locals }) => {
     const { target_language_code, sourcedir_slug } = params;
+
+    // Forward the access token (already validated in hooks.server.ts via
+    // safeGetSession, so this costs no extra round-trip). Without it an
+    // editor's SSR request looks anonymous to the CDN and can be served the
+    // shared cached copy of a listing they just changed.
+    const headers = new Headers();
+    const { session } = locals;
+    if (session?.access_token) {
+        headers.set('Authorization', `Bearer ${session.access_token}`);
+    }
 
     try {
         // Fetch all sourcefiles for this sourcedir using type-safe route resolution
@@ -16,6 +26,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
                     sourcedir_slug,
                 },
             ),
+            { headers },
         );
 
         if (!response.ok) {
