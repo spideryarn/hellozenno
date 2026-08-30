@@ -3,10 +3,24 @@
 from peewee import CharField, TextField, ForeignKeyField, BlobField, Model
 from playhouse.postgres_ext import JSONField
 
-from db_models import BaseModel, Lemma
+from db_models import BaseModel
 
 
-# Local model definitions matching schema at this migration point
+# Local model definitions matching schema at this migration point.
+# Lemma is redefined here rather than imported from db_models: the live model has
+# since been renamed language_code -> target_language_code (migration 030), so
+# importing it would emit SQL for a column that does not exist yet.
+class Lemma(BaseModel):
+    lemma = CharField()
+    language_code = CharField()
+    part_of_speech = CharField()
+    translations = JSONField()
+    example_usage = JSONField(null=True)
+
+    class Meta:
+        table_name = "lemma"
+
+
 class Sentence(BaseModel):
     language_code = CharField()  # 2-letter language code (e.g. "el" for Greek)
     sentence = TextField()  # the actual sentence text
