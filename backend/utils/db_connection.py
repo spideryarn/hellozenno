@@ -1,5 +1,5 @@
 from flask import g
-from playhouse.pool import PooledPostgresqlExtDatabase
+from playhouse.pool import MaxConnectionsExceeded, PooledPostgresqlExtDatabase
 import logging
 from datetime import datetime
 from config import DB_POOL_CONFIG
@@ -35,7 +35,22 @@ class MonitoredPooledPostgresqlExtDatabase(PooledPostgresqlExtDatabase):
             #     len(self._connections),
             # )
             return conn
+        except MaxConnectionsExceeded:
+            # Pool is full right now. playhouse.connect() retries this ~10x/second
+            # until the timeout, so logging at ERROR here overstates failure by
+            # ~50 lines per request - and fires even for requests that go on to
+            # get a connection. The terminal failure is logged by connect().
+            logger.debug("Connection pool exhausted, waiting for a free slot.")
+            raise
         except Exception as e:
+            logger.error("Database connection failed: %s", str(e))
+            raise
+
+    def connect(self, reuse_if_open=False):
+        """Log pool exhaustion once, when we've actually given up waiting."""
+        try:
+            return super().connect(reuse_if_open)
+        except MaxConnectionsExceeded as e:
             logger.error("Database connection failed: %s", str(e))
             raise
 

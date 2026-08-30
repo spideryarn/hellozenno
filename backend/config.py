@@ -120,7 +120,11 @@ DB_POOL_CONFIG = {
     # audio generation runs in parallel (we keep DB windows short elsewhere)
     "max_connections": 14,
     "stale_timeout": 600,
-    "timeout": 30,
+    # Fail fast when the pool is exhausted: playhouse busy-retries ~10x/second
+    # for the whole timeout, logging an ERROR each time, and we pay for the
+    # serverless function time before the request fails anyway.
+    # Overridable via the DB_POOL_TIMEOUT env var (see utils/db_connection.py).
+    "timeout": 5,
     "autoconnect": True,
     "thread_safe": True,
 }
