@@ -87,17 +87,20 @@ export function playAudioSequence(
     index += 1;
     callbacks?.onProgress?.(index, urls.length);
 
-    currentAudio.onended = playNext;
-    currentAudio.onerror = () => {
-      if (cancelled) return;
-      callbacks?.onError?.(new Error('Audio playback failed'), currentIndex);
+    // A failed load fires onerror AND rejects play(), so both handoffs must be
+    // guarded: otherwise one broken track advances the sequence twice, skipping
+    // the next one and reporting more failures than there are tracks.
+    let settled = false;
+    const settle = (err?: Error) => {
+      if (settled || cancelled) return;
+      settled = true;
+      if (err) callbacks?.onError?.(err, currentIndex);
       playNext();
     };
-    currentAudio.play().catch((err) => {
-      if (cancelled) return;
-      callbacks?.onError?.(err, currentIndex);
-      playNext();
-    });
+
+    currentAudio.onended = () => settle();
+    currentAudio.onerror = () => settle(new Error('Audio playback failed'));
+    currentAudio.play().catch((err) => settle(err));
   };
 
   playNext();

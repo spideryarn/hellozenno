@@ -58,6 +58,30 @@ def get_lemma_data_api(target_language_code: str, lemma: str):
 # -------------------------
 
 
+def _serialise_lemma_audio_variants(
+    target_language_code: str, lemma: str, variants
+) -> list[dict]:
+    """Shape LemmaAudio rows for the API.
+
+    Shared by the variants listing and the ensure endpoint so the two can never
+    drift - the ensure response is what the client plays from, to avoid a
+    read-after-write against a CDN-cached listing.
+    """
+    encoded_lemma = urllib.parse.quote(lemma, safe="")
+    return [
+        {
+            "id": v.id,
+            "provider": v.provider,
+            "metadata": v.metadata or {},
+            "created_at": (
+                v.created_at.isoformat() if getattr(v, "created_at", None) else None
+            ),
+            "url": f"/api/lang/lemma/{target_language_code}/{encoded_lemma}/audio?variant_id={v.id}",
+        }
+        for v in variants
+    ]
+
+
 @lemma_api_bp.route("/<target_language_code>/<lemma>/audio/variants", methods=["GET"])
 def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
     """List available audio variants for a lemma by provider/voice.
@@ -86,21 +110,7 @@ def get_lemma_audio_variants_api(target_language_code: str, lemma: str):
         .where(LemmaAudio.lemma == lemma_model)
         .order_by(LemmaAudio.created_at)
     )
-    out = []
-    encoded_lemma = urllib.parse.quote(lemma, safe="")
-    for v in variants:
-        metadata = v.metadata or {}
-        out.append(
-            {
-                "id": v.id,
-                "provider": v.provider,
-                "metadata": metadata,
-                "created_at": (
-                    v.created_at.isoformat() if getattr(v, "created_at", None) else None
-                ),
-                "url": f"/api/lang/lemma/{target_language_code}/{encoded_lemma}/audio?variant_id={v.id}",
-            }
-        )
+    out = _serialise_lemma_audio_variants(target_language_code, lemma, variants)
     # Short TTL: a logged-in user can add variants, and anonymous viewers
     # shouldn't lag far behind the real list.
     return cache_publicly(jsonify(out), S_MAXAGE_SHORT, STALE_WHILE_REVALIDATE_SHORT)
@@ -203,12 +213,24 @@ def ensure_lemma_audio_api(target_language_code: str, lemma: str):
             401,
         )
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+        return jsonify({"error": safe_error_message(exc, "ensure lemma audio")}), 400
     except Exception as exc:
         logger.exception(f"Failed to ensure audio variants for lemma '{lemma}'")
-        return jsonify({"error": f"Failed to ensure audio variants: {exc}"}), 500
+        # Don't echo raw exception text: persistence failures now propagate here,
+        # and their messages can carry schema and connection detail.
+        return jsonify({"error": safe_error_message(exc, "ensure lemma audio")}), 500
 
-    return jsonify({"created": created, "total": len(variants)})
+    # Return the variants themselves so the client never has to re-read the
+    # publicly-cacheable listing endpoint immediately after writing to it.
+    return jsonify(
+        {
+            "created": created,
+            "total": len(variants),
+            "variants": _serialise_lemma_audio_variants(
+                target_language_code, lemma, variants
+            ),
+        }
+    )
 
 
 @lemma_api_bp.route("/<target_language_code>/lemmas")

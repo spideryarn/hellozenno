@@ -61,6 +61,24 @@ export function getApiUrl<T extends RouteName>(
 }
 
 /**
+ * Resolve a path returned by the API into a URL the browser can fetch directly.
+ *
+ * Several endpoints return root-relative media paths (e.g. "/api/lang/lemma/el/x/audio").
+ * Those only work where something proxies /api to the backend - which the vite dev server
+ * does, but production does not: the frontend (www.hellozenno.com) and the API
+ * (api.hellozenno.com) are separate deployments, and www has no /api route. Feeding such a
+ * path straight to `new Audio()` resolves it against the page origin and 404s in production
+ * while working perfectly in dev.
+ *
+ * Absolute URLs are returned untouched, so this is safe to apply to any URL the API hands us.
+ */
+export function resolveApiPath(path: string): string {
+    // Any absolute URI (http:, https:, data:, blob:) is already resolvable.
+    if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return path;
+    return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+/**
  * Type-safe API fetch function
  *
  * @param supabaseClient Optional Supabase client instance (for client-side calls)

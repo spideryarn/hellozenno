@@ -2,7 +2,7 @@
   import { onDestroy } from 'svelte';
   import SpeakerHigh from 'phosphor-svelte/lib/SpeakerHigh';
   import LoadingSpinner from './LoadingSpinner.svelte';
-  import { apiFetch } from '$lib/api';
+  import { apiFetch, resolveApiPath } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { LEMMA_AUDIO_SAMPLES } from '$lib/config';
@@ -25,21 +25,25 @@
     playbackHandle?.cancel();
   });
 
-  async function fetchVariants(): Promise<
-    { id: number; provider: string; metadata: Record<string, any>; url: string }[]
-  > {
+  type Variant = { id: number; provider: string; metadata: Record<string, any>; url: string };
+
+  async function fetchVariants(skipCache = false): Promise<Variant[]> {
     const res = await apiFetch({
       supabaseClient: null, // public endpoint
       routeName: RouteName.LEMMA_API_GET_LEMMA_AUDIO_VARIANTS_API,
       params: { target_language_code, lemma },
-      options: { method: 'GET' },
+      // no-store: this list is publicly cacheable, so a read straight after
+      // generating would otherwise be served the pre-generation empty list.
+      options: { method: 'GET', cache: skipCache ? 'no-store' : 'default' },
     });
     return Array.isArray(res) ? res : [];
   }
 
-  async function ensureVariants(n: number): Promise<{ success: boolean; isAuthError: boolean }> {
+  async function ensureVariants(
+    n: number,
+  ): Promise<{ success: boolean; isAuthError: boolean; variants: Variant[] | null }> {
     try {
-      await apiFetch({
+      const res = await apiFetch({
         supabaseClient: supabaseClient,
         routeName: RouteName.LEMMA_API_ENSURE_LEMMA_AUDIO_API,
         params: { target_language_code, lemma },
@@ -47,11 +51,17 @@
         searchParams: { n },
         timeoutMs: 90000, // 90s for audio generation (3 samples × ~10s each)
       });
-      return { success: true, isAuthError: false };
+      // The ensure response carries the full list. Re-reading the variants
+      // endpoint here instead would hit a stale, publicly-cached empty list -
+      // that GET is anonymous and browser-cacheable for 60s, so a read straight
+      // after this write reports "no audio" for audio we just generated.
+      // null (rather than []) means an older backend that doesn't send them yet.
+      const variants = Array.isArray(res?.variants) ? res.variants : null;
+      return { success: true, isAuthError: false, variants };
     } catch (e: any) {
       const isAuthError = e?.status === 401;
       console.warn('LemmaAudioButton: failed to ensure audio', isAuthError ? '(auth required)' : '', e);
-      return { success: false, isAuthError };
+      return { success: false, isAuthError, variants: null };
     }
   }
 
@@ -70,9 +80,11 @@
       const needed = LEMMA_AUDIO_SAMPLES - variants.length;
       if (needed > 0) {
         if (supabaseClient) {
-          const { success, isAuthError } = await ensureVariants(LEMMA_AUDIO_SAMPLES);
+          const { success, isAuthError, variants: ensured } = await ensureVariants(LEMMA_AUDIO_SAMPLES);
           if (success) {
-            variants = await fetchVariants();
+            // Only reached against a backend too old to return the variants
+            // itself; skip the cache so that fallback can't read the stale list.
+            variants = ensured ?? (await fetchVariants(true));
           } else if (variants.length === 0) {
             errorMessage = isAuthError ? 'Login required to generate audio.' : 'Failed to generate audio.';
             isGeneratingAudio = false;
@@ -86,7 +98,7 @@
       }
       
       // 3) Build URLs and play
-      const urls = variants.slice(0, LEMMA_AUDIO_SAMPLES).map((v) => v.url);
+      const urls = variants.slice(0, LEMMA_AUDIO_SAMPLES).map((v) => resolveApiPath(v.url));
       if (!urls.length) {
         errorMessage = 'No audio available.';
         isGeneratingAudio = false;
@@ -98,13 +110,23 @@
       isPlayingAudio = true;
       totalToPlay = toPlay.length;
       
+      let playbackFailures = 0;
       playbackHandle = playAudioSequence(toPlay, {
         onProgress: (current, total) => {
           progressCount = current;
         },
+        onError: (err, index) => {
+          // Without this the sequence advances silently, so a run of failed
+          // loads looks identical to successful playback with no sound.
+          playbackFailures += 1;
+          console.warn(`LemmaAudioButton: playback failed for variant ${index}`, err);
+        },
         onComplete: () => {
           isPlayingAudio = false;
           playbackHandle = null;
+          if (playbackFailures === toPlay.length) {
+            errorMessage = 'Audio failed to play.';
+          }
         },
         onCancel: () => {
           isPlayingAudio = false;

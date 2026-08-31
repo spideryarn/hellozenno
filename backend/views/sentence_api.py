@@ -132,6 +132,31 @@ def get_sentence_audio_api(target_language_code: str, sentence_id: int):
     return response
 
 
+def _serialise_sentence_audio_variants(
+    target_language_code: str, sentence_id: int, variants
+) -> list[dict]:
+    """Shape SentenceAudio rows for the API.
+
+    Shared by the variants listing and the ensure endpoint so the two can never
+    drift - the ensure response is what the client plays from, to avoid a
+    read-after-write against a CDN-cached listing.
+    """
+    return [
+        {
+            "id": variant.id,
+            "provider": variant.provider,
+            "metadata": variant.metadata or {},
+            "created_at": (
+                variant.created_at.isoformat()
+                if getattr(variant, "created_at", None)
+                else None
+            ),
+            "url": f"/api/lang/sentence/{target_language_code}/{sentence_id}/audio?variant_id={variant.id}",
+        }
+        for variant in variants
+    ]
+
+
 @sentence_api_bp.route(
     "/<target_language_code>/<int:sentence_id>/audio/variants", methods=["GET"]
 )
@@ -151,22 +176,9 @@ def get_sentence_audio_variants_api(target_language_code: str, sentence_id: int)
         .where(SentenceAudio.sentence == sentence)
         .order_by(SentenceAudio.created_at)
     )
-    payload = []
-    for variant in variants:
-        metadata = variant.metadata or {}
-        payload.append(
-            {
-                "id": variant.id,
-                "provider": variant.provider,
-                "metadata": metadata,
-                "created_at": (
-                    variant.created_at.isoformat()
-                    if getattr(variant, "created_at", None)
-                    else None
-                ),
-                "url": f"/api/lang/sentence/{target_language_code}/{sentence_id}/audio?variant_id={variant.id}",
-            }
-        )
+    payload = _serialise_sentence_audio_variants(
+        target_language_code, sentence_id, variants
+    )
 
     # Short TTL: a logged-in user can add variants, and anonymous viewers
     # shouldn't lag far behind the real list.
@@ -264,7 +276,17 @@ def ensure_sentence_audio_api(target_language_code: str, slug: str):
         logger.exception(f"Failed to ensure audio variants for sentence '{slug}'")
         return jsonify({"error": safe_error_message(exc, "ensure sentence audio")}), 500
 
-    return jsonify({"created": created, "total": len(variants)})
+    # Return the variants themselves so the client never has to re-read the
+    # publicly-cacheable listing endpoint immediately after writing to it.
+    return jsonify(
+        {
+            "created": created,
+            "total": len(variants),
+            "variants": _serialise_sentence_audio_variants(
+                target_language_code, sentence.id, variants
+            ),
+        }
+    )
 
 
 @sentence_api_bp.route("/<target_language_code>/sentences", methods=["GET"])

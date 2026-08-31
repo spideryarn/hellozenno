@@ -193,7 +193,11 @@ def ensure_audio_data(
         temp_file.seek(0)
         audio_data = temp_file.read()
 
-        # Check size
+        # Check size. An empty file means the TTS call produced nothing; storing
+        # it yields a variant that can never play, and the failure only shows up
+        # later as silence.
+        if not audio_data:
+            raise ValueError("Generated audio was empty")
         if len(audio_data) > MAX_AUDIO_SIZE_FOR_STORAGE:
             raise ValueError(
                 f"Generated audio too large (max {MAX_AUDIO_SIZE_FOR_STORAGE/(1024*1024):.1f}MB)"
@@ -226,6 +230,32 @@ def select_random_voices(n: int, exclude: set[str] | None = None) -> list[str]:
         return available
 
     return random.sample(available, n)
+
+
+def _is_duplicate_variant_error(exc: Exception) -> bool:
+    """True only when an insert failed because the same voice already exists.
+
+    Match the driver's SQLSTATE for unique_violation (23505), not peewee's
+    IntegrityError: peewee maps foreign-key violations to IntegrityError too, so
+    treating that class as "already there" would swallow a genuine failure to
+    persist and report it to the caller as success.
+
+    Note that neither audio table currently declares a uniqueness constraint on
+    (entity, voice_name), so in practice this cannot fire and the check-then-insert
+    above is the only guard against a concurrent duplicate. This stays as the
+    correct classifier for when that constraint is added; until then a race
+    inserts a duplicate row rather than raising.
+    """
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if getattr(current, "pgcode", None) == "23505":
+            return True
+        # Peewee 3.18 re-raises inside a context manager, which puts the driver
+        # error in __context__ rather than __cause__. Walk both.
+        current = current.__cause__ or current.__context__
+    return False
 
 
 def _build_metadata(voice_name: str, settings: Optional[dict[str, Any]] = None) -> dict:
@@ -323,17 +353,26 @@ def ensure_sentence_audio_variants(
                 )
                 created_variants.append(variant)
             except Exception as e:
-                # Handle race condition where another request created this variant
-                logger.debug(f"Skipping duplicate audio variant: {e}")
+                # A concurrent request may have inserted this voice between the
+                # check above and this insert. Anything else is a real failure and
+                # must not be reported to the caller as a success.
+                if not _is_duplicate_variant_error(e):
+                    logger.error(
+                        f"Failed to persist sentence audio variant "
+                        f"(voice={voice_name}): {e}",
+                        exc_info=True,
+                    )
+                    raise
+                logger.debug(f"Skipping duplicate sentence audio variant: {e}")
 
-    if created_variants:
-        # Refresh final list so callers can rely on ordering/ids
-        with database.connection_context():
-            existing_variants = list(
-                SentenceAudio.select()
-                .where(SentenceAudio.sentence == sentence)
-                .order_by(SentenceAudio.created_at)
-            )
+    # Always re-read: a concurrent request may have added variants even when this
+    # one created none, and callers rely on this list being the current truth.
+    with database.connection_context():
+        existing_variants = list(
+            SentenceAudio.select()
+            .where(SentenceAudio.sentence == sentence)
+            .order_by(SentenceAudio.created_at)
+        )
 
     return existing_variants, len(created_variants)
 
@@ -418,16 +457,26 @@ def ensure_lemma_audio_variants(
                 )
                 created_variants.append(variant)
             except Exception as e:
-                # Handle race condition where another request created this variant
+                # A concurrent request may have inserted this voice between the
+                # check above and this insert. Anything else is a real failure and
+                # must not be reported to the caller as a success.
+                if not _is_duplicate_variant_error(e):
+                    logger.error(
+                        f"Failed to persist lemma audio variant "
+                        f"(voice={voice_name}): {e}",
+                        exc_info=True,
+                    )
+                    raise
                 logger.debug(f"Skipping duplicate lemma audio variant: {e}")
 
-    if created_variants:
-        with database.connection_context():
-            existing_variants = list(
-                LemmaAudio.select()
-                .where(LemmaAudio.lemma == lemma)
-                .order_by(LemmaAudio.created_at)
-            )
+    # Always re-read: a concurrent request may have added variants even when this
+    # one created none, and callers rely on this list being the current truth.
+    with database.connection_context():
+        existing_variants = list(
+            LemmaAudio.select()
+            .where(LemmaAudio.lemma == lemma)
+            .order_by(LemmaAudio.created_at)
+        )
 
     return existing_variants, len(created_variants)
 

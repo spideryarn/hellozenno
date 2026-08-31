@@ -2,7 +2,7 @@
   import { onDestroy } from 'svelte';
   import SpeakerHigh from 'phosphor-svelte/lib/SpeakerHigh';
   import LoadingSpinner from './LoadingSpinner.svelte';
-  import { apiFetch, getApiUrl } from '$lib/api';
+  import { apiFetch, getApiUrl, resolveApiPath } from '$lib/api';
   import { RouteName } from '$lib/generated/routes';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { SENTENCE_AUDIO_SAMPLES } from '$lib/config';
@@ -53,12 +53,14 @@
     }
   }
 
-  async function ensureVariants(slug: string): Promise<{ success: boolean; isAuthError: boolean }> {
+  async function ensureVariants(
+    slug: string,
+  ): Promise<{ success: boolean; isAuthError: boolean; variants: { url: string }[] | null }> {
     if (!supabaseClient) {
-      return { success: false, isAuthError: true };
+      return { success: false, isAuthError: true, variants: null };
     }
     try {
-      await apiFetch({
+      const res = await apiFetch({
         supabaseClient,
         routeName: RouteName.SENTENCE_API_ENSURE_SENTENCE_AUDIO_API,
         params: { target_language_code, slug },
@@ -66,11 +68,17 @@
         searchParams: { n: SENTENCE_AUDIO_SAMPLES },
         timeoutMs: 90000, // 90s for audio generation
       });
-      return { success: true, isAuthError: false };
+      // The ensure response carries the full list. Re-reading the variants
+      // endpoint here instead would hit a stale, publicly-cached empty list -
+      // that GET is anonymous and browser-cacheable for 60s, so a read straight
+      // after this write reports "no audio" for audio we just generated.
+      // null (rather than []) means an older backend that doesn't send them yet.
+      const variants = Array.isArray(res?.variants) ? res.variants : null;
+      return { success: true, isAuthError: false, variants };
     } catch (e: any) {
       const isAuthError = e?.status === 401;
       console.warn('SentenceAudioButton: failed to ensure audio', isAuthError ? '(auth required)' : '', e);
-      return { success: false, isAuthError };
+      return { success: false, isAuthError, variants: null };
     }
   }
 
@@ -80,7 +88,7 @@
   ): string[] {
     return variants
       .slice(0, SENTENCE_AUDIO_SAMPLES)
-      .map((v) => v.url ?? getApiUrl(RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API, {
+      .map((v) => v.url ? resolveApiPath(v.url) : getApiUrl(RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_API, {
         target_language_code,
         sentence_id,
       }));
@@ -100,7 +108,7 @@
         return;
       }
 
-      const { id, has_audio } = info;
+      const { id } = info;
 
       let variants = await apiFetch({
         supabaseClient: null,
@@ -109,16 +117,22 @@
         options: { method: 'GET' },
       });
 
-      if ((!Array.isArray(variants) || variants.length < SENTENCE_AUDIO_SAMPLES) && !has_audio) {
-        const { success, isAuthError } = await ensureVariants(sentenceSlug);
+      // The variants list is the authority. has_audio only means "at least one
+      // row exists", so letting it veto generation both left users staring at
+      // "No audio available." when the list was empty, and stopped a
+      // one-variant sentence ever reaching the full set.
+      const variantsSoFar = Array.isArray(variants) ? variants.length : 0;
+      if (variantsSoFar < SENTENCE_AUDIO_SAMPLES) {
+        const { success, isAuthError, variants: ensured } = await ensureVariants(sentenceSlug);
         if (success) {
-          // Refetch variants after successful generation
-          variants = await apiFetch({
+          // Only reached against a backend too old to return the variants
+          // itself; no-store keeps that fallback off the stale cached list.
+          variants = ensured ?? (await apiFetch({
             supabaseClient: null,
             routeName: RouteName.SENTENCE_API_GET_SENTENCE_AUDIO_VARIANTS_API,
             params: { target_language_code, sentence_id: id },
-            options: { method: 'GET' },
-          });
+            options: { method: 'GET', cache: 'no-store' },
+          }));
         } else if (!Array.isArray(variants) || variants.length === 0) {
           // Only error if we have no variants to play at all
           errorMessage = isAuthError ? 'Login required to generate audio.' : 'Failed to generate audio.';
@@ -143,13 +157,23 @@
       isGeneratingAudio = false;
       isPlayingAudio = true;
       
+      let playbackFailures = 0;
       playbackHandle = playAudioSequence(toPlay, {
         onProgress: (current, total) => {
           progressCount = current;
         },
+        onError: (err, index) => {
+          // Without this the sequence advances silently, so a run of failed
+          // loads looks identical to successful playback with no sound.
+          playbackFailures += 1;
+          console.warn(`SentenceAudioButton: playback failed for variant ${index}`, err);
+        },
         onComplete: () => {
           isPlayingAudio = false;
           playbackHandle = null;
+          if (playbackFailures === toPlay.length) {
+            errorMessage = 'Audio failed to play.';
+          }
         },
         onCancel: () => {
           isPlayingAudio = false;
