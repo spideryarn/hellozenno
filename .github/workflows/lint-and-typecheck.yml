@@ -74,7 +74,7 @@ jobs:
       - name: Install
         run: npm ci
 
-      # ENFORCING. svelte-check currently reports 0 errors (5 warnings), so this
+      # ENFORCING. svelte-check currently reports 0 errors (3 warnings), so this
       # is a genuine gate: it blocks any new type error entering the frontend.
       - name: svelte-check
         run: npm run check
