@@ -123,6 +123,8 @@ Before unpinning `ast-types`, diff 0.16.1...0.16.3 and run `npm audit signatures
 
 ### Debugging
 - Logs: `/logs/backend.log`, `/logs/frontend.log`
+- Production (Vercel) runtime logs: `timeout 30 vercel logs https://api.hellozenno.com`
+  (or `https://www.hellozenno.com`). The `timeout` matters - it live-tails and never exits.
 - See: `backend/docs/DEBUGGING.md`
 
 ### Git Workflow

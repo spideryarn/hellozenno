@@ -21,14 +21,19 @@ INSERT INTO auth.users (
   encrypted_password, email_confirmed_at,
   created_at, updated_at, last_sign_in_at,
   raw_app_meta_data, raw_user_meta_data,
-  is_sso_user, is_anonymous
+  is_sso_user, is_anonymous,
+  -- GoTrue scans these into Go strings, so NULL makes every login 500 with
+  -- "converting NULL to string is unsupported". They are nullable with no
+  -- default, so we must set them explicitly.
+  confirmation_token, recovery_token, email_change_token_new, email_change
 )
 SELECT
   '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'testing@hellozenno.com',
   crypt('hello123', gen_salt('bf')), now(),
   now(), now(), now(),
   jsonb_build_object('provider','email','providers', ARRAY['email']), jsonb_build_object('email','testing@hellozenno.com'),
-  false, false
+  false, false,
+  '', '', '', ''
 WHERE NOT EXISTS (
   SELECT 1 FROM auth.users WHERE email='testing@hellozenno.com' AND is_sso_user=false AND deleted_at IS NULL
 );
@@ -39,14 +44,19 @@ INSERT INTO auth.users (
   encrypted_password, email_confirmed_at,
   created_at, updated_at, last_sign_in_at,
   raw_app_meta_data, raw_user_meta_data,
-  is_sso_user, is_anonymous
+  is_sso_user, is_anonymous,
+  -- GoTrue scans these into Go strings, so NULL makes every login 500 with
+  -- "converting NULL to string is unsupported". They are nullable with no
+  -- default, so we must set them explicitly.
+  confirmation_token, recovery_token, email_change_token_new, email_change
 )
 SELECT
   '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 'admin@hellozenno.com',
   crypt('hello123', gen_salt('bf')), now(),
   now(), now(), now(),
   jsonb_build_object('provider','email','providers', ARRAY['email']), jsonb_build_object('email','admin@hellozenno.com'),
-  false, false
+  false, false,
+  '', '', '', ''
 WHERE NOT EXISTS (
   SELECT 1 FROM auth.users WHERE email='admin@hellozenno.com' AND is_sso_user=false AND deleted_at IS NULL
 );
@@ -78,6 +88,15 @@ FROM u
 ON CONFLICT (user_id) DO UPDATE
 SET admin_granted_at = EXCLUDED.admin_granted_at,
     updated_at = now();
+
+-- Heal rows created by an older version of this script, which left these
+-- columns NULL and so made every password login fail with a GoTrue 500.
+UPDATE auth.users SET
+  confirmation_token     = COALESCE(confirmation_token, ''),
+  recovery_token         = COALESCE(recovery_token, ''),
+  email_change_token_new = COALESCE(email_change_token_new, ''),
+  email_change           = COALESCE(email_change, '')
+WHERE email IN ('testing@hellozenno.com','admin@hellozenno.com');
 
 -- Show results
 SELECT email, id::text AS user_id FROM auth.users
