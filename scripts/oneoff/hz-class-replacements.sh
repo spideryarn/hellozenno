@@ -1,7 +1,7 @@
 #\!/bin/bash
 # Script to update class names with hz- prefix in Hello Zenno codebase
 
-cd /Users/greg/Dropbox/dev/experim/hellozenno
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 echo "Replacing button classes in HTML/Svelte files..."
 

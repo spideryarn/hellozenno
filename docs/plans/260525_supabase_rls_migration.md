@@ -316,12 +316,12 @@ removes the `migratehistory` row. Slightly slower (~5 seconds).
 
 ## Files referenced
 - `/Users/greg/security-investigations/260503-supabase-vercel/scripts/enable_rls_hellozenno.sql` — original draft (do not apply as-is)
-- `/Users/greg/Dropbox/dev/experim/hellozenno/backend/utils/db_connection.py`
-- `/Users/greg/Dropbox/dev/experim/hellozenno/backend/utils/auth_utils.py`
-- `/Users/greg/Dropbox/dev/experim/hellozenno/backend/db_models.py`
-- `/Users/greg/Dropbox/dev/experim/hellozenno/backend/docs/MIGRATIONS.md`
-- `/Users/greg/Dropbox/dev/experim/hellozenno/backend/tests/backend/conftest.py`
-- `/Users/greg/Dropbox/dev/experim/hellozenno/.env.prod`
-- `/Users/greg/Dropbox/dev/experim/hellozenno/frontend/src/routes/language/[target_language_code]/{lemmas,wordforms,sentences,sources,generate}/+page.server.ts`
-- `/Users/greg/Dropbox/dev/experim/hellozenno/frontend/src/lib/datagrid/providers/supabase.ts`
+- `/Users/greg/dev/hellozenno/backend/utils/db_connection.py`
+- `/Users/greg/dev/hellozenno/backend/utils/auth_utils.py`
+- `/Users/greg/dev/hellozenno/backend/db_models.py`
+- `/Users/greg/dev/hellozenno/backend/docs/MIGRATIONS.md`
+- `/Users/greg/dev/hellozenno/backend/tests/backend/conftest.py`
+- `/Users/greg/dev/hellozenno/.env.prod`
+- `/Users/greg/dev/hellozenno/frontend/src/routes/language/[target_language_code]/{lemmas,wordforms,sentences,sources,generate}/+page.server.ts`
+- `/Users/greg/dev/hellozenno/frontend/src/lib/datagrid/providers/supabase.ts`
 - [`docs/conversations/260525a_supabase_pat_compromise_remediation.md`](../conversations/260525a_supabase_pat_compromise_remediation.md)

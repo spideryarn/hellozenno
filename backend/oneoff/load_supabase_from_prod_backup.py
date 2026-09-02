@@ -9,6 +9,7 @@ This script:
 """
 
 import os
+from pathlib import Path
 
 from gjdutils.cmd import run_cmd
 from utils.db_connection import parse_database_url, init_db, get_db_config
@@ -16,7 +17,11 @@ from utils.env_config import DATABASE_URL
 from db_models import get_models, Lemma, Sourcedir, Sourcefile
 
 # Constants
-BACKUP_PATH = "/Users/greg/Dropbox/dev/experim/hellozenno/backup/production_backup_250209_0231_22.sql"
+BACKUP_PATH = str(
+    Path(__file__).resolve().parents[2]
+    / "backup"
+    / "production_backup_250224_2037_54.sql"
+)
 
 
 def load_backup(db_url: str):
