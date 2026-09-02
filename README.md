@@ -85,7 +85,7 @@ Both types of source files support:
    Open http://localhost:5173 in your browser
 
 Tip:
-- If another app is using port 5173, free it with `lsof -ti:5173 | xargs kill -9` or run the frontend on 5174 using `cd frontend && PORT=5174 npm run dev`, then open http://localhost:5174
+- If another app is using port 5173, see who holds it with `lsof -nP -iTCP:5173 -sTCP:LISTEN` before you stop anything - on a shared machine it is often another project's dev server. Otherwise run the frontend on 5174 using `cd frontend && PORT=5174 npm run dev`, then open http://localhost:5174
 
 ### Detailed Documentation
 

@@ -178,6 +178,6 @@ source /Users/greg/.venvs/hellozenno__backend/bin/activate
 ```
 
 Tip:
-- If port 5173 is in use: `lsof -ti:5173 | xargs kill -9` or run on 5174 with `cd frontend && PORT=5174 npm run dev`.
+- If port 5173 is in use, find out who holds it first with `lsof -nP -iTCP:5173 -sTCP:LISTEN` - on Greg's shared remote box it is probably another project's dev server, and killing it destroys somebody else's work. Run on 5174 instead: `cd frontend && PORT=5174 npm run dev`.
 
 - Flask backend should auto-reload on Python changes in development, but it can occasionally get stuck. If changes don't show up, restart `./scripts/local/run_backend.sh`.

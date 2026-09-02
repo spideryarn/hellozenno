@@ -27,16 +27,24 @@ function show_usage {
     echo "  $0 --prod-frontend      # Run with production frontend for testing"
 }
 
-# Function to kill existing Flask servers
-function kill_flask_servers {
-    echo "Killing any existing Flask servers on port $FLASK_PORT..."
-    lsof -ti:$FLASK_PORT | xargs kill -9 2>/dev/null || true
-}
-
-# Function to kill Vite dev server
-function kill_vite_server {
-    echo "Killing any running Vite development server..."
-    lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+# Refuse an occupied port, and say who is holding it.
+#
+# These two used to be `lsof -ti:$PORT | xargs kill -9`. On Greg's shared remote
+# box the holder is very likely somebody else: 5173 is contested with another
+# repo's Vite dev server, and killing it destroys an agent's work that is
+# nothing to do with us. So we stop and let a person decide.
+# See docs/plans/260831a_remote_box_gjd_remote_setup.md.
+function require_free_port {
+    local port="$1"
+    local what="$2"
+    local holders
+    holders="$(lsof -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+    if [ -n "$holders" ]; then
+        echo "Error: port $port is in use ($what). Refusing to kill the holder:" >&2
+        echo "$holders" >&2
+        echo "Stop it yourself, or use another port (e.g. FLASK_PORT=3001)." >&2
+        exit 1
+    fi
 }
 
 # Parse command-line arguments
@@ -68,6 +76,11 @@ if [ -z "$FLASK_PORT" ]; then
     exit 1
 fi
 
+# Flask's port must be ours, and we find that out before spending a minute on
+# pip -- the old kill-the-holder line ran after the installs, which is a slow
+# way to reach a decision that needs nothing installed.
+require_free_port "$FLASK_PORT" "Flask"
+
 # Install API requirements if Flask is not installed
 if ! pip show flask > /dev/null 2>&1; then
     echo "Installing API requirements..."
@@ -80,15 +93,13 @@ if ! pip show gjdutils > /dev/null 2>&1; then
     pip install -e gjdutils
 fi
 
-# Always kill existing Flask servers
-kill_flask_servers
-
 # Setup environment variables based on mode
 if [ "$PROD_FRONTEND" = true ]; then
     echo "Starting Flask in production frontend mode (for local testing)"
     
-    # Kill Vite dev server if running
-    kill_vite_server
+    # A Vite dev server on 5173 is the thing this mode exists to avoid serving
+    # from, so it must not be running -- but it may not be ours to stop.
+    require_free_port 5173 "Vite dev server"
     
     # The new, more explicit environment variable name
     export LOCAL_CHECK_OF_PROD_FRONTEND=true
