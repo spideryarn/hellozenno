@@ -1,0 +1,22 @@
+# How `gjd-remote` sets Hello Zenno up on Greg's shared Hetzner box.
+#
+# `gjd-remote` is a CLI that lives in Greg's other repo, spideryarn/reading2.
+# The contract for this file is written down there, in
+# docs/project/hetzner-remote-server-box.md, section "Which repo, and where on
+# the box" (and its subsection "Setting a repo up: `gjd-remote setup`").
+# Every key is optional, an unknown key is an error naming the key, and a
+# command must be a single line.
+#
+# There is no `setup =` line on purpose: an executable `.gjd-remote/setup` is
+# the default when one exists, and this repo has one. Both scripts run on the
+# box, from the checkout, over non-interactive ssh -- no profile is sourced,
+# there is no stdin and no terminal -- so they use explicit paths and never ask
+# a question. See ../docs/plans/260831a_remote_box_gjd_remote_setup.md.
+#
+# What setup deliberately leaves out, for v1: `.env.local`, the local Supabase
+# stack, the migrations and Playwright's browsers. Setup installs dependencies;
+# it does not stand the application up. The box runs one repo's application
+# stack at a time, so bringing Hello Zenno's up is a decision for a person,
+# not a side effect of cloning it.
+
+check = "./.gjd-remote/check"

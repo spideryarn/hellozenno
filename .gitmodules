@@ -1,4 +1,10 @@
 [submodule "gjdutils"]
 	path = gjdutils
-	url = git@github.com:gregdetre/gjdutils.git
+	# https, not ssh: Greg's shared remote box has no GitHub ssh key and
+	# authenticates over https through a credential helper that reads the owner
+	# out of the request path. An ssh URL never reaches that helper, so
+	# `git submodule update --init` there fails. https works on both machines,
+	# which a global url.insteadOf rewrite on the box would not.
+	# See docs/plans/260831a_remote_box_gjd_remote_setup.md.
+	url = https://github.com/gregdetre/gjdutils.git
 	branch = main

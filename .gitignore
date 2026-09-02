@@ -9,6 +9,9 @@ __pycache__/
 .DS_Store
 backup/
 obsolete/
+# .gjd-remote/setup creates this on the remote box; Greg's laptop venv lives
+# outside the repo, so nothing here was ignoring it before.
+.venv/
 
 # Frontend-related entries
 node_modules/

@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# Install Hello Zenno's dependencies in this checkout. Run by `gjd-remote setup`
+# on Greg's shared Hetzner box, from the checkout, over non-interactive ssh:
+# no profile is sourced, there is no stdin and no terminal, and PATH is
+# /usr/local/bin:/usr/bin:/bin:/usr/local/sbin. So: explicit paths, no
+# questions, no assumptions about a login shell. See .gjd-remote/config.toml and
+# docs/plans/260831a_remote_box_gjd_remote_setup.md.
+#
+# Idempotent and non-destructive. It installs; it never removes. Two rules
+# follow from the box being SHARED, with other agents' sessions live in other
+# checkouts at the same time:
+#
+#   - `npm ci` deletes node_modules before it rebuilds it, so it runs only when
+#     there is no node_modules to delete. `.gjd-remote/check` is what notices a
+#     stale one, by looking.
+#   - `pip install -r` is additive and safe to repeat, so it is repeated, and an
+#     existing .venv is reused rather than recreated.
+#
+# Nothing here may import the app. backend/utils/env_config.py requires *every*
+# key in .env.local, and there is no .env.local on the box.
+#
+# Not done here, on purpose: .env.local, the local Supabase stack, migrations,
+# Playwright's browsers. This installs dependencies; it does not stand the
+# application up.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+root="$PWD"
+
+# The checkout, identified by a file only this repo has -- `cd ..` from a script
+# is a guess, and running pip and npm in the wrong tree is worth one test.
+if [ ! -f backend/api/index.py ]; then
+  echo "setup: $root is not a Hello Zenno checkout (no backend/api/index.py)" >&2
+  exit 1
+fi
+
+echo "=== hellozenno setup in $root ==="
+
+# --- the gjdutils submodule -------------------------------------------------
+# .gitmodules uses an https URL, because the box has no GitHub ssh key and
+# authenticates through a credential helper that reads the owner out of the
+# request path. An ssh URL never reaches that helper.
+echo "--- submodule: gjdutils"
+git submodule update --init --recursive
+
+# --- the backend virtualenv -------------------------------------------------
+if [ -x .venv/bin/python ]; then
+  echo "--- venv: reusing $root/.venv"
+else
+  echo "--- venv: creating $root/.venv"
+  # Needs python3-venv on Ubuntu, which infra/hetzner/provision.sh in
+  # spideryarn/reading2 installs.
+  python3 -m venv .venv
+fi
+
+if [ ! -x .venv/bin/pip ]; then
+  echo "setup: $root/.venv exists but has no pip -- delete it by hand and re-run" >&2
+  exit 1
+fi
+
+echo "--- backend requirements (backend/requirements-dev.txt)"
+# The -dev file starts with `-r requirements.txt`, so this is the runtime
+# dependencies plus pytest, ruff and black. A box you can only install runtime
+# dependencies on is a box you cannot run the tests on.
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/pip install -r backend/requirements-dev.txt
+
+# --- the frontend -----------------------------------------------------------
+if [ -d frontend/node_modules ]; then
+  echo "--- frontend: node_modules is already here, so it is left alone"
+  echo "    (npm ci would delete it first; run 'npm ci --prefix frontend' by hand"
+  echo "     if .gjd-remote/check says it is stale)"
+else
+  echo "--- frontend: npm ci"
+  npm ci --prefix frontend
+fi
+
+echo "=== setup finished. Run .gjd-remote/check for the verdict ==="

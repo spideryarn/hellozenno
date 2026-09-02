@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+#
+# Is this checkout actually usable? Read-only, and run by `gjd-remote setup`
+# after `.gjd-remote/setup` -- see .gjd-remote/config.toml.
+#
+# The whole point of a separate check is that it must be able to disagree with
+# setup. So every item here LOOKS at the thing (imports the module, asks git
+# where the submodule is, asks npm whether the tree satisfies the lockfile)
+# rather than trusting that an installer exited 0 twenty minutes ago. A check
+# built out of the installers' exit codes can only ever agree with them.
+#
+# It checks every item before it reports, so one failure does not hide the next,
+# and it names the failing item and the command that fixes it.
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+root="$PWD"
+failed=""
+
+ok()  { printf '  ok   %s\n' "$1"; }
+bad() { printf '  FAIL %s\n' "$1" >&2; failed="$failed $2"; }
+
+echo "=== hellozenno check in $root ==="
+
+# --- the backend virtualenv -------------------------------------------------
+# The imports, not the directory: a .venv whose interpreter is broken or whose
+# packages were never installed is a directory that passes every `test -d`.
+# gjdutils is in here because requirements.txt pins it and it is the one that
+# has bitten before.
+if [ ! -x .venv/bin/python ]; then
+  bad "venv: $root/.venv/bin/python is missing or not executable" "venv"
+elif ! .venv/bin/python -c 'import flask, peewee, loguru, gjdutils' 2>&1; then
+  bad "venv: .venv/bin/python cannot import flask, peewee, loguru and gjdutils" "venv"
+else
+  ok "venv: flask, peewee, loguru and gjdutils import"
+fi
+
+# --- the gjdutils submodule -------------------------------------------------
+# `git submodule status` prefixes a line with '-' when the submodule is not
+# checked out, '+' when it sits on a commit other than the one the superproject
+# records, and 'U' on a merge conflict. A blank prefix is the only good one.
+if ! submodules=$(git submodule status --recursive 2>&1); then
+  bad "submodule: 'git submodule status' failed: $submodules" "submodule"
+elif [ -z "$submodules" ]; then
+  bad "submodule: git reports no submodules at all -- expected gjdutils" "submodule"
+elif printf '%s\n' "$submodules" | grep -q '^[-+U]'; then
+  bad "submodule: not at the recorded commit ($(printf '%s\n' "$submodules" | grep '^[-+U]' | tr '\n' ';'))" "submodule"
+else
+  ok "submodule: gjdutils is at the commit this checkout records"
+fi
+
+# --- the frontend -----------------------------------------------------------
+# `npm ls --depth=0` reads node_modules and compares it with package.json; it
+# exits non-zero when a declared dependency is missing or the wrong version.
+# Unmet *optional* dependencies (the linux-only esbuild and rollup binaries on a
+# Mac, or the darwin ones on the box) do not fail it, which is what we want.
+if [ ! -d frontend/node_modules ]; then
+  bad "frontend: frontend/node_modules is missing" "frontend"
+elif ! npm ls --prefix frontend --depth=0 >/dev/null 2>&1; then
+  bad "frontend: node_modules does not satisfy frontend/package.json" "frontend"
+else
+  ok "frontend: node_modules satisfies frontend/package.json"
+fi
+
+# --- the verdict ------------------------------------------------------------
+if [ -n "$failed" ]; then
+  echo "" >&2
+  echo "check FAILED:$failed" >&2
+  case "$failed" in
+    *venv*|*submodule*) echo "  try: ./.gjd-remote/setup" >&2 ;;
+  esac
+  case "$failed" in
+    *frontend*) echo "  try: npm ci --prefix frontend  (this deletes node_modules first)" >&2 ;;
+  esac
+  exit 1
+fi
+
+echo "=== check passed ==="

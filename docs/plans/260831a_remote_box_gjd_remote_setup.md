@@ -1,7 +1,8 @@
 # Running Hello Zenno on the shared remote box
 
-Status: proposal, nothing built. Written 2026-08-31 from the Spideryarn side, for whoever picks this
-up here.
+Status: **the Hello Zenno half landed 2026-09-02** — see "What landed" below. Written 2026-08-31
+from the Spideryarn side, for whoever picks this up here. Nothing has been run on the box yet from
+this repo.
 
 Greg has an always-on Hetzner box (CX53, Ubuntu 24.04) where many autonomous Claude Code sessions run
 in parallel in tmux, driven from his laptop by a CLI called `gjd-remote`. It has only ever served one
@@ -11,34 +12,43 @@ time.
 **The design lives in the other repo**, because that is where `gjd-remote` and the box's Terraform
 live:
 
-- `/Users/greg/Dropbox/dev/experim/spideryarn2/docs/plans/260831ad-multi-repo-support-for-gjd-remote-box.md`
-  — the plan, the seam, and what is deliberately not being built.
-- `/Users/greg/Dropbox/dev/experim/spideryarn2/docs/project/remote-box.md` — what the box is and how
-  `gjd-remote` drives it.
+That repo now lives at `/Users/greg/dev/spideryarn/reading2` (it moved out of Dropbox), and the
+files have been renamed since this doc was written:
+
+- `docs/plans/260902h-gjd-remote-works-from-whichever-repo-you-are-in.md` — **the live plan**, and
+  Hello Zenno is its Stage 5. It supersedes `260831ad-multi-repo-support-for-gjd-remote-box.md`,
+  which was written the day before this doc and never built.
+- `docs/project/hetzner-remote-server-box.md` — what the box is and how `gjd-remote` drives it. The
+  contract for `.gjd-remote/` is its section "Which repo, and where on the box".
 
 This doc holds only the part that is **Hello Zenno's own work**.
 
 ## The shape of the answer, in one paragraph
 
-`gjd-remote` will not learn anything about Hello Zenno. Per-repo variation is absorbed by **one
-committed executable per repo**, invoked explicitly, never automatically:
+`gjd-remote` will not learn anything about Hello Zenno. Per-repo variation is absorbed by committed
+files in this repo, run explicitly, never because a checkout happened to arrive:
 
 ```
-.gjd-remote/run setup      # explicit, idempotent, non-destructive
-.gjd-remote/run check      # read-only; the tool runs it itself after setup
+.gjd-remote/config.toml    # what this repo asks for; `check` is the only key it sets
+.gjd-remote/setup          # executable, idempotent, non-destructive; the default when it exists
+.gjd-remote/check          # read-only; the tool runs it itself after setup
 ```
 
-It may dispatch however this repo likes — a venv, the submodule, `npm ci --prefix frontend`, the
-local database. No config file, no lifecycle hooks, no overrides. Anything that decides *what leaves
-Greg's laptop* (credentials, destinations, repo identity) stays on the laptop side and is not
-something this repo can declare.
+**Corrected since 2026-08-31**: Greg decided in favour of a small TOML config alongside the
+executable, rather than one `.gjd-remote/run` dispatcher and no config at all. Every key is
+optional, and an unknown key is an error naming the key. The reasoning is in the Spideryarn plan
+`260902h`, section "The per-repo config".
+
+The scripts may do whatever this repo likes — a venv, the submodule, `npm ci --prefix frontend`.
+Anything that decides *what leaves Greg's laptop* (credentials, destinations, repo identity) stays
+on the laptop side and is not something this repo can declare.
 
 ## Five things here that need fixing, with the reasons
 
 These are Hello Zenno's bugs, not `gjd-remote`'s. They are listed roughly by how much they matter on
 a **shared** machine.
 
-### 1. `run_backend.sh` kills whatever owns the port
+### 1. `run_backend.sh` kills whatever owns the port — FIXED 2026-09-02
 
 `scripts/local/run_backend.sh:30` and its Vite sibling:
 
@@ -50,6 +60,12 @@ lsof -ti:5173        | xargs kill -9 2>/dev/null || true
 On a shared box, whatever owns 5173 is very likely Spideryarn's dev server and a colleague agent's
 work. **Refuse an occupied port and say who holds it**, rather than killing the owner. This is the
 one item that can damage someone else's work, so it is first.
+
+Both are now one `require_free_port` that prints `lsof -nP -iTCP:$port -sTCP:LISTEN` and exits 1.
+It also moved *above* the pip installs, so the refusal costs nothing. The `kill -9` tips in
+`README.md` and `AGENTS.md` were reworded to "find out who holds it first". Made to go red: a
+`python3 -m http.server` on 3111, then `FLASK_PORT=3111 ./scripts/local/run_backend.sh` — refused
+by name, and the listener was still alive afterwards.
 
 ### 2. `migrate.sh` exits 0 when you cancel the migration
 
@@ -65,7 +81,7 @@ here than usual, because an adapter's `check` would be built on exactly this kin
 **Verify the resulting schema, not the exit status.** (Spideryarn has a doc about this class:
 `docs/reusable/silent-success.md` in that repo.)
 
-### 3. The submodule URL is ssh, and the box has no GitHub ssh key
+### 3. The submodule URL is ssh, and the box has no GitHub ssh key — FIXED 2026-09-02
 
 `.gitmodules`:
 
@@ -81,7 +97,10 @@ of the request path and looks up a per-owner fine-grained PAT. An ssh URL never 
 rewrite on the box, and rejected: https works on both machines, whereas a global rewrite is hidden
 machine magic that every later `git submodule update` silently depends on.
 
-Until it is changed, a one-command rewrite on the box gets you moving.
+Done, with the reasoning kept as a comment in `.gitmodules`, and `git submodule sync` run so the
+laptop's `.git/config` and the submodule's own `origin` follow. Checked from the laptop:
+`git -C gjdutils ls-remote origin refs/heads/main` over https returns exactly the commit this
+checkout records. The submodule's *push* URL is still ssh, which is right — the box never pushes it.
 
 ### 4. Playwright expects a browser the box does not have
 
@@ -161,19 +180,48 @@ Deliberately manual. It needs essentially no change to `gjd-remote`, which is th
 
 Skip Playwright. Do not run Spideryarn's app stack at the same time.
 
-Once steps 2-5 are written down as `.gjd-remote/run setup`, with a `check` that verifies venv,
-submodule commit, frontend dependencies and database schema **independently** rather than by trusting
-exit codes, the box can answer "does Hello Zenno still work here?" after a rebuild without a human
-checking five things by hand. That is the whole reason the adapter exists.
+Steps 2 and 3 are now `.gjd-remote/setup`, and `.gjd-remote/check` answers "does Hello Zenno still
+work here?" by looking rather than by trusting exit codes. Steps 4 and 5 — `.env.local`, the
+Supabase stack, the migrations — are deliberately **not** in setup: the box runs one repo's app
+stack at a time, so standing Hello Zenno's up stays a decision a person makes. The database-schema
+half of the check waits for that.
+
+## What landed, 2026-09-02
+
+Written from the Spideryarn side, as Stage 5 of that repo's `260902h` plan. Nothing has been run on
+the box yet.
+
+| file | what |
+|---|---|
+| `.gjd-remote/config.toml` | points `check` at the script below; no `setup =` key, because an executable `.gjd-remote/setup` is the default |
+| `.gjd-remote/setup` | submodule, `.venv` + `backend/requirements-dev.txt`, `npm ci --prefix frontend` |
+| `.gjd-remote/check` | read-only: imports flask/peewee/loguru/gjdutils out of `.venv`, `git submodule status`, `npm ls --prefix frontend --depth=0` |
+| `.gitmodules` | ssh → https (item 3) |
+| `.gitignore` | ignore `.venv/`, which setup creates |
+| `scripts/local/run_backend.sh` | `require_free_port` (item 1) |
+| `README.md`, `AGENTS.md` | the `kill -9` port tips reworded |
+
+Two things setup will not do, both because the box is shared and other agents' sessions are live in
+other checkouts: it never re-runs `npm ci` over an existing `frontend/node_modules` (`npm ci`
+deletes that directory first), and it never recreates an existing `.venv`. `pip install -r` is
+additive, so that one is repeated on every run. `check` is what notices a stale `node_modules`.
+
+Exercised on the laptop: `check` red on the venv by name with no `.venv`; green on all three with a
+`.venv` symlinked to Greg's existing backend venv; red on the submodule by name with `gjdutils`
+detached to `HEAD~1`, then restored. `setup` was **not** run here — it would create a second venv
+and install hundreds of MB on the laptop for no reason — beyond `bash -n` and its
+not-a-checkout guard. The Spideryarn config parser was pointed at this repo and resolved
+`setup = ./.gjd-remote/setup (source: script)`, `check = ./.gjd-remote/check`, no warnings.
 
 ## How to know each guard works
 
 The rule on the Spideryarn side, worth importing: a check you have never seen fail is not evidence.
 
-| Guard | Make it go red |
-|---|---|
-| `check` is not just `setup` again | Have `setup` return immediately with dependencies absent; `check` must fail, by name |
-| venv | Remove `.venv/bin/python`; `check` must fail |
-| submodule | Move `gjdutils` off its recorded commit; `check` must fail |
-| migration verification | Cancel the migration; the schema check must still fail |
-| port politeness | Bind 5173 from an unrelated process; `run_backend.sh` must refuse and name the holder, not kill it |
+| Guard | Make it go red | Seen red? |
+|---|---|---|
+| `check` is not just `setup` again | Have `setup` return immediately with dependencies absent; `check` must fail, by name | yes — `check` fails on a checkout `setup` has never touched |
+| venv | Remove `.venv/bin/python`; `check` must fail | yes, 2026-09-02 |
+| submodule | Move `gjdutils` off its recorded commit; `check` must fail | yes, 2026-09-02 (`HEAD~1`, then restored) |
+| frontend | Remove `frontend/node_modules`, or leave one that no longer satisfies the lockfile | not yet — `npm ls` was only seen green |
+| migration verification | Cancel the migration; the schema check must still fail | no — item 2 is still open, and no schema check exists yet |
+| port politeness | Bind 5173 from an unrelated process; `run_backend.sh` must refuse and name the holder, not kill it | yes, 2026-09-02 (on 3111, and the holder survived) |
