@@ -1,8 +1,8 @@
 # Running Hello Zenno on the shared remote box
 
-Status: **the Hello Zenno half landed 2026-09-02** — see "What landed" below. Written 2026-08-31
-from the Spideryarn side, for whoever picks this up here. Nothing has been run on the box yet from
-this repo.
+Status: **done — it ran on the box 2026-09-03**, see "Outcome, 2026-09-03" at the bottom. The
+files themselves landed 2026-09-02, under "What landed". Written 2026-08-31 from the Spideryarn
+side, for whoever picks this up here.
 
 Greg has an always-on Hetzner box (CX53, Ubuntu 24.04) where many autonomous Claude Code sessions run
 in parallel in tmux, driven from his laptop by a CLI called `gjd-remote`. It has only ever served one
@@ -123,6 +123,10 @@ unqualified defaults, and **5173 is genuinely contested** — Spideryarn's Vite 
 
 ## Environment variables: do not use `push-env`
 
+> **Overtaken by events, 2026-09-03.** `push-env` no longer refuses, and it has been run — see
+> "Outcome, 2026-09-03" at the bottom for what went and what was withheld. The reasoning below
+> is kept because half of it still holds.
+
 `gjd-remote push-env` builds a `.env.local` on the box from an allowlist of key names. It will
 **refuse** for this repo, deliberately, and you should not try to talk it into working.
 
@@ -225,3 +229,51 @@ The rule on the Spideryarn side, worth importing: a check you have never seen fa
 | frontend | Remove `frontend/node_modules`, or leave one that no longer satisfies the lockfile | not yet — `npm ls` was only seen green |
 | migration verification | Cancel the migration; the schema check must still fail | no — item 2 is still open, and no schema check exists yet |
 | port politeness | Bind 5173 from an unrelated process; `run_backend.sh` must refuse and name the holder, not kill it | yes, 2026-09-02 (on 3111, and the holder survived) |
+
+## Outcome, 2026-09-03
+
+**Hello Zenno is on the box.** Run end to end from `/Users/greg/dev/hellozenno` with the multi-repo
+`gjd-remote`, as Stage 5 of the Spideryarn plan. The full record — every command, the quoted output,
+and what each of GPT Sol's watch points did — is in that repo, at
+`/Users/greg/dev/spideryarn/reading2/docs/plans/260902h-gjd-remote-works-from-whichever-repo-you-are-in.md`,
+in the Log entry dated 2026-09-03 headed "Stage 5 run end to end against the box".
+
+What is now on the box, at `/home/greg/code/hellozenno`:
+
+- The checkout, cloned over https from `main` at `62e7c54`. Its repo identity to `gjd-remote` is
+  **`spideryarn/hellozenno`**, taken from the git origin — so its files on the box and on the laptop
+  are named `spideryarn--hellozenno.*`.
+- `gjdutils` checked out at the recorded commit, over the https submodule URL, with no credential
+  prompt.
+- `.venv` on Python 3.12.3, with `backend/requirements-dev.txt` installed.
+- `frontend/node_modules` from `npm ci`.
+- A `success` setup verdict at `~/gjd-remote/setup/spideryarn--hellozenno.json`, and
+  `./.gjd-remote/check` passing all three items when re-run by hand.
+
+Nothing stands the application up: no Supabase stack, no migrations, no Playwright browsers. That is
+still a decision for a person, as this doc says above.
+
+### `push-env` was run, and "do not use `push-env`" above needs revisiting
+
+The section headed "Environment variables: do not use `push-env`" is now half out of date, and Greg
+should decide what replaces it.
+
+- **Out of date:** it says `push-env` "will **refuse** for this repo, deliberately". It does not any
+  more. Every repo that is not Spideryarn now gets a checklist of its own key **names**, proposed by
+  a model that never sees a value, and the answers are remembered.
+- **Still true, and the reason to be careful:** `backend/utils/env_config.py` requires *every* key,
+  so the partial file now on the box would crash the backend at import.
+
+What was actually sent, on 2026-09-03, as key names only: `OPENAI_API_KEY`, `CLAUDE_API_KEY`,
+`ELEVENLABS_API_KEY`, `PERPLEXITY_API_KEY`, `GEMINI_API_KEY`, `CODEX_API_KEY`, `USE_LOCAL_TO_PROD`,
+`LOGS_DIR`, `FLASK_PORT`, `SUPABASE_PORT`, `SUPABASE_POOL_MODE`, `PUBLIC_SUPABASE_URL`,
+`SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, `USE_LEGACY_CURSORRULES`, `VITE_FRONTEND_URL`,
+`VITE_API_URL`, `SEGMENTATION_DEFAULT`, `SEGMENTATION_TH`, `RECOGNITION_KNOWN_WORD_SEARCH`.
+
+**Withheld**, and recorded as withheld so no later model can re-propose them: `FLASK_SECRET_KEY` —
+the production session-signing secret this doc singles out — plus `SUPABASE_PASSWORD`,
+`SUPABASE_USER`, `SUPABASE_HOST`, `SUPABASE_DATABASE` and `DATABASE_URL`.
+
+The file on the box is `600 greg:greg` and holds those 20 names and no others. The paragraph above
+about the box being one Unix user shared by many agents still stands, unchanged: those provider keys
+are now readable by every agent on it.
