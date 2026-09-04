@@ -77,6 +77,9 @@ Key points:
 - Backend: `pytest backend/tests/`
 - See: `docs/reference/TESTING.md`, `backend/docs/BACKEND_TESTING.md`
 - Local test user credentials: `docs/reference/LOCAL_TEST_USERS.md`
+- Dummy Greek learner: `greek@hellozenno.com` / `hello123`. Signed up through the app's
+  own form, so unlike the two users above it is not in the seed SQL - it exists only in
+  the local Supabase of the box where it was created (2026-09-04: the Hetzner box).
 
 ### Type Checking & Linting
 Config lives in the root `pyproject.toml` (`[tool.ruff]`, `[tool.black]`), so run these
