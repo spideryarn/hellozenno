@@ -17,7 +17,7 @@ from flask_cors import CORS
 from whitenoise import WhiteNoise
 
 # We no longer need the Vite helpers import since we're using SvelteKit for frontend
-from utils.env_config import is_vercel, FLASK_SECRET_KEY
+from utils.env_config import is_vercel, FLASK_SECRET_KEY, VITE_FRONTEND_URL
 from utils.logging_utils import setup_logging
 from utils.url_utils import decode_url_params
 from utils.error_utils import register_pool_exhaustion_handler
@@ -40,31 +40,29 @@ def create_app():
         ),
     )
 
-    # Enable CORS for API endpoints
+    # Enable CORS for API endpoints.
+    #
+    # 5173 is Vite's default, but it is not always ours: on Greg's shared remote box
+    # another repo's dev server usually holds it, so the frontend runs on whatever
+    # port is free. VITE_FRONTEND_URL already records which one that is (the frontend
+    # reads it too), so allow it rather than hardcoding a port the dev server may not
+    # be on -- otherwise every browser->API call fails preflight, and the only symptom
+    # is a CORS message in the console.
+    dev_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        VITE_FRONTEND_URL,
+    ]
+    allowed_origins = list(dict.fromkeys(dev_origins + ["https://www.hellozenno.com"]))
+
     CORS(
         app,
         supports_credentials=True,
-        # Specify allowed origins. For development, this includes your SvelteKit dev server.
-        # For production, this should be your frontend's domain (e.g., "https://www.hellozenno.com").
-        origins=[
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "https://www.hellozenno.com",
-        ],  # Add your actual production frontend URL
+        origins=allowed_origins,
         resources={
-            r"/api/*": {
-                "origins": [
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173",
-                    "https://www.hellozenno.com",
-                ]
-            },
+            r"/api/*": {"origins": allowed_origins},
             r"/language/*": {
-                "origins": [
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173",
-                    "https://www.hellozenno.com",
-                ]
+                "origins": allowed_origins
             },  # Ensure /language routes are covered
             # r"/lang/*/flashcards/*": {
             #     "origins": "*"
